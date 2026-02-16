@@ -54,20 +54,22 @@ export async function registerRoutes(
 
   app.post("/api/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
-      if (!username || !password) {
-        return res.status(400).json({ message: "ユーザー名とパスワードを入力してください" });
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "メールアドレスとパスワードを入力してください" });
       }
 
-      const user = await storage.getUserByUsername(username);
+      const user = await storage.getUserByEmail(email);
       if (!user) {
-        return res.status(401).json({ message: "ユーザー名またはパスワードが正しくありません" });
+        return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
       }
 
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
-        return res.status(401).json({ message: "ユーザー名またはパスワードが正しくありません" });
+        return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
       }
+
+      await storage.deleteSessionsByUserId(user.id);
 
       req.session.userId = user.id;
       req.session.role = user.role;

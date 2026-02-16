@@ -13,7 +13,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { login, isAuthenticated, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
@@ -25,12 +25,12 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login.mutateAsync({ username, password });
+      await login.mutateAsync({ email, password });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "ログイン失敗",
-        description: error.message || "ユーザー名またはパスワードが正しくありません",
+        description: error.message || "メールアドレスまたはパスワードが正しくありません",
       });
     }
   };
@@ -48,15 +48,15 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">ユーザー名</Label>
+              <Label htmlFor="email">メールアドレス</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="ユーザー名を入力"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="メールアドレスを入力"
                 required
-                data-testid="input-login-username"
+                data-testid="input-login-email"
               />
             </div>
             <div className="space-y-2">
