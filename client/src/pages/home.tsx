@@ -110,10 +110,6 @@ function TruckCard({ listing }: { listing: TruckListing }) {
             <span className="text-muted-foreground">車種：</span>
             <span className="font-semibold text-foreground">{listing.vehicleType}</span>
           </div>
-          <div className="mt-auto pt-2">
-            <p className="text-xs text-muted-foreground">運賃</p>
-            <p className="font-bold text-primary text-lg">{listing.price || "要相談"}</p>
-          </div>
         </CardContent>
       </Card>
     </Link>
