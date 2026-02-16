@@ -1,7 +1,7 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Truck, Search, ArrowRight, MapPin, Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Package, Truck, ArrowRight, MapPin, Plus, Home, Search, Shield, User, Building2, Phone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +21,8 @@ function ListingSkeleton() {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const [location] = useLocation();
 
   const { data: cargoListings, isLoading: cargoLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
@@ -31,122 +32,159 @@ export default function Dashboard() {
     queryKey: ["/api/trucks"],
   });
 
+  const menuItems = [
+    { href: "/home", label: "ダッシュボード", icon: Home },
+    { href: "/cargo", label: "荷物一覧", icon: Package },
+    { href: "/trucks", label: "車両一覧", icon: Truck },
+    { href: "/cargo/new", label: "荷物を掲載", icon: Plus },
+    { href: "/trucks/new", label: "車両を掲載", icon: Plus },
+    ...(isAdmin ? [{ href: "/admin", label: "管理画面", icon: Shield }] : []),
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="bg-primary rounded-md p-6 mb-8">
-        <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
-          {user?.companyName}さん、こんにちは
-        </h1>
-        <p className="text-base text-primary-foreground mt-1 text-shadow">マッチング情報の概要をご確認ください</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-              <Package className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground" data-testid="text-stat-cargo">{cargoListings?.length ?? 0}</div>
-              <div className="text-xs text-muted-foreground">荷物情報</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground" data-testid="text-stat-trucks">{truckListings?.length ?? 0}</div>
-              <div className="text-xs text-muted-foreground">車両情報</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Link href="/cargo/new">
-          <Card className="hover-elevate cursor-pointer h-full">
-            <CardContent className="p-4 flex items-center gap-4 h-full">
-              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <Plus className="w-5 h-5 text-primary" />
+      <div className="flex gap-6">
+        <aside className="hidden lg:block w-64 shrink-0" data-testid="panel-sidebar">
+          <Card className="sticky top-20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate" data-testid="text-sidebar-company">{user?.companyName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
               </div>
-              <div className="text-sm font-medium text-foreground">荷物を掲載</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/trucks/new">
-          <Card className="hover-elevate cursor-pointer h-full">
-            <CardContent className="p-4 flex items-center gap-4 h-full">
-              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <Plus className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-sm font-medium text-foreground">車両を掲載</div>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-            <h2 className="text-lg font-bold text-foreground">最新の荷物情報</h2>
-            <Link href="/cargo">
-              <Button variant="ghost" size="sm" data-testid="link-dashboard-all-cargo">
-                すべて見る <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {cargoLoading
-              ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-              : cargoListings?.slice(0, 5).map((listing) => (
-                  <Link key={listing.id} href={`/cargo/${listing.id}`}>
-                    <Card className="hover-elevate cursor-pointer" data-testid={`card-dash-cargo-${listing.id}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
-                          <Badge variant="secondary" className="text-xs shrink-0">{listing.vehicleType}</Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                          <span>{listing.departureArea} → {listing.arrivalArea}</span>
-                          <span className="ml-auto text-xs">{listing.desiredDate}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
+              {(user?.phone || user?.address) && (
+                <div className="mb-4 pb-4 border-b space-y-2">
+                  {user?.address && (
+                    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <Building2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span className="break-all">{user.address}</span>
+                    </div>
+                  )}
+                  {user?.phone && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="w-3.5 h-3.5 shrink-0" />
+                      <span>{user.phone}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <nav className="space-y-1" data-testid="nav-sidebar">
+                {menuItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start text-sm ${location === item.href ? "bg-primary/10 text-primary" : ""}`}
+                      data-testid={`link-sidebar-${item.href.replace(/\//g, "-").slice(1)}`}
+                    >
+                      <item.icon className="w-4 h-4 mr-2" />
+                      {item.label}
+                    </Button>
                   </Link>
                 ))}
-          </div>
-        </div>
+              </nav>
+            </CardContent>
+          </Card>
+        </aside>
 
-        <div>
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-            <h2 className="text-lg font-bold text-foreground">最新の車両情報</h2>
-            <Link href="/trucks">
-              <Button variant="ghost" size="sm" data-testid="link-dashboard-all-trucks">
-                すべて見る <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+        <div className="flex-1 min-w-0">
+          <div className="bg-primary rounded-md p-6 mb-8">
+            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
+              {user?.companyName}さん、こんにちは
+            </h1>
+            <p className="text-base text-primary-foreground mt-1 text-shadow">マッチング情報の概要をご確認ください</p>
           </div>
-          <div className="space-y-3">
-            {truckLoading
-              ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-              : truckListings?.slice(0, 5).map((listing) => (
-                  <Link key={listing.id} href={`/trucks/${listing.id}`}>
-                    <Card className="hover-elevate cursor-pointer" data-testid={`card-dash-truck-${listing.id}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
-                          <Badge variant="secondary" className="text-xs shrink-0">{listing.vehicleType}</Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                          <span>{listing.currentArea} → {listing.destinationArea}</span>
-                          <span className="ml-auto text-xs">{listing.availableDate}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <Card>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <Package className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-foreground" data-testid="text-stat-cargo">{cargoListings?.length ?? 0}</div>
+                  <div className="text-xs text-muted-foreground">荷物情報</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <Truck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-foreground" data-testid="text-stat-trucks">{truckListings?.length ?? 0}</div>
+                  <div className="text-xs text-muted-foreground">車両情報</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+                <h2 className="text-lg font-bold text-foreground">最新の荷物情報</h2>
+                <Link href="/cargo">
+                  <Button variant="ghost" size="sm" data-testid="link-dashboard-all-cargo">
+                    すべて見る <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {cargoLoading
+                  ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
+                  : cargoListings?.slice(0, 5).map((listing) => (
+                      <Card key={listing.id} data-testid={`card-dash-cargo-${listing.id}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+                            <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
+                            <Badge variant="secondary" className="text-xs shrink-0">{listing.vehicleType}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+                            <span>{listing.departureArea} → {listing.arrivalArea}</span>
+                            <span className="ml-auto text-xs">{listing.desiredDate}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+                <h2 className="text-lg font-bold text-foreground">最新の車両情報</h2>
+                <Link href="/trucks">
+                  <Button variant="ghost" size="sm" data-testid="link-dashboard-all-trucks">
+                    すべて見る <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {truckLoading
+                  ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
+                  : truckListings?.slice(0, 5).map((listing) => (
+                      <Card key={listing.id} data-testid={`card-dash-truck-${listing.id}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+                            <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
+                            <Badge variant="secondary" className="text-xs shrink-0">{listing.vehicleType}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+                            <span>{listing.currentArea} → {listing.destinationArea}</span>
+                            <span className="ml-auto text-xs">{listing.availableDate}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
