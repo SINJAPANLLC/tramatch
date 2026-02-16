@@ -9,6 +9,7 @@
 - **Backend**: Express.js + TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
 - **Auth**: bcrypt password hashing, express-session with connect-pg-simple
+- **File Upload**: multer (permit file upload: PDF/JPG/PNG, max 10MB)
 - **Design**: Turquoise/teal color theme with white background
 
 ## Project Structure
@@ -43,11 +44,25 @@
 - Session-based authentication with PostgreSQL session store
 - Password hashing with bcrypt
 - Roles: "user" (default), "admin"
-- Seeded admin: username=admin, password=admin123
+- Admin approval workflow: new registrations require admin approval before login
+- `approved` field in users table (boolean, default false, admin users auto-approved)
+- Admin accounts: admin@tramatch.jp / admin123, info@sinjapan.jp / Kazuya8008
+
+## UI Layout (Finalized)
+- **Dashboard**: Fixed header + fixed left sidebar, only main content scrolls
+- **Header**: Cargo/truck counts, notification bell with red dot, username, logout button
+- **Footer**: Hidden on /home page, shown on other pages
+- **Sidebar (User Menu - 12 items)**:
+  - AI荷物検索, AI荷物登録, 登録した荷物, 成約した荷物
+  - AI空車検索, AI空車登録
+  - 企業検索, 取引先管理, 実運送体制管理簿
+  - お支払い, 便利サービス, 設定
+- **Sidebar (Admin Menu - 7 items, separated by divider line + label)**:
+  - 管理画面, 申請管理, ユーザー管理, 収益管理, 通知管理, SEO記事生成, 管理設定
 
 ## API Endpoints
-- `POST /api/register` - Register new user
-- `POST /api/login` - Login
+- `POST /api/register` - Register new user (with permit file upload)
+- `POST /api/login` - Login (checks approved status)
 - `POST /api/logout` - Logout
 - `GET /api/user` - Get current user
 - `GET /api/cargo` - List all cargo listings
@@ -61,6 +76,7 @@
 - `GET /api/admin/stats` - Admin stats (admin only)
 - `GET /api/admin/users` - List users (admin only)
 - `DELETE /api/admin/users/:id` - Delete user (admin only)
+- `PATCH /api/admin/users/:id/approve` - Approve user (admin only)
 
 ## Running
 - `npm run dev` starts Express server (backend + Vite frontend) on port 5000
