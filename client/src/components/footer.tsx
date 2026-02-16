@@ -1,27 +1,25 @@
-import { Link } from "wouter";
 import logoImage from "@assets/tra_match_logo_white.jpg";
 
 export default function Footer() {
   return (
     <footer className="bg-primary mt-auto text-shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center mb-4">
               <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
             </div>
-            <p className="text-base text-primary-foreground leading-relaxed">
-              荷主と運送会社をつなぐ、求荷求車マッチングプラットフォーム
+            <p className="text-base text-primary-foreground leading-relaxed mb-4">
+              運送会社をつなぐ、AI求荷求車サービス
             </p>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-primary-foreground mb-3">サービス</h3>
-            <ul className="space-y-2 text-base text-primary-foreground">
-              <li><Link href="/cargo" className="hover:text-primary-foreground transition-colors">荷物情報の検索</Link></li>
-              <li><Link href="/trucks" className="hover:text-primary-foreground transition-colors">車両情報の検索</Link></li>
-              <li><Link href="/cargo/new" className="hover:text-primary-foreground transition-colors">荷物情報の掲載</Link></li>
-              <li><Link href="/trucks/new" className="hover:text-primary-foreground transition-colors">車両情報の掲載</Link></li>
-            </ul>
+            <div className="text-sm text-primary-foreground space-y-1">
+              <p className="font-semibold">合同会社SIN JAPAN</p>
+              <p>〒243-0303</p>
+              <p>神奈川県愛甲郡愛川町中津7287</p>
+              <p>TEL 046-212-2325</p>
+              <p>FAX 046-212-2326</p>
+              <p>Mail info@sinjapan.jp</p>
+            </div>
           </div>
           <div>
             <h3 className="text-base font-semibold text-primary-foreground mb-3">サポート</h3>
@@ -34,7 +32,6 @@ export default function Footer() {
           <div>
             <h3 className="text-base font-semibold text-primary-foreground mb-3">会社情報</h3>
             <ul className="space-y-2 text-base text-primary-foreground">
-              <li>運営会社について</li>
               <li>利用規約</li>
               <li>プライバシーポリシー</li>
             </ul>
