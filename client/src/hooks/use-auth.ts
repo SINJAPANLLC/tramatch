@@ -12,7 +12,7 @@ export function useAuth() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (data: { username: string; password: string }) => {
+    mutationFn: async (data: { email: string; password: string }) => {
       const res = await apiRequest("POST", "/api/login", data);
       return res.json();
     },

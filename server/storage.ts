@@ -10,7 +10,9 @@ import { eq, desc } from "drizzle-orm";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  deleteSessionsByUserId(userId: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<boolean>;
 
@@ -35,6 +37,17 @@ export class DatabaseStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async deleteSessionsByUserId(userId: string): Promise<void> {
+    await db.execute(
+      `DELETE FROM "session" WHERE sess::text LIKE '%"userId":"${userId}"%'`
+    );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
