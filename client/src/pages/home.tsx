@@ -1,23 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, Search, ArrowRight, Shield, Clock, MapPin } from "lucide-react";
+import { Package, Truck, Search, ArrowRight, Shield, Handshake, Clock, MapPin, Users, FileText, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-
-function StatCard({ icon: Icon, value, label }: { icon: any; value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-3">
-        <Icon className="w-6 h-6 text-primary" />
-      </div>
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <div className="text-sm text-muted-foreground mt-1">{label}</div>
-    </div>
-  );
-}
+import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 function CargoCard({ listing }: { listing: CargoListing }) {
   return (
@@ -57,7 +46,7 @@ function TruckCard({ listing }: { listing: TruckListing }) {
             <span className="truncate">{listing.currentArea} → {listing.destinationArea}</span>
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap text-sm">
-            <span className="text-muted-foreground">最大 {listing.maxWeight}</span>
+            <span className="text-muted-foreground">{listing.maxWeight}</span>
             <span className="font-medium text-foreground">{listing.availableDate}</span>
           </div>
           <div className="text-xs text-muted-foreground">{listing.companyName}</div>
@@ -95,87 +84,227 @@ export default function Home() {
     queryKey: ["/api/trucks"],
   });
 
+  const cargoCount = cargoListings?.length || 0;
+  const truckCount = truckListings?.length || 0;
+
   return (
     <div className="min-h-screen">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#40E0D0] via-primary to-[#2CBCAD] dark:from-primary dark:via-[#2CBCAD] dark:to-[#1A7A6E]">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE4YzAtMy4zMTQtMi42ODYtNi02LTZzLTYgMi42ODYtNiA2IDIuNjg2IDYgNiA2IDYtMi42ODYgNi02eiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 relative z-10">
+      <div className="bg-[#40E0D0] dark:bg-[#2CBCAD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-center gap-6 sm:gap-12 py-3 text-white">
+            <span className="text-xs sm:text-sm font-medium tracking-wide">リアルタイム情報</span>
+            <Link href="/cargo" className="flex items-center gap-2 group">
+              <Package className="w-4 h-4" />
+              <span className="text-sm sm:text-base font-bold">{cargoCount}件</span>
+              <span className="text-xs opacity-80 hidden sm:inline">の荷物情報</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </Link>
+            <Link href="/trucks" className="flex items-center gap-2 group">
+              <Truck className="w-4 h-4" />
+              <span className="text-sm sm:text-base font-bold">{truckCount}件</span>
+              <span className="text-xs opacity-80 hidden sm:inline">の空きトラック</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <section className="bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight" data-testid="text-hero-title">
-              荷主と運送会社を
-              <br />
-              最適にマッチング
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight" data-testid="text-hero-title">
+              求荷求車マッチングサービス
             </h1>
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg text-white/85 leading-relaxed max-w-2xl mx-auto">
-              トラマッチは求荷求車のマッチングプラットフォームです。
-              <br className="hidden sm:block" />
-              空車情報・荷物情報を簡単に検索・掲載できます。
+            <div className="mt-6 flex justify-center">
+              <img src={logoImage} alt="TRA MATCH" className="h-12 sm:h-16 w-auto" />
+            </div>
+            <p className="mt-6 text-lg sm:text-xl text-[#40E0D0] dark:text-[#5EEADB] font-bold leading-relaxed" data-testid="text-hero-subtitle">
+              荷物や空きトラックが見つかる。決まる。
+            </p>
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto">
+              運送会社同士をつなぐマッチングプラットフォーム。
+              空車情報・荷物情報をリアルタイムで検索・掲載できます。
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/cargo">
-                <Button size="lg" className="bg-white text-primary font-semibold border-white/20 min-w-[200px]" data-testid="button-hero-cargo">
-                  <Search className="w-4 h-4 mr-2" />
-                  荷物を探す
+              <Link href="/register">
+                <Button size="lg" className="min-w-[220px] text-base" data-testid="button-hero-register">
+                  無料会員登録
                 </Button>
               </Link>
-              <Link href="/trucks">
-                <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm min-w-[200px]" data-testid="button-hero-trucks">
-                  <Truck className="w-4 h-4 mr-2" />
-                  車両を探す
+              <Link href="/cargo">
+                <Button size="lg" variant="outline" className="min-w-[220px] text-base" data-testid="button-hero-cargo">
+                  <Search className="w-4 h-4 mr-2" />
+                  無料荷物検索を試してみる
                 </Button>
               </Link>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
-            <StatCard icon={Package} value={String(cargoListings?.length || 0)} label="荷物情報" />
-            <StatCard icon={Truck} value={String(truckListings?.length || 0)} label="車両情報" />
-            <StatCard icon={Shield} value="24h" label="サポート" />
+      <section className="py-16 sm:py-20 bg-card">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-12" data-testid="text-reason-title">
+            TRA MATCHが選ばれる理由
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center mx-auto mb-5">
+                <Search className="w-9 h-9 text-[#40E0D0]" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">案件が見つかる</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                豊富な荷物・車両情報の中から<br />ほしい案件を見つけ出せます
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center mx-auto mb-5">
+                <Handshake className="w-9 h-9 text-[#40E0D0]" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">成約が早い</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                会員同士の直接交渉で<br />スピーディーな成約を実現します
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center mx-auto mb-5">
+                <Shield className="w-9 h-9 text-[#40E0D0]" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">安心な取引</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                充実したサポートや保証サービスで<br />安心して取引できます
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-background">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-4" data-testid="text-stats-title">
+            圧倒的な情報量
+          </h2>
+          <p className="text-sm text-muted-foreground text-center mb-12">リアルタイムで更新される情報をご活用ください</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            <Card>
+              <CardContent className="p-6 sm:p-8 text-center">
+                <p className="text-sm text-muted-foreground mb-2">荷物情報数</p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl sm:text-5xl font-bold text-[#40E0D0]">{cargoCount}</span>
+                  <span className="text-lg font-medium text-foreground">件</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 sm:p-8 text-center">
+                <p className="text-sm text-muted-foreground mb-2">空きトラック情報数</p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl sm:text-5xl font-bold text-[#40E0D0]">{truckCount}</span>
+                  <span className="text-lg font-medium text-foreground">件</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 sm:p-8 text-center">
+                <p className="text-sm text-muted-foreground mb-2">サポート対応</p>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl sm:text-5xl font-bold text-[#40E0D0]">24</span>
+                  <span className="text-lg font-medium text-foreground">時間</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-4 bg-[#40E0D0] dark:bg-[#2CBCAD]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 py-4">
+            <p className="text-white font-bold text-base sm:text-lg">TRA MATCHを使って業務をラクにしませんか？</p>
+            <div className="flex items-center gap-3">
+              <Link href="/register">
+                <Button className="bg-white text-[#40E0D0] font-bold border-white/20" data-testid="button-mid-cta-register">
+                  無料会員登録
+                </Button>
+              </Link>
+              <Link href="/cargo">
+                <Button variant="outline" className="text-white border-white/40 bg-white/10 backdrop-blur-sm" data-testid="button-mid-cta-search">
+                  荷物を見てみる
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-card">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-4">サービス内容</h2>
+          <p className="text-sm text-muted-foreground text-center mb-12">運送会社同士のマッチングサービス</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center shrink-0">
+                  <Package className="w-6 h-6 text-[#40E0D0]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground mb-1">荷物情報の掲載・検索</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    運びたい荷物の情報を掲載し、空きトラックを持つ運送会社とマッチング。エリア・日付・車種で簡単検索。
+                  </p>
+                  <Link href="/cargo" className="inline-flex items-center gap-1 mt-3 text-sm text-[#40E0D0] font-medium">
+                    荷物一覧を見る <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center shrink-0">
+                  <Truck className="w-6 h-6 text-[#40E0D0]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground mb-1">空車情報の掲載・検索</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    空きトラックの情報を掲載し、荷物を探している荷主とマッチング。効率的に帰り荷を見つけられます。
+                  </p>
+                  <Link href="/trucks" className="inline-flex items-center gap-1 mt-3 text-sm text-[#40E0D0] font-medium">
+                    車両一覧を見る <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center shrink-0">
+                  <Users className="w-6 h-6 text-[#40E0D0]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground mb-1">会員同士の直接マッチング</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    中間マージンなし。運送会社同士で直接やり取りができるため、コストを抑えた取引が可能です。
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#40E0D0]/15 dark:bg-[#40E0D0]/20 flex items-center justify-center shrink-0">
+                  <Clock className="w-6 h-6 text-[#40E0D0]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground mb-1">リアルタイム更新</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    最新の荷物・車両情報がリアルタイムで更新。タイムリーなマッチングを実現します。
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       <section className="py-16 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardContent className="p-6 space-y-3">
-                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto">
-                  <Search className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-foreground">簡単検索</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  エリアや日付で荷物・車両情報を素早く検索。最適な案件を見つけられます。
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="p-6 space-y-3">
-                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto">
-                  <Clock className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-foreground">リアルタイム</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  最新の荷物・車両情報がリアルタイムで更新。タイムリーなマッチングを実現します。
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="p-6 space-y-3">
-                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-foreground">安心・安全</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  掲載企業の情報を明確に表示。安心して取引を進められます。
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
@@ -205,7 +334,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-background">
+      <section className="py-16 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
@@ -235,21 +364,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-primary text-white">
+      <section className="py-16 sm:py-20 bg-[#40E0D0] dark:bg-[#2CBCAD]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold">今すぐ荷物・車両情報を掲載しませんか？</h2>
-          <p className="mt-4 text-white/80 text-base">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">TRA MATCHを使って<br className="sm:hidden" />業務をラクにしませんか？</h2>
+          <p className="mt-4 text-white/85 text-base">
             無料で会員登録して、荷物や空車の情報を掲載・検索できます。
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/register">
-              <Button size="lg" className="bg-white text-primary font-semibold border-white/20 min-w-[200px]" data-testid="button-cta-register">
-                新規登録（無料）
+              <Button size="lg" className="bg-white text-[#40E0D0] font-bold border-white/20 min-w-[220px]" data-testid="button-cta-register">
+                無料会員登録
               </Button>
             </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm min-w-[200px]" data-testid="button-cta-login">
-                ログイン
+            <Link href="/cargo">
+              <Button size="lg" variant="outline" className="text-white border-white/40 bg-white/10 backdrop-blur-sm min-w-[220px]" data-testid="button-cta-search">
+                <Search className="w-4 h-4 mr-2" />
+                荷物を見てみる（無料）
               </Button>
             </Link>
           </div>

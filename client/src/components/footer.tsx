@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Footer() {
@@ -7,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center mb-4">
-              <img src={logoImage} alt="TRA MATCH" className="h-7 w-auto" />
+              <img src={logoImage} alt="TRA MATCH" className="h-6 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               荷主と運送会社をつなぐ、求荷求車マッチングプラットフォーム
@@ -16,9 +17,10 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">サービス</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>荷物情報の掲載</li>
-              <li>車両情報の掲載</li>
-              <li>マッチング検索</li>
+              <li><Link href="/cargo" className="hover:text-foreground transition-colors">荷物情報の検索</Link></li>
+              <li><Link href="/trucks" className="hover:text-foreground transition-colors">車両情報の検索</Link></li>
+              <li><Link href="/cargo/new" className="hover:text-foreground transition-colors">荷物情報の掲載</Link></li>
+              <li><Link href="/trucks/new" className="hover:text-foreground transition-colors">車両情報の掲載</Link></li>
             </ul>
           </div>
           <div>
@@ -39,7 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-border text-center text-sm text-muted-foreground">
-          &copy; 2026 トラマッチ All rights reserved.
+          &copy; 2026 TRA MATCH All rights reserved.
         </div>
       </div>
     </footer>

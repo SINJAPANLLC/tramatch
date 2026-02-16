@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, LayoutDashboard, Shield } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import logoImage from "@assets/IMG_0046_1771206816410.jpg";
@@ -11,7 +11,7 @@ export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const navItems = [
-    { href: "/", label: "LP" },
+    { href: "/", label: "TOP" },
     ...(isAuthenticated ? [{ href: "/home", label: "ホーム" }] : []),
     { href: "/cargo", label: "荷物を探す" },
     { href: "/trucks", label: "車両を探す" },
@@ -23,15 +23,15 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
           <Link href="/" className="flex items-center shrink-0" data-testid="text-logo">
-            <img src={logoImage} alt="TRA MATCH" className="h-8 w-auto" />
+            <img src={logoImage} alt="TRA MATCH" className="h-7 sm:h-8 w-auto" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1" data-testid="nav-desktop">
+          <nav className="hidden md:flex items-center gap-0.5" data-testid="nav-desktop">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <Button
-                  variant={location === item.href ? "secondary" : "ghost"}
-                  className="text-sm font-medium"
+                  variant="ghost"
+                  className={`text-sm font-medium px-3 ${location === item.href ? "text-[#40E0D0] dark:text-[#5EEADB]" : ""}`}
                   data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
                 >
                   {item.label}
@@ -67,7 +67,7 @@ export default function Header() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="outline" data-testid="button-header-login">
+                  <Button variant="ghost" className="text-sm" data-testid="button-header-login">
                     <LogIn className="w-4 h-4 mr-1.5" />
                     ログイン
                   </Button>
@@ -75,7 +75,7 @@ export default function Header() {
                 <Link href="/register">
                   <Button data-testid="button-header-register">
                     <UserPlus className="w-4 h-4 mr-1.5" />
-                    新規登録
+                    無料会員登録
                   </Button>
                 </Link>
               </>
@@ -99,8 +99,8 @@ export default function Header() {
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
               <Button
-                variant={location === item.href ? "secondary" : "ghost"}
-                className="w-full justify-start text-sm font-medium"
+                variant="ghost"
+                className={`w-full justify-start text-sm font-medium ${location === item.href ? "text-[#40E0D0] dark:text-[#5EEADB]" : ""}`}
               >
                 {item.label}
               </Button>
@@ -133,7 +133,7 @@ export default function Header() {
             ) : (
               <>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start">
                     <LogIn className="w-4 h-4 mr-1.5" />
                     ログイン
                   </Button>
@@ -141,7 +141,7 @@ export default function Header() {
                 <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
                   <Button className="w-full">
                     <UserPlus className="w-4 h-4 mr-1.5" />
-                    新規登録
+                    無料会員登録
                   </Button>
                 </Link>
               </>
