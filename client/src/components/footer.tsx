@@ -1,42 +1,33 @@
-import { Link } from "wouter";
 import logoImage from "@assets/tra_match_logo_white.jpg";
+import { Mail, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
     <footer className="bg-primary mt-auto text-shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-12">
+          <div className="flex-1">
             <div className="flex items-center mb-4">
               <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
             </div>
             <p className="text-base text-primary-foreground leading-relaxed">
-              荷主と運送会社をつなぐ、求荷求車マッチングプラットフォーム
+              運送会社をつなぐ、AI求荷求車サービス
             </p>
           </div>
-          <div>
-            <h3 className="text-base font-semibold text-primary-foreground mb-3">サービス</h3>
+          <div className="flex-1">
+            <h3 className="text-base font-bold text-primary-foreground mb-4">合同会社SIN JAPAN</h3>
             <ul className="space-y-2 text-base text-primary-foreground">
-              <li><Link href="/cargo" className="hover:text-primary-foreground transition-colors">荷物情報の検索</Link></li>
-              <li><Link href="/trucks" className="hover:text-primary-foreground transition-colors">車両情報の検索</Link></li>
-              <li><Link href="/cargo/new" className="hover:text-primary-foreground transition-colors">荷物情報の掲載</Link></li>
-              <li><Link href="/trucks/new" className="hover:text-primary-foreground transition-colors">車両情報の掲載</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-primary-foreground mb-3">サポート</h3>
-            <ul className="space-y-2 text-base text-primary-foreground">
-              <li>ご利用ガイド</li>
-              <li>よくある質問</li>
-              <li>お問い合わせ</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-primary-foreground mb-3">会社情報</h3>
-            <ul className="space-y-2 text-base text-primary-foreground">
-              <li>運営会社について</li>
-              <li>利用規約</li>
-              <li>プライバシーポリシー</li>
+              <li>〒243-0303</li>
+              <li>神奈川県愛甲郡愛川町中津7287</li>
+              <li className="flex items-center gap-2">
+                <Phone className="w-4 h-4 shrink-0" />
+                TEL 046-212-2325
+              </li>
+              <li>FAX 046-212-2326</li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 shrink-0" />
+                info@sinjapan.jp
+              </li>
             </ul>
           </div>
         </div>
