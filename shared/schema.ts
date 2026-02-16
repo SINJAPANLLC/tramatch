@@ -22,6 +22,7 @@ export const cargoListings = pgTable("cargo_listings", {
   cargoType: text("cargo_type").notNull(),
   weight: text("weight").notNull(),
   desiredDate: text("desired_date").notNull(),
+  arrivalDate: text("arrival_date"),
   vehicleType: text("vehicle_type").notNull(),
   price: text("price"),
   description: text("description"),

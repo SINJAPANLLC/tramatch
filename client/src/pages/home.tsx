@@ -66,6 +66,12 @@ function CargoCard({ listing }: { listing: CargoListing }) {
           <div className="flex items-center gap-2 text-sm mb-2">
             <Clock className="w-4 h-4 shrink-0 text-primary" />
             <span className="text-foreground">積込日 {listing.desiredDate}</span>
+            {listing.arrivalDate && (
+              <>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-foreground">着荷日 {listing.arrivalDate}</span>
+              </>
+            )}
           </div>
           <div className="text-sm mb-2">
             <span className="text-muted-foreground">荷物種類：</span>
