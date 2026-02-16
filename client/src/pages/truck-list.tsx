@@ -40,19 +40,21 @@ export default function TruckList() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground" data-testid="text-truck-title">車両情報一覧</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filtered.length}件の車両情報が見つかりました
-          </p>
+      <div className="bg-primary rounded-md p-6 mb-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-primary-foreground" data-testid="text-truck-title">車両情報一覧</h1>
+            <p className="text-sm text-primary-foreground/80 mt-1">
+              {filtered.length}件の車両情報が見つかりました
+            </p>
+          </div>
+          <Link href="/trucks/new">
+            <Button variant="outline" className="bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30 backdrop-blur-sm" data-testid="button-new-truck">
+              <Plus className="w-4 h-4 mr-1.5" />
+              車両を掲載
+            </Button>
+          </Link>
         </div>
-        <Link href="/trucks/new">
-          <Button data-testid="button-new-truck">
-            <Plus className="w-4 h-4 mr-1.5" />
-            車両を掲載
-          </Button>
-        </Link>
       </div>
 
       <Card className="mb-6">
