@@ -348,9 +348,9 @@ export default function Home() {
                 <Package className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-primary-foreground mb-1">荷物情報の掲載・検索</h3>
+                <h3 className="text-lg font-bold text-primary-foreground mb-1">荷物情報のAI掲載・AI検索</h3>
                 <p className="text-base text-primary-foreground leading-relaxed">
-                  運びたい荷物の情報を掲載し、空きトラックを持つ運送会社とマッチング。エリア・日付・車種で簡単検索。
+                  運びたい荷物の情報を掲載し、空きトラックを持つ運送会社とマッチング。AIに投げるだけで簡単登録　簡単検索
                 </p>
                 <Link href="/cargo" className="inline-flex items-center gap-1 mt-3 text-sm text-primary-foreground font-medium">
                   荷物一覧を見る <ChevronRight className="w-3.5 h-3.5" />
@@ -362,9 +362,9 @@ export default function Home() {
                 <Truck className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-primary-foreground mb-1">空車情報の掲載・検索</h3>
+                <h3 className="text-lg font-bold text-primary-foreground mb-1">空車情報のAI掲載・AI検索</h3>
                 <p className="text-base text-primary-foreground leading-relaxed">
-                  空きトラックの情報を掲載し、荷物を探している荷主とマッチング。効率的に帰り荷を見つけられます。
+                  空きトラックの情報をAIで簡単掲載し、トラックを探している荷主とマッチング。効率的に荷物を見つけられます。
                 </p>
                 <Link href="/trucks" className="inline-flex items-center gap-1 mt-3 text-sm text-primary-foreground font-medium">
                   車両一覧を見る <ChevronRight className="w-3.5 h-3.5" />
