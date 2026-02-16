@@ -69,7 +69,8 @@ export default function Register() {
     }
     try {
       await register.mutateAsync({ ...form, permitFile: permitFile?.filePath || "" });
-      toast({ title: "登録完了", description: "アカウントが作成されました" });
+      toast({ title: "登録完了", description: "管理者の承認後にログインできます。しばらくお待ちください。" });
+      setLocation("/login");
     } catch (error: any) {
       toast({
         variant: "destructive",

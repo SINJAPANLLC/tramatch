@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   permitFile: text("permit_file"),
   userType: text("user_type").notNull(),
   role: text("role").notNull().default("user"),
+  approved: boolean("approved").notNull().default(false),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
@@ -57,7 +58,7 @@ export const truckListings = pgTable("truck_listings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
 export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true, userId: true });
 export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
 

@@ -15,6 +15,7 @@ export async function seedDatabase() {
       email: "admin@tramatch.jp",
       userType: "admin",
       role: "admin",
+      approved: true,
     });
     console.log("Admin user created (username: admin, password: admin123)");
   }
