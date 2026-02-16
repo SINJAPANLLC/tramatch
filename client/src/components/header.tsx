@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Mail, User } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -49,13 +49,13 @@ export default function Header() {
                   空車数 {truckListings?.length ?? 0}
                 </Badge>
               </div>
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex text-xs" data-testid="button-contact">
-                <Mail className="w-3 h-3 mr-1" />
-                お問い合わせ
-              </Button>
             </div>
 
             <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              </Button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="w-3.5 h-3.5 text-primary" />
