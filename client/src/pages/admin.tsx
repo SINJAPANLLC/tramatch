@@ -74,8 +74,8 @@ export default function Admin() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="bg-primary rounded-md p-6 mb-8">
-        <h1 className="text-2xl font-bold text-primary-foreground" data-testid="text-admin-title">管理画面</h1>
-        <p className="text-sm text-primary-foreground/80 mt-1">荷物・車両・ユーザーの管理</p>
+        <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-admin-title">管理画面</h1>
+        <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">荷物・車両・ユーザーの管理</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">

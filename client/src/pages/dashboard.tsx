@@ -34,10 +34,10 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="bg-primary rounded-md p-6 mb-8">
-        <h1 className="text-2xl font-bold text-primary-foreground" data-testid="text-dashboard-title">
+        <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
           {user?.companyName}さん、こんにちは
         </h1>
-        <p className="text-sm text-primary-foreground/80 mt-1">マッチング情報の概要をご確認ください</p>
+        <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">マッチング情報の概要をご確認ください</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
