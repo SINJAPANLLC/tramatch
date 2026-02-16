@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
 import { Package, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import DashboardLayout from "@/components/dashboard-layout";
 
 const VEHICLE_TYPES = ["4t車", "10t車", "大型車", "トレーラー", "軽車両", "2t車", "その他"];
 const AREAS = [
@@ -64,6 +65,7 @@ export default function CargoForm() {
   });
 
   return (
+    <DashboardLayout>
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/cargo">
         <Button variant="ghost" className="mb-4" data-testid="button-back-cargo-form">
@@ -303,5 +305,6 @@ export default function CargoForm() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 }

@@ -13,16 +13,23 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
-  const isOnDashboard = location === "/home";
+  const dashboardPaths = [
+    "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
+    "/my-cargo", "/completed-cargo", "/companies", "/partners",
+    "/transport-ledger", "/payment", "/services", "/settings",
+    "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
+    "/admin/notifications", "/admin/seo", "/admin/settings",
+  ];
+  const isOnDashboard = isAuthenticated && dashboardPaths.some((p) => location === p || location.startsWith(p + "/"));
 
   const { data: cargoListings } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
-    enabled: isOnDashboard,
+    enabled: !!isOnDashboard,
   });
 
   const { data: truckListings } = useQuery<TruckListing[]>({
     queryKey: ["/api/trucks"],
-    enabled: isOnDashboard,
+    enabled: !!isOnDashboard,
   });
 
   const navItems = [
@@ -30,7 +37,7 @@ export default function Header() {
     ...(isAdmin && !isOnDashboard ? [{ href: "/admin", label: "管理画面" }] : []),
   ];
 
-  if (isOnDashboard && isAuthenticated) {
+  if (isOnDashboard) {
     return (
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="px-4 sm:px-6">
