@@ -9,13 +9,27 @@ import LandingPage from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
-import Admin from "@/pages/admin";
 import CargoList from "@/pages/cargo-list";
 import TruckList from "@/pages/truck-list";
 import CargoDetail from "@/pages/cargo-detail";
 import TruckDetail from "@/pages/truck-detail";
 import CargoForm from "@/pages/cargo-form";
 import TruckForm from "@/pages/truck-form";
+import MyCargo from "@/pages/my-cargo";
+import CompletedCargo from "@/pages/completed-cargo";
+import Companies from "@/pages/companies";
+import Partners from "@/pages/partners";
+import TransportLedger from "@/pages/transport-ledger";
+import Payment from "@/pages/payment";
+import Services from "@/pages/services";
+import UserSettings from "@/pages/user-settings";
+import AdminDashboard from "@/pages/admin-dashboard";
+import AdminApplications from "@/pages/admin-applications";
+import AdminUsers from "@/pages/admin-users";
+import AdminRevenue from "@/pages/admin-revenue";
+import AdminNotifications from "@/pages/admin-notifications";
+import AdminSeo from "@/pages/admin-seo";
+import AdminSettings from "@/pages/admin-settings";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -35,6 +49,14 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
   return <Component />;
 }
 
+const DASHBOARD_PATHS = [
+  "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
+  "/my-cargo", "/completed-cargo", "/companies", "/partners",
+  "/transport-ledger", "/payment", "/services", "/settings",
+  "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
+  "/admin/notifications", "/admin/seo", "/admin/settings",
+];
+
 function Router() {
   return (
     <Switch>
@@ -42,13 +64,27 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
-      <Route path="/admin">{() => <AdminRoute component={Admin} />}</Route>
-      <Route path="/cargo" component={CargoList} />
+      <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
+      <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
+      <Route path="/companies">{() => <ProtectedRoute component={Companies} />}</Route>
+      <Route path="/partners">{() => <ProtectedRoute component={Partners} />}</Route>
+      <Route path="/transport-ledger">{() => <ProtectedRoute component={TransportLedger} />}</Route>
+      <Route path="/payment">{() => <ProtectedRoute component={Payment} />}</Route>
+      <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
+      <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
       <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id" component={CargoDetail} />
-      <Route path="/trucks" component={TruckList} />
+      <Route path="/cargo" component={CargoList} />
       <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/:id" component={TruckDetail} />
+      <Route path="/trucks" component={TruckList} />
+      <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
+      <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
+      <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
+      <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
+      <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
+      <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
+      <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -56,9 +92,10 @@ function Router() {
 
 function AppLayout() {
   const [loc] = useLocation();
-  const isDashboard = loc === "/home";
+  const { isAuthenticated } = useAuth();
+  const isDashboardPage = isAuthenticated && DASHBOARD_PATHS.some((p) => loc === p || loc.startsWith(p + "/"));
 
-  if (isDashboard) {
+  if (isDashboardPage) {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <Header />

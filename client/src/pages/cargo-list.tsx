@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Package, MapPin, Clock, ArrowRight, Search } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import DashboardLayout from "@/components/dashboard-layout";
 
 const AREAS = [
   "全て", "北海道", "東北", "関東", "中部", "近畿", "中国", "四国", "九州", "沖縄",
@@ -14,6 +16,7 @@ const AREAS = [
 ];
 
 export default function CargoList() {
+  const { isAuthenticated } = useAuth();
   const [searchText, setSearchText] = useState("");
   const [areaFilter, setAreaFilter] = useState("全て");
 
@@ -36,8 +39,8 @@ export default function CargoList() {
     });
   }, [listings, searchText, areaFilter]);
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  const content = (
+    <div className={isAuthenticated ? "px-4 sm:px-6 py-6" : "max-w-7xl mx-auto px-4 sm:px-6 py-8"}>
       <div className="bg-primary rounded-md p-6 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-title">荷物情報一覧</h1>
@@ -135,4 +138,10 @@ export default function CargoList() {
       </div>
     </div>
   );
+
+  if (isAuthenticated) {
+    return <DashboardLayout>{content}</DashboardLayout>;
+  }
+
+  return content;
 }
