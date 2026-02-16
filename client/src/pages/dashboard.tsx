@@ -145,7 +145,7 @@ export default function Dashboard() {
           <SidebarMenu items={userMenuItems} location={location} />
           {isAdmin && (
             <>
-              <div className="my-2 mx-2 border-t" />
+              <div className="my-3 mx-2 border-t border-border" />
               <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">管理者メニュー</p>
               <SidebarMenu items={adminMenuItems} location={location} />
             </>
