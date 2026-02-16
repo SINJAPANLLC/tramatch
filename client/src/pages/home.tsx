@@ -109,30 +109,30 @@ export default function Home() {
         </div>
       </div>
 
-      <section className="bg-background">
+      <section className="bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground leading-tight" data-testid="text-hero-title">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground leading-tight" data-testid="text-hero-title">
               求荷求車マッチングサービス
             </h1>
             <div className="mt-6 flex justify-center">
               <img src={logoImage} alt="TRA MATCH" className="h-12 sm:h-16 w-auto" />
             </div>
-            <p className="mt-6 text-lg sm:text-xl text-primary font-bold leading-relaxed" data-testid="text-hero-subtitle">
+            <p className="mt-6 text-lg sm:text-xl text-primary-foreground font-bold leading-relaxed" data-testid="text-hero-subtitle">
               荷物や空きトラックが見つかる。決まる。
             </p>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto">
+            <p className="mt-3 text-sm sm:text-base text-primary-foreground/80 leading-relaxed max-w-xl mx-auto">
               運送会社同士をつなぐマッチングプラットフォーム。
               空車情報・荷物情報をリアルタイムで検索・掲載できます。
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
-                <Button size="lg" className="min-w-[220px] text-base" data-testid="button-hero-register">
+                <Button size="lg" variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground min-w-[220px] text-base" data-testid="button-hero-register">
                   無料会員登録
                 </Button>
               </Link>
               <Link href="/cargo">
-                <Button size="lg" variant="outline" className="min-w-[220px] text-base" data-testid="button-hero-cargo">
+                <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-cargo">
                   <Search className="w-4 h-4 mr-2" />
                   無料荷物検索を試してみる
                 </Button>
