@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   userType: text("user_type").notNull(),
+  role: text("role").notNull().default("user"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
@@ -28,6 +29,7 @@ export const cargoListings = pgTable("cargo_listings", {
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email"),
   status: text("status").notNull().default("active"),
+  userId: varchar("user_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -45,12 +47,13 @@ export const truckListings = pgTable("truck_listings", {
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email"),
   status: text("status").notNull().default("active"),
+  userId: varchar("user_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true });
-export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true });
-export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true });
+export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true, userId: true });
+export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

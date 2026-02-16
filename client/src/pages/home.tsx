@@ -239,19 +239,17 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold">今すぐ荷物・車両情報を掲載しませんか？</h2>
           <p className="mt-4 text-white/80 text-base">
-            無料で荷物や空車の情報を掲載して、最適なパートナーを見つけましょう。
+            無料で会員登録して、荷物や空車の情報を掲載・検索できます。
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/cargo/new">
-              <Button size="lg" className="bg-white text-primary font-semibold border-white/20 min-w-[200px]" data-testid="button-cta-cargo">
-                <Package className="w-4 h-4 mr-2" />
-                荷物を掲載する
+            <Link href="/register">
+              <Button size="lg" className="bg-white text-primary font-semibold border-white/20 min-w-[200px]" data-testid="button-cta-register">
+                新規登録（無料）
               </Button>
             </Link>
-            <Link href="/trucks/new">
-              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm min-w-[200px]" data-testid="button-cta-truck">
-                <Truck className="w-4 h-4 mr-2" />
-                車両を掲載する
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm min-w-[200px]" data-testid="button-cta-login">
+                ログイン
               </Button>
             </Link>
           </div>
