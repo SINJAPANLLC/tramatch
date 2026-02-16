@@ -1,4 +1,5 @@
 import logoImage from "@assets/tra_match_logo_white.jpg";
+import { Link } from "wouter";
 
 export default function Footer() {
   return (
@@ -25,16 +26,17 @@ export default function Footer() {
             <div>
               <h3 className="text-base font-semibold text-primary-foreground mb-3">サポート</h3>
               <ul className="space-y-2 text-base text-primary-foreground">
-                <li>ご利用ガイド</li>
-                <li>よくある質問</li>
-                <li>お問い合わせ</li>
+                <li><Link href="/guide" className="hover:underline" data-testid="link-guide">ご利用ガイド</Link></li>
+                <li><Link href="/faq" className="hover:underline" data-testid="link-faq">よくある質問</Link></li>
+                <li><Link href="/contact" className="hover:underline" data-testid="link-contact">お問い合わせ</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="text-base font-semibold text-primary-foreground mb-3">会社情報</h3>
               <ul className="space-y-2 text-base text-primary-foreground">
-                <li>利用規約</li>
-                <li>プライバシーポリシー</li>
+                <li><Link href="/company-info" className="hover:underline" data-testid="link-company-info">会社情報</Link></li>
+                <li><Link href="/terms" className="hover:underline" data-testid="link-terms">利用規約</Link></li>
+                <li><Link href="/privacy" className="hover:underline" data-testid="link-privacy">プライバシーポリシー</Link></li>
               </ul>
             </div>
           </div>

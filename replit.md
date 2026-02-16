@@ -68,6 +68,12 @@
 - `/admin/notifications` - 通知管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
 - `/admin/settings` - 管理設定 (requires admin role)
+- `/guide` - ご利用ガイド (public)
+- `/faq` - よくある質問 (public)
+- `/contact` - お問い合わせ (public)
+- `/company-info` - 会社情報 (public)
+- `/terms` - 利用規約 (public)
+- `/privacy` - プライバシーポリシー (public)
 
 ## Auth
 - Session-based authentication with PostgreSQL session store
