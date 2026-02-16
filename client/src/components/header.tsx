@@ -11,10 +11,7 @@ export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const navItems = [
-    { href: "/", label: "TOP" },
     ...(isAuthenticated ? [{ href: "/home", label: "ホーム" }] : []),
-    { href: "/cargo", label: "荷物を探す" },
-    { href: "/trucks", label: "車両を探す" },
     ...(isAdmin ? [{ href: "/admin", label: "管理画面" }] : []),
   ];
 
