@@ -30,6 +30,12 @@ import AdminRevenue from "@/pages/admin-revenue";
 import AdminNotifications from "@/pages/admin-notifications";
 import AdminSeo from "@/pages/admin-seo";
 import AdminSettings from "@/pages/admin-settings";
+import Guide from "@/pages/guide";
+import Faq from "@/pages/faq";
+import Contact from "@/pages/contact";
+import CompanyInfoPage from "@/pages/company-info";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -85,6 +91,12 @@ function Router() {
       <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
       <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
       <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
+      <Route path="/guide" component={Guide} />
+      <Route path="/faq" component={Faq} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/company-info" component={CompanyInfoPage} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );
