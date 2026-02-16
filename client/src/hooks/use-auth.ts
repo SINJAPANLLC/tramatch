@@ -31,6 +31,7 @@ export function useAuth() {
       phone: string;
       fax?: string;
       truckCount?: string;
+      permitFile?: string;
     }) => {
       const res = await apiRequest("POST", "/api/register", data);
       return res.json();
