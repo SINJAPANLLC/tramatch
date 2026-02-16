@@ -138,8 +138,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
+    <div className="flex h-full">
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30 overflow-y-auto" data-testid="panel-sidebar">
         <div className="p-3 border-b bg-primary">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -173,7 +173,7 @@ export default function Dashboard() {
         )}
       </aside>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-y-auto">
         <div className="bg-muted/50 border-b px-4 sm:px-6 py-2 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">荷物数</span>

@@ -56,7 +56,18 @@ function Router() {
 
 function AppLayout() {
   const [loc] = useLocation();
-  const hideFooter = loc === "/home";
+  const isDashboard = loc === "/home";
+
+  if (isDashboard) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-hidden">
+          <Router />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -64,7 +75,7 @@ function AppLayout() {
       <main className="flex-1">
         <Router />
       </main>
-      {!hideFooter && <Footer />}
+      <Footer />
     </div>
   );
 }
