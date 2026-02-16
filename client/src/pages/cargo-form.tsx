@@ -77,7 +77,7 @@ export default function CargoForm() {
           <Package className="w-6 h-6 text-primary-foreground" />
           <div>
             <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">荷物情報の掲載</h1>
-            <p className="text-sm text-primary-foreground/80 text-shadow">運びたい荷物の情報を入力してください</p>
+            <p className="text-sm text-primary-foreground text-shadow">運びたい荷物の情報を入力してください</p>
           </div>
         </div>
       </div>
