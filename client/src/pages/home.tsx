@@ -113,17 +113,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground leading-tight text-shadow-lg" data-testid="text-hero-title">
-              求荷求車マッチングサービス
+              AI求荷求車サービス
             </h1>
             <div className="mt-6 flex justify-center">
               <img src={logoImage} alt="TRA MATCH" className="h-12 sm:h-16 w-auto" />
             </div>
             <p className="mt-6 text-xl sm:text-2xl text-primary-foreground font-bold leading-relaxed text-shadow" data-testid="text-hero-subtitle">
-              荷物や空きトラックが見つかる。決まる。
+              AIで荷物や空きトラックを簡単登録　簡単検索
             </p>
             <p className="mt-3 text-base sm:text-lg text-primary-foreground leading-relaxed max-w-xl mx-auto text-shadow">
-              運送会社同士をつなぐマッチングプラットフォーム。
-              空車情報・荷物情報をリアルタイムで検索・掲載できます。
+              空車情報・荷物情報をリアルタイムでAI登録・AI検索できます。
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
