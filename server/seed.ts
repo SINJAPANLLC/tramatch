@@ -1,8 +1,24 @@
 import { db } from "./db";
-import { cargoListings, truckListings } from "@shared/schema";
+import { cargoListings, truckListings, users } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export async function seedDatabase() {
+  const existingUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
+  if (Number(existingUsers[0].count) === 0) {
+    const adminPassword = await bcrypt.hash("admin123", 10);
+    await db.insert(users).values({
+      username: "admin",
+      password: adminPassword,
+      companyName: "トラマッチ運営",
+      phone: "03-0000-0000",
+      email: "admin@tramatch.jp",
+      userType: "admin",
+      role: "admin",
+    });
+    console.log("Admin user created (username: admin, password: admin123)");
+  }
+
   const existingCargo = await db.select({ count: sql<number>`count(*)` }).from(cargoListings);
   const existingTrucks = await db.select({ count: sql<number>`count(*)` }).from(truckListings);
 

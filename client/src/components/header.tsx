@@ -1,16 +1,20 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, LayoutDashboard, Shield } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const navItems = [
-    { href: "/", label: "ホーム" },
+    { href: "/", label: "LP" },
+    ...(isAuthenticated ? [{ href: "/home", label: "ホーム" }] : []),
     { href: "/cargo", label: "荷物を探す" },
     { href: "/trucks", label: "車両を探す" },
+    ...(isAdmin ? [{ href: "/admin", label: "管理画面" }] : []),
   ];
 
   return (
@@ -32,7 +36,7 @@ export default function Header() {
                 <Button
                   variant={location === item.href ? "secondary" : "ghost"}
                   className="text-sm font-medium"
-                  data-testid={`link-nav-${item.href.replace("/", "") || "home"}`}
+                  data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
                 >
                   {item.label}
                 </Button>
@@ -41,18 +45,45 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/cargo/new">
-              <Button variant="outline" data-testid="button-post-cargo">
-                <Package className="w-4 h-4 mr-1.5" />
-                荷物を掲載
-              </Button>
-            </Link>
-            <Link href="/trucks/new">
-              <Button data-testid="button-post-truck">
-                <Truck className="w-4 h-4 mr-1.5" />
-                車両を掲載
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link href="/cargo/new">
+                  <Button variant="outline" data-testid="button-post-cargo">
+                    <Package className="w-4 h-4 mr-1.5" />
+                    荷物を掲載
+                  </Button>
+                </Link>
+                <Link href="/trucks/new">
+                  <Button data-testid="button-post-truck">
+                    <Truck className="w-4 h-4 mr-1.5" />
+                    車両を掲載
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={() => logout.mutate()}
+                  data-testid="button-logout"
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  ログアウト
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline" data-testid="button-header-login">
+                    <LogIn className="w-4 h-4 mr-1.5" />
+                    ログイン
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button data-testid="button-header-register">
+                    <UserPlus className="w-4 h-4 mr-1.5" />
+                    新規登録
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <Button
@@ -80,18 +111,45 @@ export default function Header() {
             </Link>
           ))}
           <div className="pt-2 border-t border-border space-y-2">
-            <Link href="/cargo/new" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full">
-                <Package className="w-4 h-4 mr-1.5" />
-                荷物を掲載
-              </Button>
-            </Link>
-            <Link href="/trucks/new" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full">
-                <Truck className="w-4 h-4 mr-1.5" />
-                車両を掲載
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link href="/cargo/new" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    <Package className="w-4 h-4 mr-1.5" />
+                    荷物を掲載
+                  </Button>
+                </Link>
+                <Link href="/trucks/new" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full">
+                    <Truck className="w-4 h-4 mr-1.5" />
+                    車両を掲載
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { logout.mutate(); setMobileMenuOpen(false); }}
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  ログアウト
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    <LogIn className="w-4 h-4 mr-1.5" />
+                    ログイン
+                  </Button>
+                </Link>
+                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full">
+                    <UserPlus className="w-4 h-4 mr-1.5" />
+                    新規登録
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

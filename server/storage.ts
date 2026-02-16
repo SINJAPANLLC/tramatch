@@ -11,14 +11,16 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  deleteUser(id: string): Promise<boolean>;
 
   getCargoListings(): Promise<CargoListing[]>;
   getCargoListing(id: string): Promise<CargoListing | undefined>;
-  createCargoListing(listing: InsertCargoListing): Promise<CargoListing>;
+  createCargoListing(listing: InsertCargoListing, userId?: string): Promise<CargoListing>;
 
   getTruckListings(): Promise<TruckListing[]>;
   getTruckListing(id: string): Promise<TruckListing | undefined>;
-  createTruckListing(listing: InsertTruckListing): Promise<TruckListing>;
+  createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing>;
 
   deleteCargoListing(id: string): Promise<boolean>;
   deleteTruckListing(id: string): Promise<boolean>;
@@ -40,6 +42,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+
   async getCargoListings(): Promise<CargoListing[]> {
     return db.select().from(cargoListings).orderBy(desc(cargoListings.createdAt));
   }
@@ -49,8 +60,8 @@ export class DatabaseStorage implements IStorage {
     return listing;
   }
 
-  async createCargoListing(listing: InsertCargoListing): Promise<CargoListing> {
-    const [created] = await db.insert(cargoListings).values(listing).returning();
+  async createCargoListing(listing: InsertCargoListing, userId?: string): Promise<CargoListing> {
+    const [created] = await db.insert(cargoListings).values({ ...listing, userId: userId || null }).returning();
     return created;
   }
 
@@ -63,8 +74,8 @@ export class DatabaseStorage implements IStorage {
     return listing;
   }
 
-  async createTruckListing(listing: InsertTruckListing): Promise<TruckListing> {
-    const [created] = await db.insert(truckListings).values(listing).returning();
+  async createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing> {
+    const [created] = await db.insert(truckListings).values({ ...listing, userId: userId || null }).returning();
     return created;
   }
 
