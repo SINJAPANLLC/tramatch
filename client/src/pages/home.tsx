@@ -52,20 +52,46 @@ function CargoCard({ listing }: { listing: CargoListing }) {
   return (
     <Link href={`/cargo/${listing.id}`}>
       <Card className="hover-elevate cursor-pointer" data-testid={`card-cargo-${listing.id}`}>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2 flex-wrap">
-            <h3 className="font-semibold text-foreground text-sm line-clamp-1">{listing.title}</h3>
+        <CardContent className="p-4 space-y-0">
+          <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
+            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
             <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-            <span className="truncate">{listing.departureArea} → {listing.arrivalArea}</span>
+          <div className="bg-muted/50 rounded-md p-3 space-y-2 mb-3">
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="w-4 h-4 shrink-0 text-primary" />
+              <span className="font-semibold text-foreground">{listing.departureArea}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-semibold text-foreground">{listing.arrivalArea}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 shrink-0 text-primary" />
+              <span className="text-foreground">{listing.desiredDate}</span>
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-2 flex-wrap text-sm">
-            <span className="text-muted-foreground">{listing.weight}</span>
-            <span className="font-medium text-foreground">{listing.desiredDate}</span>
+          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground">荷物種類</p>
+              <p className="font-semibold text-foreground">{listing.cargoType}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">重量</p>
+              <p className="font-semibold text-foreground">{listing.weight}</p>
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground">{listing.companyName}</div>
+          {listing.price && (
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground">希望金額</p>
+              <p className="font-bold text-primary text-base">{listing.price}</p>
+            </div>
+          )}
+          {listing.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{listing.description}</p>
+          )}
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border">
+            <span className="text-sm font-semibold text-foreground">{listing.companyName}</span>
+            <span className="text-xs text-muted-foreground">{listing.contactPhone}</span>
+          </div>
         </CardContent>
       </Card>
     </Link>
@@ -76,20 +102,46 @@ function TruckCard({ listing }: { listing: TruckListing }) {
   return (
     <Link href={`/trucks/${listing.id}`}>
       <Card className="hover-elevate cursor-pointer" data-testid={`card-truck-${listing.id}`}>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2 flex-wrap">
-            <h3 className="font-semibold text-foreground text-sm line-clamp-1">{listing.title}</h3>
+        <CardContent className="p-4 space-y-0">
+          <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
+            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
             <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-            <span className="truncate">{listing.currentArea} → {listing.destinationArea}</span>
+          <div className="bg-muted/50 rounded-md p-3 space-y-2 mb-3">
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="w-4 h-4 shrink-0 text-primary" />
+              <span className="font-semibold text-foreground">{listing.currentArea}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-semibold text-foreground">{listing.destinationArea}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 shrink-0 text-primary" />
+              <span className="text-foreground">{listing.availableDate}</span>
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-2 flex-wrap text-sm">
-            <span className="text-muted-foreground">{listing.maxWeight}</span>
-            <span className="font-medium text-foreground">{listing.availableDate}</span>
+          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground">車種</p>
+              <p className="font-semibold text-foreground">{listing.vehicleType}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">最大積載量</p>
+              <p className="font-semibold text-foreground">{listing.maxWeight}</p>
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground">{listing.companyName}</div>
+          {listing.price && (
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground">希望金額</p>
+              <p className="font-bold text-primary text-base">{listing.price}</p>
+            </div>
+          )}
+          {listing.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{listing.description}</p>
+          )}
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border">
+            <span className="text-sm font-semibold text-foreground">{listing.companyName}</span>
+            <span className="text-xs text-muted-foreground">{listing.contactPhone}</span>
+          </div>
         </CardContent>
       </Card>
     </Link>
