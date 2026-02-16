@@ -85,11 +85,18 @@ export default function Login() {
               )}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            アカウントをお持ちでない方は{" "}
-            <Link href="/register" className="text-primary font-medium" data-testid="link-to-register">
-              新規登録
-            </Link>
+          <div className="mt-6 text-center text-sm text-muted-foreground space-y-2">
+            <div>
+              アカウントをお持ちでない方は{" "}
+              <Link href="/register" className="text-primary font-medium" data-testid="link-to-register">
+                新規登録
+              </Link>
+            </div>
+            <div>
+              <span className="text-primary font-medium cursor-pointer" data-testid="link-forgot-password">
+                パスワードを忘れた場合
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
