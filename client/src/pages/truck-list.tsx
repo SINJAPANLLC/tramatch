@@ -1,12 +1,10 @@
-import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, MapPin, Calendar, Weight, Plus, Search } from "lucide-react";
+import { Truck, MapPin, Clock, ArrowRight, Search } from "lucide-react";
 import type { TruckListing } from "@shared/schema";
 import { useState, useMemo } from "react";
 
@@ -41,19 +39,11 @@ export default function TruckList() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="bg-primary rounded-md p-6 mb-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-title">車両情報一覧</h1>
-            <p className="text-base text-primary-foreground mt-1 text-shadow">
-              {filtered.length}件の車両情報が見つかりました
-            </p>
-          </div>
-          <Link href="/trucks/new">
-            <Button variant="outline" className="bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30 backdrop-blur-sm" data-testid="button-new-truck">
-              <Plus className="w-4 h-4 mr-1.5" />
-              車両を掲載
-            </Button>
-          </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-title">車両情報一覧</h1>
+          <p className="text-base text-primary-foreground mt-1 text-shadow">
+            {filtered.length}件の車両情報が見つかりました
+          </p>
         </div>
       </div>
 
@@ -96,40 +86,33 @@ export default function TruckList() {
                 <Skeleton className="h-4 w-52" />
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-28" />
               </CardContent>
             </Card>
           ))}
 
         {!isLoading && filtered.map((listing) => (
-          <Link key={listing.id} href={`/trucks/${listing.id}`}>
-            <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-truck-${listing.id}`}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2 flex-wrap">
-                  <h3 className="font-semibold text-foreground text-sm line-clamp-2">{listing.title}</h3>
-                  <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                  <span>{listing.currentArea} → {listing.destinationArea}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Weight className="w-3.5 h-3.5 shrink-0" />
-                  <span>最大 {listing.maxWeight}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  <span>{listing.availableDate}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-border">
-                  <span className="text-xs text-muted-foreground">{listing.companyName}</span>
-                  {listing.price && (
-                    <span className="text-sm font-semibold text-primary">{listing.price}</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+          <Card key={listing.id} className="h-full" data-testid={`card-truck-${listing.id}`}>
+            <CardContent className="p-4 flex flex-col h-full">
+              <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
+                <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
+                <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
+              </div>
+              <div className="flex items-center gap-2 text-sm mb-2">
+                <MapPin className="w-4 h-4 shrink-0 text-primary" />
+                <span className="font-semibold text-foreground">{listing.currentArea}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="font-semibold text-foreground">{listing.destinationArea}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm mb-2">
+                <Clock className="w-4 h-4 shrink-0 text-primary" />
+                <span className="text-foreground">空車日 {listing.availableDate}</span>
+              </div>
+              <div className="text-sm mb-2">
+                <span className="text-muted-foreground">車種：</span>
+                <span className="font-semibold text-foreground">{listing.vehicleType}</span>
+              </div>
+            </CardContent>
+          </Card>
         ))}
 
         {!isLoading && filtered.length === 0 && (
