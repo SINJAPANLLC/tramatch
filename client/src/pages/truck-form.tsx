@@ -75,8 +75,8 @@ export default function TruckForm() {
         <div className="flex items-center gap-3">
           <Truck className="w-6 h-6 text-primary-foreground" />
           <div>
-            <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-form-title">車両情報の掲載</h1>
-            <p className="text-sm text-primary-foreground text-shadow">空車の情報を入力してください</p>
+            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-form-title">車両情報の掲載</h1>
+            <p className="text-base text-primary-foreground text-shadow">空車の情報を入力してください</p>
           </div>
         </div>
       </div>
