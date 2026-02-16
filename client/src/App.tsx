@@ -18,6 +18,7 @@ import CargoForm from "@/pages/cargo-form";
 import TruckForm from "@/pages/truck-form";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -53,17 +54,26 @@ function Router() {
   );
 }
 
+function AppLayout() {
+  const [loc] = useLocation();
+  const hideFooter = loc === "/home";
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">
+        <Router />
+      </main>
+      {!hideFooter && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1">
-            <Router />
-          </main>
-          <Footer />
-        </div>
+        <AppLayout />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
