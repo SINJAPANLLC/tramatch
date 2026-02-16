@@ -21,7 +21,7 @@ export default function Footer() {
               <p>Mail info@sinjapan.jp</p>
             </div>
           </div>
-          <div className="flex gap-16 md:gap-20">
+          <div className="flex gap-16 md:gap-20 md:self-end md:pb-2">
             <div>
               <h3 className="text-base font-semibold text-primary-foreground mb-3">サポート</h3>
               <ul className="space-y-2 text-base text-primary-foreground">
