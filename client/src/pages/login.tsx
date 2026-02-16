@@ -7,7 +7,7 @@ import { LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import logoImage from "@assets/tra_match_logo_white.jpg";
+import logoImage from "@assets/IMG_0046_1771226022407.jpg";
 
 export default function Login() {
   const [, setLocation] = useLocation();
