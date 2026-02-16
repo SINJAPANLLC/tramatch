@@ -132,8 +132,12 @@ export default function Home() {
               </Link>
               <Link href="/cargo">
                 <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-cargo">
-                  <Search className="w-4 h-4 mr-2" />
-                  無料荷物検索を試してみる
+                  荷物を見てみる
+                </Button>
+              </Link>
+              <Link href="/trucks">
+                <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-trucks">
+                  空きトラックを見てみる
                 </Button>
               </Link>
             </div>
