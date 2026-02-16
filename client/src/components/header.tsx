@@ -10,48 +10,56 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
+  const isOnDashboard = location === "/home";
+
   const navItems = [
-    ...(isAuthenticated ? [{ href: "/home", label: "ホーム" }] : []),
-    ...(isAdmin ? [{ href: "/admin", label: "管理画面" }] : []),
+    ...(isAuthenticated && !isOnDashboard ? [{ href: "/home", label: "ホーム" }] : []),
+    ...(isAdmin && !isOnDashboard ? [{ href: "/admin", label: "管理画面" }] : []),
   ];
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b-2 border-primary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className={`${isOnDashboard ? "" : "max-w-7xl"} mx-auto px-4 sm:px-6`}>
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
-          <Link href="/" className="flex items-center shrink-0" data-testid="text-logo">
+          <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center shrink-0" data-testid="text-logo">
             <img src={logoImage} alt="TRA MATCH" className="h-7 sm:h-8 w-auto" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-0.5" data-testid="nav-desktop">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  className={`text-sm font-medium px-3 ${location === item.href ? "text-primary" : ""}`}
-                  data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
-                >
-                  {item.label}
-                </Button>
-              </Link>
-            ))}
-          </nav>
+          {navItems.length > 0 && (
+            <nav className="hidden md:flex items-center gap-0.5" data-testid="nav-desktop">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    className={`text-sm font-medium px-3 ${location === item.href ? "text-primary" : ""}`}
+                    data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
+                  >
+                    {item.label}
+                  </Button>
+                </Link>
+              ))}
+            </nav>
+          )}
 
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                <Link href="/cargo/new">
-                  <Button variant="outline" data-testid="button-post-cargo">
-                    <Package className="w-4 h-4 mr-1.5" />
-                    荷物を掲載
-                  </Button>
-                </Link>
-                <Link href="/trucks/new">
-                  <Button data-testid="button-post-truck">
-                    <Truck className="w-4 h-4 mr-1.5" />
-                    車両を掲載
-                  </Button>
-                </Link>
+                {!isOnDashboard && (
+                  <>
+                    <Link href="/cargo/new">
+                      <Button variant="outline" data-testid="button-post-cargo">
+                        <Package className="w-4 h-4 mr-1.5" />
+                        荷物を掲載
+                      </Button>
+                    </Link>
+                    <Link href="/trucks/new">
+                      <Button data-testid="button-post-truck">
+                        <Truck className="w-4 h-4 mr-1.5" />
+                        車両を掲載
+                      </Button>
+                    </Link>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => logout.mutate()}
