@@ -8,8 +8,12 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   companyName: text("company_name").notNull(),
+  address: text("address"),
+  contactName: text("contact_name"),
   phone: text("phone").notNull(),
-  email: text("email").notNull(),
+  fax: text("fax"),
+  email: text("email").notNull().unique(),
+  truckCount: text("truck_count"),
   userType: text("user_type").notNull(),
   role: text("role").notNull().default("user"),
 });

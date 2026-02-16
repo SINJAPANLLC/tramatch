@@ -26,14 +26,19 @@ export async function registerRoutes(
 
   app.post("/api/register", async (req, res) => {
     try {
-      const parsed = insertUserSchema.safeParse(req.body);
+      const body = {
+        ...req.body,
+        username: req.body.email,
+        userType: req.body.userType || "carrier",
+      };
+      const parsed = insertUserSchema.safeParse(body);
       if (!parsed.success) {
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
 
-      const existing = await storage.getUserByUsername(parsed.data.username);
-      if (existing) {
-        return res.status(400).json({ message: "このユーザー名は既に使われています" });
+      const existingEmail = await storage.getUserByEmail(parsed.data.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています" });
       }
 
       const hashedPassword = await bcrypt.hash(parsed.data.password, 10);

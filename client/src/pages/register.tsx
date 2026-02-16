@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
@@ -14,13 +14,16 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [agreed, setAgreed] = useState(false);
   const [form, setForm] = useState({
-    username: "",
+    email: "",
     password: "",
     companyName: "",
+    address: "",
+    contactName: "",
     phone: "",
-    email: "",
-    userType: "",
+    fax: "",
+    truckCount: "",
   });
 
   useEffect(() => {
@@ -31,6 +34,14 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreed) {
+      toast({
+        variant: "destructive",
+        title: "確認",
+        description: "利用規約・プライバシーポリシーに同意してください",
+      });
+      return;
+    }
     try {
       await register.mutateAsync(form);
       toast({ title: "登録完了", description: "アカウントが作成されました" });
@@ -60,15 +71,15 @@ export default function Register() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">ユーザー名</Label>
+              <Label htmlFor="email">メールアドレス</Label>
               <Input
-                id="username"
-                type="text"
-                value={form.username}
-                onChange={(e) => update("username", e.target.value)}
-                placeholder="ユーザー名"
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
+                placeholder="info@example.co.jp"
                 required
-                data-testid="input-register-username"
+                data-testid="input-register-email"
               />
             </div>
             <div className="space-y-2">
@@ -95,6 +106,28 @@ export default function Register() {
                 data-testid="input-register-company"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">所在地</Label>
+              <Input
+                id="address"
+                type="text"
+                value={form.address}
+                onChange={(e) => update("address", e.target.value)}
+                placeholder="例: 神奈川県横浜市中区1-2-3"
+                data-testid="input-register-address"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactName">担当者名</Label>
+              <Input
+                id="contactName"
+                type="text"
+                value={form.contactName}
+                onChange={(e) => update("contactName", e.target.value)}
+                placeholder="例: 山田 太郎"
+                data-testid="input-register-contact-name"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">電話番号</Label>
@@ -109,41 +142,49 @@ export default function Register() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">メールアドレス</Label>
+                <Label htmlFor="fax">FAX番号</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="info@example.co.jp"
-                  required
-                  data-testid="input-register-email"
+                  id="fax"
+                  type="tel"
+                  value={form.fax}
+                  onChange={(e) => update("fax", e.target.value)}
+                  placeholder="03-0000-0001"
+                  data-testid="input-register-fax"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>業種</Label>
-              <Select value={form.userType} onValueChange={(v) => update("userType", v)}>
-                <SelectTrigger data-testid="select-register-usertype">
-                  <SelectValue placeholder="選択してください" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="shipper">荷主</SelectItem>
-                  <SelectItem value="carrier">運送会社</SelectItem>
-                  <SelectItem value="both">荷主 / 運送会社 両方</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="truckCount">トラック保有台数</Label>
+              <Input
+                id="truckCount"
+                type="text"
+                value={form.truckCount}
+                onChange={(e) => update("truckCount", e.target.value)}
+                placeholder="例: 10台"
+                data-testid="input-register-truck-count"
+              />
+            </div>
+            <div className="flex items-start gap-2 pt-2">
+              <Checkbox
+                id="agree"
+                checked={agreed}
+                onCheckedChange={(v) => setAgreed(v === true)}
+                data-testid="checkbox-agree"
+              />
+              <Label htmlFor="agree" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                <span className="text-primary font-medium">利用規約</span>、<span className="text-primary font-medium">プライバシーポリシー</span>に同意する
+              </Label>
             </div>
             <Button
               type="submit"
               className="w-full"
-              disabled={register.isPending || !form.userType}
+              disabled={register.isPending || !agreed}
               data-testid="button-register-submit"
             >
               {register.isPending ? "登録中..." : (
                 <>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  アカウント作成
+                  同意して登録する
                 </>
               )}
             </Button>
