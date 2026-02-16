@@ -43,8 +43,8 @@ export default function TruckList() {
       <div className="bg-primary rounded-md p-6 mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-primary-foreground" data-testid="text-truck-title">車両情報一覧</h1>
-            <p className="text-sm text-primary-foreground/80 mt-1">
+            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-title">車両情報一覧</h1>
+            <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">
               {filtered.length}件の車両情報が見つかりました
             </p>
           </div>
