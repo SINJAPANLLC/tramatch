@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, Calendar } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, Calendar, X, Check } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,10 +72,13 @@ export default function CargoList() {
     if (activeSearch.length > 0) {
       result = result.filter((item) => {
         const searchable = [
-          item.title, item.departureArea, item.arrivalArea,
+          item.title, item.departureArea, item.departureAddress,
+          item.arrivalArea, item.arrivalAddress,
           item.cargoType, item.weight, item.vehicleType,
+          item.bodyType, item.temperatureControl,
           item.price, item.companyName, item.description,
           item.desiredDate, item.arrivalDate,
+          item.driverWork, item.loadingMethod,
         ].filter(Boolean).join(" ").toLowerCase();
         return activeSearch.some((keyword) => searchable.includes(keyword.toLowerCase()));
       });
@@ -225,9 +227,11 @@ export default function CargoList() {
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">企業名</th>
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">発日時・発地 / 着日時・着地</th>
                 <th className="text-right px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">運賃</th>
+                <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">積合</th>
                 <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">重量</th>
                 <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">車種</th>
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">荷種</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">ドライバー作業</th>
                 <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">備考</th>
               </tr>
             </thead>
@@ -235,10 +239,12 @@ export default function CargoList() {
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b">
                   <td className="px-3 py-3"><Skeleton className="h-4 w-28" /></td>
-                  <td className="px-3 py-3"><Skeleton className="h-4 w-44" /></td>
+                  <td className="px-3 py-3"><Skeleton className="h-8 w-52" /></td>
                   <td className="px-3 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-3 py-3"><Skeleton className="h-4 w-8" /></td>
                   <td className="px-3 py-3"><Skeleton className="h-4 w-12" /></td>
                   <td className="px-3 py-3"><Skeleton className="h-4 w-12" /></td>
+                  <td className="px-3 py-3"><Skeleton className="h-4 w-16" /></td>
                   <td className="px-3 py-3"><Skeleton className="h-4 w-16" /></td>
                   <td className="px-3 py-3"><Skeleton className="h-4 w-24" /></td>
                 </tr>
@@ -250,51 +256,89 @@ export default function CargoList() {
                   className="border-b hover-elevate cursor-pointer"
                   data-testid={`row-cargo-${listing.id}`}
                 >
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-2.5">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="font-medium text-foreground whitespace-nowrap">{listing.companyName}</div>
+                      <div className="font-medium text-foreground whitespace-nowrap text-xs">{listing.companyName}</div>
                     </Link>
                   </td>
-                  <td className="px-3 py-3">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
-                        <Calendar className="w-3 h-3" />
-                        {listing.desiredDate}
-                        {listing.arrivalDate && ` → ${listing.arrivalDate}`}
+                  <td className="px-3 py-2.5">
+                    <Link href={`/cargo/${listing.id}`} className="block space-y-0.5">
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-muted-foreground">{listing.desiredDate}</span>
+                        <span className="text-muted-foreground">{listing.departureTime || "指定なし"}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 text-xs">
                         <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
                         <span className="font-medium">{listing.departureArea}</span>
-                        <span className="text-muted-foreground mx-0.5">→</span>
-                        <span className="font-medium">{listing.arrivalArea}</span>
+                        {listing.departureAddress && <span className="text-muted-foreground">{listing.departureAddress}</span>}
                       </div>
+                      {(listing.arrivalDate || listing.arrivalArea) && (
+                        <>
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-muted-foreground">{listing.arrivalDate || "指定なし"}</span>
+                            <span className="text-muted-foreground">{listing.arrivalTime || "指定なし"}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs">
+                            <MapPin className="w-3 h-3 text-destructive flex-shrink-0" />
+                            <span className="font-medium">{listing.arrivalArea}</span>
+                            {listing.arrivalAddress && <span className="text-muted-foreground">{listing.arrivalAddress}</span>}
+                          </div>
+                        </>
+                      )}
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-right">
+                  <td className="px-3 py-2.5 text-right">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="font-semibold text-foreground whitespace-nowrap">
+                      <div className="font-semibold text-foreground whitespace-nowrap text-xs">
                         {listing.price ? `${listing.price}円` : "要相談"}
-                      </span>
+                      </div>
+                      {listing.highwayFee && (
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">
+                          高速代{listing.highwayFee}
+                        </div>
+                      )}
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="px-3 py-2.5 text-center">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap">{listing.weight}</span>
+                      {listing.consolidation === "可" ? (
+                        <Check className="w-3.5 h-3.5 text-primary mx-auto" />
+                      ) : listing.consolidation === "不可" ? (
+                        <X className="w-3.5 h-3.5 text-muted-foreground mx-auto" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="px-3 py-2.5 text-center">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <Badge variant="secondary" className="text-xs">{listing.vehicleType}</Badge>
+                      <span className="whitespace-nowrap text-xs">{listing.weight}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-2.5 text-center">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap">{listing.cargoType}</span>
+                      <div className="text-xs whitespace-nowrap">{listing.vehicleType}</div>
+                      {listing.bodyType && (
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">{listing.bodyType}</div>
+                      )}
                     </Link>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-2.5">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-muted-foreground text-xs line-clamp-2 max-w-[200px]">
+                      <span className="whitespace-nowrap text-xs">{listing.cargoType}</span>
+                      {listing.temperatureControl && listing.temperatureControl !== "指定なし" && (
+                        <div className="text-xs text-muted-foreground">{listing.temperatureControl}</div>
+                      )}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <Link href={`/cargo/${listing.id}`} className="block">
+                      <span className="text-xs whitespace-nowrap">{listing.driverWork || "未入力"}</span>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <Link href={`/cargo/${listing.id}`} className="block">
+                      <span className="text-muted-foreground text-xs line-clamp-2 max-w-[180px]">
                         {listing.description || "-"}
                       </span>
                     </Link>
@@ -304,7 +348,7 @@ export default function CargoList() {
 
               {!isLoading && paginated.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
+                  <td colSpan={9} className="text-center py-12">
                     <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
                     <p className="font-medium text-muted-foreground">荷物情報が見つかりませんでした</p>
                     <p className="text-xs text-muted-foreground mt-1">検索条件を変更してお試しください</p>

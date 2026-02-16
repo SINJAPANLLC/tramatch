@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, MapPin, Calendar, Weight, Building2, Phone, Mail, Package } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Building2, Phone, Mail, Package, Clock, Truck, Thermometer, Weight } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 
 export default function CargoDetail() {
@@ -70,54 +70,78 @@ export default function CargoDetail() {
             <Badge variant="default" className="shrink-0">{listing.status === "active" ? "募集中" : "終了"}</Badge>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-3 rounded-md bg-muted/50">
-                <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs text-muted-foreground">出発地</div>
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-primary" />
+                発着情報
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-md bg-muted/50">
+                  <div className="text-xs text-muted-foreground mb-1">発地</div>
                   <div className="font-medium text-foreground">{listing.departureArea}</div>
+                  {listing.departureAddress && (
+                    <div className="text-sm text-muted-foreground">{listing.departureAddress}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1.5">
+                    {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-md bg-muted/50">
-                <MapPin className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs text-muted-foreground">到着地</div>
+                <div className="p-3 rounded-md bg-muted/50">
+                  <div className="text-xs text-muted-foreground mb-1">着地</div>
                   <div className="font-medium text-foreground">{listing.arrivalArea}</div>
+                  {listing.arrivalAddress && (
+                    <div className="text-sm text-muted-foreground">{listing.arrivalAddress}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1.5">
+                    {listing.arrivalDate || "指定なし"} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-3 rounded-md bg-muted/50">
-                <div className="text-xs text-muted-foreground mb-1">荷物種類</div>
-                <div className="text-sm font-medium text-foreground">{listing.cargoType}</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/50">
-                <div className="text-xs text-muted-foreground mb-1">重量</div>
-                <div className="text-sm font-medium text-foreground">{listing.weight}</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/50">
-                <div className="text-xs text-muted-foreground mb-1">希望車種</div>
-                <div className="text-sm font-medium text-foreground">{listing.vehicleType}</div>
-              </div>
-              <div className="p-3 rounded-md bg-muted/50">
-                <div className="text-xs text-muted-foreground mb-1">希望日</div>
-                <div className="text-sm font-medium text-foreground">{listing.desiredDate}</div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                <Package className="w-4 h-4 text-primary" />
+                荷物情報
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <InfoCell label="荷種" value={listing.cargoType} />
+                <InfoCell label="重量" value={listing.weight} />
+                <InfoCell label="個数" value={listing.packageCount} />
+                <InfoCell label="荷姿" value={listing.loadingMethod} />
+                <InfoCell label="温度管理" value={listing.temperatureControl} />
               </div>
             </div>
 
-            {listing.price && (
-              <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
-                <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
-                <div className="text-lg font-bold text-primary">{listing.price}</div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-primary" />
+                車両・作業条件
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <InfoCell label="希望車種" value={listing.vehicleType} />
+                <InfoCell label="車体タイプ" value={listing.bodyType} />
+                <InfoCell label="ドライバー作業" value={listing.driverWork} />
+                <InfoCell label="積合" value={listing.consolidation} />
               </div>
-            )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">運賃</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
+                  <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
+                  <div className="text-lg font-bold text-primary">{listing.price ? `${listing.price}円` : "要相談"}</div>
+                </div>
+                <InfoCell label="高速代" value={listing.highwayFee} />
+              </div>
+            </div>
 
             {listing.description && (
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">詳細情報</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{listing.description}</p>
+                <h3 className="text-sm font-semibold text-foreground mb-2">備考</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 rounded-md bg-muted/50">{listing.description}</p>
               </div>
             )}
 
@@ -143,6 +167,15 @@ export default function CargoDetail() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function InfoCell({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div className="p-3 rounded-md bg-muted/50">
+      <div className="text-xs text-muted-foreground mb-1">{label}</div>
+      <div className="text-sm font-medium text-foreground">{value || "-"}</div>
     </div>
   );
 }

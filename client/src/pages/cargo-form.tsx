@@ -15,7 +15,15 @@ import { Package, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 
-const VEHICLE_TYPES = ["4t車", "10t車", "大型車", "トレーラー", "軽車両", "2t車", "その他"];
+const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "トレーラー", "その他"];
+const BODY_TYPES = ["平ボディ", "バン", "ウイング", "冷蔵車", "冷凍車", "ダンプ", "タンクローリー", "車載車", "その他"];
+const TEMP_CONTROLS = ["指定なし", "常温", "冷蔵（0〜10℃）", "冷凍（-18℃以下）", "定温"];
+const HIGHWAY_FEE_OPTIONS = ["込み", "別途", "高速代なし"];
+const CONSOLIDATION_OPTIONS = ["可", "不可"];
+const DRIVER_WORK_OPTIONS = ["手積み手降ろし", "フォークリフト", "クレーン", "ゲート車", "パレット", "作業なし（車上渡し）", "その他"];
+const LOADING_METHODS = ["バラ積み", "パレット積み", "段ボール", "フレコン", "その他"];
+const TIME_OPTIONS = ["指定なし", "午前中", "午後", "夕方以降", "終日可", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
 const AREAS = [
   "北海道", "青森", "岩手", "宮城", "秋田", "山形", "福島",
   "茨城", "栃木", "群馬", "埼玉", "千葉", "東京", "神奈川",
@@ -36,12 +44,24 @@ export default function CargoForm() {
     defaultValues: {
       title: "",
       departureArea: "",
+      departureAddress: "",
+      departureTime: "",
       arrivalArea: "",
+      arrivalAddress: "",
+      arrivalTime: "",
       cargoType: "",
       weight: "",
       desiredDate: "",
+      arrivalDate: "",
       vehicleType: "",
+      bodyType: "",
+      temperatureControl: "",
       price: "",
+      highwayFee: "",
+      consolidation: "",
+      driverWork: "",
+      packageCount: "",
+      loadingMethod: "",
       description: "",
       companyName: "",
       contactPhone: "",
@@ -66,7 +86,7 @@ export default function CargoForm() {
 
   return (
     <DashboardLayout>
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/cargo">
         <Button variant="ghost" className="mb-4" data-testid="button-back-cargo-form">
           <ArrowLeft className="w-4 h-4 mr-1.5" />
@@ -87,7 +107,8 @@ export default function CargoForm() {
       <Card>
         <CardContent className="p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-5">
+            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+
               <FormField
                 control={form.control}
                 name="title"
@@ -102,155 +123,418 @@ export default function CargoForm() {
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="departureArea"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>出発地</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-departure">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {AREAS.map((area) => (
-                            <SelectItem key={area} value={area}>{area}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="arrivalArea"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>到着地</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-arrival">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {AREAS.map((area) => (
-                            <SelectItem key={area} value={area}>{area}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="border-t border-border pt-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">発地情報</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="departureArea"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>発地（都道府県）</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-departure">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {AREAS.map((area) => (
+                                <SelectItem key={area} value={area}>{area}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="departureAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>発地（詳細住所）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 横浜市中区xxx" {...field} value={field.value || ""} data-testid="input-departure-address" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="desiredDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>発日</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 2026/03/01" {...field} data-testid="input-desired-date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="departureTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>発時間</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-departure-time">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {TIME_OPTIONS.map((t) => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="cargoType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>荷物種類</FormLabel>
-                      <FormControl>
-                        <Input placeholder="例: 食品、機械部品" {...field} data-testid="input-cargo-type" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>重量</FormLabel>
-                      <FormControl>
-                        <Input placeholder="例: 5t" {...field} data-testid="input-weight" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="border-t border-border pt-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">着地情報</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="arrivalArea"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>着地（都道府県）</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-arrival">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {AREAS.map((area) => (
+                                <SelectItem key={area} value={area}>{area}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="arrivalAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>着地（詳細住所）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 大阪市北区xxx" {...field} value={field.value || ""} data-testid="input-arrival-address" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="arrivalDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>着日</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 2026/03/02" {...field} value={field.value || ""} data-testid="input-arrival-date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="arrivalTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>着時間</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-arrival-time">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {TIME_OPTIONS.map((t) => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="desiredDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>希望日</FormLabel>
-                      <FormControl>
-                        <Input placeholder="例: 2026/03/01" {...field} data-testid="input-desired-date" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="vehicleType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>希望車種</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+              <div className="border-t border-border pt-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">荷物情報</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="cargoType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>荷種</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 食品、機械部品、建材" {...field} data-testid="input-cargo-type" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>重量</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 5t" {...field} data-testid="input-weight" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packageCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>個数（任意）</FormLabel>
+                          <FormControl>
+                            <Input placeholder="例: 20パレット、100個" {...field} value={field.value || ""} data-testid="input-package-count" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="loadingMethod"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>荷姿</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-loading-method">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {LOADING_METHODS.map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="temperatureControl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>温度管理</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-temp-control">
+                              <SelectValue placeholder="選択してください" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {TEMP_CONTROLS.map((t) => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">車両・作業条件</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="vehicleType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>希望車種</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-vehicle-type">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {VEHICLE_TYPES.map((v) => (
+                                <SelectItem key={v} value={v}>{v}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>車体タイプ（任意）</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-body-type">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {BODY_TYPES.map((b) => (
+                                <SelectItem key={b} value={b}>{b}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="driverWork"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ドライバー作業</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-driver-work">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {DRIVER_WORK_OPTIONS.map((d) => (
+                                <SelectItem key={d} value={d}>{d}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="consolidation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>積合</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-consolidation">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CONSOLIDATION_OPTIONS.map((c) => (
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="highwayFee"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>高速代</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-highway-fee">
+                                <SelectValue placeholder="選択してください" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {HIGHWAY_FEE_OPTIONS.map((h) => (
+                                <SelectItem key={h} value={h}>{h}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">運賃・備考</h3>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>希望運賃（任意）</FormLabel>
                         <FormControl>
-                          <SelectTrigger data-testid="select-vehicle-type">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
+                          <Input placeholder="例: 50,000" {...field} value={field.value || ""} data-testid="input-price" />
                         </FormControl>
-                        <SelectContent>
-                          {VEHICLE_TYPES.map((v) => (
-                            <SelectItem key={v} value={v}>{v}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>備考（任意）</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="荷物の詳細や注意事項など"
+                            className="resize-none min-h-[80px]"
+                            {...field}
+                            value={field.value || ""}
+                            data-testid="textarea-description"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>希望運賃（任意）</FormLabel>
-                    <FormControl>
-                      <Input placeholder="例: 50,000円" {...field} value={field.value || ""} data-testid="input-price" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>詳細説明（任意）</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="荷物の詳細や注意事項など"
-                        className="resize-none min-h-[100px]"
-                        {...field}
-                        value={field.value || ""}
-                        data-testid="textarea-description"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="pt-4 border-t border-border">
+              <div className="border-t border-border pt-5">
                 <h3 className="text-sm font-semibold text-foreground mb-4">連絡先情報</h3>
                 <div className="space-y-4">
                   <FormField
