@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import logoImage from "@assets/IMG_0046_1771206816410.jpg";
+import logoImage from "@assets/tra_match_logo_footer.png";
 
 export default function Footer() {
   return (
@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center mb-4">
-              <img src={logoImage} alt="TRA MATCH" className="h-6 w-auto" />
+              <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
             </div>
             <p className="text-sm text-primary-foreground/90 leading-relaxed">
               荷主と運送会社をつなぐ、求荷求車マッチングプラットフォーム
