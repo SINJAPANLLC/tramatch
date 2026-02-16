@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Truck, Users, Trash2, MapPin } from "lucide-react";
+import { Package, Truck, Users, Trash2, MapPin, CheckCircle, FileText } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing, TruckListing } from "@shared/schema";
@@ -17,6 +17,12 @@ type SafeUser = {
   email: string;
   userType: string;
   role: string;
+  approved: boolean;
+  address?: string;
+  contactName?: string;
+  fax?: string;
+  truckCount?: string;
+  permitFile?: string;
 };
 
 export default function Admin() {
@@ -52,6 +58,16 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
       toast({ title: "車両情報を削除しました" });
+    },
+  });
+
+  const approveUser = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "ユーザーを承認しました" });
     },
   });
 
@@ -188,25 +204,53 @@ export default function Admin() {
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-foreground text-sm">{u.username}</h3>
+                      <h3 className="font-medium text-foreground text-sm">{u.companyName}</h3>
                       <Badge variant={u.role === "admin" ? "default" : "secondary"} className="text-xs shrink-0">
                         {u.role === "admin" ? "管理者" : "一般"}
                       </Badge>
+                      {u.role !== "admin" && (
+                        <Badge variant={u.approved ? "default" : "destructive"} className="text-xs shrink-0" data-testid={`badge-approved-${u.id}`}>
+                          {u.approved ? "承認済" : "未承認"}
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {u.companyName} / {u.email}
+                      {u.email} {u.contactName ? `/ ${u.contactName}` : ""} {u.phone ? `/ ${u.phone}` : ""}
                     </div>
+                    {u.truckCount && (
+                      <div className="text-xs text-muted-foreground mt-0.5">保有台数: {u.truckCount}</div>
+                    )}
+                    {u.permitFile && (
+                      <a href={u.permitFile} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1" data-testid={`link-permit-${u.id}`}>
+                        <FileText className="w-3 h-3" />
+                        許可証を確認
+                      </a>
+                    )}
                   </div>
                   {u.role !== "admin" && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => deleteUser.mutate(u.id)}
-                      disabled={deleteUser.isPending}
-                      data-testid={`button-delete-user-${u.id}`}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {!u.approved && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => approveUser.mutate(u.id)}
+                          disabled={approveUser.isPending}
+                          data-testid={`button-approve-user-${u.id}`}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          承認
+                        </Button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => deleteUser.mutate(u.id)}
+                        disabled={deleteUser.isPending}
+                        data-testid={`button-delete-user-${u.id}`}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>

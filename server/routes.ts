@@ -85,11 +85,8 @@ export async function registerRoutes(
         password: hashedPassword,
       });
 
-      req.session.userId = user.id;
-      req.session.role = user.role;
-
       const { password, ...safeUser } = user;
-      res.status(201).json(safeUser);
+      res.status(201).json({ ...safeUser, message: "登録が完了しました。管理者の承認後にログインできます。" });
     } catch (error) {
       res.status(500).json({ message: "登録に失敗しました" });
     }
@@ -110,6 +107,10 @@ export async function registerRoutes(
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
         return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
+      }
+
+      if (!user.approved) {
+        return res.status(403).json({ message: "アカウントはまだ承認されていません。管理者の承認をお待ちください。" });
       }
 
       await storage.deleteSessionsByUserId(user.id);
@@ -259,6 +260,19 @@ export async function registerRoutes(
       res.json(safeUsers);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
+    try {
+      const user = await storage.approveUser(req.params.id as string);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "承認に失敗しました" });
     }
   });
 

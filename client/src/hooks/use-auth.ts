@@ -36,9 +36,6 @@ export function useAuth() {
       const res = await apiRequest("POST", "/api/register", data);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-    },
   });
 
   const logoutMutation = useMutation({
