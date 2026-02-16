@@ -67,7 +67,12 @@ export default function CargoDetail() {
                 掲載日: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString("ja-JP") : "---"}
               </p>
             </div>
-            <Badge variant="default" className="shrink-0">{listing.status === "active" ? "募集中" : "終了"}</Badge>
+            <div className="flex items-center gap-2 shrink-0">
+              {listing.transportType && (
+                <Badge variant="outline" className="text-xs">{listing.transportType}</Badge>
+              )}
+              <Badge variant="default">{listing.status === "active" ? "募集中" : "終了"}</Badge>
+            </div>
           </div>
 
           <div className="space-y-6">

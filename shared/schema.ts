@@ -38,6 +38,7 @@ export const cargoListings = pgTable("cargo_listings", {
   temperatureControl: text("temperature_control"),
   price: text("price"),
   highwayFee: text("highway_fee"),
+  transportType: text("transport_type"),
   consolidation: text("consolidation"),
   driverWork: text("driver_work"),
   packageCount: text("package_count"),

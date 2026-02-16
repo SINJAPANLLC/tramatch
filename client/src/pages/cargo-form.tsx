@@ -20,6 +20,7 @@ const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "�
 const BODY_TYPES = ["平ボディ", "バン", "ウイング", "冷蔵車", "冷凍車", "ダンプ", "タンクローリー", "車載車", "その他"];
 const TEMP_CONTROLS = ["指定なし", "常温", "冷蔵（0〜10℃）", "冷凍（-18℃以下）", "定温"];
 const HIGHWAY_FEE_OPTIONS = ["込み", "別途", "高速代なし"];
+const TRANSPORT_TYPE_OPTIONS = ["スポット", "定期", "チャーター"];
 const CONSOLIDATION_OPTIONS = ["可", "不可"];
 const DRIVER_WORK_OPTIONS = ["手積み手降ろし", "フォークリフト", "クレーン", "ゲート車", "パレット", "作業なし（車上渡し）", "その他"];
 const LOADING_METHODS = ["バラ積み", "パレット積み", "段ボール", "フレコン", "その他"];
@@ -47,6 +48,7 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
   bodyType: BODY_TYPES,
   temperatureControl: TEMP_CONTROLS,
   highwayFee: HIGHWAY_FEE_OPTIONS,
+  transportType: TRANSPORT_TYPE_OPTIONS,
   consolidation: CONSOLIDATION_OPTIONS,
   driverWork: DRIVER_WORK_OPTIONS,
   loadingMethod: LOADING_METHODS,
@@ -91,6 +93,7 @@ export default function CargoForm() {
       temperatureControl: "",
       price: "",
       highwayFee: "",
+      transportType: "",
       consolidation: "",
       driverWork: "",
       packageCount: "",
@@ -122,7 +125,7 @@ export default function CargoForm() {
       "title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress",
       "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
       "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
-      "price", "consolidation", "driverWork", "packageCount", "loadingMethod",
+      "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
       "highwayFee", "description",
     ];
 
@@ -442,19 +445,43 @@ export default function CargoForm() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
 
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>タイトル</FormLabel>
-                    <FormControl>
-                      <Input placeholder="例: 東京→大阪 食品 10t" {...field} data-testid="input-cargo-title" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>タイトル</FormLabel>
+                      <FormControl>
+                        <Input placeholder="例: 東京→大阪 食品 10t" {...field} data-testid="input-cargo-title" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="transportType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>輸送形態</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="w-[140px]" data-testid="select-transport-type">
+                            <SelectValue placeholder="選択してください" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TRANSPORT_TYPE_OPTIONS.map((t) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="border-t border-border pt-5">
                 <h3 className="text-sm font-semibold text-foreground mb-4">発地情報</h3>

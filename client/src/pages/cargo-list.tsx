@@ -177,7 +177,7 @@ export default function CargoList() {
           item.bodyType, item.temperatureControl,
           item.price, item.companyName, item.description,
           item.desiredDate, item.arrivalDate,
-          item.driverWork, item.loadingMethod,
+          item.driverWork, item.loadingMethod, item.transportType,
         ].filter(Boolean).join(" ").toLowerCase();
         return activeSearch.some((keyword) => searchable.includes(keyword.toLowerCase()));
       });
@@ -477,6 +477,7 @@ export default function CargoList() {
           <table className="w-full" data-testid="table-cargo">
             <thead>
               <tr className="border-b bg-muted/60">
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">形態</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">企業名</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap min-w-[280px]">発着情報</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">運賃</th>
@@ -491,6 +492,7 @@ export default function CargoList() {
             <tbody className="divide-y divide-border">
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
+                  <td className="px-4 py-4"><Skeleton className="h-4 w-14" /></td>
                   <td className="px-4 py-4"><Skeleton className="h-4 w-28" /></td>
                   <td className="px-4 py-4"><Skeleton className="h-10 w-56" /></td>
                   <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
@@ -509,6 +511,19 @@ export default function CargoList() {
                   className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
                   data-testid={`row-cargo-${listing.id}`}
                 >
+                  <td className="px-4 py-3.5 text-center align-top">
+                    <Link href={`/cargo/${listing.id}`} className="block">
+                      {listing.transportType ? (
+                        <Badge variant="outline" className={`text-[11px] px-1.5 ${
+                          listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
+                          listing.transportType === "定期" ? "border-green-300 text-green-600" :
+                          listing.transportType === "チャーター" ? "border-orange-300 text-orange-600" : ""
+                        }`}>{listing.transportType}</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
                       <div className="font-medium text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
@@ -621,7 +636,7 @@ export default function CargoList() {
 
               {!isLoading && paginated.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="text-center py-16">
+                  <td colSpan={10} className="text-center py-16">
                     <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
                     <p className="font-medium text-muted-foreground">荷物情報が見つかりませんでした</p>
                     <p className="text-xs text-muted-foreground mt-1">検索条件を変更してお試しください</p>
