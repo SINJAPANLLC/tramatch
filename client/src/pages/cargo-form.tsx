@@ -72,13 +72,13 @@ export default function CargoForm() {
         </Button>
       </Link>
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-          <Package className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-foreground" data-testid="text-cargo-form-title">荷物情報の掲載</h1>
-          <p className="text-sm text-muted-foreground">運びたい荷物の情報を入力してください</p>
+      <div className="bg-primary rounded-md p-5 mb-6">
+        <div className="flex items-center gap-3">
+          <Package className="w-6 h-6 text-primary-foreground" />
+          <div>
+            <h1 className="text-xl font-bold text-primary-foreground" data-testid="text-cargo-form-title">荷物情報の掲載</h1>
+            <p className="text-sm text-primary-foreground/80">運びたい荷物の情報を入力してください</p>
+          </div>
         </div>
       </div>
 

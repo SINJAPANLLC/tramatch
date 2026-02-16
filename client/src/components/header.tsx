@@ -19,7 +19,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-gray-950 border-b border-border">
+    <header className="sticky top-0 z-50 bg-background border-b-2 border-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
           <Link href="/" className="flex items-center shrink-0" data-testid="text-logo">
@@ -31,7 +31,7 @@ export default function Header() {
               <Link key={item.href} href={item.href}>
                 <Button
                   variant="ghost"
-                  className={`text-sm font-medium px-3 ${location === item.href ? "text-[#40E0D0] dark:text-[#5EEADB]" : ""}`}
+                  className={`text-sm font-medium px-3 ${location === item.href ? "text-primary" : ""}`}
                   data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
                 >
                   {item.label}
@@ -95,12 +95,12 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white dark:bg-gray-950 p-4 space-y-2">
+        <div className="md:hidden border-t border-border bg-background p-4 space-y-2">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
               <Button
                 variant="ghost"
-                className={`w-full justify-start text-sm font-medium ${location === item.href ? "text-[#40E0D0] dark:text-[#5EEADB]" : ""}`}
+                className={`w-full justify-start text-sm font-medium ${location === item.href ? "text-primary" : ""}`}
               >
                 {item.label}
               </Button>

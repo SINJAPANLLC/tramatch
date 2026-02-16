@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Truck, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -38,11 +39,11 @@ export default function Login() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="w-14 h-14 rounded-md bg-primary flex items-center justify-center mx-auto">
-            <Truck className="w-8 h-8 text-primary-foreground" />
+          <div className="flex justify-center">
+            <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
           </div>
           <CardTitle className="text-2xl">ログイン</CardTitle>
-          <p className="text-sm text-muted-foreground">トラマッチにログインしてください</p>
+          <p className="text-sm text-muted-foreground">TRA MATCHにログインしてください</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

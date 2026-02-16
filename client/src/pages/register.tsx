@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Truck, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -50,11 +51,11 @@ export default function Register() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="w-14 h-14 rounded-md bg-primary flex items-center justify-center mx-auto">
-            <Truck className="w-8 h-8 text-primary-foreground" />
+          <div className="flex justify-center">
+            <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
           </div>
           <CardTitle className="text-2xl">新規登録</CardTitle>
-          <p className="text-sm text-muted-foreground">トラマッチのアカウントを作成</p>
+          <p className="text-sm text-muted-foreground">TRA MATCHのアカウントを作成</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
