@@ -128,37 +128,9 @@ export default function Dashboard() {
   return (
     <div className="flex h-full">
       <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30 overflow-y-auto" data-testid="panel-sidebar">
-        <div className="p-3 border-b bg-primary">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <User className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-primary-foreground truncate" data-testid="text-sidebar-company">{user?.companyName}</p>
-            </div>
-          </div>
-        </div>
-
         <div className="flex-1 overflow-y-auto p-2">
           <SidebarMenu items={menuItems} location={location} />
         </div>
-
-        {(user?.phone || user?.address) && (
-          <div className="p-3 border-t space-y-1.5">
-            {user?.address && (
-              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                <Building2 className="w-3 h-3 shrink-0 mt-0.5" />
-                <span className="break-all leading-tight">{user.address}</span>
-              </div>
-            )}
-            {user?.phone && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Phone className="w-3 h-3 shrink-0" />
-                <span>{user.phone}</span>
-              </div>
-            )}
-          </div>
-        )}
       </aside>
 
       <div className="flex-1 min-w-0 overflow-y-auto">
