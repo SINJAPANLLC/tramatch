@@ -40,7 +40,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-primary-foreground/30 text-center text-base text-primary-foreground">
-          &copy; 2026 TRA MATCH All rights reserved.
+          &copy; 2026 SIN JAPAN LLC All rights reserved.
         </div>
       </div>
     </footer>
