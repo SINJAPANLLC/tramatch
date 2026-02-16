@@ -174,17 +174,6 @@ export default function Dashboard() {
       </aside>
 
       <div className="flex-1 min-w-0 overflow-y-auto">
-        <div className="bg-muted/50 border-b px-4 sm:px-6 py-2 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">荷物数</span>
-            <Badge variant="secondary" data-testid="text-stat-cargo">{cargoListings?.length ?? 0}</Badge>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">空車数</span>
-            <Badge variant="secondary" data-testid="text-stat-trucks">{truckListings?.length ?? 0}</Badge>
-          </div>
-        </div>
-
         <div className="px-4 sm:px-6 py-6">
           <div className="bg-primary rounded-md p-5 mb-6">
             <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
