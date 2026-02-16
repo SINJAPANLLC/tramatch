@@ -30,6 +30,7 @@ export async function seedDatabase() {
 
   await db.insert(cargoListings).values([
     {
+      transportType: "スポット",
       title: "東京→大阪 食品冷蔵便",
       departureArea: "東京",
       departureAddress: "江東区有明",
@@ -56,6 +57,7 @@ export async function seedDatabase() {
       contactEmail: "logistics@tokyofoods.co.jp",
     },
     {
+      transportType: "定期",
       title: "名古屋→福岡 機械部品",
       departureArea: "愛知",
       departureAddress: "名古屋市港区",
@@ -82,6 +84,7 @@ export async function seedDatabase() {
       contactEmail: "shipping@chubu-mech.co.jp",
     },
     {
+      transportType: "スポット",
       title: "大阪→東京 アパレル商品",
       departureArea: "大阪",
       departureAddress: "大阪市中央区",
@@ -108,6 +111,7 @@ export async function seedDatabase() {
       contactEmail: "info@kansai-apparel.co.jp",
     },
     {
+      transportType: "チャーター",
       title: "北海道→東京 農産物",
       departureArea: "北海道",
       departureAddress: "帯広市西",
@@ -134,6 +138,7 @@ export async function seedDatabase() {
       contactEmail: "nouhan@hokkaido-farm.co.jp",
     },
     {
+      transportType: "スポット",
       title: "埼玉→仙台 建材",
       departureArea: "埼玉",
       departureAddress: "川口市",
@@ -160,6 +165,7 @@ export async function seedDatabase() {
       contactEmail: "haiso@kanto-kenzai.co.jp",
     },
     {
+      transportType: "スポット",
       title: "神奈川→千葉 フレコン鋼材",
       departureArea: "神奈川",
       departureAddress: "横浜市鶴見区",
@@ -186,6 +192,7 @@ export async function seedDatabase() {
       contactEmail: "",
     },
     {
+      transportType: "チャーター",
       title: "神奈川→香川 シャフト",
       departureArea: "神奈川",
       departureAddress: "横浜市",
@@ -212,6 +219,7 @@ export async function seedDatabase() {
       contactEmail: "",
     },
     {
+      transportType: "スポット",
       title: "川崎→浦安 フレコン",
       departureArea: "神奈川",
       departureAddress: "川崎市川崎区",
