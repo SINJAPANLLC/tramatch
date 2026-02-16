@@ -276,6 +276,70 @@ export default function Home() {
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg">料金比較</h2>
+          <p className="text-base text-primary-foreground text-center mb-12 text-shadow">他社と比べてください</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
+              <p className="text-lg font-bold text-primary-foreground mb-1">A社</p>
+              <div className="space-y-4 mt-6">
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">初期費用</p>
+                  <p className="text-2xl font-bold text-primary-foreground">50,000円</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">成約手数料</p>
+                  <p className="text-2xl font-bold text-primary-foreground">10%</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">月額費用</p>
+                  <p className="text-2xl font-bold text-primary-foreground">30,000円</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-primary-foreground rounded-md p-6 sm:p-8 text-center shadow-lg relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-yellow-400 text-yellow-900 font-bold text-sm px-4 py-1 no-default-hover-elevate no-default-active-elevate">おすすめ</Badge>
+              </div>
+              <p className="text-lg font-bold text-primary mb-1">TRA MATCH</p>
+              <div className="space-y-4 mt-6">
+                <div>
+                  <p className="text-base text-primary mb-1">初期費用</p>
+                  <p className="text-3xl font-bold text-primary">0円</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary mb-1">成約手数料</p>
+                  <p className="text-3xl font-bold text-primary">0円</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary mb-1">月額費用</p>
+                  <p className="text-3xl font-bold text-primary">5,000円</p>
+                  <p className="text-sm font-bold text-primary mt-1 bg-primary/10 rounded-md py-1 px-2 inline-block">β版は月額費用も0円</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
+              <p className="text-lg font-bold text-primary-foreground mb-1">B社</p>
+              <div className="space-y-4 mt-6">
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">初期費用</p>
+                  <p className="text-2xl font-bold text-primary-foreground">100,000円</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">成約手数料</p>
+                  <p className="text-2xl font-bold text-primary-foreground">15%</p>
+                </div>
+                <div>
+                  <p className="text-base text-primary-foreground mb-1">月額費用</p>
+                  <p className="text-2xl font-bold text-primary-foreground">50,000円</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-primary">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg">サービス内容</h2>
           <p className="text-base text-primary-foreground text-center mb-12 text-shadow">運送会社同士のマッチングサービス</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
