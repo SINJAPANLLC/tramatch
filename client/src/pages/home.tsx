@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import logoImage from "@assets/IMG_0046_1771206816410.jpg";
+import logoImage from "@assets/tra_match_logo_white.jpg";
 
 function CargoCard({ listing }: { listing: CargoListing }) {
   return (

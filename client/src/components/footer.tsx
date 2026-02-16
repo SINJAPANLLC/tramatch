@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import logoImage from "@assets/tra_match_logo_footer.png";
+import logoImage from "@assets/tra_match_logo_white.jpg";
 
 export default function Footer() {
   return (
