@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2 } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 const QUICK_FILTERS = [
   { label: "全て", value: "all" },
@@ -23,6 +24,8 @@ const QUICK_FILTERS = [
 
 const PER_PAGE_OPTIONS = [10, 20, 50];
 
+type InputMode = "text" | "file" | "voice";
+
 function parseAISearch(text: string): string[] {
   const cleaned = text
     .replace(/[、。\n\r\t,./]/g, " ")
@@ -34,6 +37,7 @@ function parseAISearch(text: string): string[] {
 
 export default function CargoList() {
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [aiSearchText, setAiSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
@@ -41,6 +45,12 @@ export default function CargoList() {
   const [perPage, setPerPage] = useState(20);
   const [sortBy, setSortBy] = useState<"date" | "price">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [inputMode, setInputMode] = useState<InputMode>("text");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: listings, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
@@ -64,6 +74,95 @@ export default function CargoList() {
       handleSearch();
     }
   };
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/ai/extract-text", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("抽出に失敗しました");
+
+      const data = await response.json();
+      if (data.text) {
+        setAiSearchText(data.text);
+        setActiveSearch(parseAISearch(data.text));
+        setPage(1);
+        toast({ title: "テキスト抽出完了", description: "ファイルから検索条件を読み取りました" });
+      }
+    } catch (error) {
+      toast({ title: "エラー", description: "ファイルからの情報抽出に失敗しました", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [toast]);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.start(100);
+      setIsRecording(true);
+    } catch {
+      toast({ title: "エラー", description: "マイクへのアクセスが許可されていません", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const stopRecording = useCallback(async () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") return;
+
+    return new Promise<void>((resolve) => {
+      recorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        recorder.stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+        setIsProcessing(true);
+
+        try {
+          const formData = new FormData();
+          formData.append("audio", blob, "recording.webm");
+
+          const response = await fetch("/api/ai/transcribe", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error("文字起こしに失敗しました");
+
+          const data = await response.json();
+          if (data.text) {
+            setAiSearchText(data.text);
+            setActiveSearch(parseAISearch(data.text));
+            setPage(1);
+            toast({ title: "音声認識完了", description: "音声から検索条件を読み取りました" });
+          }
+        } catch {
+          toast({ title: "エラー", description: "音声の文字起こしに失敗しました", variant: "destructive" });
+        } finally {
+          setIsProcessing(false);
+        }
+        resolve();
+      };
+      recorder.stop();
+    });
+  }, [toast]);
 
   const filtered = useMemo(() => {
     if (!listings) return [];
@@ -113,40 +212,194 @@ export default function CargoList() {
     <div className={isAuthenticated ? "px-4 sm:px-6 py-4" : "max-w-7xl mx-auto px-4 sm:px-6 py-8"}>
       <Card className="mb-5">
         <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm">AI荷物検索</span>
-            <span className="text-xs text-muted-foreground hidden sm:inline">テキストを入力するとAIが自動で条件を解析して検索します</span>
-          </div>
-
-          <div className="flex gap-2">
-            <Textarea
-              placeholder={"例: 神奈川から大阪 2/20 13t 平ボディ\n例: 東京発 冷凍 10t 至急"}
-              value={aiSearchText}
-              onChange={(e) => setAiSearchText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onPaste={(e) => {
-                setTimeout(() => {
-                  const val = (e.target as HTMLTextAreaElement).value;
-                  setAiSearchText(val);
-                  setActiveSearch(parseAISearch(val));
-                  setPage(1);
-                }, 0);
-              }}
-              rows={2}
-              className="resize-none text-sm flex-1"
-              data-testid="input-ai-search"
-            />
-            <div className="flex flex-col gap-1.5">
-              <Button onClick={handleSearch} className="flex-1" data-testid="button-search">
-                <Search className="w-4 h-4 mr-1" />
-                検索
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm">AI荷物検索</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant={inputMode === "text" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("text")}
+                data-testid="button-mode-text"
+              >
+                <Search className="w-3.5 h-3.5 mr-1" />
+                テキスト
               </Button>
-              <Button variant="outline" onClick={handleClear} className="flex-1 text-xs" data-testid="button-clear">
-                クリア
+              <Button
+                variant={inputMode === "file" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("file")}
+                data-testid="button-mode-file"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1" />
+                ファイル
+              </Button>
+              <Button
+                variant={inputMode === "voice" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("voice")}
+                data-testid="button-mode-voice"
+              >
+                <Mic className="w-3.5 h-3.5 mr-1" />
+                音声
               </Button>
             </div>
           </div>
+
+          {inputMode === "text" && (
+            <div className="flex gap-2">
+              <Textarea
+                placeholder={"例: 神奈川から大阪 2/20 13t 平ボディ\n例: 東京発 冷凍 10t 至急"}
+                value={aiSearchText}
+                onChange={(e) => setAiSearchText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={(e) => {
+                  setTimeout(() => {
+                    const val = (e.target as HTMLTextAreaElement).value;
+                    setAiSearchText(val);
+                    setActiveSearch(parseAISearch(val));
+                    setPage(1);
+                  }, 0);
+                }}
+                rows={2}
+                className="resize-none text-sm flex-1"
+                data-testid="input-ai-search"
+              />
+              <div className="flex flex-col gap-1.5">
+                <Button onClick={handleSearch} className="flex-1" data-testid="button-search">
+                  <Search className="w-4 h-4 mr-1" />
+                  検索
+                </Button>
+                <Button variant="outline" onClick={handleClear} className="flex-1 text-xs" data-testid="button-clear">
+                  クリア
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {inputMode === "file" && (
+            <div className="space-y-3">
+              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  data-testid="input-file-upload"
+                />
+                {isProcessing ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">AIがファイルを解析中...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">画像やスクリーンショットからAIが荷物情報を読み取ります</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="button-upload-file"
+                    >
+                      <Upload className="w-4 h-4 mr-1.5" />
+                      ファイルを選択
+                    </Button>
+                    <p className="text-xs text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
+                  </div>
+                )}
+              </div>
+              {aiSearchText && (
+                <div className="flex gap-2">
+                  <Textarea
+                    value={aiSearchText}
+                    onChange={(e) => setAiSearchText(e.target.value)}
+                    rows={2}
+                    className="resize-none text-sm flex-1"
+                    placeholder="抽出されたテキスト"
+                    data-testid="input-extracted-text"
+                  />
+                  <div className="flex flex-col gap-1.5">
+                    <Button onClick={handleSearch} className="flex-1" data-testid="button-search-extracted">
+                      <Search className="w-4 h-4 mr-1" />
+                      検索
+                    </Button>
+                    <Button variant="outline" onClick={handleClear} className="flex-1 text-xs">
+                      クリア
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {inputMode === "voice" && (
+            <div className="space-y-3">
+              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+                {isProcessing ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">AIが音声を解析中...</p>
+                  </div>
+                ) : isRecording ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-destructive/20 animate-ping" />
+                      <div className="relative w-16 h-16 rounded-full bg-destructive flex items-center justify-center">
+                        <MicOff className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium text-destructive">録音中...</p>
+                    <p className="text-xs text-muted-foreground">「神奈川から大阪、3月5日、10トン」のように話してください</p>
+                    <Button
+                      variant="destructive"
+                      onClick={stopRecording}
+                      data-testid="button-stop-recording"
+                    >
+                      <MicOff className="w-4 h-4 mr-1.5" />
+                      録音停止して検索
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Mic className="w-8 h-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">音声で荷物を検索できます</p>
+                    <Button
+                      onClick={startRecording}
+                      data-testid="button-start-recording"
+                    >
+                      <Mic className="w-4 h-4 mr-1.5" />
+                      録音開始
+                    </Button>
+                    <p className="text-xs text-muted-foreground">マイクへのアクセスを許可してください</p>
+                  </div>
+                )}
+              </div>
+              {aiSearchText && (
+                <div className="flex gap-2">
+                  <Textarea
+                    value={aiSearchText}
+                    onChange={(e) => setAiSearchText(e.target.value)}
+                    rows={2}
+                    className="resize-none text-sm flex-1"
+                    placeholder="認識されたテキスト"
+                    data-testid="input-voice-text"
+                  />
+                  <div className="flex flex-col gap-1.5">
+                    <Button onClick={handleSearch} className="flex-1" data-testid="button-search-voice">
+                      <Search className="w-4 h-4 mr-1" />
+                      検索
+                    </Button>
+                    <Button variant="outline" onClick={handleClear} className="flex-1 text-xs">
+                      クリア
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-1.5 flex-wrap">
             {QUICK_FILTERS.map((f) => (

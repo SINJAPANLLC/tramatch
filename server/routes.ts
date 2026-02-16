@@ -8,6 +8,13 @@ import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import OpenAI from "openai";
+import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 const uploadDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -285,6 +292,66 @@ export async function registerRoutes(
       res.json({ message: "Deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  const aiUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024 },
+  });
+
+  app.post("/api/ai/transcribe", aiUpload.single("audio"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "音声ファイルが必要です" });
+      }
+      const rawBuffer = Buffer.from(req.file.buffer);
+      const { buffer: audioBuffer, format } = await ensureCompatibleFormat(rawBuffer);
+      const transcript = await speechToText(audioBuffer, format);
+      res.json({ text: transcript });
+    } catch (error) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ message: "音声の文字起こしに失敗しました" });
+    }
+  });
+
+  app.post("/api/ai/extract-text", aiUpload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "ファイルが必要です" });
+      }
+      const base64 = req.file.buffer.toString("base64");
+      const mimeType = req.file.mimetype || "image/png";
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "あなたは画像やドキュメントから運送・物流に関する情報を抽出するアシスタントです。画像内のテキストを読み取り、検索に使えるキーワード（出発地、到着地、日時、荷物の種類、重量、車種など）を抽出してください。結果は検索用のテキストとして簡潔にまとめてください。余計な説明は不要です。",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: { url: `data:${mimeType};base64,${base64}` },
+              },
+              {
+                type: "text",
+                text: "この画像から運送・物流に関する情報を抽出してください。検索用のテキストとして返してください。",
+              },
+            ],
+          },
+        ],
+        max_tokens: 500,
+      });
+
+      const extractedText = response.choices[0]?.message?.content || "";
+      res.json({ text: extractedText });
+    } catch (error) {
+      console.error("Text extraction error:", error);
+      res.status(500).json({ message: "ファイルからのテキスト抽出に失敗しました" });
     }
   });
 
