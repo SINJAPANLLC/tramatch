@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, LayoutDashboard, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Header() {
   const [location] = useLocation();
@@ -21,13 +22,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-950 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center">
-              <Truck className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground" data-testid="text-logo">
-              トラマッチ
-            </span>
+          <Link href="/" className="flex items-center shrink-0" data-testid="text-logo">
+            <img src={logoImage} alt="TRA MATCH" className="h-8 w-auto" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1" data-testid="nav-desktop">

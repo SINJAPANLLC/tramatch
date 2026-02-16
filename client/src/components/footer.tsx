@@ -1,4 +1,4 @@
-import { Truck } from "lucide-react";
+import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Footer() {
   return (
@@ -6,11 +6,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <Truck className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="text-lg font-bold text-foreground">トラマッチ</span>
+            <div className="flex items-center mb-4">
+              <img src={logoImage} alt="TRA MATCH" className="h-7 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               荷主と運送会社をつなぐ、求荷求車マッチングプラットフォーム
