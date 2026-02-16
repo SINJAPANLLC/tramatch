@@ -1,8 +1,11 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Shield } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import type { CargoListing, TruckListing } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
 import logoImage from "@assets/IMG_0046_1771206816410.jpg";
 
 export default function Header() {
@@ -12,14 +15,73 @@ export default function Header() {
 
   const isOnDashboard = location === "/home";
 
+  const { data: cargoListings } = useQuery<CargoListing[]>({
+    queryKey: ["/api/cargo"],
+    enabled: isOnDashboard,
+  });
+
+  const { data: truckListings } = useQuery<TruckListing[]>({
+    queryKey: ["/api/trucks"],
+    enabled: isOnDashboard,
+  });
+
   const navItems = [
     ...(isAuthenticated && !isOnDashboard ? [{ href: "/home", label: "ホーム" }] : []),
     ...(isAdmin && !isOnDashboard ? [{ href: "/admin", label: "管理画面" }] : []),
   ];
 
+  if (isOnDashboard && isAuthenticated) {
+    return (
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="px-4 sm:px-6">
+          <div className="flex items-center justify-between gap-4 h-12">
+            <div className="flex items-center gap-4">
+              <Link href="/home" className="flex items-center shrink-0" data-testid="text-logo">
+                <img src={logoImage} alt="TRA MATCH" className="h-6 w-auto" />
+              </Link>
+              <div className="hidden sm:flex items-center gap-2">
+                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-cargo">
+                  <Package className="w-3 h-3" />
+                  荷物数 {cargoListings?.length ?? 0}
+                </Badge>
+                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-trucks">
+                  <Truck className="w-3 h-3" />
+                  空車数 {truckListings?.length ?? 0}
+                </Badge>
+              </div>
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex text-xs" data-testid="button-contact">
+                <Mail className="w-3 h-3 mr-1" />
+                お問い合わせ
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <span className="text-foreground text-xs font-medium" data-testid="text-header-username">{user?.contactName || user?.companyName}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout.mutate()}
+                data-testid="button-logout"
+                className="text-xs"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1" />
+                ログアウト
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-background border-b-2 border-primary">
-      <div className={`${isOnDashboard ? "" : "max-w-7xl"} mx-auto px-4 sm:px-6`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
           <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center shrink-0" data-testid="text-logo">
             <img src={logoImage} alt="TRA MATCH" className="h-7 sm:h-8 w-auto" />
@@ -44,22 +106,18 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                {!isOnDashboard && (
-                  <>
-                    <Link href="/cargo/new">
-                      <Button variant="outline" data-testid="button-post-cargo">
-                        <Package className="w-4 h-4 mr-1.5" />
-                        荷物を掲載
-                      </Button>
-                    </Link>
-                    <Link href="/trucks/new">
-                      <Button data-testid="button-post-truck">
-                        <Truck className="w-4 h-4 mr-1.5" />
-                        車両を掲載
-                      </Button>
-                    </Link>
-                  </>
-                )}
+                <Link href="/cargo/new">
+                  <Button variant="outline" data-testid="button-post-cargo">
+                    <Package className="w-4 h-4 mr-1.5" />
+                    荷物を掲載
+                  </Button>
+                </Link>
+                <Link href="/trucks/new">
+                  <Button data-testid="button-post-truck">
+                    <Truck className="w-4 h-4 mr-1.5" />
+                    車両を掲載
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   onClick={() => logout.mutate()}
