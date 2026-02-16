@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, ArrowRight, MapPin, Search, Plus, Shield, User, Building2, Phone, FileText, CheckCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ChevronDown, ChevronRight } from "lucide-react";
+import { Package, Truck, ArrowRight, MapPin, Search, Plus, Shield, User, Building2, Phone, FileText, CheckCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ChevronDown, ChevronRight, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -109,7 +109,7 @@ export default function Dashboard() {
     queryKey: ["/api/trucks"],
   });
 
-  const menuItems: MenuItem[] = [
+  const userMenuItems: MenuItem[] = [
     { href: "/cargo", label: "AI荷物検索", icon: Sparkles },
     { href: "/cargo/new", label: "AI荷物登録", icon: Plus },
     { href: "/home", label: "登録した荷物", icon: FileText },
@@ -122,14 +122,34 @@ export default function Dashboard() {
     { href: "/home#payment", label: "お支払い", icon: CreditCard },
     { href: "/home#services", label: "便利サービス", icon: Star },
     { href: "/home#settings", label: "設定", icon: Settings },
-    ...(isAdmin ? [{ href: "/admin", label: "管理画面", icon: Shield } as MenuItem] : []),
   ];
+
+  const adminMenuItems: MenuItem[] = [
+    { href: "/admin", label: "管理画面", icon: Shield },
+    { href: "/admin#applications", label: "申請管理", icon: ClipboardList },
+    { href: "/admin#users", label: "ユーザー管理", icon: UserCog },
+    { href: "/admin#revenue", label: "収益管理", icon: DollarSign },
+    { href: "/admin#notifications", label: "通知管理", icon: Bell },
+    { href: "/admin#seo", label: "SEO記事生成", icon: PenTool },
+    { href: "/admin#admin-settings", label: "管理設定", icon: Wrench },
+  ];
+
+  const menuItems: MenuItem[] = isAdmin
+    ? [...userMenuItems, ...adminMenuItems]
+    : userMenuItems;
 
   return (
     <div className="flex h-full">
       <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30 overflow-y-auto" data-testid="panel-sidebar">
         <div className="flex-1 overflow-y-auto p-2">
-          <SidebarMenu items={menuItems} location={location} />
+          <SidebarMenu items={userMenuItems} location={location} />
+          {isAdmin && (
+            <>
+              <div className="my-2 mx-2 border-t" />
+              <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">管理者メニュー</p>
+              <SidebarMenu items={adminMenuItems} location={location} />
+            </>
+          )}
         </div>
       </aside>
 
