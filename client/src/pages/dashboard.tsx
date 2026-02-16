@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, ArrowRight, MapPin, Search, Plus, Home, Shield, User, Building2, Phone, BookmarkCheck, Clock, FileText, Handshake, Settings, ChevronDown, ChevronRight } from "lucide-react";
+import { Package, Truck, ArrowRight, MapPin, Search, Plus, Shield, User, Building2, Phone, FileText, CheckCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ChevronDown, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,31 +110,19 @@ export default function Dashboard() {
   });
 
   const menuItems: MenuItem[] = [
-    {
-      label: "荷物検索",
-      icon: Search,
-      children: [
-        { href: "/cargo", label: "荷物一覧" },
-      ],
-    },
-    { href: "/cargo/new", label: "荷物登録", icon: Plus },
-    {
-      label: "マイ荷物・成約",
-      icon: Handshake,
-      children: [
-        { href: "/home", label: "ダッシュボード" },
-      ],
-    },
-    {
-      label: "空車検索・登録",
-      icon: Truck,
-      children: [
-        { href: "/trucks", label: "車両一覧" },
-        { href: "/trucks/new", label: "車両登録" },
-      ],
-    },
+    { href: "/cargo", label: "AI荷物検索", icon: Sparkles },
+    { href: "/cargo/new", label: "AI荷物登録", icon: Plus },
+    { href: "/home", label: "登録した荷物", icon: FileText },
+    { href: "/home#completed", label: "成約した荷物", icon: CheckCircle },
+    { href: "/trucks", label: "AI空車検索", icon: Sparkles },
+    { href: "/trucks/new", label: "AI空車登録", icon: Truck },
+    { href: "/home#companies", label: "企業検索", icon: Building },
+    { href: "/home#partners", label: "取引先管理", icon: Users },
+    { href: "/home#transport", label: "実運送体制管理簿", icon: BookOpen },
+    { href: "/home#payment", label: "お支払い", icon: CreditCard },
+    { href: "/home#services", label: "便利サービス", icon: Star },
+    { href: "/home#settings", label: "設定", icon: Settings },
     ...(isAdmin ? [{ href: "/admin", label: "管理画面", icon: Shield } as MenuItem] : []),
-    { href: "/settings" as string, label: "設定", icon: Settings },
   ];
 
   return (
