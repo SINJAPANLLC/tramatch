@@ -11,9 +11,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
-import { Package, ArrowLeft } from "lucide-react";
+import { Package, ArrowLeft, Sparkles, Search, Upload, Mic, MicOff, FileText, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
+import { useState, useRef, useCallback } from "react";
 
 const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "トレーラー", "その他"];
 const BODY_TYPES = ["平ボディ", "バン", "ウイング", "冷蔵車", "冷凍車", "ダンプ", "タンクローリー", "車載車", "その他"];
@@ -35,9 +36,41 @@ const AREAS = [
   "福岡", "佐賀", "長崎", "熊本", "大分", "宮崎", "鹿児島", "沖縄"
 ];
 
+type InputMode = "text" | "file" | "voice";
+
+const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
+  departureArea: AREAS,
+  arrivalArea: AREAS,
+  departureTime: TIME_OPTIONS,
+  arrivalTime: TIME_OPTIONS,
+  vehicleType: VEHICLE_TYPES,
+  bodyType: BODY_TYPES,
+  temperatureControl: TEMP_CONTROLS,
+  highwayFee: HIGHWAY_FEE_OPTIONS,
+  consolidation: CONSOLIDATION_OPTIONS,
+  driverWork: DRIVER_WORK_OPTIONS,
+  loadingMethod: LOADING_METHODS,
+};
+
+function findBestMatch(value: string, options: string[]): string {
+  if (!value) return "";
+  const exact = options.find((o) => o === value);
+  if (exact) return exact;
+  const includes = options.find((o) => o.includes(value) || value.includes(o));
+  if (includes) return includes;
+  return "";
+}
+
 export default function CargoForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [inputMode, setInputMode] = useState<InputMode>("text");
+  const [aiText, setAiText] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<InsertCargoListing>({
     resolver: zodResolver(insertCargoListingSchema),
@@ -84,6 +117,147 @@ export default function CargoForm() {
     },
   });
 
+  const applyAiFields = useCallback((fields: Record<string, string>) => {
+    const formFields = [
+      "title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress",
+      "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
+      "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
+      "price", "consolidation", "driverWork", "packageCount", "loadingMethod",
+      "highwayFee", "description",
+    ];
+
+    let filledCount = 0;
+    for (const key of formFields) {
+      const val = fields[key];
+      if (val && typeof val === "string" && val.trim()) {
+        const options = SELECT_FIELD_OPTIONS[key];
+        if (options) {
+          const matched = findBestMatch(val.trim(), options);
+          if (matched) {
+            form.setValue(key as keyof InsertCargoListing, matched);
+            filledCount++;
+          }
+        } else {
+          form.setValue(key as keyof InsertCargoListing, val.trim());
+          filledCount++;
+        }
+      }
+    }
+    return filledCount;
+  }, [form]);
+
+  const parseAndFillRaw = useCallback(async (text: string) => {
+    try {
+      const formData = new FormData();
+      formData.append("text", text);
+
+      const response = await fetch("/api/ai/parse-cargo", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("解析に失敗しました");
+
+      const data = await response.json();
+      if (data.fields) {
+        const count = applyAiFields(data.fields);
+        toast({
+          title: "AI入力完了",
+          description: `${count}項目を自動入力しました。内容を確認して必要に応じて修正してください。`,
+        });
+      }
+    } catch {
+      toast({ title: "エラー", description: "AIによる解析に失敗しました", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [applyAiFields, toast]);
+
+  const handleAiSubmit = async () => {
+    if (aiText.trim()) {
+      setIsProcessing(true);
+      await parseAndFillRaw(aiText.trim());
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleAiSubmit();
+    }
+  };
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/ai/extract-text", { method: "POST", body: formData });
+      if (!response.ok) throw new Error("抽出に失敗しました");
+      const data = await response.json();
+      if (data.text) {
+        setAiText(data.text);
+        await parseAndFillRaw(data.text);
+      } else {
+        setIsProcessing(false);
+      }
+    } catch {
+      toast({ title: "エラー", description: "ファイルからの情報抽出に失敗しました", variant: "destructive" });
+      setIsProcessing(false);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [parseAndFillRaw, toast]);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.start(100);
+      setIsRecording(true);
+    } catch {
+      toast({ title: "エラー", description: "マイクへのアクセスが許可されていません", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const stopRecording = useCallback(async () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") return;
+    return new Promise<void>((resolve) => {
+      recorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        recorder.stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+        setIsProcessing(true);
+        try {
+          const formData = new FormData();
+          formData.append("audio", blob, "recording.webm");
+          const response = await fetch("/api/ai/transcribe", { method: "POST", body: formData });
+          if (!response.ok) throw new Error("文字起こしに失敗しました");
+          const data = await response.json();
+          if (data.text) {
+            setAiText(data.text);
+            await parseAndFillRaw(data.text);
+          } else {
+            setIsProcessing(false);
+          }
+        } catch {
+          toast({ title: "エラー", description: "音声の文字起こしに失敗しました", variant: "destructive" });
+          setIsProcessing(false);
+        }
+        resolve();
+      };
+      recorder.stop();
+    });
+  }, [parseAndFillRaw, toast]);
+
   return (
     <DashboardLayout>
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
@@ -98,11 +272,170 @@ export default function CargoForm() {
         <div className="flex items-center gap-3">
           <Package className="w-6 h-6 text-primary-foreground" />
           <div>
-            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">荷物情報の掲載</h1>
-            <p className="text-base text-primary-foreground text-shadow">運びたい荷物の情報を入力してください</p>
+            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">AI荷物登録</h1>
+            <p className="text-base text-primary-foreground text-shadow">AIが入力をサポートします</p>
           </div>
         </div>
       </div>
+
+      <Card className="mb-5">
+        <CardContent className="p-4 sm:p-5 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm">AI自動入力</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant={inputMode === "text" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("text")}
+                data-testid="button-mode-text"
+              >
+                <Search className="w-3.5 h-3.5 mr-1" />
+                テキスト
+              </Button>
+              <Button
+                variant={inputMode === "file" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("file")}
+                data-testid="button-mode-file"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1" />
+                ファイル
+              </Button>
+              <Button
+                variant={inputMode === "voice" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setInputMode("voice")}
+                data-testid="button-mode-voice"
+              >
+                <Mic className="w-3.5 h-3.5 mr-1" />
+                音声
+              </Button>
+            </div>
+          </div>
+
+          {inputMode === "text" && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">荷物情報を自然文で入力すると、AIがフォームに自動入力します</p>
+              <div className="flex gap-2">
+                <Textarea
+                  placeholder={"例: 3月5日に神奈川県横浜市から大阪市北区まで食品10トンを冷凍車で運びたい。パレット積みでフォークリフト作業。運賃5万円希望。"}
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={3}
+                  className="resize-none text-sm flex-1"
+                  data-testid="input-ai-text"
+                />
+                <div className="flex flex-col gap-1.5">
+                  <Button
+                    onClick={handleAiSubmit}
+                    disabled={isProcessing || !aiText.trim()}
+                    className="flex-1"
+                    data-testid="button-ai-fill"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 mr-1" />
+                    )}
+                    AI入力
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {inputMode === "file" && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">画像やスクリーンショットからAIが荷物情報を読み取り、フォームに自動入力します</p>
+              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  data-testid="input-file-upload"
+                />
+                {isProcessing ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">AIがファイルを解析してフォームに入力中...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="button-upload-file"
+                    >
+                      <Upload className="w-4 h-4 mr-1.5" />
+                      ファイルを選択
+                    </Button>
+                    <p className="text-xs text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {inputMode === "voice" && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">音声で荷物情報を話すと、AIがフォームに自動入力します</p>
+              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+                {isProcessing ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">AIが音声を解析してフォームに入力中...</p>
+                  </div>
+                ) : isRecording ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-destructive/20 animate-ping" />
+                      <div className="relative w-16 h-16 rounded-full bg-destructive flex items-center justify-center">
+                        <MicOff className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium text-destructive">録音中...</p>
+                    <p className="text-xs text-muted-foreground">「3月5日に神奈川から大阪まで食品10トン冷凍車」のように話してください</p>
+                    <Button
+                      variant="destructive"
+                      onClick={stopRecording}
+                      data-testid="button-stop-recording"
+                    >
+                      <MicOff className="w-4 h-4 mr-1.5" />
+                      録音停止してAI入力
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Mic className="w-8 h-8 text-muted-foreground" />
+                    <Button
+                      onClick={startRecording}
+                      data-testid="button-start-recording"
+                    >
+                      <Mic className="w-4 h-4 mr-1.5" />
+                      録音開始
+                    </Button>
+                    <p className="text-xs text-muted-foreground">マイクへのアクセスを許可してください</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {aiText && (inputMode === "file" || inputMode === "voice") && (
+            <div className="bg-muted/30 rounded-md p-3">
+              <p className="text-xs text-muted-foreground mb-1">認識されたテキスト:</p>
+              <p className="text-sm" data-testid="text-recognized">{aiText}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-6">
