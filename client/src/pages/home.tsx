@@ -150,9 +150,9 @@ export default function Home() {
               <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mx-auto mb-5">
                 <Search className="w-9 h-9 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-primary-foreground mb-2">案件が見つかる</h3>
+              <h3 className="text-xl font-bold text-primary-foreground mb-2">案件がAIで簡単に見つかる</h3>
               <p className="text-base text-primary-foreground leading-relaxed">
-                豊富な荷物・車両情報の中から<br />ほしい案件を見つけ出せます
+                豊富な荷物・車両情報の中から<br />ほしい案件を簡単に見つけ出せます
               </p>
             </div>
             <div className="text-center text-shadow">
@@ -161,7 +161,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-primary-foreground mb-2">成約が早い</h3>
               <p className="text-base text-primary-foreground leading-relaxed">
-                会員同士の直接交渉で<br />スピーディーな成約を実現します
+                会員同士の直接交渉やAI掲載で<br />スピーディーな成約を実現します
               </p>
             </div>
             <div className="text-center text-shadow">
@@ -170,7 +170,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-primary-foreground mb-2">安心な取引</h3>
               <p className="text-base text-primary-foreground leading-relaxed">
-                充実したサポートや保証サービスで<br />安心して取引できます
+                充実したサポートで<br />安心して取引できます
               </p>
             </div>
           </div>
