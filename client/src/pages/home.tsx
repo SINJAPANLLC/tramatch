@@ -6,7 +6,47 @@ import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useRef } from "react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
+
+function useCountUp(target: number, duration = 1500) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!ref.current || hasAnimated.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          const startTime = performance.now();
+          const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.round(eased * target));
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target, duration]);
+
+  useEffect(() => {
+    if (hasAnimated.current) {
+      setCount(target);
+    }
+  }, [target]);
+
+  return { count, ref };
+}
 
 function CargoCard({ listing }: { listing: CargoListing }) {
   return (
@@ -53,6 +93,38 @@ function TruckCard({ listing }: { listing: TruckListing }) {
         </CardContent>
       </Card>
     </Link>
+  );
+}
+
+function StatsCounters({ cargoCount, truckCount }: { cargoCount: number; truckCount: number }) {
+  const cargo = useCountUp(cargoCount);
+  const truck = useCountUp(truckCount);
+  const support = useCountUp(24);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8" ref={cargo.ref}>
+      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
+        <p className="text-base text-primary-foreground mb-2">荷物情報数</p>
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{cargo.count}</span>
+          <span className="text-lg font-medium text-primary-foreground">件</span>
+        </div>
+      </div>
+      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow" ref={truck.ref}>
+        <p className="text-base text-primary-foreground mb-2">空きトラック情報数</p>
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{truck.count}</span>
+          <span className="text-lg font-medium text-primary-foreground">件</span>
+        </div>
+      </div>
+      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow" ref={support.ref}>
+        <p className="text-base text-primary-foreground mb-2">サポート対応</p>
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{support.count}</span>
+          <span className="text-lg font-medium text-primary-foreground">時間</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -183,29 +255,7 @@ export default function Home() {
             圧倒的な情報量
           </h2>
           <p className="text-base text-primary-foreground text-center mb-12 text-shadow">リアルタイムで更新される情報をご活用ください</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
-              <p className="text-base text-primary-foreground mb-2">荷物情報数</p>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{cargoCount}</span>
-                <span className="text-lg font-medium text-primary-foreground">件</span>
-              </div>
-            </div>
-            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
-              <p className="text-base text-primary-foreground mb-2">空きトラック情報数</p>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{truckCount}</span>
-                <span className="text-lg font-medium text-primary-foreground">件</span>
-              </div>
-            </div>
-            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
-              <p className="text-base text-primary-foreground mb-2">サポート対応</p>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">24</span>
-                <span className="text-lg font-medium text-primary-foreground">時間</span>
-              </div>
-            </div>
-          </div>
+          <StatsCounters cargoCount={cargoCount} truckCount={truckCount} />
         </div>
       </section>
 
