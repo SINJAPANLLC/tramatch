@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   fax: text("fax"),
   email: text("email").notNull().unique(),
   truckCount: text("truck_count"),
+  permitFile: text("permit_file"),
   userType: text("user_type").notNull(),
   role: text("role").notNull().default("user"),
 });

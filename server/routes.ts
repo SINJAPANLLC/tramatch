@@ -1,9 +1,38 @@
+import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const permitUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `permit_${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [".pdf", ".jpg", ".jpeg", ".png"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("PDF、JPG、PNGファイルのみアップロードできます"));
+    }
+  },
+});
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
@@ -23,6 +52,15 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  app.use("/uploads", express.static(uploadDir));
+
+  app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "ファイルを選択してください" });
+    }
+    res.json({ filePath: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
+  });
 
   app.post("/api/register", async (req, res) => {
     try {

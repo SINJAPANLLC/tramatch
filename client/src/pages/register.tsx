@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Upload, FileText, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/IMG_0046_1771226022407.jpg";
 
@@ -15,6 +15,9 @@ export default function Register() {
   const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [agreed, setAgreed] = useState(false);
+  const [permitFile, setPermitFile] = useState<{ filePath: string; fileName: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -32,6 +35,28 @@ export default function Register() {
     }
   }, [isAuthenticated, setLocation]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("permit", file);
+      const res = await fetch("/api/upload/permit", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message);
+      }
+      const data = await res.json();
+      setPermitFile(data);
+      toast({ title: "アップロード完了", description: "許可証がアップロードされました" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "アップロード失敗", description: error.message || "ファイルのアップロードに失敗しました" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
@@ -43,7 +68,7 @@ export default function Register() {
       return;
     }
     try {
-      await register.mutateAsync(form);
+      await register.mutateAsync({ ...form, permitFile: permitFile?.filePath || "" });
       toast({ title: "登録完了", description: "アカウントが作成されました" });
     } catch (error: any) {
       toast({
@@ -163,6 +188,49 @@ export default function Register() {
                 placeholder="例: 10台"
                 data-testid="input-register-truck-count"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>運送事業許可証</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleFileUpload}
+                className="hidden"
+                data-testid="input-permit-file"
+              />
+              {permitFile ? (
+                <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/30">
+                  <FileText className="w-5 h-5 text-primary shrink-0" />
+                  <span className="text-sm truncate flex-1" data-testid="text-permit-filename">{permitFile.fileName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setPermitFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                    data-testid="button-remove-permit"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  data-testid="button-upload-permit"
+                >
+                  {uploading ? "アップロード中..." : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      許可証をアップロード
+                    </>
+                  )}
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground">PDF、JPG、PNG形式（最大10MB）</p>
             </div>
             <div className="flex items-start gap-2 pt-2">
               <Checkbox
