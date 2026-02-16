@@ -479,20 +479,14 @@ export default function Home() {
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">TRA MATCHを使って<br className="sm:hidden" />業務をラクにしませんか？</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">TRA MATCH AIを使って<br className="sm:hidden" />業務をラクにしませんか？</h2>
           <p className="mt-4 text-primary-foreground text-lg text-shadow">
-            無料で会員登録して、荷物や空車の情報を掲載・検索できます。
+            無料で会員登録して、荷物や空車の情報をAI掲載・AI検索できます。
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/register">
               <Button size="lg" variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground min-w-[220px]" data-testid="button-cta-register">
                 無料会員登録
-              </Button>
-            </Link>
-            <Link href="/cargo">
-              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px]" data-testid="button-cta-search">
-                <Search className="w-4 h-4 mr-2" />
-                荷物を見てみる（無料）
               </Button>
             </Link>
           </div>
