@@ -355,5 +355,68 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/ai/parse-cargo", aiUpload.none(), async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text || typeof text !== "string") {
+        return res.status(400).json({ message: "テキストが必要です" });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
+以下のJSON形式で返してください。情報が不明な場合はそのフィールドを空文字にしてください。
+
+{
+  "title": "タイトル（出発地→到着地 荷種 重量の形式）",
+  "departureArea": "都道府県名のみ（例: 神奈川）",
+  "departureAddress": "詳細住所（市区町村以下）",
+  "arrivalArea": "都道府県名のみ（例: 大阪）",
+  "arrivalAddress": "詳細住所（市区町村以下）",
+  "desiredDate": "発日（YYYY/MM/DD形式）",
+  "departureTime": "発時間（以下から選択: 指定なし, 午前中, 午後, 夕方以降, 終日可, 06:00〜20:00の1時間刻み）",
+  "arrivalDate": "着日（YYYY/MM/DD形式）",
+  "arrivalTime": "着時間（同上の選択肢から）",
+  "cargoType": "荷種（例: 食品、機械部品、建材）",
+  "weight": "重量（例: 5t、500kg）",
+  "vehicleType": "車種（以下から選択: 軽車両, 2t車, 4t車, 10t車, 大型車, トレーラー, その他）",
+  "bodyType": "車体タイプ（以下から選択: 平ボディ, バン, ウイング, 冷蔵車, 冷凍車, ダンプ, タンクローリー, 車載車, その他）",
+  "temperatureControl": "温度管理（以下から選択: 指定なし, 常温, 冷蔵（0〜10℃）, 冷凍（-18℃以下）, 定温）",
+  "price": "運賃（数字のみ、例: 50000）",
+  "consolidation": "積合（可 or 不可）",
+  "driverWork": "ドライバー作業（以下から選択: 手積み手降ろし, フォークリフト, クレーン, ゲート車, パレット, 作業なし（車上渡し）, その他）",
+  "packageCount": "個数（例: 20パレット）",
+  "loadingMethod": "荷姿（以下から選択: バラ積み, パレット積み, 段ボール, フレコン, その他）",
+  "highwayFee": "高速代（以下から選択: 込み, 別途, 高速代なし）",
+  "description": "備考"
+}
+
+JSONのみを返してください。説明文は不要です。`,
+          },
+          {
+            role: "user",
+            content: text,
+          },
+        ],
+        max_tokens: 800,
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content || "{}";
+      try {
+        const parsed = JSON.parse(content);
+        res.json({ fields: parsed });
+      } catch {
+        res.json({ fields: {} });
+      }
+    } catch (error) {
+      console.error("Cargo parse error:", error);
+      res.status(500).json({ message: "荷物情報の解析に失敗しました" });
+    }
+  });
+
   return httpServer;
 }
