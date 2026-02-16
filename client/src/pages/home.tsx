@@ -142,36 +142,36 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-card">
+      <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-12" data-testid="text-reason-title">
+          <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground text-center mb-12" data-testid="text-reason-title">
             TRA MATCHが選ばれる理由
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5">
-                <Search className="w-9 h-9 text-primary" />
+              <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mx-auto mb-5">
+                <Search className="w-9 h-9 text-primary-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">案件が見つかる</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-primary-foreground mb-2">案件が見つかる</h3>
+              <p className="text-sm text-primary-foreground/80 leading-relaxed">
                 豊富な荷物・車両情報の中から<br />ほしい案件を見つけ出せます
               </p>
             </div>
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5">
-                <Handshake className="w-9 h-9 text-primary" />
+              <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mx-auto mb-5">
+                <Handshake className="w-9 h-9 text-primary-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">成約が早い</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-primary-foreground mb-2">成約が早い</h3>
+              <p className="text-sm text-primary-foreground/80 leading-relaxed">
                 会員同士の直接交渉で<br />スピーディーな成約を実現します
               </p>
             </div>
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5">
-                <Shield className="w-9 h-9 text-primary" />
+              <div className="w-20 h-20 rounded-full bg-primary-foreground/20 flex items-center justify-center mx-auto mb-5">
+                <Shield className="w-9 h-9 text-primary-foreground" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">安心な取引</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-primary-foreground mb-2">安心な取引</h3>
+              <p className="text-sm text-primary-foreground/80 leading-relaxed">
                 充実したサポートや保証サービスで<br />安心して取引できます
               </p>
             </div>
@@ -179,40 +179,34 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-background">
+      <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-4" data-testid="text-stats-title">
+          <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground text-center mb-4" data-testid="text-stats-title">
             圧倒的な情報量
           </h2>
-          <p className="text-sm text-muted-foreground text-center mb-12">リアルタイムで更新される情報をご活用ください</p>
+          <p className="text-sm text-primary-foreground/80 text-center mb-12">リアルタイムで更新される情報をご活用ください</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            <Card>
-              <CardContent className="p-6 sm:p-8 text-center">
-                <p className="text-sm text-muted-foreground mb-2">荷物情報数</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl sm:text-5xl font-bold text-primary">{cargoCount}</span>
-                  <span className="text-lg font-medium text-foreground">件</span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 sm:p-8 text-center">
-                <p className="text-sm text-muted-foreground mb-2">空きトラック情報数</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl sm:text-5xl font-bold text-primary">{truckCount}</span>
-                  <span className="text-lg font-medium text-foreground">件</span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 sm:p-8 text-center">
-                <p className="text-sm text-muted-foreground mb-2">サポート対応</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl sm:text-5xl font-bold text-primary">24</span>
-                  <span className="text-lg font-medium text-foreground">時間</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center">
+              <p className="text-sm text-primary-foreground/80 mb-2">荷物情報数</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground">{cargoCount}</span>
+                <span className="text-lg font-medium text-primary-foreground">件</span>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center">
+              <p className="text-sm text-primary-foreground/80 mb-2">空きトラック情報数</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground">{truckCount}</span>
+                <span className="text-lg font-medium text-primary-foreground">件</span>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center">
+              <p className="text-sm text-primary-foreground/80 mb-2">サポート対応</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-4xl sm:text-5xl font-bold text-primary-foreground">24</span>
+                <span className="text-lg font-medium text-primary-foreground">時間</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -237,82 +231,74 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-card">
+      <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center mb-4">サービス内容</h2>
-          <p className="text-sm text-muted-foreground text-center mb-12">運送会社同士のマッチングサービス</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground text-center mb-4">サービス内容</h2>
+          <p className="text-sm text-primary-foreground/80 text-center mb-12">運送会社同士のマッチングサービス</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <Package className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground mb-1">荷物情報の掲載・検索</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    運びたい荷物の情報を掲載し、空きトラックを持つ運送会社とマッチング。エリア・日付・車種で簡単検索。
-                  </p>
-                  <Link href="/cargo" className="inline-flex items-center gap-1 mt-3 text-sm text-primary font-medium">
-                    荷物一覧を見る <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <Truck className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground mb-1">空車情報の掲載・検索</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    空きトラックの情報を掲載し、荷物を探している荷主とマッチング。効率的に帰り荷を見つけられます。
-                  </p>
-                  <Link href="/trucks" className="inline-flex items-center gap-1 mt-3 text-sm text-primary font-medium">
-                    車両一覧を見る <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground mb-1">会員同士の直接マッチング</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    中間マージンなし。運送会社同士で直接やり取りができるため、コストを抑えた取引が可能です。
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground mb-1">リアルタイム更新</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    最新の荷物・車両情報がリアルタイムで更新。タイムリーなマッチングを実現します。
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-primary-foreground/15 rounded-md p-6 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+                <Package className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-bold text-primary-foreground mb-1">荷物情報の掲載・検索</h3>
+                <p className="text-sm text-primary-foreground/80 leading-relaxed">
+                  運びたい荷物の情報を掲載し、空きトラックを持つ運送会社とマッチング。エリア・日付・車種で簡単検索。
+                </p>
+                <Link href="/cargo" className="inline-flex items-center gap-1 mt-3 text-sm text-primary-foreground font-medium">
+                  荷物一覧を見る <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+                <Truck className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-bold text-primary-foreground mb-1">空車情報の掲載・検索</h3>
+                <p className="text-sm text-primary-foreground/80 leading-relaxed">
+                  空きトラックの情報を掲載し、荷物を探している荷主とマッチング。効率的に帰り荷を見つけられます。
+                </p>
+                <Link href="/trucks" className="inline-flex items-center gap-1 mt-3 text-sm text-primary-foreground font-medium">
+                  車両一覧を見る <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+                <Users className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-bold text-primary-foreground mb-1">会員同士の直接マッチング</h3>
+                <p className="text-sm text-primary-foreground/80 leading-relaxed">
+                  中間マージンなし。運送会社同士で直接やり取りができるため、コストを抑えた取引が可能です。
+                </p>
+              </div>
+            </div>
+            <div className="bg-primary-foreground/15 rounded-md p-6 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+                <Clock className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-bold text-primary-foreground mb-1">リアルタイム更新</h3>
+                <p className="text-sm text-primary-foreground/80 leading-relaxed">
+                  最新の荷物・車両情報がリアルタイムで更新。タイムリーなマッチングを実現します。
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-background">
+      <section className="py-16 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
-              <h2 className="text-xl font-bold text-foreground">最新の荷物情報</h2>
-              <p className="text-sm text-muted-foreground mt-1">新着の荷物案件をご覧ください</p>
+              <h2 className="text-xl font-bold text-primary-foreground">最新の荷物情報</h2>
+              <p className="text-sm text-primary-foreground/80 mt-1">新着の荷物案件をご覧ください</p>
             </div>
             <Link href="/cargo">
-              <Button variant="outline" data-testid="link-all-cargo">
+              <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-cargo">
                 すべて見る
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
@@ -325,7 +311,7 @@ export default function Home() {
                   <CargoCard key={listing.id} listing={listing} />
                 ))}
             {!cargoLoading && (!cargoListings || cargoListings.length === 0) && (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
+              <div className="col-span-full text-center py-12 text-primary-foreground/70">
                 <Package className="w-10 h-10 mx-auto mb-3 opacity-40" />
                 <p>荷物情報はまだありません</p>
               </div>
@@ -334,15 +320,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-card">
+      <section className="py-16 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
             <div>
-              <h2 className="text-xl font-bold text-foreground">最新の車両情報</h2>
-              <p className="text-sm text-muted-foreground mt-1">新着の空車情報をご覧ください</p>
+              <h2 className="text-xl font-bold text-primary-foreground">最新の車両情報</h2>
+              <p className="text-sm text-primary-foreground/80 mt-1">新着の空車情報をご覧ください</p>
             </div>
             <Link href="/trucks">
-              <Button variant="outline" data-testid="link-all-trucks">
+              <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-trucks">
                 すべて見る
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
@@ -355,7 +341,7 @@ export default function Home() {
                   <TruckCard key={listing.id} listing={listing} />
                 ))}
             {!truckLoading && (!truckListings || truckListings.length === 0) && (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
+              <div className="col-span-full text-center py-12 text-primary-foreground/70">
                 <Truck className="w-10 h-10 mx-auto mb-3 opacity-40" />
                 <p>車両情報はまだありません</p>
               </div>
