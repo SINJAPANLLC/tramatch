@@ -478,6 +478,44 @@ export default function Home() {
       </section>
 
       <section className="py-16 sm:py-20 bg-primary">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg mb-8">お知らせ</h2>
+          <Card>
+            <CardContent className="p-0 divide-y divide-border">
+              <div className="flex items-start gap-4 p-4">
+                <Badge variant="default" className="shrink-0 mt-0.5">新着</Badge>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">2026/02/16</p>
+                  <p className="text-base font-semibold text-foreground">TRA MATCH AIβ版をリリースしました。月額費用0円でご利用いただけます。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4">
+                <Badge variant="secondary" className="shrink-0 mt-0.5">更新</Badge>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">2026/02/10</p>
+                  <p className="text-base font-semibold text-foreground">AI検索機能を強化しました。より精度の高いマッチングが可能になりました。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4">
+                <Badge variant="secondary" className="shrink-0 mt-0.5">お知らせ</Badge>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">2026/02/01</p>
+                  <p className="text-base font-semibold text-foreground">会員登録数が100社を突破しました。ご利用ありがとうございます。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4">
+                <Badge variant="secondary" className="shrink-0 mt-0.5">お知らせ</Badge>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">2026/01/20</p>
+                  <p className="text-base font-semibold text-foreground">AI掲載機能をリリースしました。テキストを入力するだけで荷物・車両情報を自動登録できます。</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">TRA MATCH AIを使って<br className="sm:hidden" />業務をラクにしませんか？</h2>
           <p className="mt-4 text-primary-foreground text-lg text-shadow">
