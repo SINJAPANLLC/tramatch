@@ -177,6 +177,12 @@
   .bg-primary {
     font-weight: 600;
   }
+
+  .bg-primary button,
+  .bg-primary a[role="button"],
+  .bg-primary [class*="btn"] {
+    font-weight: 700;
+  }
 }
 
 .text-shadow {
