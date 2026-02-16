@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,12 +7,54 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  companyName: text("company_name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  userType: text("user_type").notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const cargoListings = pgTable("cargo_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  departureArea: text("departure_area").notNull(),
+  arrivalArea: text("arrival_area").notNull(),
+  cargoType: text("cargo_type").notNull(),
+  weight: text("weight").notNull(),
+  desiredDate: text("desired_date").notNull(),
+  vehicleType: text("vehicle_type").notNull(),
+  price: text("price"),
+  description: text("description"),
+  companyName: text("company_name").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  contactEmail: text("contact_email"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const truckListings = pgTable("truck_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  currentArea: text("current_area").notNull(),
+  destinationArea: text("destination_area").notNull(),
+  vehicleType: text("vehicle_type").notNull(),
+  maxWeight: text("max_weight").notNull(),
+  availableDate: text("available_date").notNull(),
+  price: text("price"),
+  description: text("description"),
+  companyName: text("company_name").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  contactEmail: text("contact_email"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({ id: true });
+export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true });
+export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertCargoListing = z.infer<typeof insertCargoListingSchema>;
+export type CargoListing = typeof cargoListings.$inferSelect;
+export type InsertTruckListing = z.infer<typeof insertTruckListingSchema>;
+export type TruckListing = typeof truckListings.$inferSelect;
