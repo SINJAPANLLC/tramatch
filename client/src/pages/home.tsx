@@ -125,11 +125,6 @@ export default function Home() {
               空車情報・荷物情報をリアルタイムでAI登録・AI検索できます。
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/register">
-                <Button size="lg" variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground min-w-[220px] text-base" data-testid="button-hero-register">
-                  無料会員登録
-                </Button>
-              </Link>
               <Link href="/cargo">
                 <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-cargo">
                   荷物を見てみる
