@@ -213,6 +213,21 @@ type CompanyInfo = {
 
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
   const [panelTab, setPanelTab] = useState<"cargo" | "company">("cargo");
+  const { toast } = useToast();
+
+  const completeCargoMutation = useMutation({
+    mutationFn: async (cargoId: string) => {
+      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "completed" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      toast({ title: "成約しました", description: "荷物のステータスが成約済みに変更されました" });
+      onClose();
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "成約処理に失敗しました", variant: "destructive" });
+    },
+  });
 
   const { data: companyInfo } = useQuery<CompanyInfo>({
     queryKey: ["/api/companies", listing?.userId],
@@ -309,13 +324,18 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           </div>
 
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
+            <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
             <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
           </div>
 
           {listing.status === "active" && (
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-base py-5 rounded-full no-default-hover-elevate" data-testid="button-proceed-contract">
-              成約へ進む
+            <Button
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-sm rounded-full no-default-hover-elevate"
+              data-testid="button-proceed-contract"
+              onClick={() => completeCargoMutation.mutate(listing.id)}
+              disabled={completeCargoMutation.isPending}
+            >
+              {completeCargoMutation.isPending ? "処理中..." : "成約へ進む"}
             </Button>
           )}
 

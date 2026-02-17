@@ -257,7 +257,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           </div>
 
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
+            <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
             <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
           </div>
 
