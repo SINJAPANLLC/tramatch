@@ -607,8 +607,8 @@ export default function CargoForm() {
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  rows={2}
-                  className="resize-none text-sm flex-1 min-h-[44px]"
+                  rows={3}
+                  className="resize-none text-sm flex-1 min-h-[64px]"
                   data-testid="input-chat-text"
                 />
                 <div className="flex flex-col gap-1">
@@ -1032,7 +1032,7 @@ export default function CargoForm() {
                           スキップ
                         </Button>
                       )}
-                      <Button type="submit" className="flex-1" size="sm" disabled={mutation.isPending} data-testid="button-submit-cargo">
+                      <Button type="submit" className="flex-1 text-sm font-bold" disabled={mutation.isPending} data-testid="button-submit-cargo">
                         {mutation.isPending ? "掲載中..." : totalItems > 1 ? `掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
                       </Button>
                     </div>
