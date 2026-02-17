@@ -70,9 +70,21 @@ export const truckListings = pgTable("truck_listings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: varchar("related_id"),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
 export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true, userId: true });
 export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -80,3 +92,5 @@ export type InsertCargoListing = z.infer<typeof insertCargoListingSchema>;
 export type CargoListing = typeof cargoListings.$inferSelect;
 export type InsertTruckListing = z.infer<typeof insertTruckListingSchema>;
 export type TruckListing = typeof truckListings.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

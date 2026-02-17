@@ -93,6 +93,18 @@ export async function registerRoutes(
       });
 
       const { password, ...safeUser } = user;
+
+      const admins = (await storage.getAllUsers()).filter((u) => u.role === "admin");
+      for (const admin of admins) {
+        await storage.createNotification({
+          userId: admin.id,
+          type: "user_registered",
+          title: "新規ユーザー登録",
+          message: `${parsed.data.companyName} が新規登録しました。承認をお願いします。`,
+          relatedId: user.id,
+        });
+      }
+
       res.status(201).json({ ...safeUser, message: "登録が完了しました。管理者の承認後にログインできます。" });
     } catch (error) {
       res.status(500).json({ message: "登録に失敗しました" });
@@ -181,6 +193,20 @@ export async function registerRoutes(
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
       const listing = await storage.createCargoListing({ ...parsed.data }, req.session.userId as string);
+
+      const allUsers = await storage.getAllUsers();
+      for (const u of allUsers) {
+        if (u.id !== req.session.userId && u.approved) {
+          await storage.createNotification({
+            userId: u.id,
+            type: "cargo_new",
+            title: "新しい荷物が登録されました",
+            message: `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType} ${listing.weight}`,
+            relatedId: listing.id,
+          });
+        }
+      }
+
       res.status(201).json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to create cargo listing" });
@@ -227,6 +253,20 @@ export async function registerRoutes(
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
       const listing = await storage.createTruckListing({ ...parsed.data }, req.session.userId as string);
+
+      const allUsers = await storage.getAllUsers();
+      for (const u of allUsers) {
+        if (u.id !== req.session.userId && u.approved) {
+          await storage.createNotification({
+            userId: u.id,
+            type: "truck_new",
+            title: "新しい空車が登録されました",
+            message: `${listing.currentArea}→${listing.destinationArea} ${listing.vehicleType} ${listing.maxWeight}`,
+            relatedId: listing.id,
+          });
+        }
+      }
+
       res.status(201).json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to create truck listing" });
@@ -276,6 +316,13 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
+      await storage.createNotification({
+        userId: user.id,
+        type: "user_approved",
+        title: "アカウント承認",
+        message: "アカウントが承認されました。ログインしてサービスをご利用ください。",
+      });
+
       const { password, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
@@ -416,6 +463,57 @@ JSONのみを返してください。説明文は不要です。`,
     } catch (error) {
       console.error("Cargo parse error:", error);
       res.status(500).json({ message: "荷物情報の解析に失敗しました" });
+    }
+  });
+
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      const notifs = await storage.getNotificationsByUserId(req.session.userId as string);
+      res.json(notifs);
+    } catch (error) {
+      res.status(500).json({ message: "通知の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", requireAuth, async (req, res) => {
+    try {
+      const count = await storage.getUnreadNotificationCount(req.session.userId as string);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "未読数の取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      const notif = await storage.markNotificationAsRead(req.params.id as string, req.session.userId as string);
+      if (!notif) {
+        return res.status(404).json({ message: "通知が見つかりません" });
+      }
+      res.json(notif);
+    } catch (error) {
+      res.status(500).json({ message: "通知の更新に失敗しました" });
+    }
+  });
+
+  app.patch("/api/notifications/read-all", requireAuth, async (req, res) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.session.userId as string);
+      res.json({ message: "全て既読にしました" });
+    } catch (error) {
+      res.status(500).json({ message: "通知の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
+    try {
+      const deleted = await storage.deleteNotification(req.params.id as string, req.session.userId as string);
+      if (!deleted) {
+        return res.status(404).json({ message: "通知が見つかりません" });
+      }
+      res.json({ message: "通知を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "通知の削除に失敗しました" });
     }
   });
 
