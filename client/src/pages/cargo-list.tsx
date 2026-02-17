@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/utils";
 
 const QUICK_FILTERS = [
   { label: "全て", value: "all" },
@@ -575,7 +576,7 @@ export default function CargoList() {
                   <td className="px-4 py-3.5 text-right align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
                       <div className="font-bold text-[14px] text-foreground whitespace-nowrap">
-                        {listing.price ? `¥${listing.price}` : "要相談"}
+                        {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                       </div>
                       {listing.highwayFee && (
                         <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">

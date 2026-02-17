@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
+import { formatPrice } from "@/lib/utils";
 
 function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelete: () => void; isDeleting: boolean }) {
   const daysAgo = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
@@ -84,7 +85,7 @@ function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelet
             <div className="flex items-center gap-3 flex-wrap">
               {item.price && (
                 <span className="text-sm font-semibold text-primary" data-testid={`text-price-${item.id}`}>
-                  {item.price}円
+                  {formatPrice(item.price)}円
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs text-muted-foreground">

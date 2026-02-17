@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, MapPin, Calendar, Weight, Building2, Phone, Mail, Truck } from "lucide-react";
 import type { TruckListing } from "@shared/schema";
+import { formatPrice } from "@/lib/utils";
 
 export default function TruckDetail() {
   const [, params] = useRoute("/trucks/:id");
@@ -106,7 +107,7 @@ export default function TruckDetail() {
             {listing.price && (
               <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
                 <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
-                <div className="text-lg font-bold text-primary">{listing.price}</div>
+                <div className="text-lg font-bold text-primary">{formatPrice(listing.price)}円</div>
               </div>
             )}
 

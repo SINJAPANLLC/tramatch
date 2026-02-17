@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
+import { formatPrice } from "@/lib/utils";
 
 function useCountUp(target: number, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -79,7 +80,7 @@ function CargoCard({ listing }: { listing: CargoListing }) {
           </div>
           <div className="mt-auto pt-2">
             <p className="text-xs text-muted-foreground">運賃</p>
-            <p className="font-bold text-primary text-lg">{listing.price || "要相談"}</p>
+            <p className="font-bold text-primary text-lg">{listing.price ? `${formatPrice(listing.price)}円` : "要相談"}</p>
           </div>
         </CardContent>
       </Card>
