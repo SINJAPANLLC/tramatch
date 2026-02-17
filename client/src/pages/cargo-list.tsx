@@ -490,7 +490,6 @@ export default function CargoList() {
               onClick={() => { setTodayOnly(!todayOnly); setDateFilter(""); setPage(1); }}
               data-testid="filter-today"
             >
-              <Sun className="w-3 h-3 mr-1" />
               当日荷物
             </Badge>
           </div>
