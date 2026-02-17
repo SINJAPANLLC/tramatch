@@ -12,10 +12,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
-import { Package, ArrowLeft, Sparkles, Search, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon } from "lucide-react";
-import { Link } from "wouter";
+import { Package, Sparkles, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon, Send, ChevronDown, ChevronUp, CheckCircle2, CircleDot, Bot, User, Banknote } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parse } from "date-fns";
@@ -52,8 +51,6 @@ const AREAS = [
   "福岡", "佐賀", "長崎", "熊本", "大分", "宮崎", "鹿児島", "沖縄"
 ];
 
-type InputMode = "text" | "file" | "voice";
-
 const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
   departureArea: AREAS,
   arrivalArea: AREAS,
@@ -88,6 +85,16 @@ const CARGO_FIELDS = [
 
 const MULTI_SELECT_FIELDS = ["vehicleType", "bodyType"];
 
+const FIELD_LABELS: Record<string, string> = {
+  title: "タイトル", departureArea: "発地", departureAddress: "発地詳細",
+  arrivalArea: "着地", arrivalAddress: "着地詳細",
+  desiredDate: "発日", departureTime: "発時間", arrivalDate: "着日", arrivalTime: "着時間",
+  cargoType: "荷種", weight: "重量", vehicleType: "車種", bodyType: "車体",
+  temperatureControl: "温度管理", price: "運賃", transportType: "形態",
+  consolidation: "積合", driverWork: "作業", packageCount: "個数",
+  loadingMethod: "荷姿", highwayFee: "高速代", description: "備考",
+};
+
 function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of CARGO_FIELDS) {
@@ -95,7 +102,6 @@ function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
     if (val == null) { result[key] = ""; continue; }
     const str = String(val).trim();
     if (!str) { result[key] = ""; continue; }
-
     if (MULTI_SELECT_FIELDS.includes(key)) {
       const options = SELECT_FIELD_OPTIONS[key];
       if (options) {
@@ -117,63 +123,87 @@ function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
   return result;
 }
 
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  extractedFields?: Record<string, string>;
+  priceSuggestion?: { min: number; max: number; reason: string } | null;
+  items?: Record<string, unknown>[];
+  status?: string;
+};
+
 export default function CargoForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [inputMode, setInputMode] = useState<InputMode>("text");
-  const [aiText, setAiText] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: "荷物登録のお手伝いをします！\n\n荷物の情報をテキストで貼り付けるか、ファイルをアップロードしてください。運賃の相談もできます。\n\n例：「3月5日に横浜から大阪まで食品10トンを冷凍車で運びたい」",
+      status: "chatting",
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [showForm, setShowForm] = useState(false);
   const [pendingItems, setPendingItems] = useState<Record<string, unknown>[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const [extractedFields, setExtractedFields] = useState<Record<string, string>>({});
 
   const form = useForm<InsertCargoListing>({
     resolver: zodResolver(insertCargoListingSchema),
     defaultValues: {
-      title: "",
-      departureArea: "",
-      departureAddress: "",
-      departureTime: "",
-      arrivalArea: "",
-      arrivalAddress: "",
-      arrivalTime: "",
-      cargoType: "",
-      weight: "",
-      desiredDate: "",
-      arrivalDate: "",
-      vehicleType: "",
-      bodyType: "",
-      temperatureControl: "",
-      price: "",
-      highwayFee: "",
-      transportType: "",
-      consolidation: "",
-      driverWork: "",
-      packageCount: "",
-      loadingMethod: "",
-      description: "",
-      companyName: "",
-      contactPhone: "",
-      contactEmail: ""
+      title: "", departureArea: "", departureAddress: "", departureTime: "",
+      arrivalArea: "", arrivalAddress: "", arrivalTime: "", cargoType: "",
+      weight: "", desiredDate: "", arrivalDate: "", vehicleType: "", bodyType: "",
+      temperatureControl: "", price: "", highwayFee: "", transportType: "",
+      consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
+      description: "", companyName: "", contactPhone: "", contactEmail: "",
     },
   });
 
-  const applyAiFields = useCallback((rawFields: Record<string, unknown>) => {
-    const normalized = normalizeAiItem(rawFields);
-    let filledCount = 0;
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, scrollToBottom]);
+
+  const applyFieldsToForm = useCallback((fields: Record<string, string>) => {
+    let count = 0;
     for (const key of CARGO_FIELDS) {
-      const val = normalized[key];
+      const val = fields[key];
       if (val) {
         form.setValue(key as keyof InsertCargoListing, val);
-        filledCount++;
+        count++;
       }
     }
-    return filledCount;
+    return count;
   }, [form]);
+
+  const mergeExtractedFields = useCallback((newFields: Record<string, unknown>) => {
+    const normalized = normalizeAiItem(newFields);
+    setExtractedFields(prev => {
+      const merged = { ...prev };
+      for (const key of CARGO_FIELDS) {
+        if (normalized[key]) merged[key] = normalized[key];
+      }
+      return merged;
+    });
+    const normalizedClean: Record<string, string> = {};
+    for (const key of CARGO_FIELDS) {
+      if (normalized[key]) normalizedClean[key] = normalized[key];
+    }
+    return normalizedClean;
+  }, []);
 
   const loadNextPendingItem = useCallback(() => {
     if (pendingItems.length > 0) {
@@ -189,10 +219,12 @@ export default function CargoForm() {
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
       });
-      const count = applyAiFields(nextItem);
+      const normalized = normalizeAiItem(nextItem);
+      setExtractedFields(normalized);
+      applyFieldsToForm(normalized);
       toast({
         title: `次の荷物を入力しました（${currentItemIndex + 2}/${totalItems}件目）`,
-        description: `${count}項目を自動入力しました。内容を確認して掲載してください。残り${remaining.length}件`,
+        description: `残り${remaining.length}件`,
       });
     } else {
       setPendingItems([]);
@@ -200,7 +232,7 @@ export default function CargoForm() {
       setTotalItems(0);
       setLocation("/cargo");
     }
-  }, [pendingItems, currentItemIndex, totalItems, form, applyAiFields, toast, setLocation]);
+  }, [pendingItems, currentItemIndex, totalItems, form, applyFieldsToForm, toast, setLocation]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertCargoListing) => {
@@ -224,67 +256,102 @@ export default function CargoForm() {
     },
   });
 
-  const parseAndFillRaw = useCallback(async (text: string) => {
-    try {
-      const formData = new FormData();
-      formData.append("text", text);
+  const sendChatMessage = useCallback(async (userMessage: string, opts?: { skipGuard?: boolean; skipUserMsg?: boolean }) => {
+    if (!userMessage.trim()) return;
+    if (!opts?.skipGuard && isAiProcessing) return;
 
-      const response = await fetch("/api/ai/parse-cargo", {
+    let userMsg: ChatMessage | null = null;
+    if (!opts?.skipUserMsg) {
+      userMsg = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: userMessage,
+      };
+      setChatMessages(prev => [...prev, userMsg!]);
+    }
+    setChatInput("");
+    setIsAiProcessing(true);
+
+    try {
+      const currentMessages = userMsg ? [...chatMessages, userMsg] : chatMessages;
+      const allMessages = currentMessages
+        .filter(m => m.id !== "welcome")
+        .map(m => ({
+          role: m.role,
+          content: m.role === "assistant" ? (m.content || "") : m.content,
+        }));
+
+      const response = await fetch("/api/ai/cargo-chat", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: allMessages,
+          extractedFields: extractedFields,
+        }),
       });
 
-      if (!response.ok) throw new Error("解析に失敗しました");
-
+      if (!response.ok) throw new Error("AI通信エラー");
       const data = await response.json();
-      const items = data.items || (data.fields ? [data.fields] : []);
 
-      if (items.length === 0) {
-        toast({ title: "エラー", description: "荷物情報を検出できませんでした", variant: "destructive" });
-        return;
+      if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
+        const merged = mergeExtractedFields(data.extractedFields);
+        applyFieldsToForm(merged);
+        if (!showForm) setShowForm(true);
       }
 
-      const count = applyAiFields(items[0]);
-
-      if (items.length > 1) {
-        setPendingItems(items.slice(1));
-        setCurrentItemIndex(0);
-        setTotalItems(items.length);
-        toast({
-          title: `${items.length}件の荷物を検出しました`,
-          description: `1件目をフォームに反映しました（${count}項目）。内容を確認して掲載してください。掲載後に次の荷物が自動入力されます。`,
-        });
-      } else {
-        toast({
-          title: "AI入力完了",
-          description: `${count}項目を自動入力しました。内容を確認して必要に応じて修正してください。`,
-        });
+      if (data.items && data.items.length > 0) {
+        if (data.items.length === 1) {
+          const singleItem = normalizeAiItem(data.items[0]);
+          const hasFields = Object.values(singleItem).some(v => v);
+          if (hasFields) {
+            mergeExtractedFields(singleItem);
+            applyFieldsToForm(singleItem);
+            setShowForm(true);
+          }
+        } else {
+          const firstItem = normalizeAiItem(data.items[0]);
+          setExtractedFields(firstItem);
+          applyFieldsToForm(firstItem);
+          setPendingItems(data.items.slice(1));
+          setCurrentItemIndex(0);
+          setTotalItems(data.items.length);
+          setShowForm(true);
+        }
       }
+
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        role: "assistant",
+        content: data.message,
+        extractedFields: data.extractedFields,
+        priceSuggestion: data.priceSuggestion,
+        items: data.items,
+        status: data.status,
+      };
+      setChatMessages(prev => [...prev, aiMsg]);
     } catch {
-      toast({ title: "エラー", description: "AIによる解析に失敗しました", variant: "destructive" });
+      setChatMessages(prev => [...prev, {
+        id: `error-${Date.now()}`,
+        role: "assistant",
+        content: "申し訳ございません。通信エラーが発生しました。もう一度お試しください。",
+      }]);
     } finally {
-      setIsProcessing(false);
+      setIsAiProcessing(false);
     }
-  }, [applyAiFields, toast]);
-
-  const handleAiSubmit = async () => {
-    if (aiText.trim()) {
-      setIsProcessing(true);
-      await parseAndFillRaw(aiText.trim());
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleAiSubmit();
-    }
-  };
+  }, [chatMessages, extractedFields, isAiProcessing, mergeExtractedFields, applyFieldsToForm, showForm]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsProcessing(true);
+    setIsAiProcessing(true);
+
+    const userMsg: ChatMessage = {
+      id: `user-file-${Date.now()}`,
+      role: "user",
+      content: `[ファイルアップロード: ${file.name}]`,
+    };
+    setChatMessages(prev => [...prev, userMsg]);
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -292,18 +359,22 @@ export default function CargoForm() {
       if (!response.ok) throw new Error("抽出に失敗しました");
       const data = await response.json();
       if (data.text) {
-        setAiText(data.text);
-        await parseAndFillRaw(data.text);
+        setChatMessages(prev => [...prev, {
+          id: `ai-extract-${Date.now()}`,
+          role: "assistant",
+          content: `ファイルから以下の情報を読み取りました：\n\n${data.text}\n\nこの情報から荷物を登録しますね。`,
+        }]);
+        await sendChatMessage(data.text, { skipGuard: true, skipUserMsg: true });
       } else {
-        setIsProcessing(false);
+        setIsAiProcessing(false);
       }
     } catch {
       toast({ title: "エラー", description: "ファイルからの情報抽出に失敗しました", variant: "destructive" });
-      setIsProcessing(false);
+      setIsAiProcessing(false);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [parseAndFillRaw, toast]);
+  }, [sendChatMessage, toast]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -329,7 +400,15 @@ export default function CargoForm() {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         recorder.stream.getTracks().forEach((t) => t.stop());
         setIsRecording(false);
-        setIsProcessing(true);
+        setIsAiProcessing(true);
+
+        const userMsg: ChatMessage = {
+          id: `user-voice-${Date.now()}`,
+          role: "user",
+          content: "[音声入力中...]",
+        };
+        setChatMessages(prev => [...prev, userMsg]);
+
         try {
           const formData = new FormData();
           formData.append("audio", blob, "recording.webm");
@@ -337,810 +416,575 @@ export default function CargoForm() {
           if (!response.ok) throw new Error("文字起こしに失敗しました");
           const data = await response.json();
           if (data.text) {
-            setAiText(data.text);
-            await parseAndFillRaw(data.text);
+            setChatMessages(prev =>
+              prev.map(m => m.id === userMsg.id ? { ...m, content: data.text } : m)
+            );
+            await sendChatMessage(data.text, { skipGuard: true, skipUserMsg: true });
           } else {
-            setIsProcessing(false);
+            setIsAiProcessing(false);
           }
         } catch {
           toast({ title: "エラー", description: "音声の文字起こしに失敗しました", variant: "destructive" });
-          setIsProcessing(false);
+          setIsAiProcessing(false);
         }
         resolve();
       };
       recorder.stop();
     });
-  }, [parseAndFillRaw, toast]);
+  }, [sendChatMessage, toast]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage(chatInput);
+    }
+  };
+
+  const filledFieldCount = Object.values(extractedFields).filter(v => v).length;
 
   return (
     <DashboardLayout>
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <Link href="/cargo">
-        <Button variant="ghost" className="mb-4" data-testid="button-back-cargo-form">
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          荷物一覧に戻る
-        </Button>
-      </Link>
-
-      <div className="bg-primary rounded-md p-5 mb-6">
-        <div className="flex items-center gap-3">
-          <Package className="w-6 h-6 text-primary-foreground" />
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
+          <Package className="w-5 h-5 text-primary-foreground" />
           <div>
-            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">AI荷物登録</h1>
-            <p className="text-base text-primary-foreground text-shadow">AIが入力をサポートします</p>
+            <h1 className="text-lg font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">AI荷物登録</h1>
+            <p className="text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
           </div>
         </div>
-      </div>
 
-      <Card className="mb-5">
-        <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-sm">AI自動入力</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant={inputMode === "text" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setInputMode("text")}
-                data-testid="button-mode-text"
-              >
-                <Search className="w-3.5 h-3.5 mr-1" />
-                テキスト
-              </Button>
-              <Button
-                variant={inputMode === "file" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setInputMode("file")}
-                data-testid="button-mode-file"
-              >
-                <Upload className="w-3.5 h-3.5 mr-1" />
-                ファイル
-              </Button>
-              <Button
-                variant={inputMode === "voice" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setInputMode("voice")}
-                data-testid="button-mode-voice"
-              >
-                <Mic className="w-3.5 h-3.5 mr-1" />
-                音声
-              </Button>
-            </div>
-          </div>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" data-testid="chat-messages">
+              {chatMessages.map((msg) => (
+                <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {msg.role === "assistant" && (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Bot className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                  <div className={`max-w-[85%] ${msg.role === "user" ? "order-first" : ""}`}>
+                    <div
+                      className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-muted/60 text-foreground rounded-bl-md"
+                      }`}
+                      data-testid={`chat-message-${msg.id}`}
+                    >
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    </div>
 
-          {inputMode === "text" && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">荷物情報を自然文で入力すると、AIがフォームに自動入力します</p>
+                    {msg.priceSuggestion && (
+                      <div className="mt-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-3.5 py-2.5" data-testid="price-suggestion">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Banknote className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400">運賃の提案</span>
+                        </div>
+                        <div className="text-lg font-bold text-amber-800 dark:text-amber-300">
+                          ¥{msg.priceSuggestion.min.toLocaleString()} 〜 ¥{msg.priceSuggestion.max.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">{msg.priceSuggestion.reason}</p>
+                        <div className="flex gap-1.5 mt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-7 border-amber-300 text-amber-700 dark:text-amber-400"
+                            onClick={() => {
+                              const mid = Math.round((msg.priceSuggestion!.min + msg.priceSuggestion!.max) / 2);
+                              form.setValue("price", String(mid));
+                              setExtractedFields(prev => ({ ...prev, price: String(mid) }));
+                              toast({ title: "運賃を設定しました", description: `¥${mid.toLocaleString()}` });
+                            }}
+                            data-testid="button-apply-price-mid"
+                          >
+                            中間値で設定
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-7 border-amber-300 text-amber-700 dark:text-amber-400"
+                            onClick={() => {
+                              sendChatMessage("もう少し安くしたいんだけど");
+                            }}
+                            data-testid="button-negotiate-lower"
+                          >
+                            もう少し安く
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {msg.extractedFields && Object.keys(msg.extractedFields).filter(k => msg.extractedFields![k]).length > 0 && (
+                      <div className="mt-2 bg-primary/5 border border-primary/20 rounded-xl px-3 py-2" data-testid="extracted-fields-preview">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-[11px] font-bold text-primary">抽出した情報</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(msg.extractedFields).filter(([, v]) => v).map(([k, v]) => (
+                            <Badge key={k} variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                              {FIELD_LABELS[k] || k}: {String(v).length > 15 ? String(v).substring(0, 15) + "..." : v}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {msg.items && msg.items.length > 1 && (
+                      <div className="mt-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2" data-testid="multi-cargo-detected">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Package className="w-3.5 h-3.5 text-blue-600" />
+                          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">{msg.items.length}件の荷物を検出</span>
+                        </div>
+                        <p className="text-[11px] text-blue-600 dark:text-blue-400">1件目をフォームに反映しました。掲載後に次の荷物が自動入力されます。</p>
+                      </div>
+                    )}
+                  </div>
+                  {msg.role === "user" && (
+                    <div className="w-7 h-7 rounded-full bg-foreground/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="w-4 h-4 text-foreground/60" />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {isAiProcessing && (
+                <div className="flex gap-2.5 justify-start">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Bot className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="bg-muted/60 rounded-2xl rounded-bl-md px-4 py-3" data-testid="ai-loading">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground">考え中...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            <div className="border-t border-border px-3 py-2.5 bg-background shrink-0" data-testid="chat-input-area">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-[10px] text-muted-foreground font-bold">入力方法:</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 cursor-default">テキスト</Badge>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-1.5 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  data-testid="button-mode-file"
+                >
+                  <Upload className="w-3 h-3 mr-0.5" /> ファイル
+                </Badge>
+                <Badge
+                  variant={isRecording ? "destructive" : "outline"}
+                  className="text-[10px] px-1.5 cursor-pointer"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  data-testid="button-mode-voice"
+                >
+                  {isRecording ? <MicOff className="w-3 h-3 mr-0.5" /> : <Mic className="w-3 h-3 mr-0.5" />}
+                  {isRecording ? "録音停止" : "音声"}
+                </Badge>
+                {isRecording && (
+                  <span className="text-[10px] text-destructive font-bold animate-pulse">録音中...</span>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*,.pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} className="hidden" data-testid="input-file-upload" />
               <div className="flex gap-2">
                 <Textarea
-                  placeholder={"例: 3月5日に神奈川県横浜市から大阪市北区まで食品10トンを冷凍車で運びたい。パレット積みでフォークリフト作業。運賃5万円希望。"}
-                  value={aiText}
-                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder="荷物情報を入力、またはデータを貼り付け..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  rows={3}
-                  className="resize-none text-sm flex-1"
-                  data-testid="input-ai-text"
+                  rows={2}
+                  className="resize-none text-sm flex-1 min-h-[44px]"
+                  data-testid="input-chat-text"
                 />
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1">
                   <Button
-                    onClick={handleAiSubmit}
-                    disabled={isProcessing || !aiText.trim()}
-                    className="flex-1"
-                    data-testid="button-ai-fill"
+                    onClick={() => sendChatMessage(chatInput)}
+                    disabled={isAiProcessing || !chatInput.trim()}
+                    size="icon"
+                    data-testid="button-send-chat"
                   >
-                    {isProcessing ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-4 h-4 mr-1" />
-                    )}
-                    AI入力
+                    {isAiProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => sendChatMessage("運賃はどれくらいが妥当ですか？")}
+                    disabled={isAiProcessing || filledFieldCount < 3}
+                    className="text-amber-600"
+                    title="運賃の相談"
+                    data-testid="button-ask-price"
+                  >
+                    <Banknote className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {inputMode === "file" && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">画像やスクリーンショットからAIが荷物情報を読み取り、フォームに自動入力します</p>
-              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  data-testid="input-file-upload"
-                />
-                {isProcessing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">AIがファイルを解析してフォームに入力中...</p>
+          <div className={`border-l border-border bg-background overflow-y-auto transition-all duration-300 ${showForm ? "w-[420px]" : "w-[52px]"}`}>
+            <div
+              className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2 cursor-pointer"
+              onClick={() => setShowForm(!showForm)}
+              data-testid="button-toggle-form"
+            >
+              {showForm ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold">登録フォーム</span>
+                    {filledFieldCount > 0 && (
+                      <Badge variant="secondary" className="text-[10px]">{filledFieldCount}項目入力済</Badge>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <FileText className="w-8 h-8 text-muted-foreground" />
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      data-testid="button-upload-file"
-                    >
-                      <Upload className="w-4 h-4 mr-1.5" />
-                      ファイルを選択
-                    </Button>
-                    <p className="text-xs text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {inputMode === "voice" && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">音声で荷物情報を話すと、AIがフォームに自動入力します</p>
-              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
-                {isProcessing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">AIが音声を解析してフォームに入力中...</p>
-                  </div>
-                ) : isRecording ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-destructive/20 animate-ping" />
-                      <div className="relative w-16 h-16 rounded-full bg-destructive flex items-center justify-center">
-                        <MicOff className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-                    <p className="text-sm font-medium text-destructive">録音中...</p>
-                    <p className="text-xs text-muted-foreground">「3月5日に神奈川から大阪まで食品10トン冷凍車」のように話してください</p>
-                    <Button
-                      variant="destructive"
-                      onClick={stopRecording}
-                      data-testid="button-stop-recording"
-                    >
-                      <MicOff className="w-4 h-4 mr-1.5" />
-                      録音停止してAI入力
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Mic className="w-8 h-8 text-muted-foreground" />
-                    <Button
-                      onClick={startRecording}
-                      data-testid="button-start-recording"
-                    >
-                      <Mic className="w-4 h-4 mr-1.5" />
-                      録音開始
-                    </Button>
-                    <p className="text-xs text-muted-foreground">マイクへのアクセスを許可してください</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {aiText && (inputMode === "file" || inputMode === "voice") && (
-            <div className="bg-muted/30 rounded-md p-3">
-              <p className="text-xs text-muted-foreground mb-1">認識されたテキスト:</p>
-              <p className="text-sm" data-testid="text-recognized">{aiText}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
-
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>タイトル</FormLabel>
-                      <FormControl>
-                        <Input placeholder="例: 東京→大阪 食品 10t" {...field} data-testid="input-cargo-title" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground rotate-90" />
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-1 w-full py-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  <span className="text-[10px] font-bold text-primary writing-vertical" style={{ writingMode: "vertical-rl" }}>登録フォーム</span>
+                  {filledFieldCount > 0 && (
+                    <Badge variant="default" className="text-[9px] px-1 py-0">{filledFieldCount}</Badge>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="transportType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>輸送形態</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="w-[140px]" data-testid="select-transport-type">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {TRANSPORT_TYPE_OPTIONS.map((t) => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">発地情報</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="departureArea"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>発地（都道府県）</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-departure">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {AREAS.map((area) => (
-                                <SelectItem key={area} value={area}>{area}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="departureAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>発地（詳細住所）</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 横浜市中区xxx" {...field} value={field.value || ""} data-testid="input-departure-address" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="desiredDate"
-                      render={({ field }) => {
-                        const dateValue = field.value ? (() => {
-                          try {
-                            const parsed = parse(field.value, "yyyy/MM/dd", new Date());
-                            return isNaN(parsed.getTime()) ? undefined : parsed;
-                          } catch { return undefined; }
-                        })() : undefined;
-                        return (
-                          <FormItem>
-                            <FormLabel>発日</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                    data-testid="input-desired-date"
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value || "日付を選択"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={dateValue}
-                                  onSelect={(date) => {
-                                    if (date) {
-                                      field.onChange(format(date, "yyyy/MM/dd"));
-                                    }
-                                  }}
-                                  locale={ja}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="departureTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>発時間</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-departure-time">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TIME_OPTIONS.map((t) => (
-                                <SelectItem key={t} value={t}>{t}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
                 </div>
-              </div>
+              )}
+            </div>
 
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">着地情報</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="arrivalArea"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>着地（都道府県）</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-arrival">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {AREAS.map((area) => (
-                                <SelectItem key={area} value={area}>{area}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="arrivalAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>着地（詳細住所）</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 大阪市北区xxx" {...field} value={field.value || ""} data-testid="input-arrival-address" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="arrivalDate"
-                      render={({ field }) => {
-                        const dateValue = field.value ? (() => {
-                          try {
-                            const parsed = parse(field.value, "yyyy/MM/dd", new Date());
-                            return isNaN(parsed.getTime()) ? undefined : parsed;
-                          } catch { return undefined; }
-                        })() : undefined;
-                        return (
-                          <FormItem>
-                            <FormLabel>着日</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                    data-testid="input-arrival-date"
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value || "日付を選択"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={dateValue}
-                                  onSelect={(date) => {
-                                    if (date) {
-                                      field.onChange(format(date, "yyyy/MM/dd"));
-                                    }
-                                  }}
-                                  locale={ja}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        );
-                      }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="arrivalTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>着時間</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-arrival-time">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TIME_OPTIONS.map((t) => (
-                                <SelectItem key={t} value={t}>{t}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">荷物情報</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="cargoType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>荷種</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 食品、機械部品、建材" {...field} data-testid="input-cargo-type" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="weight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>重量</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 5t" {...field} data-testid="input-weight" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="packageCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>個数（任意）</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 20パレット、100個" {...field} value={field.value || ""} data-testid="input-package-count" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="loadingMethod"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>荷姿</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-loading-method">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {LOADING_METHODS.map((m) => (
-                                <SelectItem key={m} value={m}>{m}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="temperatureControl"
-                    render={({ field }) => (
+            {showForm && (
+              <div className="p-3">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+                    <FormField control={form.control} name="title" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>温度管理</FormLabel>
+                        <FormLabel className="text-xs">タイトル</FormLabel>
+                        <FormControl><Input placeholder="例: 東京→大阪 食品 10t" {...field} className="h-8 text-xs" data-testid="input-cargo-title" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="transportType" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">輸送形態</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-temp-control">
-                              <SelectValue placeholder="選択してください" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {TEMP_CONTROLS.map((t) => (
-                              <SelectItem key={t} value={t}>{t}</SelectItem>
-                            ))}
-                          </SelectContent>
+                          <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-transport-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                          <SelectContent>{TRANSPORT_TYPE_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                    )} />
 
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">車両・作業条件</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="vehicleType"
-                      render={({ field }) => {
-                        const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
-                        const toggle = (v: string) => {
-                          const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v];
-                          field.onChange(next.join(", "));
-                        };
-                        return (
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">発地情報</h3>
+                      <div className="space-y-2">
+                        <FormField control={form.control} name="departureArea" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>希望車種</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal min-h-9 h-auto",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                    data-testid="select-vehicle-type"
-                                  >
-                                    {selected.length > 0 ? (
-                                      <span className="flex flex-wrap gap-1">
-                                        {selected.map(s => (
-                                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
-                                        ))}
-                                      </span>
-                                    ) : "選択してください"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-72 p-3" align="start">
-                                <div className="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto">
-                                  {VEHICLE_TYPES.map((v) => (
-                                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer hover-elevate rounded-md px-1.5 py-1">
-                                      <input
-                                        type="checkbox"
-                                        checked={selected.includes(v)}
-                                        onChange={() => toggle(v)}
-                                        className="rounded border-border"
-                                        data-testid={`checkbox-vehicle-${v}`}
-                                      />
-                                      {v}
-                                    </label>
-                                  ))}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                            <FormLabel className="text-xs">発地（都道府県）</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-departure"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                              <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
-                        );
-                      }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bodyType"
-                      render={({ field }) => {
-                        const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
-                        const toggle = (v: string) => {
-                          const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v];
-                          field.onChange(next.join(", "));
-                        };
-                        return (
+                        )} />
+                        <FormField control={form.control} name="departureAddress" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>車体タイプ（任意）</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal min-h-9 h-auto",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                    data-testid="select-body-type"
-                                  >
-                                    {selected.length > 0 ? (
-                                      <span className="flex flex-wrap gap-1">
-                                        {selected.map(s => (
-                                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
-                                        ))}
-                                      </span>
-                                    ) : "選択してください"}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80 p-3" align="start">
-                                <div className="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto">
-                                  {BODY_TYPES.map((b) => (
-                                    <label key={b} className="flex items-center gap-1.5 text-sm cursor-pointer hover-elevate rounded-md px-1.5 py-1">
-                                      <input
-                                        type="checkbox"
-                                        checked={selected.includes(b)}
-                                        onChange={() => toggle(b)}
-                                        className="rounded border-border"
-                                        data-testid={`checkbox-body-${b}`}
-                                      />
-                                      {b}
-                                    </label>
-                                  ))}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                            <FormLabel className="text-xs">発地（詳細）</FormLabel>
+                            <FormControl><Input placeholder="例: 横浜市中区" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-departure-address" /></FormControl>
                             <FormMessage />
                           </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="driverWork"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ドライバー作業</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-driver-work">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {DRIVER_WORK_OPTIONS.map((d) => (
-                                <SelectItem key={d} value={d}>{d}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="consolidation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>積合</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-consolidation">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {CONSOLIDATION_OPTIONS.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="highwayFee"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>高速代</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-highway-fee">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {HIGHWAY_FEE_OPTIONS.map((h) => (
-                                <SelectItem key={h} value={h}>{h}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
+                        )} />
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="desiredDate" render={({ field }) => {
+                            const dateValue = field.value ? (() => { try { const p = parse(field.value, "yyyy/MM/dd", new Date()); return isNaN(p.getTime()) ? undefined : p; } catch { return undefined; } })() : undefined;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">発日</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-8 text-xs", !field.value && "text-muted-foreground")} data-testid="input-desired-date">
+                                        <CalendarIcon className="mr-1.5 h-3 w-3" />
+                                        {field.value || "日付選択"}
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={dateValue} onSelect={(d) => { if (d) field.onChange(format(d, "yyyy/MM/dd")); }} locale={ja} initialFocus />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }} />
+                          <FormField control={form.control} name="departureTime" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">発時間</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-departure-time"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{TIME_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">運賃・備考</h3>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>希望運賃（任意）</FormLabel>
-                        <FormControl>
-                          <Input placeholder="例: 50,000" {...field} value={field.value || ""} data-testid="input-price" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>備考（任意）</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="荷物の詳細や注意事項など"
-                            className="resize-none min-h-[80px]"
-                            {...field}
-                            value={field.value || ""}
-                            data-testid="textarea-description"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">着地情報</h3>
+                      <div className="space-y-2">
+                        <FormField control={form.control} name="arrivalArea" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">着地（都道府県）</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-arrival"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                              <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="arrivalAddress" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">着地（詳細）</FormLabel>
+                            <FormControl><Input placeholder="例: 大阪市北区" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-arrival-address" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="arrivalDate" render={({ field }) => {
+                            const dateValue = field.value ? (() => { try { const p = parse(field.value, "yyyy/MM/dd", new Date()); return isNaN(p.getTime()) ? undefined : p; } catch { return undefined; } })() : undefined;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">着日</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-8 text-xs", !field.value && "text-muted-foreground")} data-testid="input-arrival-date">
+                                        <CalendarIcon className="mr-1.5 h-3 w-3" />
+                                        {field.value || "日付選択"}
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={dateValue} onSelect={(d) => { if (d) field.onChange(format(d, "yyyy/MM/dd")); }} locale={ja} initialFocus />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }} />
+                          <FormField control={form.control} name="arrivalTime" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">着時間</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-arrival-time"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{TIME_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+                    </div>
 
-              {totalItems > 1 && (
-                <div className="bg-primary/10 border border-primary/20 rounded-md p-3 text-sm text-center" data-testid="text-queue-status">
-                  {currentItemIndex + 1} / {totalItems} 件目を入力中（残り {pendingItems.length} 件）
-                </div>
-              )}
-              <div className="flex gap-2">
-                {totalItems > 1 && pendingItems.length > 0 && (
-                  <Button type="button" variant="outline" onClick={() => { setPendingItems(prev => prev.slice(1)); setCurrentItemIndex(prev => prev + 1); if (pendingItems.length <= 1) { setTotalItems(0); setCurrentItemIndex(0); setPendingItems([]); } else { loadNextPendingItem(); } }} data-testid="button-skip-cargo">
-                    スキップ
-                  </Button>
-                )}
-                <Button type="submit" className="flex-1" disabled={mutation.isPending} data-testid="button-submit-cargo">
-                  {mutation.isPending ? "掲載中..." : totalItems > 1 ? `荷物情報を掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
-                </Button>
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">荷物情報</h3>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="cargoType" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">荷種</FormLabel>
+                              <FormControl><Input placeholder="例: 食品" {...field} className="h-8 text-xs" data-testid="input-cargo-type" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="weight" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">重量</FormLabel>
+                              <FormControl><Input placeholder="例: 5t" {...field} className="h-8 text-xs" data-testid="input-weight" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="packageCount" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">個数</FormLabel>
+                              <FormControl><Input placeholder="例: 20パレット" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-package-count" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="loadingMethod" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">荷姿</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-loading-method"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{LOADING_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <FormField control={form.control} name="temperatureControl" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">温度管理</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-temp-control"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                              <SelectContent>{TEMP_CONTROLS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">車両・作業条件</h3>
+                      <div className="space-y-2">
+                        <FormField control={form.control} name="vehicleType" render={({ field }) => {
+                          const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                          const toggle = (v: string) => { const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v]; field.onChange(next.join(", ")); };
+                          return (
+                            <FormItem>
+                              <FormLabel className="text-xs">希望車種</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal min-h-8 h-auto text-xs", !field.value && "text-muted-foreground")} data-testid="select-vehicle-type">
+                                      {selected.length > 0 ? <span className="flex flex-wrap gap-0.5">{selected.map(s => <Badge key={s} variant="secondary" className="text-[10px] px-1">{s}</Badge>)}</span> : "選択"}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2" align="start">
+                                  <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto">
+                                    {VEHICLE_TYPES.map(v => (
+                                      <label key={v} className="flex items-center gap-1 text-xs cursor-pointer hover-elevate rounded px-1 py-0.5">
+                                        <input type="checkbox" checked={selected.includes(v)} onChange={() => toggle(v)} className="rounded border-border" data-testid={`checkbox-vehicle-${v}`} />{v}
+                                      </label>
+                                    ))}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }} />
+                        <FormField control={form.control} name="bodyType" render={({ field }) => {
+                          const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                          const toggle = (v: string) => { const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v]; field.onChange(next.join(", ")); };
+                          return (
+                            <FormItem>
+                              <FormLabel className="text-xs">車体タイプ</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal min-h-8 h-auto text-xs", !field.value && "text-muted-foreground")} data-testid="select-body-type">
+                                      {selected.length > 0 ? <span className="flex flex-wrap gap-0.5">{selected.map(s => <Badge key={s} variant="secondary" className="text-[10px] px-1">{s}</Badge>)}</span> : "選択"}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-72 p-2" align="start">
+                                  <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto">
+                                    {BODY_TYPES.map(b => (
+                                      <label key={b} className="flex items-center gap-1 text-xs cursor-pointer hover-elevate rounded px-1 py-0.5">
+                                        <input type="checkbox" checked={selected.includes(b)} onChange={() => toggle(b)} className="rounded border-border" data-testid={`checkbox-body-${b}`} />{b}
+                                      </label>
+                                    ))}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }} />
+                        <div className="grid grid-cols-3 gap-2">
+                          <FormField control={form.control} name="driverWork" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">作業</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-driver-work"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{DRIVER_WORK_OPTIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="consolidation" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">積合</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-consolidation"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{CONSOLIDATION_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="highwayFee" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">高速代</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-highway-fee"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{HIGHWAY_FEE_OPTIONS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">運賃・備考</h3>
+                      <div className="space-y-2">
+                        <FormField control={form.control} name="price" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">希望運賃</FormLabel>
+                            <FormControl><Input placeholder="例: 50000" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-price" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="description" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">備考</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="荷物の詳細や注意事項" className="resize-none min-h-[60px] text-xs" {...field} value={field.value || ""} data-testid="textarea-description" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </div>
+
+                    {totalItems > 1 && (
+                      <div className="bg-primary/10 border border-primary/20 rounded-md p-2 text-xs text-center" data-testid="text-queue-status">
+                        {currentItemIndex + 1} / {totalItems} 件目を入力中（残り {pendingItems.length} 件）
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 sticky bottom-0 bg-background py-2">
+                      {totalItems > 1 && pendingItems.length > 0 && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => {
+                          setPendingItems(prev => prev.slice(1));
+                          setCurrentItemIndex(prev => prev + 1);
+                          if (pendingItems.length <= 1) { setTotalItems(0); setCurrentItemIndex(0); setPendingItems([]); } else { loadNextPendingItem(); }
+                        }} data-testid="button-skip-cargo">
+                          スキップ
+                        </Button>
+                      )}
+                      <Button type="submit" className="flex-1" size="sm" disabled={mutation.isPending} data-testid="button-submit-cargo">
+                        {mutation.isPending ? "掲載中..." : totalItems > 1 ? `掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+            )}
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 }
