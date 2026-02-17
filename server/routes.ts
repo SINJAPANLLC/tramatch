@@ -821,6 +821,104 @@ statusの意味:
     }
   });
 
+  app.post("/api/ai/truck-chat", aiUpload.none(), async (req, res) => {
+    try {
+      const { messages, extractedFields } = req.body;
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ message: "メッセージが必要です" });
+      }
+
+      const truckFieldSchema = `{
+  "title": "タイトル（車種 空車地→行先地の形式、例: 10t車 東京→大阪 空車あり）",
+  "currentArea": "空車地の都道府県名のみ（例: 東京）",
+  "destinationArea": "行先地の都道府県名のみ（例: 大阪）",
+  "vehicleType": "車種（以下から選択: 軽車両, 2t車, 4t車, 10t車, 大型車, トレーラー, その他）",
+  "maxWeight": "最大積載量（例: 10t, 2t, 500kg）",
+  "availableDate": "空車日（YYYY/MM/DD形式）",
+  "price": "最低運賃（税別、数字のみ、例: 50000。金額不明の場合は空文字）",
+  "description": "備考",
+  "companyName": "会社名",
+  "contactPhone": "電話番号",
+  "contactEmail": "メールアドレス"
+}`;
+
+      const systemPrompt = `あなたは「トラマッチ」の空車登録AIアシスタントです。日本の運送・物流に精通しています。
+
+あなたの役割:
+1. ユーザーが入力した雑多なテキスト・データから空車情報を抽出・整理する
+2. 不足している情報があれば会話で確認する
+3. 運賃について相談されたら、ルート・車種・距離から相場を提案する
+4. 複数案件が含まれる場合はそれぞれ分けて処理する
+
+運賃相場の目安（一般的な参考値）:
+- 近距離（同一県内〜隣県）: 2t車 15,000〜25,000円、4t車 20,000〜35,000円、10t車 35,000〜55,000円
+- 中距離（200〜400km）: 2t車 25,000〜40,000円、4t車 35,000〜60,000円、10t車 55,000〜80,000円
+- 長距離（400km以上）: 2t車 40,000〜60,000円、4t車 60,000〜90,000円、10t車 80,000〜130,000円
+これはあくまで目安で、車種・時期・路線などで変動します。
+
+応答のJSON形式（必ずこの形式で返してください）:
+{
+  "message": "ユーザーへの返答テキスト（親しみやすく、簡潔に）",
+  "extractedFields": ${truckFieldSchema} のうち抽出できたフィールドのみのオブジェクト（抽出できなかったフィールドは含めない）,
+  "items": [複数案件の場合は各案件のフィールドオブジェクトの配列、1件または追加抽出なしの場合は空配列],
+  "priceSuggestion": { "min": 最低額数字, "max": 最高額数字, "reason": "根拠の説明" } または null,
+  "status": "extracting" | "confirming" | "ready" | "chatting"
+}
+
+statusの意味:
+- "extracting": 情報を抽出中、まだ不足あり
+- "confirming": 主要情報は揃った、ユーザーに確認中
+- "ready": 登録準備完了
+- "chatting": 雑談や質問への回答中
+
+現在抽出済みのフィールド: ${extractedFields ? JSON.stringify(extractedFields) : "なし"}
+
+重要:
+- 返答は必ず有効なJSONで返してください
+- messageは必ず日本語で、丁寧だが堅すぎない口調で
+- 運賃の相談には積極的に応じて、具体的な金額を提案してください
+- 大量のデータが来た場合は、整理して要約してから確認してください`;
+
+      const apiMessages = [
+        { role: "system" as const, content: systemPrompt },
+        ...messages.map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      ];
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: apiMessages,
+        max_tokens: 2000,
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content || "{}";
+      try {
+        const parsed = JSON.parse(content);
+        res.json({
+          message: parsed.message || "申し訳ございません、もう一度お試しください。",
+          extractedFields: parsed.extractedFields || {},
+          items: parsed.items || [],
+          priceSuggestion: parsed.priceSuggestion || null,
+          status: parsed.status || "chatting",
+        });
+      } catch {
+        res.json({
+          message: content,
+          extractedFields: {},
+          items: [],
+          priceSuggestion: null,
+          status: "chatting",
+        });
+      }
+    } catch (error) {
+      console.error("Truck chat error:", error);
+      res.status(500).json({ message: "AIとの通信に失敗しました" });
+    }
+  });
+
   app.get("/api/notifications", requireAuth, async (req, res) => {
     try {
       const notifs = await storage.getNotificationsByUserId(req.session.userId as string);
