@@ -239,6 +239,7 @@ export async function registerRoutes(
       if (!listing) {
         return res.status(404).json({ message: "Cargo listing not found" });
       }
+      storage.incrementCargoViewCount(req.params.id).catch(() => {});
       res.json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch cargo listing" });
@@ -276,6 +277,27 @@ export async function registerRoutes(
       res.status(201).json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to create cargo listing" });
+    }
+  });
+
+  app.patch("/api/cargo/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status || !["active", "completed"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const cargoId = req.params.id as string;
+      const listing = await storage.getCargoListing(cargoId);
+      if (!listing) {
+        return res.status(404).json({ message: "Cargo listing not found" });
+      }
+      if (listing.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const updated = await storage.updateCargoStatus(cargoId, status);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update cargo status" });
     }
   });
 

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, MapPin, Trash2, Plus, Calendar, Weight, Truck, ArrowRight, Clock, CircleDot } from "lucide-react";
+import { Package, MapPin, Trash2, Plus, Calendar, Weight, Truck, ArrowRight, Clock, CircleDot, Eye, CheckCircle2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -12,7 +12,7 @@ import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
 
-function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelete: () => void; isDeleting: boolean }) {
+function CargoCard({ item, onDelete, isDeleting, onComplete, isCompleting }: { item: CargoListing; onDelete: () => void; isDeleting: boolean; onComplete: () => void; isCompleting: boolean }) {
   const daysAgo = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
   const timeLabel = daysAgo === 0 ? "今日" : daysAgo === 1 ? "昨日" : `${daysAgo}日前`;
 
@@ -32,9 +32,12 @@ function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelet
                   {item.transportType}
                 </Badge>
               )}
-              <Badge variant="outline" className="text-xs" data-testid={`badge-status-${item.id}`}>
-                <CircleDot className="w-3 h-3 mr-1 text-green-500" />
-                {item.status === "active" ? "掲載中" : item.status}
+              <Badge variant="outline" className={`text-xs ${item.status === "completed" ? "border-orange-300 text-orange-600" : ""}`} data-testid={`badge-status-${item.id}`}>
+                {item.status === "completed" ? (
+                  <><CheckCircle2 className="w-3 h-3 mr-1 text-orange-500" />成約済み</>
+                ) : (
+                  <><CircleDot className="w-3 h-3 mr-1 text-green-500" />掲載中</>
+                )}
               </Badge>
             </div>
 
@@ -89,6 +92,10 @@ function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelet
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Eye className="w-3 h-3" />
+                {item.viewCount ?? 0}人が閲覧
+              </span>
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 {timeLabel}に登録
               </span>
@@ -101,6 +108,31 @@ function CargoCard({ item, onDelete, isDeleting }: { item: CargoListing; onDelet
                 詳細
               </Button>
             </Link>
+            {item.status === "active" ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onComplete}
+                disabled={isCompleting}
+                className="text-orange-600 border-orange-300"
+                data-testid={`button-complete-cargo-${item.id}`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                成約にする
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onComplete}
+                disabled={isCompleting}
+                className="text-green-600 border-green-300"
+                data-testid={`button-reactivate-cargo-${item.id}`}
+              >
+                <CircleDot className="w-3.5 h-3.5 mr-1" />
+                掲載に戻す
+              </Button>
+            )}
             <Button
               size="icon"
               variant="ghost"
@@ -135,6 +167,16 @@ export default function MyCargo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
       toast({ title: "荷物情報を削除しました" });
+    },
+  });
+
+  const toggleCargoStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await apiRequest("PATCH", `/api/cargo/${id}/status`, { status });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      toast({ title: variables.status === "completed" ? "成約済みにしました" : "掲載中に戻しました" });
     },
   });
 
@@ -184,6 +226,8 @@ export default function MyCargo() {
                 item={item}
                 onDelete={() => deleteCargo.mutate(item.id)}
                 isDeleting={deleteCargo.isPending}
+                onComplete={() => toggleCargoStatus.mutate({ id: item.id, status: item.status === "active" ? "completed" : "active" })}
+                isCompleting={toggleCargoStatus.isPending}
               />
             ))}
           </div>
