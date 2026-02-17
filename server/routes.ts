@@ -251,7 +251,14 @@ export async function registerRoutes(
       if (!parsed.success) {
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
-      const listing = await storage.createCargoListing({ ...parsed.data }, req.session.userId as string);
+      const currentUser = await storage.getUser(req.session.userId as string);
+      const listingData = {
+        ...parsed.data,
+        companyName: parsed.data.companyName || currentUser?.companyName || "",
+        contactPhone: parsed.data.contactPhone || currentUser?.phone || "",
+        contactEmail: parsed.data.contactEmail || currentUser?.email || "",
+      };
+      const listing = await storage.createCargoListing(listingData, req.session.userId as string);
 
       const allUsers = await storage.getAllUsers();
       for (const u of allUsers) {

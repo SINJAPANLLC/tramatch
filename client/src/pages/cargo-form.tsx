@@ -116,7 +116,7 @@ export default function CargoForm() {
       description: "",
       companyName: "",
       contactPhone: "",
-      contactEmail: "",
+      contactEmail: ""
     },
   });
 
@@ -1042,53 +1042,6 @@ export default function CargoForm() {
                       </FormItem>
                     )}
                   />
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">連絡先情報</h3>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="companyName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>会社名</FormLabel>
-                        <FormControl>
-                          <Input placeholder="例: 株式会社トラマッチ" {...field} data-testid="input-company" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="contactPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>電話番号</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 03-1234-5678" {...field} data-testid="input-phone" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contactEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>メールアドレス（任意）</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: info@example.com" {...field} value={field.value || ""} data-testid="input-email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
                 </div>
               </div>
 
