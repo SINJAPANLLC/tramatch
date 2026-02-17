@@ -10,7 +10,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function formatDateCompact(dateStr: string | null | undefined) {
   if (!dateStr) return "";
@@ -83,17 +87,157 @@ type CompanyInfo = {
   truckCount3m: number;
 };
 
-function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
-  const [panelTab, setPanelTab] = useState<"deal" | "company" | "request">("deal");
+function EditDealForm({ listing, onClose }: { listing: CargoListing; onClose: () => void }) {
   const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    price: listing.price || "",
+    highwayFee: listing.highwayFee || "",
+    description: listing.description || "",
+    departureTime: listing.departureTime || "",
+    arrivalTime: listing.arrivalTime || "",
+    vehicleType: listing.vehicleType || "",
+    bodyType: listing.bodyType || "",
+    weight: listing.weight || "",
+    paymentDate: listing.paymentDate || "",
+  });
 
-  const reactivateMutation = useMutation({
-    mutationFn: async (cargoId: string) => {
-      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "active" });
+  const updateMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      await apiRequest("PATCH", `/api/cargo/${listing.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "掲載中に戻しました" });
+      toast({ title: "成約内容を変更しました" });
+      onClose();
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "変更に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="border border-primary/30 rounded-md p-3 bg-primary/5 space-y-3">
+      <h4 className="text-sm font-bold text-foreground">成約内容の変更</h4>
+
+      <div className="space-y-2">
+        <div>
+          <Label className="text-xs">運賃（税別）</Label>
+          <Input
+            value={formData.price}
+            onChange={(e) => handleChange("price", e.target.value)}
+            placeholder="例: 18000"
+            data-testid="input-edit-price"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">高速代</Label>
+          <Input
+            value={formData.highwayFee}
+            onChange={(e) => handleChange("highwayFee", e.target.value)}
+            placeholder="例: あり / なし / 金額"
+            data-testid="input-edit-highway"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label className="text-xs">発時間</Label>
+            <Input
+              value={formData.departureTime}
+              onChange={(e) => handleChange("departureTime", e.target.value)}
+              placeholder="例: 11時"
+              data-testid="input-edit-departure-time"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">着時間</Label>
+            <Input
+              value={formData.arrivalTime}
+              onChange={(e) => handleChange("arrivalTime", e.target.value)}
+              placeholder="例: 13時"
+              data-testid="input-edit-arrival-time"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label className="text-xs">車種</Label>
+            <Input
+              value={formData.vehicleType}
+              onChange={(e) => handleChange("vehicleType", e.target.value)}
+              data-testid="input-edit-vehicle-type"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">車体</Label>
+            <Input
+              value={formData.bodyType}
+              onChange={(e) => handleChange("bodyType", e.target.value)}
+              data-testid="input-edit-body-type"
+            />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">入金予定日</Label>
+          <Input
+            value={formData.paymentDate}
+            onChange={(e) => handleChange("paymentDate", e.target.value)}
+            placeholder="例: 2026/04/30"
+            data-testid="input-edit-payment-date"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">備考</Label>
+          <Textarea
+            value={formData.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+            rows={2}
+            data-testid="input-edit-description"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          className="flex-1"
+          onClick={() => updateMutation.mutate(formData)}
+          disabled={updateMutation.isPending}
+          data-testid="button-save-edit"
+        >
+          {updateMutation.isPending ? "保存中..." : "変更を保存"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={onClose}
+          data-testid="button-cancel-edit"
+        >
+          キャンセル
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
+  const [panelTab, setPanelTab] = useState<"deal" | "company" | "request">("deal");
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
+
+  const cancelDealMutation = useMutation({
+    mutationFn: async (cargoId: string) => {
+      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "cancelled" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      toast({ title: "成約を取り消しました", description: "荷物は「成約しなかった荷物」に移動しました" });
+      onClose();
     },
     onError: () => {
       toast({ title: "エラー", description: "処理に失敗しました", variant: "destructive" });
@@ -115,6 +259,8 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
 
   useEffect(() => {
     setPanelTab("deal");
+    setShowCancelConfirm(false);
+    setIsEditing(false);
   }, [listing?.id]);
 
   const handlePrint = () => {
@@ -256,15 +402,59 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="入金予定日" value={listing.paymentDate || "支払サイトに準拠"} />
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full text-green-600 border-green-300"
-            onClick={() => reactivateMutation.mutate(listing.id)}
-            disabled={reactivateMutation.isPending}
-            data-testid="button-reactivate"
-          >
-            {reactivateMutation.isPending ? "処理中..." : "掲載に戻す"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setIsEditing(true)}
+              data-testid="button-edit-deal"
+            >
+              成約内容を変更
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 text-destructive border-destructive/30"
+              onClick={() => setShowCancelConfirm(true)}
+              data-testid="button-cancel-deal"
+            >
+              成約を取り消す
+            </Button>
+          </div>
+
+          {showCancelConfirm && (
+            <div className="border border-destructive/30 rounded-md p-3 bg-destructive/5">
+              <p className="text-sm font-bold text-destructive mb-2">この成約を取り消しますか？</p>
+              <p className="text-xs text-muted-foreground mb-3">取り消すと荷物は「不成約」に移動します。この操作は変更期限内のみ可能です。</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    cancelDealMutation.mutate(listing.id);
+                    setShowCancelConfirm(false);
+                  }}
+                  disabled={cancelDealMutation.isPending}
+                  data-testid="button-confirm-cancel-deal"
+                >
+                  {cancelDealMutation.isPending ? "処理中..." : "取り消す"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setShowCancelConfirm(false)}
+                  data-testid="button-dismiss-cancel"
+                >
+                  戻る
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {isEditing && (
+            <EditDealForm listing={listing} onClose={() => setIsEditing(false)} />
+          )}
         </div>
       ) : panelTab === "company" ? (
         <div className="p-3 space-y-3">
@@ -404,12 +594,10 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
   );
 }
 
-function CompletedCargoTable({ items, selectedId, onSelect, onReactivate, isReactivating }: {
+function CompletedCargoTable({ items, selectedId, onSelect }: {
   items: CargoListing[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onReactivate: (id: string) => void;
-  isReactivating: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -482,7 +670,6 @@ function CompletedCargoTable({ items, selectedId, onSelect, onReactivate, isReac
 
 export default function CompletedCargo() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<"own" | "contracted" | "billing">("own");
 
@@ -497,16 +684,6 @@ export default function CompletedCargo() {
     if (!selectedCargoId || !allCargo) return null;
     return allCargo.find((l) => l.id === selectedCargoId) || null;
   }, [selectedCargoId, allCargo]);
-
-  const reactivate = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("PATCH", `/api/cargo/${id}/status`, { status: "active" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "掲載中に戻しました" });
-    },
-  });
 
   const mainTabs = [
     { key: "own" as const, label: "自社荷物の成約", icon: Package },
@@ -556,8 +733,6 @@ export default function CompletedCargo() {
                 items={sorted}
                 selectedId={selectedCargoId}
                 onSelect={setSelectedCargoId}
-                onReactivate={(id) => reactivate.mutate(id)}
-                isReactivating={reactivate.isPending}
               />
             ) : mainTab === "contracted" ? (
               <Card>
