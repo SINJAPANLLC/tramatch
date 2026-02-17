@@ -883,6 +883,99 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
     setPanelTab("cargo");
   }, [listing?.id]);
 
+  const handlePrint = () => {
+    if (!listing) return;
+    const fmtDate = (dateStr: string | null | undefined) => {
+      if (!dateStr) return "指定なし";
+      const cleaned = dateStr.replace(/\//g, "-");
+      const d = new Date(cleaned);
+      if (isNaN(d.getTime())) return dateStr;
+      const days = ["日", "月", "火", "水", "木", "金", "土"];
+      return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}(${days[d.getDay()]})`;
+    };
+    const row = (label: string, value: string | null | undefined) =>
+      `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap;border:1px solid #ddd;background:#f9f9f9;font-size:13px;width:140px">${label}</td><td style="padding:6px 10px;border:1px solid #ddd;font-size:13px">${value || "-"}</td></tr>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>荷物情報 - ${listing.companyName}</title>
+<style>body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:20px;color:#333}
+h2{font-size:18px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px}
+table{border-collapse:collapse;width:100%;margin-bottom:16px}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:22px;color:#40E0D0;margin:0}
+.route{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px}
+.route-side{flex:1}.route-arrow{padding:0 16px;font-size:20px;color:#999}
+.price{font-size:22px;font-weight:bold;margin-bottom:16px}
+@media print{body{margin:10px}}</style></head><body>
+<div class="header"><h1>トラマッチ 荷物情報</h1><p style="font-size:12px;color:#888">印刷日: ${new Date().toLocaleString("ja-JP")}</p></div>
+<h2>荷物情報</h2>
+<div class="route">
+<div class="route-side"><div style="font-weight:bold;font-size:14px">${fmtDate(listing.desiredDate)} ${listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}</div><div style="font-weight:bold;font-size:14px;margin-top:4px">${listing.departureArea} ${listing.departureAddress || ""}</div></div>
+<div class="route-arrow">→</div>
+<div class="route-side" style="text-align:right"><div style="font-weight:bold;font-size:14px">${fmtDate(listing.arrivalDate)} ${listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}</div><div style="font-weight:bold;font-size:14px;margin-top:4px">${listing.arrivalArea} ${listing.arrivalAddress || ""}</div></div>
+</div>
+<div class="price">${listing.price ? `¥${Number(listing.price).toLocaleString()}` : "要相談"} ${listing.taxType ? `(${listing.taxType})` : ""} ${listing.highwayFee ? "高速代：有" : "高速代：無"}</div>
+<table>
+${row("荷物番号", listing.cargoNumber ? String(listing.cargoNumber) : "-")}
+${row("企業名", listing.companyName)}
+${row("担当者", listing.contactPerson)}
+${row("連絡先", listing.contactPhone)}
+${row("荷種", listing.cargoType)}
+${row("積合", listing.consolidation || "不可")}
+${row("希望車種", `重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`)}
+${row("車両指定", listing.vehicleSpec || "指定なし")}
+${row("必要装備", listing.equipment || "標準装備")}
+${row("備考", listing.description)}
+${row("発着日時", `${fmtDate(listing.desiredDate)} ${listing.departureTime || ""}${listing.loadingTime ? ` (積み時間：${listing.loadingTime})` : ""} → ${fmtDate(listing.arrivalDate)} ${listing.arrivalTime || ""}${listing.unloadingTime ? ` (卸し時間：${listing.unloadingTime})` : ""}`)}
+${row("入金予定日", listing.paymentDate || "登録された支払いサイトに準拠します。")}
+</table>
+<h2>企業情報</h2>
+<h3 style="font-size:14px;margin:8px 0">基本情報</h3>
+<table>
+${row("法人名・事業者名", companyInfo?.companyName || listing.companyName)}
+${row("住所", companyInfo?.postalCode ? `〒${companyInfo.postalCode} ${companyInfo.address || "-"}` : companyInfo?.address || "-")}
+${row("電話番号", listing.contactPhone)}
+${row("FAX番号", companyInfo?.fax)}
+${row("請求事業者登録番号", companyInfo?.invoiceRegistrationNumber)}
+${row("業務内容・会社PR", companyInfo?.businessDescription)}
+${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-")}
+${row("ウェブサイトURL", companyInfo?.websiteUrl)}
+</table>
+<h3 style="font-size:14px;margin:8px 0">詳細情報</h3>
+<table>
+${row("代表者", companyInfo?.representative)}
+${row("設立", companyInfo?.establishedDate)}
+${row("資本金", companyInfo?.capital ? `${companyInfo.capital} 万円` : null)}
+${row("従業員数", companyInfo?.employeeCount)}
+${row("事業所所在地", companyInfo?.officeLocations)}
+${row("年間売上", companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null)}
+${row("取引先銀行", companyInfo?.bankInfo)}
+${row("主要取引先", companyInfo?.majorClients)}
+${row("締め日", companyInfo?.closingDay)}
+${row("支払月・支払日", companyInfo?.paymentMonth)}
+${row("営業地域", companyInfo?.businessArea)}
+</table>
+<h3 style="font-size:14px;margin:8px 0">信用情報</h3>
+<table>
+${row("加入組織", companyInfo?.memberOrganization)}
+${row("国交省認可番号", companyInfo?.transportLicenseNumber)}
+${row("デジタコ搭載数", companyInfo?.digitalTachographCount)}
+${row("GPS搭載数", companyInfo?.gpsCount)}
+${row("安全性優良事業所", companyInfo?.safetyExcellenceCert || "無")}
+${row("グリーン経営認証", companyInfo?.greenManagementCert || "無")}
+${row("ISO9000", companyInfo?.iso9000 || "無")}
+${row("ISO14000", companyInfo?.iso14000 || "無")}
+${row("ISO39001", companyInfo?.iso39001 || "無")}
+${row("荷物保険", companyInfo?.cargoInsurance)}
+</table>
+</body></html>`;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    }
+  };
+
   if (!listing) {
     return (
       <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
@@ -924,7 +1017,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => window.print()} data-testid="button-print">
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={handlePrint} data-testid="button-print">
               印刷
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
