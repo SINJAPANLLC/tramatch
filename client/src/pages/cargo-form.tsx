@@ -607,8 +607,8 @@ export default function CargoForm() {
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  rows={3}
-                  className="resize-none text-sm flex-1 min-h-[64px]"
+                  rows={4}
+                  className="resize-none text-sm flex-1 min-h-[80px]"
                   data-testid="input-chat-text"
                 />
                 <div className="flex flex-col gap-1">
