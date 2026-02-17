@@ -21,7 +21,11 @@ import { format, parse } from "date-fns";
 import { ja } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "トレーラー", "その他"];
+const VEHICLE_TYPES = [
+  "軽車両", "1t車", "1.5t車", "2t車", "3t車", "4t車", "5t車", "6t車",
+  "7t車", "8t車", "10t車", "11t車", "13t車", "15t車",
+  "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他"
+];
 const BODY_TYPES = ["平ボディ", "バン", "ウイング", "冷蔵車", "冷凍車", "ダンプ", "タンクローリー", "車載車", "その他"];
 const TEMP_CONTROLS = ["指定なし", "常温", "冷蔵（0〜10℃）", "冷凍（-18℃以下）", "定温"];
 const HIGHWAY_FEE_OPTIONS = ["込み", "別途", "高速代なし"];
