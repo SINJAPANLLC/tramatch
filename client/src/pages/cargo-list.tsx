@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
@@ -812,19 +813,61 @@ function PanelInfoItem({ label, value, highlight }: { label: string; value: stri
   );
 }
 
+function CompanyInfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div className="flex gap-2">
+      <div className="text-[11px] text-muted-foreground font-bold w-[120px] shrink-0 pt-0.5">{label}</div>
+      <div className="text-sm font-bold text-foreground whitespace-pre-wrap flex-1">{value || "-"}</div>
+    </div>
+  );
+}
+
+type CompanyInfo = {
+  companyName: string;
+  address: string | null;
+  phone: string;
+  fax: string | null;
+  email: string;
+  contactName: string | null;
+  userType: string;
+  truckCount: string | null;
+  paymentTerms: string | null;
+  businessDescription: string | null;
+  companyNameKana: string | null;
+  postalCode: string | null;
+  websiteUrl: string | null;
+  invoiceRegistrationNumber: string | null;
+  registrationDate: string | null;
+  representative: string | null;
+  establishedDate: string | null;
+  capital: string | null;
+  employeeCount: string | null;
+  officeLocations: string | null;
+  annualRevenue: string | null;
+  bankInfo: string | null;
+  majorClients: string | null;
+  closingDay: string | null;
+  paymentMonth: string | null;
+  businessArea: string | null;
+  autoInvoiceAcceptance: string | null;
+  memberOrganization: string | null;
+  transportLicenseNumber: string | null;
+  digitalTachographCount: string | null;
+  gpsCount: string | null;
+  safetyExcellenceCert: string | null;
+  greenManagementCert: string | null;
+  iso9000: string | null;
+  iso14000: string | null;
+  iso39001: string | null;
+  cargoInsurance: string | null;
+  cargoCount1m: number;
+  cargoCount3m: number;
+  truckCount1m: number;
+  truckCount3m: number;
+};
+
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
-  const { data: companyInfo } = useQuery<{
-    companyName: string;
-    address: string | null;
-    phone: string;
-    fax: string | null;
-    email: string;
-    contactName: string | null;
-    userType: string;
-    truckCount: string | null;
-    paymentTerms: string | null;
-    businessDescription: string | null;
-  }>({
+  const { data: companyInfo } = useQuery<CompanyInfo>({
     queryKey: ["/api/companies", listing?.userId],
     enabled: !!listing?.userId,
   });
@@ -947,65 +990,81 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
         <div className="border-t border-border" />
 
         <PanelSectionHeader icon={<Building2 className="w-4 h-4" />} title="掲載企業情報" />
-        <div className="space-y-2.5 pl-1">
-          <div className="flex items-center gap-3 text-sm">
-            <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-bold text-foreground">{companyInfo?.companyName || listing.companyName}</span>
-          </div>
-          {companyInfo?.contactName && (
-            <div className="flex items-center gap-3 text-sm">
-              <span className="w-4 h-4 shrink-0" />
-              <span className="font-bold text-muted-foreground">担当: {companyInfo.contactName}</span>
-            </div>
-          )}
-          {companyInfo?.address && (
-            <div className="flex items-center gap-3 text-sm">
-              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="font-bold text-foreground">{companyInfo.address}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 text-sm">
-            <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-bold text-foreground">{listing.contactPhone}</span>
-          </div>
-          {companyInfo?.fax && (
-            <div className="flex items-center gap-3 text-sm">
-              <span className="w-4 h-4 shrink-0" />
-              <span className="font-bold text-muted-foreground">FAX: {companyInfo.fax}</span>
-            </div>
-          )}
-          {listing.contactEmail && (
-            <div className="flex items-center gap-3 text-sm">
-              <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="font-bold text-foreground">{listing.contactEmail}</span>
-            </div>
-          )}
-          {companyInfo?.userType && (
-            <div className="flex items-center gap-3 text-sm">
-              <Truck className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="font-bold text-foreground">{companyInfo.userType}</span>
-              {companyInfo?.truckCount && (
-                <span className="font-bold text-muted-foreground">（保有台数: {companyInfo.truckCount}）</span>
-              )}
-            </div>
-          )}
-        </div>
+        <Tabs defaultValue="basic" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 h-8">
+            <TabsTrigger value="basic" className="text-xs font-bold" data-testid="tab-company-basic">基本情報</TabsTrigger>
+            <TabsTrigger value="detail" className="text-xs font-bold" data-testid="tab-company-detail">詳細情報</TabsTrigger>
+            <TabsTrigger value="credit" className="text-xs font-bold" data-testid="tab-company-credit">信用情報</TabsTrigger>
+          </TabsList>
 
-        <div className="border-t border-border" />
+          <TabsContent value="basic" className="space-y-3 mt-3">
+            <CompanyInfoRow label="法人名・事業者名" value={companyInfo?.companyName || listing.companyName} />
+            {companyInfo?.companyNameKana && (
+              <div className="text-xs text-muted-foreground font-bold -mt-2 pl-1">{companyInfo.companyNameKana}</div>
+            )}
+            <CompanyInfoRow label="住所" value={companyInfo?.postalCode ? `〒${companyInfo.postalCode}\n${companyInfo.address || "-"}` : companyInfo?.address} />
+            <CompanyInfoRow label="電話番号" value={listing.contactPhone} />
+            <CompanyInfoRow label="FAX番号" value={companyInfo?.fax} />
+            <CompanyInfoRow label="メール" value={listing.contactEmail} />
+            <CompanyInfoRow label="請求事業者登録番号" value={companyInfo?.invoiceRegistrationNumber} />
+            <CompanyInfoRow label="業務内容・会社PR" value={companyInfo?.businessDescription} />
+            <CompanyInfoRow label="保有車両台数" value={companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : null} />
+            <CompanyInfoRow label="ウェブサイトURL" value={companyInfo?.websiteUrl} />
+            <CompanyInfoRow label="登録年月" value={companyInfo?.registrationDate} />
 
-        <PanelSectionHeader icon={<DollarSign className="w-4 h-4" />} title="支払い条件" />
-        <div className="grid grid-cols-1 gap-3">
-          <div className="p-3 rounded-md bg-muted/30">
-            <div className="text-[11px] text-muted-foreground font-bold mb-0.5">支払いサイト</div>
-            <div className="text-sm font-bold text-foreground">{companyInfo?.paymentTerms || "未設定"}</div>
-          </div>
-          {companyInfo?.businessDescription && (
-            <div className="p-3 rounded-md bg-muted/30">
-              <div className="text-[11px] text-muted-foreground font-bold mb-0.5">事業内容</div>
-              <div className="text-sm font-bold text-foreground">{companyInfo.businessDescription}</div>
+            <div className="border-t border-border pt-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 rounded-md bg-muted/30 text-center">
+                  <div className="text-[10px] text-muted-foreground font-bold">直近1ヶ月 荷物登録数</div>
+                  <div className="text-base font-bold text-foreground">{companyInfo?.cargoCount1m ?? "-"}</div>
+                </div>
+                <div className="p-2 rounded-md bg-muted/30 text-center">
+                  <div className="text-[10px] text-muted-foreground font-bold">直近3ヶ月 荷物登録数</div>
+                  <div className="text-base font-bold text-foreground">{companyInfo?.cargoCount3m ?? "-"}</div>
+                </div>
+                <div className="p-2 rounded-md bg-muted/30 text-center">
+                  <div className="text-[10px] text-muted-foreground font-bold">直近1ヶ月 車両登録数</div>
+                  <div className="text-base font-bold text-foreground">{companyInfo?.truckCount1m ?? "-"}</div>
+                </div>
+                <div className="p-2 rounded-md bg-muted/30 text-center">
+                  <div className="text-[10px] text-muted-foreground font-bold">直近3ヶ月 車両登録数</div>
+                  <div className="text-base font-bold text-foreground">{companyInfo?.truckCount3m ?? "-"}</div>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="detail" className="space-y-3 mt-3">
+            <CompanyInfoRow label="代表者" value={companyInfo?.representative} />
+            <CompanyInfoRow label="設立" value={companyInfo?.establishedDate} />
+            <CompanyInfoRow label="資本金" value={companyInfo?.capital ? `${companyInfo.capital} 万円` : null} />
+            <CompanyInfoRow label="従業員数" value={companyInfo?.employeeCount} />
+            <CompanyInfoRow label="事業所所在地" value={companyInfo?.officeLocations} />
+            <CompanyInfoRow label="年間売上" value={companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null} />
+            <CompanyInfoRow label="取引先銀行" value={companyInfo?.bankInfo} />
+            <CompanyInfoRow label="主要取引先" value={companyInfo?.majorClients} />
+            <CompanyInfoRow label="締め日" value={companyInfo?.closingDay} />
+            <CompanyInfoRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
+            <CompanyInfoRow label="営業地域" value={companyInfo?.businessArea} />
+            <div className="border-t border-border pt-2">
+              <div className="text-[11px] text-muted-foreground font-bold mb-1">おまかせ請求</div>
+              <CompanyInfoRow label="受入可否" value={companyInfo?.autoInvoiceAcceptance || "未設定"} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="credit" className="space-y-3 mt-3">
+            <CompanyInfoRow label="加入組織" value={companyInfo?.memberOrganization} />
+            <CompanyInfoRow label="国交省認可番号" value={companyInfo?.transportLicenseNumber} />
+            <CompanyInfoRow label="デジタコ搭載数" value={companyInfo?.digitalTachographCount} />
+            <CompanyInfoRow label="GPS搭載数" value={companyInfo?.gpsCount} />
+            <CompanyInfoRow label="安全性優良事業所認定" value={companyInfo?.safetyExcellenceCert || "無"} />
+            <CompanyInfoRow label="グリーン経営認証" value={companyInfo?.greenManagementCert || "無"} />
+            <CompanyInfoRow label="ISO9000" value={companyInfo?.iso9000 || "無"} />
+            <CompanyInfoRow label="ISO14000" value={companyInfo?.iso14000 || "無"} />
+            <CompanyInfoRow label="ISO39001" value={companyInfo?.iso39001 || "無"} />
+            <CompanyInfoRow label="荷物保険" value={companyInfo?.cargoInsurance} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
