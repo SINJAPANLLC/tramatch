@@ -187,8 +187,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
                 {changeLimitDate.toLocaleString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" })}
               </span>
             </DetailRow>
-            <DetailRow label="おまかせ請求" value="対象外" />
-            <div className="px-3 py-1.5 text-[10px] text-muted-foreground bg-muted/20 border-b border-border">最新状態は取引で確認してください</div>
             <DetailRow label="荷物番号" value={listing.cargoNumber ? String(listing.cargoNumber) : "未設定"} />
           </div>
 
@@ -216,14 +214,12 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="発地">
               <span className="font-bold">{listing.departureArea} {listing.departureAddress || ""}</span>
             </DetailRow>
-            <DetailRow label="積み時間" value={listing.loadingTime || ""} />
             <DetailRow label="着日時">
               <span className="font-bold">{formatDateFull(listing.arrivalDate)} {listing.arrivalTime || ""}</span>
             </DetailRow>
             <DetailRow label="着地">
               <span className="font-bold">{listing.arrivalArea} {listing.arrivalAddress || ""}</span>
             </DetailRow>
-            <DetailRow label="卸し時間" value={listing.unloadingTime || ""} />
           </div>
 
           <div className="border border-border rounded-md overflow-hidden">
