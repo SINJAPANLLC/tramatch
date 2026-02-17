@@ -11,10 +11,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
-import { Package, ArrowLeft, Sparkles, Search, Upload, Mic, MicOff, FileText, Loader2 } from "lucide-react";
+import { Package, ArrowLeft, Sparkles, Search, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useState, useRef, useCallback } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parse } from "date-fns";
+import { ja } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "トレーラー", "その他"];
 const BODY_TYPES = ["平ボディ", "バン", "ウイング", "冷蔵車", "冷凍車", "ダンプ", "タンクローリー", "車載車", "その他"];
@@ -527,15 +532,50 @@ export default function CargoForm() {
                     <FormField
                       control={form.control}
                       name="desiredDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>発日</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 2026/03/01" {...field} data-testid="input-desired-date" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const dateValue = field.value ? (() => {
+                          try {
+                            const parsed = parse(field.value, "yyyy/MM/dd", new Date());
+                            return isNaN(parsed.getTime()) ? undefined : parsed;
+                          } catch { return undefined; }
+                        })() : undefined;
+                        return (
+                          <FormItem>
+                            <FormLabel>発日</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="input-desired-date"
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value || "日付を選択"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={dateValue}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      field.onChange(format(date, "yyyy/MM/dd"));
+                                    }
+                                  }}
+                                  locale={ja}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
@@ -607,15 +647,50 @@ export default function CargoForm() {
                     <FormField
                       control={form.control}
                       name="arrivalDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>着日</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 2026/03/02" {...field} value={field.value || ""} data-testid="input-arrival-date" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const dateValue = field.value ? (() => {
+                          try {
+                            const parsed = parse(field.value, "yyyy/MM/dd", new Date());
+                            return isNaN(parsed.getTime()) ? undefined : parsed;
+                          } catch { return undefined; }
+                        })() : undefined;
+                        return (
+                          <FormItem>
+                            <FormLabel>着日</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="input-arrival-date"
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value || "日付を選択"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={dateValue}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      field.onChange(format(date, "yyyy/MM/dd"));
+                                    }
+                                  }}
+                                  locale={ja}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
