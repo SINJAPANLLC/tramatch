@@ -1064,6 +1064,20 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
   );
 }
 
+function DispatchStatusBadge({ cargoId }: { cargoId: string }) {
+  const { data: dr } = useQuery<DispatchRequest | null>({
+    queryKey: [`/api/dispatch-requests/${cargoId}`],
+  });
+
+  if (!dr) {
+    return <Badge variant="outline" className="text-[10px] border-gray-300 text-gray-500">未作成</Badge>;
+  }
+  if (dr.status === "sent") {
+    return <Badge variant="outline" className="text-[10px] border-green-300 text-green-600">送信済</Badge>;
+  }
+  return <Badge variant="outline" className="text-[10px] border-yellow-300 text-yellow-600">下書き</Badge>;
+}
+
 function CompletedCargoTable({ items, selectedId, onSelect }: {
   items: CargoListing[];
   selectedId: string | null;
@@ -1096,6 +1110,7 @@ function CompletedCargoTable({ items, selectedId, onSelect }: {
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">高速代</th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">車種</th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">車</th>
+              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">依頼書</th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">入金予定日</th>
             </tr>
           </thead>
@@ -1128,6 +1143,9 @@ function CompletedCargoTable({ items, selectedId, onSelect }: {
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.highwayFee || "なし"}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.vehicleType || "-"}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.bodyType || "-"}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <DispatchStatusBadge cargoId={item.id} />
+                </td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.paymentDate || "-"}</td>
               </tr>
             ))}
