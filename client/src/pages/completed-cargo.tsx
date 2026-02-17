@@ -280,12 +280,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
               </div>
             </DetailRow>
             <DetailRow label="荷種">
-              <div>
-                <div>{listing.cargoType}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  至急：{listing.urgency || "×"} / 引越し案件：{listing.movingJob || "×"}
-                </div>
-              </div>
+              <div>{listing.cargoType}</div>
             </DetailRow>
             <DetailRow label="積合" value={listing.consolidation || "不可"} />
             <DetailRow label="希望車種" value={`重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`} />
