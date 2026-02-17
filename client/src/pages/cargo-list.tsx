@@ -701,11 +701,9 @@ export default function CargoList() {
                     <div className="font-bold text-[14px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
-                    {listing.highwayFee && (
-                      <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
-                        高速代: {listing.highwayFee}
-                      </div>
-                    )}
+                    <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
+                      高速代: {listing.highwayFee ? "有" : "無"}
+                    </div>
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
                     {listing.consolidation === "可" ? (
