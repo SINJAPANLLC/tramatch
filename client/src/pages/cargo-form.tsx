@@ -127,6 +127,9 @@ export default function CargoForm() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingItems, setPendingItems] = useState<Record<string, unknown>[]>([]);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   const form = useForm<InsertCargoListing>({
     resolver: zodResolver(insertCargoListingSchema),
@@ -159,21 +162,6 @@ export default function CargoForm() {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data: InsertCargoListing) => {
-      const res = await apiRequest("POST", "/api/cargo", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "荷物情報を掲載しました" });
-      setLocation("/cargo");
-    },
-    onError: (error: Error) => {
-      toast({ title: "エラーが発生しました", description: error.message, variant: "destructive" });
-    },
-  });
-
   const applyAiFields = useCallback((rawFields: Record<string, unknown>) => {
     const normalized = normalizeAiItem(rawFields);
     let filledCount = 0;
@@ -186,6 +174,55 @@ export default function CargoForm() {
     }
     return filledCount;
   }, [form]);
+
+  const loadNextPendingItem = useCallback(() => {
+    if (pendingItems.length > 0) {
+      const nextItem = pendingItems[0];
+      const remaining = pendingItems.slice(1);
+      setPendingItems(remaining);
+      setCurrentItemIndex(prev => prev + 1);
+      form.reset({
+        title: "", departureArea: "", departureAddress: "", departureTime: "",
+        arrivalArea: "", arrivalAddress: "", arrivalTime: "", cargoType: "",
+        weight: "", desiredDate: "", arrivalDate: "", vehicleType: "", bodyType: "",
+        temperatureControl: "", price: "", highwayFee: "", transportType: "",
+        consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
+        description: "", companyName: "", contactPhone: "", contactEmail: "",
+      });
+      const count = applyAiFields(nextItem);
+      toast({
+        title: `次の荷物を入力しました（${currentItemIndex + 2}/${totalItems}件目）`,
+        description: `${count}項目を自動入力しました。内容を確認して掲載してください。残り${remaining.length}件`,
+      });
+    } else {
+      setPendingItems([]);
+      setCurrentItemIndex(0);
+      setTotalItems(0);
+      setLocation("/cargo");
+    }
+  }, [pendingItems, currentItemIndex, totalItems, form, applyAiFields, toast, setLocation]);
+
+  const mutation = useMutation({
+    mutationFn: async (data: InsertCargoListing) => {
+      const res = await apiRequest("POST", "/api/cargo", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      if (pendingItems.length > 0) {
+        toast({ title: "荷物情報を掲載しました", description: "次の荷物を読み込みます..." });
+        loadNextPendingItem();
+      } else {
+        toast({ title: "荷物情報を掲載しました" });
+        setTotalItems(0);
+        setCurrentItemIndex(0);
+        setLocation("/cargo");
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "エラーが発生しました", description: error.message, variant: "destructive" });
+    },
+  });
 
   const parseAndFillRaw = useCallback(async (text: string) => {
     try {
@@ -210,31 +247,12 @@ export default function CargoForm() {
       const count = applyAiFields(items[0]);
 
       if (items.length > 1) {
-        let autoRegistered = 0;
-        let failedCount = 0;
-        for (let i = 1; i < items.length; i++) {
-          try {
-            const normalized = normalizeAiItem(items[i]);
-            const cargoData = {
-              ...normalized,
-              companyName: "",
-              contactPhone: "",
-              contactEmail: "",
-            };
-            await apiRequest("POST", "/api/cargo", cargoData);
-            autoRegistered++;
-          } catch (e) {
-            console.error("Auto-register failed for item", i, e);
-            failedCount++;
-          }
-        }
-        queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-        const desc = failedCount > 0
-          ? `1件目をフォームに反映（${count}項目）。${autoRegistered}件を自動掲載、${failedCount}件は登録に失敗しました。`
-          : `1件目をフォームに反映しました（${count}項目）。残り${autoRegistered}件は自動掲載しました。内容を確認してください。`;
+        setPendingItems(items.slice(1));
+        setCurrentItemIndex(0);
+        setTotalItems(items.length);
         toast({
-          title: `${items.length}件の荷物を検出`,
-          description: desc,
+          title: `${items.length}件の荷物を検出しました`,
+          description: `1件目をフォームに反映しました（${count}項目）。内容を確認して掲載してください。掲載後に次の荷物が自動入力されます。`,
         });
       } else {
         toast({
@@ -1103,9 +1121,21 @@ export default function CargoForm() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-submit-cargo">
-                {mutation.isPending ? "掲載中..." : "荷物情報を掲載する"}
-              </Button>
+              {totalItems > 1 && (
+                <div className="bg-primary/10 border border-primary/20 rounded-md p-3 text-sm text-center" data-testid="text-queue-status">
+                  {currentItemIndex + 1} / {totalItems} 件目を入力中（残り {pendingItems.length} 件）
+                </div>
+              )}
+              <div className="flex gap-2">
+                {totalItems > 1 && pendingItems.length > 0 && (
+                  <Button type="button" variant="outline" onClick={() => { setPendingItems(prev => prev.slice(1)); setCurrentItemIndex(prev => prev + 1); if (pendingItems.length <= 1) { setTotalItems(0); setCurrentItemIndex(0); setPendingItems([]); } else { loadNextPendingItem(); } }} data-testid="button-skip-cargo">
+                    スキップ
+                  </Button>
+                )}
+                <Button type="submit" className="flex-1" disabled={mutation.isPending} data-testid="button-submit-cargo">
+                  {mutation.isPending ? "掲載中..." : totalItems > 1 ? `荷物情報を掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
