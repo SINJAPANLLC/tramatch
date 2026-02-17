@@ -948,12 +948,11 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
             {listing.taxType && <span className="text-xs text-muted-foreground font-bold">({listing.taxType})</span>}
-            <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee || ""}</span>
-            <Badge variant="outline" className="text-[10px] ml-auto">{companyInfo?.autoInvoiceAcceptance || "おまかせ請求受入不可"}</Badge>
+            <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? `高速代：${listing.highwayFee}` : ""}</span>
           </div>
 
           {listing.status === "active" && (
-            <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-base py-5 rounded-full no-default-hover-elevate" data-testid="button-proceed-contract">
+            <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-base py-5 rounded-full no-default-hover-elevate" data-testid="button-proceed-contract">
               成約へ進む
             </Button>
           )}
@@ -991,9 +990,12 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="車両指定" value={listing.vehicleSpec || "指定なし"} />
             <DetailRow label="必要装備" value={listing.equipment || "標準備品"} />
             <DetailRow label="備考" value={listing.description} />
-            <DetailRow label="発着日時" value={`${formatDateWithDay(listing.desiredDate)} ${listing.departureTime || ""} - ${formatDateWithDay(listing.arrivalDate)} ${listing.arrivalTime || ""}`} />
-            <DetailRow label="積み時間" value={listing.loadingTime} />
-            <DetailRow label="卸し時間" value={listing.unloadingTime} />
+            <DetailRow label="発着日時">
+              <div>
+                <div>{formatDateWithDay(listing.desiredDate)} {listing.departureTime || ""}{listing.loadingTime ? ` (積み時間：${listing.loadingTime})` : ""}</div>
+                <div>{formatDateWithDay(listing.arrivalDate)} {listing.arrivalTime || ""}{listing.unloadingTime ? ` (卸し時間：${listing.unloadingTime})` : ""}</div>
+              </div>
+            </DetailRow>
             <DetailRow label="入金予定日" value={listing.paymentDate || "登録された支払いサイトに準拠します。"} />
             <DetailRow label="登録日時" value={listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"} />
           </div>
