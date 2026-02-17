@@ -13,7 +13,6 @@ const userMenuItems: MenuItem[] = [
   { href: "/cargo/new", label: "AI荷物登録", icon: Plus },
   { href: "/my-cargo", label: "登録した荷物", icon: FileText },
   { href: "/completed-cargo", label: "成約した荷物", icon: CheckCircle },
-  { href: "/cancelled-cargo", label: "成約しなかった荷物", icon: XCircle },
   { href: "/trucks", label: "AI空車検索", icon: Sparkles },
   { href: "/trucks/new", label: "AI空車登録", icon: Truck },
   { href: "/companies", label: "企業検索", icon: Building },
