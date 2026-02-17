@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Package, MapPin, ArrowRight, Calendar, Weight, Truck, Clock, Eye, CircleDot, Loader2, Phone, X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, Package, ArrowRight, Truck, Loader2, Phone, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -12,98 +12,22 @@ import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 
-function CompletedCard({ item, onReactivate, isReactivating, isSelected, onSelect }: { item: CargoListing; onReactivate: () => void; isReactivating: boolean; isSelected: boolean; onSelect: () => void }) {
-  const completedDate = new Date(item.createdAt);
-  const dateStr = `${completedDate.getFullYear()}/${String(completedDate.getMonth() + 1).padStart(2, "0")}/${String(completedDate.getDate()).padStart(2, "0")}`;
+function formatDateCompact(dateStr: string | null | undefined) {
+  if (!dateStr) return "";
+  const cleaned = dateStr.replace(/\//g, "-");
+  const d = new Date(cleaned);
+  if (isNaN(d.getTime())) return dateStr;
+  const days = ["日", "月", "火", "水", "木", "金", "土"];
+  return `${d.getMonth() + 1}/${d.getDate()}(${days[d.getDay()]})`;
+}
 
-  return (
-    <Card className={`hover-elevate cursor-pointer ${isSelected ? "ring-2 ring-primary" : ""}`} data-testid={`card-completed-cargo-${item.id}`} onClick={onSelect}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0 space-y-2.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer" data-testid={`link-completed-title-${item.id}`}>
-                {item.title}
-              </span>
-              {item.transportType && (
-                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-blue-300 text-blue-600" : "border-primary/30 text-primary"}`}>
-                  {item.transportType}
-                </Badge>
-              )}
-              <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                成約済み
-              </Badge>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-sm">
-              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-              <span className="font-medium text-foreground">{item.departureArea}</span>
-              <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground mx-1" />
-              <span className="font-medium text-foreground">{item.arrivalArea}</span>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
-              {item.desiredDate && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {item.desiredDate}
-                </span>
-              )}
-              {item.cargoType && (
-                <span className="flex items-center gap-1">
-                  <Package className="w-3 h-3" />
-                  {item.cargoType}
-                </span>
-              )}
-              {item.weight && (
-                <span className="flex items-center gap-1">
-                  <Weight className="w-3 h-3" />
-                  {item.weight}
-                </span>
-              )}
-              {item.vehicleType && (
-                <span className="flex items-center gap-1">
-                  <Truck className="w-3 h-3" />
-                  {item.vehicleType}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              {item.price && (
-                <span className="text-sm font-semibold text-primary">
-                  {formatPrice(item.price)}円
-                </span>
-              )}
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Eye className="w-3 h-3" />
-                {item.viewCount ?? 0}人が閲覧
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                登録日: {dateStr}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => { e.stopPropagation(); onReactivate(); }}
-              disabled={isReactivating}
-              className="text-green-600 border-green-300"
-              data-testid={`button-reactivate-${item.id}`}
-            >
-              <CircleDot className="w-3.5 h-3.5 mr-1" />
-              掲載に戻す
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+function formatDateFull(dateStr: string | null | undefined) {
+  if (!dateStr) return "指定なし";
+  const cleaned = dateStr.replace(/\//g, "-");
+  const d = new Date(cleaned);
+  if (isNaN(d.getTime())) return dateStr;
+  const days = ["日", "月", "火", "水", "木", "金", "土"];
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}(${days[d.getDay()]})`;
 }
 
 function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: React.ReactNode }) {
@@ -161,6 +85,20 @@ type CompanyInfo = {
 
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
   const [panelTab, setPanelTab] = useState<"cargo" | "company">("cargo");
+  const { toast } = useToast();
+
+  const reactivateMutation = useMutation({
+    mutationFn: async (cargoId: string) => {
+      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "active" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      toast({ title: "掲載中に戻しました" });
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "処理に失敗しました", variant: "destructive" });
+    },
+  });
 
   const { data: companyInfo } = useQuery<CompanyInfo>({
     queryKey: ["/api/companies", listing?.userId],
@@ -191,19 +129,13 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
     };
     const row = (label: string, value: string | null | undefined) =>
       `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap;border:1px solid #ddd;background:#f9f9f9;font-size:13px;width:140px">${label}</td><td style="padding:6px 10px;border:1px solid #ddd;font-size:13px">${value || "-"}</td></tr>`;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>荷物情報 - ${listing.companyName}</title>
-<style>body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:20px;color:#333}h2{font-size:18px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px}table{border-collapse:collapse;width:100%;margin-bottom:16px}.header{text-align:center;margin-bottom:24px}.header h1{font-size:22px;color:#40E0D0;margin:0}.route{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px}.route-side{flex:1}.route-arrow{padding:0 16px;font-size:20px;color:#999}.price{font-size:22px;font-weight:bold;margin-bottom:16px}@media print{body{margin:10px}}</style></head><body>
-<div class="header"><h1>トラマッチ 荷物情報</h1><p style="font-size:12px;color:#888">印刷日: ${new Date().toLocaleString("ja-JP")}</p></div>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>成約情報 - ${listing.companyName}</title>
+<style>body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:20px;color:#333}h2{font-size:18px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px}table{border-collapse:collapse;width:100%;margin-bottom:16px}.header{text-align:center;margin-bottom:24px}.header h1{font-size:22px;color:#40E0D0;margin:0}@media print{body{margin:10px}}</style></head><body>
+<div class="header"><h1>トラマッチ 成約情報</h1><p style="font-size:12px;color:#888">印刷日: ${new Date().toLocaleString("ja-JP")}</p></div>
 <h2>荷物情報</h2>
-<div class="route"><div class="route-side"><div style="font-weight:bold;font-size:14px">${fmtDate(listing.desiredDate)} ${listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}</div><div style="font-weight:bold;font-size:14px;margin-top:4px">${listing.departureArea} ${listing.departureAddress || ""}</div></div><div class="route-arrow">→</div><div class="route-side" style="text-align:right"><div style="font-weight:bold;font-size:14px">${fmtDate(listing.arrivalDate)} ${listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}</div><div style="font-weight:bold;font-size:14px;margin-top:4px">${listing.arrivalArea} ${listing.arrivalAddress || ""}</div></div></div>
-<div class="price">${listing.price ? `¥${Number(listing.price).toLocaleString()}` : "要相談"} ${listing.taxType ? `(${listing.taxType})` : ""} ${listing.highwayFee ? "高速代：有" : "高速代：無"}</div>
-<table>${row("荷物番号", listing.cargoNumber ? String(listing.cargoNumber) : "-")}${row("企業名", listing.companyName)}${row("担当者", listing.contactPerson)}${row("連絡先", listing.contactPhone)}${row("荷種", listing.cargoType)}${row("積合", listing.consolidation || "不可")}${row("希望車種", `重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`)}${row("車両指定", listing.vehicleSpec || "指定なし")}${row("必要装備", listing.equipment || "標準装備")}${row("備考", listing.description)}${row("発着日時", `${fmtDate(listing.desiredDate)} ${listing.departureTime || ""}${listing.loadingTime ? ` (積み時間：${listing.loadingTime})` : ""} → ${fmtDate(listing.arrivalDate)} ${listing.arrivalTime || ""}${listing.unloadingTime ? ` (卸し時間：${listing.unloadingTime})` : ""}`)}${row("入金予定日", listing.paymentDate || "登録された支払いサイトに準拠します。")}</table>
-<h2>企業情報</h2><h3 style="font-size:14px;margin:8px 0">基本情報</h3>
-<table>${row("法人名・事業者名", companyInfo?.companyName || listing.companyName)}${row("住所", companyInfo?.postalCode ? `〒${companyInfo.postalCode} ${companyInfo.address || "-"}` : companyInfo?.address || "-")}${row("電話番号", listing.contactPhone)}${row("FAX番号", companyInfo?.fax)}${row("請求事業者登録番号", companyInfo?.invoiceRegistrationNumber)}${row("業務内容・会社PR", companyInfo?.businessDescription)}${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-")}${row("ウェブサイトURL", companyInfo?.websiteUrl)}</table>
-<h3 style="font-size:14px;margin:8px 0">詳細情報</h3>
-<table>${row("代表者", companyInfo?.representative)}${row("設立", companyInfo?.establishedDate)}${row("資本金", companyInfo?.capital ? `${companyInfo.capital} 万円` : null)}${row("従業員数", companyInfo?.employeeCount)}${row("事業所所在地", companyInfo?.officeLocations)}${row("年間売上", companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null)}${row("取引先銀行", companyInfo?.bankInfo)}${row("主要取引先", companyInfo?.majorClients)}${row("締め日", companyInfo?.closingDay)}${row("支払月・支払日", companyInfo?.paymentMonth)}${row("営業地域", companyInfo?.businessArea)}</table>
-<h3 style="font-size:14px;margin:8px 0">信用情報</h3>
-<table>${row("加入組織", companyInfo?.memberOrganization)}${row("国交省認可番号", companyInfo?.transportLicenseNumber)}${row("デジタコ搭載数", companyInfo?.digitalTachographCount)}${row("GPS搭載数", companyInfo?.gpsCount)}${row("安全性優良事業所", companyInfo?.safetyExcellenceCert || "無")}${row("グリーン経営認証", companyInfo?.greenManagementCert || "無")}${row("ISO9000", companyInfo?.iso9000 || "無")}${row("ISO14000", companyInfo?.iso14000 || "無")}${row("ISO39001", companyInfo?.iso39001 || "無")}${row("荷物保険", companyInfo?.cargoInsurance)}</table></body></html>`;
+<table>${row("成約番号", listing.cargoNumber ? String(listing.cargoNumber) : "-")}${row("企業名", listing.companyName)}${row("担当者", listing.contactPerson)}${row("連絡先", listing.contactPhone)}${row("荷種", listing.cargoType)}${row("積合", listing.consolidation || "不可")}${row("希望車種", `重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`)}${row("備考", listing.description)}${row("発日時", `${fmtDate(listing.desiredDate)} ${listing.departureTime || ""}`)}${row("発地", `${listing.departureArea} ${listing.departureAddress || ""}`)}${row("着日時", `${fmtDate(listing.arrivalDate)} ${listing.arrivalTime || ""}`)}${row("着地", `${listing.arrivalArea} ${listing.arrivalAddress || ""}`)}${row("運賃", listing.price ? `${formatPrice(listing.price)}円` : "要相談")}${row("高速代", listing.highwayFee || "なし")}</table>
+<h2>企業情報</h2>
+<table>${row("法人名", companyInfo?.companyName || listing.companyName)}${row("住所", companyInfo?.address || "-")}${row("電話番号", listing.contactPhone)}${row("FAX番号", companyInfo?.fax)}</table></body></html>`;
     const printWindow = window.open("", "_blank");
     if (printWindow) { printWindow.document.write(html); printWindow.document.close(); printWindow.onload = () => { printWindow.print(); }; }
   };
@@ -219,15 +151,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
     );
   }
 
-  const formatDateWithDay = (dateStr: string | null | undefined) => {
-    if (!dateStr) return "指定なし";
-    const cleaned = dateStr.replace(/\//g, "-");
-    const d = new Date(cleaned);
-    if (isNaN(d.getTime())) return dateStr;
-    const days = ["日", "月", "火", "水", "木", "金", "土"];
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}(${days[d.getDay()]})`;
-  };
-
   return (
     <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-cargo-detail">
       <div className="sticky top-0 bg-background z-10">
@@ -238,7 +161,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
               className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${panelTab === "cargo" ? "text-primary border border-primary bg-primary/5" : "text-muted-foreground"}`}
               data-testid="tab-cargo-info"
             >
-              荷物情報
+              成約情報
             </button>
             <button
               onClick={() => setPanelTab("company")}
@@ -261,82 +184,90 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
 
       {panelTab === "cargo" ? (
         <div className="p-4 space-y-4">
-          <div className="border border-border rounded-md p-3">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                  <span>{formatDateWithDay(listing.desiredDate)}</span>
-                  <span>{listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}</span>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="成約番号" value={listing.cargoNumber ? String(listing.cargoNumber) : "-"} />
+            <DetailRow label="成約日時" value={listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"} />
+            <DetailRow label="荷物番号" value={listing.cargoNumber ? String(listing.cargoNumber) : "-"} />
+          </div>
+
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="運送会社">
+              <div>
+                <div className="font-bold">{listing.companyName}</div>
+                <div className="flex items-center gap-3 mt-1">
+                  <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">企業情報 &gt;</button>
                 </div>
-                <div className="text-sm font-bold text-foreground mt-0.5">
+              </div>
+            </DetailRow>
+            <DetailRow label="担当者" value={listing.contactPerson} />
+            <DetailRow label="連絡先">
+              <div className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{listing.contactPhone}</span>
+              </div>
+            </DetailRow>
+          </div>
+
+          <div className="border border-border rounded-md p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <div className="text-[10px] text-muted-foreground mb-0.5">発日時</div>
+                <div className="text-sm font-bold text-foreground">
+                  {formatDateFull(listing.desiredDate)} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1.5 mb-0.5">発地</div>
+                <div className="text-sm font-bold text-foreground">
                   {listing.departureArea} {listing.departureAddress || ""}
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-3" />
               <div className="flex-1 text-right">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground justify-end">
-                  <span>{formatDateWithDay(listing.arrivalDate)}</span>
-                  <span>{listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}</span>
+                <div className="text-[10px] text-muted-foreground mb-0.5">着日時</div>
+                <div className="text-sm font-bold text-foreground">
+                  {formatDateFull(listing.arrivalDate)} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                 </div>
-                <div className="text-sm font-bold text-foreground mt-0.5">
+                <div className="text-[10px] text-muted-foreground mt-1.5 mb-0.5">着地</div>
+                <div className="text-sm font-bold text-foreground">
                   {listing.arrivalArea} {listing.arrivalAddress || ""}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
-            <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="荷種" value={listing.cargoType} />
+            <DetailRow label="積合" value={listing.consolidation || "不可"} />
+            <DetailRow label="希望車種">
+              <div>
+                <div>重量：{listing.weight || "-"}</div>
+                <div>車種：{listing.vehicleType}{listing.bodyType ? ` / ${listing.bodyType}` : ""}</div>
+              </div>
+            </DetailRow>
+            <DetailRow label="車両指定" value={listing.vehicleSpec || "指定なし"} />
+            <DetailRow label="必要装備" value={listing.equipment || "標準装備"} />
           </div>
 
           <div className="border border-border rounded-md overflow-hidden">
-            <DetailRow label="荷物番号" value={listing.cargoNumber ? String(listing.cargoNumber) : "-"} />
-            <DetailRow label="企業名">
-              <div>
-                <div className="font-bold">{listing.companyName}</div>
-                <div className="flex items-center gap-3 mt-1">
-                  <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">他の荷物をみる &gt;</button>
-                  <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">実績をみる &gt;</button>
-                </div>
-              </div>
+            <DetailRow label="運賃">
+              <span className="text-lg font-bold">{listing.price ? `${formatPrice(listing.price)}円` : "要相談"}</span>
             </DetailRow>
-            <DetailRow label="担当者" value={listing.contactPerson} />
-            <DetailRow label="連絡方法">
-              <div className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>{listing.contactPhone}</span>
-              </div>
-            </DetailRow>
-            <DetailRow label="荷種">
-              <div>{listing.cargoType}</div>
-            </DetailRow>
-            <DetailRow label="積合" value={listing.consolidation || "不可"} />
-            <DetailRow label="希望車種" value={`重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`} />
-            <DetailRow label="車両指定" value={listing.vehicleSpec || "指定なし"} />
-            <DetailRow label="必要装備" value={listing.equipment || "標準装備"} />
-            <DetailRow label="備考" value={listing.description} />
-            <DetailRow label="発着日時">
-              <div>
-                <div>{formatDateWithDay(listing.desiredDate)} {listing.departureTime || ""}{listing.loadingTime ? ` (積み時間：${listing.loadingTime})` : ""}</div>
-                <div>{formatDateWithDay(listing.arrivalDate)} {listing.arrivalTime || ""}{listing.unloadingTime ? ` (卸し時間：${listing.unloadingTime})` : ""}</div>
-              </div>
-            </DetailRow>
-            <DetailRow label="入金予定日" value={listing.paymentDate || "登録された支払いサイトに準拠します。"} />
-            <DetailRow label="登録日時" value={listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"} />
+            <DetailRow label="高速代" value={listing.highwayFee || "なし"} />
+            <DetailRow label="入金予定日" value={listing.paymentDate || "支払サイトに準拠"} />
           </div>
 
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              {listing.transportType && (
-                <Badge variant="outline" className={`text-xs ${listing.transportType === "スポット" ? "border-blue-300 text-blue-600" : listing.transportType === "定期" ? "border-primary/30 text-primary" : ""}`}>{listing.transportType}</Badge>
-              )}
-              <Badge variant="default">成約済</Badge>
-            </div>
-            <div className="text-xs text-muted-foreground font-bold">
-              閲覧数: {listing.viewCount}
-            </div>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="備考" value={listing.description} />
           </div>
+
+          <Button
+            variant="outline"
+            className="w-full text-green-600 border-green-300"
+            onClick={() => reactivateMutation.mutate(listing.id)}
+            disabled={reactivateMutation.isPending}
+            data-testid="button-reactivate"
+          >
+            {reactivateMutation.isPending ? "処理中..." : "掲載に戻す"}
+          </Button>
         </div>
       ) : (
         <div className="p-4 space-y-4">
@@ -362,9 +293,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
                 <div className="text-xs text-muted-foreground font-bold">登録 <span className="text-lg text-foreground">{companyInfo?.truckCount3m ?? 0}</span></div>
               </div>
             </div>
-            <div className="text-[10px] text-muted-foreground font-bold text-right mt-2">
-              トラマッチ登録年月 {companyInfo?.registrationDate || "-"}
-            </div>
           </Card>
 
           <h4 className="text-sm font-bold text-foreground">基本情報</h4>
@@ -384,7 +312,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="業務内容・会社PR" value={companyInfo?.businessDescription} />
             <DetailRow label="保有車両台数" value={companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-"} />
             <DetailRow label="ウェブサイトURL" value={companyInfo?.websiteUrl} />
-            <DetailRow label="登録年月" value={companyInfo?.registrationDate} />
           </div>
 
           <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
@@ -400,7 +327,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="締め日" value={companyInfo?.closingDay} />
             <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
-
           </div>
 
           <h4 className="text-sm font-bold text-foreground">信用情報</h4>
@@ -453,8 +379,8 @@ export default function CompletedCargo() {
     <DashboardLayout>
       <div className="flex h-full">
         <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 py-6">
-            <div className="mb-6">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="mb-4">
               <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">成約した荷物</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 成約済みの荷物情報の一覧
@@ -463,9 +389,9 @@ export default function CompletedCargo() {
             </div>
 
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
+                  <Skeleton key={i} className="h-10 w-full" />
                 ))}
               </div>
             ) : sorted.length === 0 ? (
@@ -477,17 +403,83 @@ export default function CompletedCargo() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
-                {sorted.map((item) => (
-                  <CompletedCard
-                    key={item.id}
-                    item={item}
-                    onReactivate={() => reactivate.mutate(item.id)}
-                    isReactivating={reactivate.isPending}
-                    isSelected={selectedCargoId === item.id}
-                    onSelect={() => setSelectedCargoId(item.id)}
-                  />
-                ))}
+              <div className="border border-border rounded-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs" data-testid="table-completed-cargo">
+                    <thead>
+                      <tr className="bg-muted/50 border-b border-border">
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">成約番号</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">状態</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運送会社</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">発日時・発地</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">着日時・着地</th>
+                        <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運賃</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">高速代</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">車種</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">車</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">入金予定日</th>
+                        <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sorted.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={`border-b border-border cursor-pointer transition-colors hover:bg-muted/30 ${selectedCargoId === item.id ? "bg-primary/5" : ""}`}
+                          onClick={() => setSelectedCargoId(item.id)}
+                          data-testid={`row-completed-cargo-${item.id}`}
+                        >
+                          <td className="px-3 py-2.5 whitespace-nowrap font-bold" data-testid={`text-cargo-number-${item.id}`}>
+                            {item.cargoNumber || "-"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <Badge variant="outline" className="text-[10px] border-orange-300 text-orange-600">
+                              成約
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="font-bold">{item.companyName}</div>
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="font-bold">{formatDateCompact(item.desiredDate)} {item.departureTime || ""}</div>
+                            <div className="text-muted-foreground">{item.departureArea}{item.departureAddress ? ` ${item.departureAddress}` : ""}</div>
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="font-bold">{formatDateCompact(item.arrivalDate)} {item.arrivalTime || ""}</div>
+                            <div className="text-muted-foreground">{item.arrivalArea}{item.arrivalAddress ? ` ${item.arrivalAddress}` : ""}</div>
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap text-right font-bold">
+                            {item.price ? `${formatPrice(item.price)}円` : "-"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
+                            {item.highwayFee || "なし"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
+                            {item.vehicleType || "-"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
+                            {item.bodyType || "-"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
+                            {item.paymentDate || "-"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => { e.stopPropagation(); reactivate.mutate(item.id); }}
+                              disabled={reactivate.isPending}
+                              className="text-green-600 border-green-300 text-[10px] h-7"
+                              data-testid={`button-reactivate-${item.id}`}
+                            >
+                              掲載に戻す
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
