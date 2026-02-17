@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, MapPin, Building2, Phone, Mail, Package, Truck, Circle, ArrowDown, DollarSign, FileText } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
+import { formatPrice } from "@/lib/utils";
 
 export default function CargoDetail() {
   const [, params] = useRoute("/cargo/:id");
@@ -135,7 +136,7 @@ export default function CargoDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 rounded-md bg-primary/5 border border-primary/10">
                 <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
-                <div className="text-xl font-bold text-primary">{listing.price ? `¥${listing.price}` : "要相談"}</div>
+                <div className="text-xl font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
               </div>
               <div className="p-4 rounded-md bg-muted/40">
                 <div className="text-xs text-muted-foreground mb-1">高速代</div>

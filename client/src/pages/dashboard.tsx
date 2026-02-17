@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
+import { formatPrice } from "@/lib/utils";
 
 function ListingSkeleton() {
   return (
@@ -72,7 +73,7 @@ export default function Dashboard() {
                         </div>
                         {listing.price && (
                           <div className="text-xs text-foreground font-medium mt-1">
-                            {listing.price}
+                            {formatPrice(listing.price)}円
                           </div>
                         )}
                       </CardContent>
@@ -110,7 +111,7 @@ export default function Dashboard() {
                         </div>
                         {listing.price && (
                           <div className="text-xs text-foreground font-medium mt-1">
-                            {listing.price}
+                            {formatPrice(listing.price)}円
                           </div>
                         )}
                       </CardContent>
