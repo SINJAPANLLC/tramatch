@@ -17,6 +17,7 @@ import CargoForm from "@/pages/cargo-form";
 import TruckForm from "@/pages/truck-form";
 import MyCargo from "@/pages/my-cargo";
 import CompletedCargo from "@/pages/completed-cargo";
+import CancelledCargo from "@/pages/cancelled-cargo";
 import Companies from "@/pages/companies";
 import Partners from "@/pages/partners";
 import TransportLedger from "@/pages/transport-ledger";
@@ -30,6 +31,7 @@ import AdminRevenue from "@/pages/admin-revenue";
 import AdminNotifications from "@/pages/admin-notifications";
 import AdminSeo from "@/pages/admin-seo";
 import AdminSettings from "@/pages/admin-settings";
+import AdminAnnouncements from "@/pages/admin-announcements";
 import Guide from "@/pages/guide";
 import Faq from "@/pages/faq";
 import Contact from "@/pages/contact";
@@ -57,10 +59,10 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
 
 const DASHBOARD_PATHS = [
   "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
-  "/my-cargo", "/completed-cargo", "/companies", "/partners",
+  "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
-  "/admin/notifications", "/admin/seo", "/admin/settings",
+  "/admin/notifications", "/admin/announcements", "/admin/seo", "/admin/settings",
 ];
 
 function Router() {
@@ -72,6 +74,7 @@ function Router() {
       <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
       <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
       <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
+      <Route path="/cancelled-cargo">{() => <ProtectedRoute component={CancelledCargo} />}</Route>
       <Route path="/companies">{() => <ProtectedRoute component={Companies} />}</Route>
       <Route path="/partners">{() => <ProtectedRoute component={Partners} />}</Route>
       <Route path="/transport-ledger">{() => <ProtectedRoute component={TransportLedger} />}</Route>
@@ -88,6 +91,7 @@ function Router() {
       <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
       <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
       <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
+      <Route path="/admin/announcements">{() => <AdminRoute component={AdminAnnouncements} />}</Route>
       <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
       <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
       <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
