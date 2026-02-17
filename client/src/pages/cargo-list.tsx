@@ -520,7 +520,7 @@ export default function CargoList() {
                           listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
                         }`}>{listing.transportType}</Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
+                        <span className="text-xs text-muted-foreground font-bold">-</span>
                       )}
                     </Link>
                   </td>
@@ -540,10 +540,10 @@ export default function CargoList() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
                               {listing.departureAddress && (
-                                <span className="text-xs text-muted-foreground">{listing.departureAddress}</span>
+                                <span className="text-xs text-muted-foreground font-bold">{listing.departureAddress}</span>
                               )}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5 font-bold">
                               {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                             </div>
                           </div>
@@ -562,10 +562,10 @@ export default function CargoList() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
                               {listing.arrivalAddress && (
-                                <span className="text-xs text-muted-foreground">{listing.arrivalAddress}</span>
+                                <span className="text-xs text-muted-foreground font-bold">{listing.arrivalAddress}</span>
                               )}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5 font-bold">
                               {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                             </div>
                           </div>
@@ -579,7 +579,7 @@ export default function CargoList() {
                         {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                       </div>
                       {listing.highwayFee && (
-                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">
+                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
                           高速代: {listing.highwayFee}
                         </div>
                       )}
@@ -590,9 +590,9 @@ export default function CargoList() {
                       {listing.consolidation === "可" ? (
                         <Badge variant="outline" className="text-[11px] border-primary/30 text-primary px-1.5">可</Badge>
                       ) : listing.consolidation === "不可" ? (
-                        <span className="text-xs text-muted-foreground">不可</span>
+                        <span className="text-xs text-muted-foreground font-bold">不可</span>
                       ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
+                        <span className="text-xs text-muted-foreground font-bold">-</span>
                       )}
                     </Link>
                   </td>
@@ -605,7 +605,7 @@ export default function CargoList() {
                     <Link href={`/cargo/${listing.id}`} className="block">
                       <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
                       {listing.bodyType && (
-                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">{listing.bodyType}</div>
+                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
                       )}
                     </Link>
                   </td>
@@ -621,12 +621,12 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-[13px] whitespace-nowrap">{listing.driverWork || "-"}</span>
+                      <span className="text-[13px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
                     </Link>
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px]">
+                      <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px] font-bold">
                         {listing.description || "-"}
                       </span>
                     </Link>
