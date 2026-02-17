@@ -60,8 +60,7 @@ export default function CargoList() {
   const [quickFilter, setQuickFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-  const [sortBy, setSortBy] = useState<"date" | "price">("date");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price" | "departPref" | "arrivePref">("newest");
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
@@ -247,18 +246,35 @@ export default function CargoList() {
     }
 
     result = [...result].sort((a, b) => {
-      if (sortBy === "date") {
-        const dateA = a.desiredDate || "";
-        const dateB = b.desiredDate || "";
-        return sortDir === "desc" ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "departDate": {
+          const dA = a.desiredDate || "";
+          const dB = b.desiredDate || "";
+          return dA.localeCompare(dB) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        case "arriveDate": {
+          const aA = a.arrivalDate || "";
+          const aB = b.arrivalDate || "";
+          return aA.localeCompare(aB) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        case "price": {
+          const pA = parseInt(a.price?.replace(/[^0-9]/g, "") || "0");
+          const pB = parseInt(b.price?.replace(/[^0-9]/g, "") || "0");
+          return pA - pB;
+        }
+        case "departPref":
+          return (a.departureArea || "").localeCompare(b.departureArea || "");
+        case "arrivePref":
+          return (a.arrivalArea || "").localeCompare(b.arrivalArea || "");
+        default:
+          return 0;
       }
-      const priceA = parseInt(a.price?.replace(/[^0-9]/g, "") || "0");
-      const priceB = parseInt(b.price?.replace(/[^0-9]/g, "") || "0");
-      return sortDir === "desc" ? priceB - priceA : priceA - priceB;
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, sortDir, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter]);
+  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -556,40 +572,20 @@ export default function CargoList() {
           <span className="font-semibold text-sm" data-testid="text-result-count">
             検索結果 {filtered.length} 件
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs gap-1"
-            onClick={() => {
-              if (sortBy === "date") {
-                setSortDir(sortDir === "desc" ? "asc" : "desc");
-              } else {
-                setSortBy("date");
-                setSortDir("desc");
-              }
-            }}
-            data-testid="button-sort-date"
-          >
-            <ArrowUpDown className="w-3 h-3" />
-            発日時 {sortBy === "date" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs gap-1"
-            onClick={() => {
-              if (sortBy === "price") {
-                setSortDir(sortDir === "desc" ? "asc" : "desc");
-              } else {
-                setSortBy("price");
-                setSortDir("desc");
-              }
-            }}
-            data-testid="button-sort-price"
-          >
-            <ArrowUpDown className="w-3 h-3" />
-            運賃 {sortBy === "price" ? (sortDir === "desc" ? "↓" : "↑") : ""}
-          </Button>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="w-[140px] text-xs h-8" data-testid="select-sort">
+              <ArrowUpDown className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">新着順</SelectItem>
+              <SelectItem value="departDate">発日時</SelectItem>
+              <SelectItem value="arriveDate">着日時</SelectItem>
+              <SelectItem value="price">運賃</SelectItem>
+              <SelectItem value="departPref">発都道府県</SelectItem>
+              <SelectItem value="arrivePref">着都道府県</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           <Select value={String(perPage)} onValueChange={(v) => { setPerPage(Number(v)); setPage(1); }}>
