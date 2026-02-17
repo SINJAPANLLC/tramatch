@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -827,46 +828,112 @@ export default function CargoForm() {
                     <FormField
                       control={form.control}
                       name="vehicleType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>希望車種</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-vehicle-type">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {VEHICLE_TYPES.map((v) => (
-                                <SelectItem key={v} value={v}>{v}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                        const toggle = (v: string) => {
+                          const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v];
+                          field.onChange(next.join(", "));
+                        };
+                        return (
+                          <FormItem>
+                            <FormLabel>希望車種</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal min-h-9 h-auto",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="select-vehicle-type"
+                                  >
+                                    {selected.length > 0 ? (
+                                      <span className="flex flex-wrap gap-1">
+                                        {selected.map(s => (
+                                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                                        ))}
+                                      </span>
+                                    ) : "選択してください"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-72 p-3" align="start">
+                                <div className="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto">
+                                  {VEHICLE_TYPES.map((v) => (
+                                    <label key={v} className="flex items-center gap-1.5 text-sm cursor-pointer hover-elevate rounded-md px-1.5 py-1">
+                                      <input
+                                        type="checkbox"
+                                        checked={selected.includes(v)}
+                                        onChange={() => toggle(v)}
+                                        className="rounded border-border"
+                                        data-testid={`checkbox-vehicle-${v}`}
+                                      />
+                                      {v}
+                                    </label>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
                       name="bodyType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>車体タイプ（任意）</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-body-type">
-                                <SelectValue placeholder="選択してください" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {BODY_TYPES.map((b) => (
-                                <SelectItem key={b} value={b}>{b}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const selected = field.value ? field.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                        const toggle = (v: string) => {
+                          const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v];
+                          field.onChange(next.join(", "));
+                        };
+                        return (
+                          <FormItem>
+                            <FormLabel>車体タイプ（任意）</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal min-h-9 h-auto",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                    data-testid="select-body-type"
+                                  >
+                                    {selected.length > 0 ? (
+                                      <span className="flex flex-wrap gap-1">
+                                        {selected.map(s => (
+                                          <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                                        ))}
+                                      </span>
+                                    ) : "選択してください"}
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-3" align="start">
+                                <div className="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto">
+                                  {BODY_TYPES.map((b) => (
+                                    <label key={b} className="flex items-center gap-1.5 text-sm cursor-pointer hover-elevate rounded-md px-1.5 py-1">
+                                      <input
+                                        type="checkbox"
+                                        checked={selected.includes(b)}
+                                        onChange={() => toggle(b)}
+                                        className="rounded border-border"
+                                        data-testid={`checkbox-body-${b}`}
+                                      />
+                                      {b}
+                                    </label>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
