@@ -444,7 +444,7 @@ export default function CargoForm() {
   }, [sendChatMessage, toast]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
       sendChatMessage(chatInput);
     }
