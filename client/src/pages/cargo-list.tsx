@@ -654,6 +654,7 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <div className="font-bold text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 font-bold">{listing.title}</div>
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <div className="space-y-1.5">
