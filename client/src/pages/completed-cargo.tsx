@@ -1147,8 +1147,10 @@ export default function CompletedCargo() {
     queryKey: ["/api/cargo"],
   });
 
-  const completedCargo = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed") ?? [];
-  const sorted = [...completedCargo].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const completedOwn = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed" && (c as any).listingType !== "contracted") ?? [];
+  const completedContracted = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed" && (c as any).listingType === "contracted") ?? [];
+  const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const selectedCargo = useMemo(() => {
     if (!selectedCargoId || !allCargo) return null;
@@ -1170,7 +1172,8 @@ export default function CompletedCargo() {
               <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">成約した荷物</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 成約済みの荷物情報の管理
-                {sorted.length > 0 && <span className="ml-2">({sorted.length}件)</span>}
+                {mainTab === "own" && sorted.length > 0 && <span className="ml-2">({sorted.length}件)</span>}
+                {mainTab === "contracted" && sortedContracted.length > 0 && <span className="ml-2">({sortedContracted.length}件)</span>}
               </p>
             </div>
 
@@ -1205,13 +1208,21 @@ export default function CompletedCargo() {
                 onSelect={setSelectedCargoId}
               />
             ) : mainTab === "contracted" ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Truck className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground font-bold" data-testid="text-contracted-empty">受託荷物の成約はまだありません</p>
-                  <p className="text-xs text-muted-foreground mt-2">他社から受託した荷物の成約情報がここに表示されます</p>
-                </CardContent>
-              </Card>
+              sortedContracted.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Truck className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground font-bold" data-testid="text-contracted-empty">受託荷物の成約はまだありません</p>
+                    <p className="text-xs text-muted-foreground mt-2">他社から受託した荷物の成約情報がここに表示されます</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <CompletedCargoTable
+                  items={sortedContracted}
+                  selectedId={selectedCargoId}
+                  onSelect={setSelectedCargoId}
+                />
+              )
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
