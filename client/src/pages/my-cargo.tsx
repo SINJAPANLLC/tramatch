@@ -27,7 +27,7 @@ function CargoCard({ item, onDelete, isDeleting, onComplete, isCompleting, onCan
                 {item.title}
               </span>
               {item.transportType && (
-                <Badge variant={item.transportType === "スポット" ? "default" : "secondary"} className="text-xs" data-testid={`badge-transport-${item.id}`}>
+                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-primary/30 text-primary" : "border-blue-300 text-blue-600"}`} data-testid={`badge-transport-${item.id}`}>
                   {item.transportType}
                 </Badge>
               )}
