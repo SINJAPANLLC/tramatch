@@ -2,7 +2,7 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -201,13 +201,26 @@ export async function registerRoutes(
 
   const profileUpdateSchema = z.object({
     companyName: z.string().min(1).max(200).optional(),
+    companyNameKana: z.string().max(200).optional(),
     address: z.string().max(500).optional(),
+    postalCode: z.string().max(20).optional(),
     contactName: z.string().max(100).optional(),
     phone: z.string().max(20).optional(),
     fax: z.string().max(20).optional(),
     email: z.string().email().max(200).optional(),
     paymentTerms: z.string().max(200).optional(),
-    businessDescription: z.string().max(500).optional(),
+    businessDescription: z.string().max(2000).optional(),
+    representative: z.string().max(100).optional(),
+    establishedDate: z.string().max(50).optional(),
+    capital: z.string().max(50).optional(),
+    employeeCount: z.string().max(50).optional(),
+    businessArea: z.string().max(200).optional(),
+    transportLicenseNumber: z.string().max(100).optional(),
+    websiteUrl: z.string().max(500).optional(),
+    invoiceRegistrationNumber: z.string().max(100).optional(),
+    truckCount: z.string().max(50).optional(),
+    officeLocations: z.string().max(500).optional(),
+    majorClients: z.string().max(500).optional(),
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
@@ -1024,6 +1037,267 @@ statusの意味:
       res.json({ message: "お知らせを削除しました" });
     } catch (error) {
       res.status(500).json({ message: "お知らせの削除に失敗しました" });
+    }
+  });
+
+  // Company search
+  app.get("/api/companies/search", requireAuth, async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      if (!query.trim()) {
+        return res.json([]);
+      }
+      const results = await storage.searchCompanies(query);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "企業検索に失敗しました" });
+    }
+  });
+
+  // Partner CRUD
+  app.get("/api/partners", requireAuth, async (req, res) => {
+    try {
+      const list = await storage.getPartnersByUserId(req.session.userId!);
+      res.json(list);
+    } catch (error) {
+      res.status(500).json({ message: "取引先の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/partners", requireAuth, async (req, res) => {
+    try {
+      const parsed = insertPartnerSchema.safeParse({ ...req.body, userId: req.session.userId });
+      if (!parsed.success) {
+        return res.status(400).json({ message: fromError(parsed.error).message });
+      }
+      const created = await storage.createPartner(parsed.data);
+      res.json(created);
+    } catch (error) {
+      res.status(500).json({ message: "取引先の作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/partners/:id", requireAuth, async (req, res) => {
+    try {
+      const partner = await storage.getPartner(req.params.id as string);
+      if (!partner || partner.userId !== req.session.userId) {
+        return res.status(404).json({ message: "取引先が見つかりません" });
+      }
+      const updated = await storage.updatePartner(req.params.id as string, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "取引先の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/partners/:id", requireAuth, async (req, res) => {
+    try {
+      const partner = await storage.getPartner(req.params.id as string);
+      if (!partner || partner.userId !== req.session.userId) {
+        return res.status(404).json({ message: "取引先が見つかりません" });
+      }
+      await storage.deletePartner(req.params.id as string);
+      res.json({ message: "取引先を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "取引先の削除に失敗しました" });
+    }
+  });
+
+  // Transport Ledger CRUD
+  app.get("/api/transport-records", requireAuth, async (req, res) => {
+    try {
+      const records = await storage.getTransportRecordsByUserId(req.session.userId!);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ message: "管理簿の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/transport-records", requireAuth, async (req, res) => {
+    try {
+      const parsed = insertTransportRecordSchema.safeParse({ ...req.body, userId: req.session.userId });
+      if (!parsed.success) {
+        return res.status(400).json({ message: fromError(parsed.error).message });
+      }
+      const created = await storage.createTransportRecord(parsed.data);
+      res.json(created);
+    } catch (error) {
+      res.status(500).json({ message: "記録の作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/transport-records/:id", requireAuth, async (req, res) => {
+    try {
+      const record = await storage.getTransportRecord(req.params.id as string);
+      if (!record || record.userId !== req.session.userId) {
+        return res.status(404).json({ message: "記録が見つかりません" });
+      }
+      const updated = await storage.updateTransportRecord(req.params.id as string, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "記録の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/transport-records/:id", requireAuth, async (req, res) => {
+    try {
+      const record = await storage.getTransportRecord(req.params.id as string);
+      if (!record || record.userId !== req.session.userId) {
+        return res.status(404).json({ message: "記録が見つかりません" });
+      }
+      await storage.deleteTransportRecord(req.params.id as string);
+      res.json({ message: "記録を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "記録の削除に失敗しました" });
+    }
+  });
+
+  // Admin: Send notification to users
+  app.post("/api/admin/notifications/send", requireAdmin, async (req, res) => {
+    try {
+      const { title, message, target } = req.body;
+      if (!title || !message) {
+        return res.status(400).json({ message: "タイトルと本文は必須です" });
+      }
+      const allUsers = await storage.getAllUsers();
+      let targetUsers = allUsers.filter(u => u.role !== "admin" && u.approved);
+      if (target === "shippers") {
+        targetUsers = targetUsers.filter(u => u.userType === "shipper");
+      } else if (target === "carriers") {
+        targetUsers = targetUsers.filter(u => u.userType === "carrier");
+      }
+      for (const user of targetUsers) {
+        await storage.createNotification({
+          userId: user.id,
+          type: "admin_notification",
+          title,
+          message,
+        });
+      }
+      res.json({ message: `${targetUsers.length}人に通知を送信しました`, count: targetUsers.length });
+    } catch (error) {
+      res.status(500).json({ message: "通知の送信に失敗しました" });
+    }
+  });
+
+  // Admin: Revenue stats
+  app.get("/api/admin/revenue-stats", requireAdmin, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const cargo = await storage.getCargoListings();
+      const trucks = await storage.getTruckListings();
+      const totalUsers = allUsers.filter(u => u.role !== "admin").length;
+      const approvedUsers = allUsers.filter(u => u.approved && u.role !== "admin").length;
+      const totalCargo = cargo.length;
+      const completedCargo = cargo.filter(c => c.status === "completed").length;
+      const totalTrucks = trucks.length;
+      res.json({ totalUsers, approvedUsers, totalCargo, completedCargo, totalTrucks });
+    } catch (error) {
+      res.status(500).json({ message: "収益データの取得に失敗しました" });
+    }
+  });
+
+  // Admin: SEO Articles
+  app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
+    try {
+      const articles = await storage.getSeoArticles();
+      res.json(articles);
+    } catch (error) {
+      res.status(500).json({ message: "記事の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/seo-articles/generate", requireAdmin, async (req, res) => {
+    try {
+      const { topic, keywords, notes } = req.body;
+      if (!topic) {
+        return res.status(400).json({ message: "テーマは必須です" });
+      }
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `あなたはSEO記事のライターです。運送業界・物流業界に特化した高品質なSEO記事を日本語で作成してください。
+記事は以下の構成で作成してください：
+1. 魅力的なタイトル（H1）
+2. 導入文（200文字程度）
+3. 本文（H2/H3の見出しを使って構造化、合計2000〜3000文字）
+4. まとめ
+
+マークダウン形式で出力してください。`
+          },
+          {
+            role: "user",
+            content: `テーマ: ${topic}\nキーワード: ${keywords || "なし"}\n備考: ${notes || "なし"}`
+          }
+        ],
+        max_tokens: 4000,
+      });
+      const content = completion.choices[0]?.message?.content || "";
+      const titleMatch = content.match(/^#\s+(.+)$/m);
+      const title = titleMatch ? titleMatch[1] : topic;
+
+      const article = await storage.createSeoArticle({
+        topic,
+        keywords: keywords || null,
+        title,
+        content,
+        status: "draft",
+      });
+      res.json(article);
+    } catch (error) {
+      res.status(500).json({ message: "記事の生成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/seo-articles/:id", requireAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateSeoArticle(req.params.id as string, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "記事が見つかりません" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "記事の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/seo-articles/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteSeoArticle(req.params.id as string);
+      if (!deleted) {
+        return res.status(404).json({ message: "記事が見つかりません" });
+      }
+      res.json({ message: "記事を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "記事の削除に失敗しました" });
+    }
+  });
+
+  // Admin: Settings
+  app.get("/api/admin/settings", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAllAdminSettings();
+      const settingsMap: Record<string, string> = {};
+      for (const s of settings) {
+        settingsMap[s.key] = s.value;
+      }
+      res.json(settingsMap);
+    } catch (error) {
+      res.status(500).json({ message: "設定の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/settings", requireAdmin, async (req, res) => {
+    try {
+      const entries = Object.entries(req.body) as [string, string][];
+      for (const [key, value] of entries) {
+        await storage.setAdminSetting(key, value);
+      }
+      res.json({ message: "設定を保存しました" });
+    } catch (error) {
+      res.status(500).json({ message: "設定の保存に失敗しました" });
     }
   });
 
