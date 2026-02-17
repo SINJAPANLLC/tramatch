@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +21,22 @@ const QUICK_FILTERS = [
   { label: "中部地場", value: "中部" },
   { label: "東北地場", value: "東北" },
   { label: "九州地場", value: "九州" },
+];
+
+const PREFECTURES = [
+  "北海道", "青森", "岩手", "宮城", "秋田", "山形", "福島",
+  "茨城", "栃木", "群馬", "埼玉", "千葉", "東京", "神奈川",
+  "新潟", "富山", "石川", "福井", "山梨", "長野", "岐阜", "静岡", "愛知",
+  "三重", "滋賀", "京都", "大阪", "兵庫", "奈良", "和歌山",
+  "鳥取", "島根", "岡山", "広島", "山口",
+  "徳島", "香川", "愛媛", "高知",
+  "福岡", "佐賀", "長崎", "熊本", "大分", "宮崎", "鹿児島", "沖縄",
+];
+
+const VEHICLE_TYPES = [
+  "軽車両", "1t車", "1.5t車", "2t車", "3t車", "4t車", "5t車", "6t車",
+  "7t車", "8t車", "10t車", "11t車", "13t車", "15t車",
+  "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他",
 ];
 
 const PER_PAGE_OPTIONS = [10, 20, 50];
@@ -48,6 +65,10 @@ export default function CargoList() {
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  const [todayOnly, setTodayOnly] = useState(false);
+  const [prefectureFilter, setPrefectureFilter] = useState("all");
+  const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -170,6 +191,11 @@ export default function CargoList() {
     });
   }, [toast]);
 
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")}`;
+  }, []);
+
   const filtered = useMemo(() => {
     if (!listings) return [];
     let result = listings.filter((item) => item.status === "active");
@@ -197,6 +223,29 @@ export default function CargoList() {
       );
     }
 
+    if (todayOnly) {
+      result = result.filter((item) => item.desiredDate === todayStr);
+    }
+
+    if (prefectureFilter !== "all") {
+      result = result.filter(
+        (item) =>
+          item.departureArea.includes(prefectureFilter) ||
+          item.arrivalArea.includes(prefectureFilter)
+      );
+    }
+
+    if (vehicleFilter !== "all") {
+      result = result.filter((item) =>
+        item.vehicleType?.includes(vehicleFilter)
+      );
+    }
+
+    if (dateFilter) {
+      const formatted = dateFilter.replace(/-/g, "/");
+      result = result.filter((item) => item.desiredDate === formatted);
+    }
+
     result = [...result].sort((a, b) => {
       if (sortBy === "date") {
         const dateA = a.desiredDate || "";
@@ -209,7 +258,7 @@ export default function CargoList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, sortDir]);
+  }, [listings, activeSearch, quickFilter, sortBy, sortDir, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -419,6 +468,85 @@ export default function CargoList() {
                 {f.label}
               </Badge>
             ))}
+            <Badge
+              variant={todayOnly ? "default" : "outline"}
+              className="cursor-pointer text-xs"
+              onClick={() => { setTodayOnly(!todayOnly); setDateFilter(""); setPage(1); }}
+              data-testid="filter-today"
+            >
+              <Sun className="w-3 h-3 mr-1" />
+              当日荷物
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={prefectureFilter} onValueChange={(v) => { setPrefectureFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[130px] text-xs h-8" data-testid="select-prefecture">
+                <MapPin className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="都道府県" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全都道府県</SelectItem>
+                {PREFECTURES.map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={vehicleFilter} onValueChange={(v) => { setVehicleFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[130px] text-xs h-8" data-testid="select-vehicle">
+                <Truck className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="車種" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全車種</SelectItem>
+                {VEHICLE_TYPES.map((v) => (
+                  <SelectItem key={v} value={v}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-1">
+              <CalendarDays className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => { setDateFilter(e.target.value); setTodayOnly(false); setPage(1); }}
+                className="w-[150px] text-xs h-8"
+                data-testid="input-date-filter"
+              />
+              {dateFilter && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => { setDateFilter(""); setPage(1); }}
+                  data-testid="button-clear-date"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+
+            {(todayOnly || prefectureFilter !== "all" || vehicleFilter !== "all" || dateFilter) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => {
+                  setTodayOnly(false);
+                  setPrefectureFilter("all");
+                  setVehicleFilter("all");
+                  setDateFilter("");
+                  setQuickFilter("all");
+                  setPage(1);
+                }}
+                data-testid="button-clear-all-filters"
+              >
+                <X className="w-3 h-3 mr-1" />
+                フィルター解除
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
