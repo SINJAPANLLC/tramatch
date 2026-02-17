@@ -167,7 +167,7 @@ export default function CargoList() {
 
   const filtered = useMemo(() => {
     if (!listings) return [];
-    let result = listings;
+    let result = listings.filter((item) => item.status === "active");
 
     if (activeSearch.length > 0) {
       result = result.filter((item) => {
@@ -526,7 +526,7 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="font-medium text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
+                      <div className="font-bold text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
                     </Link>
                   </td>
                   <td className="px-4 py-3.5 align-top">
@@ -538,7 +538,7 @@ export default function CargoList() {
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-medium text-[13px] text-foreground">{listing.departureArea}</span>
+                              <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
                               {listing.departureAddress && (
                                 <span className="text-xs text-muted-foreground">{listing.departureAddress}</span>
                               )}
@@ -560,7 +560,7 @@ export default function CargoList() {
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-medium text-[13px] text-foreground">{listing.arrivalArea}</span>
+                              <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
                               {listing.arrivalAddress && (
                                 <span className="text-xs text-muted-foreground">{listing.arrivalAddress}</span>
                               )}
@@ -598,12 +598,12 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap text-[13px] font-medium">{listing.weight}</span>
+                      <span className="whitespace-nowrap text-[13px] font-bold">{listing.weight}</span>
                     </Link>
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="text-[13px] whitespace-nowrap font-medium">{listing.vehicleType}</div>
+                      <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
                       {listing.bodyType && (
                         <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">{listing.bodyType}</div>
                       )}
@@ -611,7 +611,7 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap text-[13px]">{listing.cargoType}</span>
+                      <span className="whitespace-nowrap text-[13px] font-bold">{listing.cargoType}</span>
                       {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
                         <div className="mt-0.5">
                           <Badge variant="outline" className="text-[10px] px-1.5">{listing.temperatureControl}</Badge>

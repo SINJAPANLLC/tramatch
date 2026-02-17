@@ -6,7 +6,7 @@ import {
   users, cargoListings, truckListings, notifications
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -31,6 +31,8 @@ export interface IStorage {
 
   deleteCargoListing(id: string): Promise<boolean>;
   deleteTruckListing(id: string): Promise<boolean>;
+  incrementCargoViewCount(id: string): Promise<void>;
+  updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined>;
 
   getNotificationsByUserId(userId: string): Promise<Notification[]>;
   getUnreadNotificationCount(userId: string): Promise<number>;
@@ -137,6 +139,20 @@ export class DatabaseStorage implements IStorage {
   async deleteTruckListing(id: string): Promise<boolean> {
     const result = await db.delete(truckListings).where(eq(truckListings.id, id)).returning();
     return result.length > 0;
+  }
+
+  async incrementCargoViewCount(id: string): Promise<void> {
+    await db.update(cargoListings)
+      .set({ viewCount: sql`${cargoListings.viewCount} + 1` })
+      .where(eq(cargoListings.id, id));
+  }
+
+  async updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined> {
+    const [updated] = await db.update(cargoListings)
+      .set({ status })
+      .where(eq(cargoListings.id, id))
+      .returning();
+    return updated;
   }
 
   async getNotificationsByUserId(userId: string): Promise<Notification[]> {
