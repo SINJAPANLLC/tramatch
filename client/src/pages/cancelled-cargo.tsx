@@ -262,7 +262,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           </div>
 
           <div className="border border-border rounded-md overflow-hidden">
-            <DetailRow label="荷物番号" value={`${listing.id}`} />
+            <DetailRow label="荷物番号" value={String(listing.id)} />
             <DetailRow label="企業名">
               <div>
                 <div className="font-bold">{listing.companyName}</div>
