@@ -262,6 +262,27 @@ export async function registerRoutes(
   app.get("/api/cargo", async (_req, res) => {
     try {
       const listings = await storage.getCargoListings();
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const expirePromises: Promise<any>[] = [];
+      for (const listing of listings) {
+        if (listing.status !== "active") continue;
+        const dateStr = listing.arrivalDate || listing.desiredDate;
+        if (!dateStr) continue;
+        const cleaned = dateStr.replace(/\//g, "-");
+        const d = new Date(cleaned);
+        if (isNaN(d.getTime())) continue;
+        d.setHours(23, 59, 59, 999);
+        if (d < now) {
+          listing.status = "cancelled";
+          expirePromises.push(storage.updateCargoStatus(listing.id, "cancelled"));
+        }
+      }
+      if (expirePromises.length > 0) {
+        await Promise.all(expirePromises);
+      }
+
       res.json(listings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch cargo listings" });

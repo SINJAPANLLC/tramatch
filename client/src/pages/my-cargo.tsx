@@ -488,15 +488,6 @@ export default function MyCargo() {
     },
   });
 
-  const toggleCargoStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await apiRequest("PATCH", `/api/cargo/${id}/status`, { status });
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: variables.status === "completed" ? "成約済みにしました" : variables.status === "cancelled" ? "不成約にしました" : "掲載中に戻しました" });
-    },
-  });
 
   const statusCounts = useMemo(() => {
     const counts = { all: myCargo.length, active: 0, completed: 0, cancelled: 0 };
@@ -712,42 +703,7 @@ export default function MyCargo() {
                             <div className="text-[10px] text-muted-foreground font-bold mt-0.5">{timeLabel}</div>
                           </td>
                           <td className="px-2 py-3 align-top" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex flex-col items-center gap-1">
-                              {listing.status === "active" ? (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-[10px] h-6 px-2 text-orange-600 border-orange-300"
-                                    onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "completed" })}
-                                    disabled={toggleCargoStatus.isPending}
-                                    data-testid={`button-complete-${listing.id}`}
-                                  >
-                                    <CheckCircle2 className="w-3 h-3 mr-0.5" />成約
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-[10px] h-6 px-2 text-red-600 border-red-300"
-                                    onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "cancelled" })}
-                                    disabled={toggleCargoStatus.isPending}
-                                    data-testid={`button-cancel-${listing.id}`}
-                                  >
-                                    <XCircle className="w-3 h-3 mr-0.5" />不成約
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-[10px] h-6 px-2 text-green-600 border-green-300"
-                                  onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "active" })}
-                                  disabled={toggleCargoStatus.isPending}
-                                  data-testid={`button-reactivate-${listing.id}`}
-                                >
-                                  <CircleDot className="w-3 h-3 mr-0.5" />掲載に戻す
-                                </Button>
-                              )}
+                            <div className="flex items-center justify-center">
                               <Button
                                 size="sm"
                                 variant="ghost"
