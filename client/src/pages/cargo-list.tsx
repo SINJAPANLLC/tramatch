@@ -846,6 +846,7 @@ type CompanyInfo = {
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
   const [panelTab, setPanelTab] = useState<"cargo" | "company">("cargo");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const completeCargoMutation = useMutation({
     mutationFn: async (cargoId: string) => {
@@ -1054,7 +1055,7 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
             <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
           </div>
 
-          {listing.status === "active" && (
+          {listing.status === "active" && listing.userId !== user?.id && (
             <Button
               className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-sm rounded-full no-default-hover-elevate"
               data-testid="button-proceed-contract"
