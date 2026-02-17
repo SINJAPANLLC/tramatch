@@ -365,6 +365,58 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/dispatch-requests/:cargoId", requireAuth, async (req, res) => {
+    try {
+      const request = await storage.getDispatchRequestByCargoId(req.params.cargoId as string);
+      res.json(request || null);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch dispatch request" });
+    }
+  });
+
+  app.post("/api/dispatch-requests", requireAuth, async (req, res) => {
+    try {
+      const { cargoId, userId, id, createdAt, sentAt, ...safeFields } = req.body;
+      const request = await storage.createDispatchRequest({
+        ...safeFields,
+        cargoId: cargoId,
+        userId: req.session.userId!,
+        status: "draft",
+      });
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create dispatch request" });
+    }
+  });
+
+  app.patch("/api/dispatch-requests/:id", requireAuth, async (req, res) => {
+    try {
+      const { userId, id, cargoId, createdAt, sentAt, status, ...safeFields } = req.body;
+      const updated = await storage.updateDispatchRequest(req.params.id as string, safeFields);
+      if (!updated) {
+        return res.status(404).json({ message: "Dispatch request not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update dispatch request" });
+    }
+  });
+
+  app.patch("/api/dispatch-requests/:id/send", requireAuth, async (req, res) => {
+    try {
+      const updated = await storage.updateDispatchRequest(req.params.id as string, {
+        status: "sent",
+        sentAt: new Date(),
+      } as any);
+      if (!updated) {
+        return res.status(404).json({ message: "Dispatch request not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send dispatch request" });
+    }
+  });
+
   app.get("/api/trucks", async (_req, res) => {
     try {
       const listings = await storage.getTruckListings();
