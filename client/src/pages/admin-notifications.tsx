@@ -21,7 +21,7 @@ export default function AdminNotifications() {
           <p className="text-sm text-muted-foreground mt-1">ユーザーへの通知・お知らせの送信</p>
         </div>
 
-        <div className="max-w-2xl space-y-6">
+        <div className="space-y-6">
           <Card>
             <CardContent className="p-4">
               <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">

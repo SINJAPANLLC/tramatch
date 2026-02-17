@@ -18,7 +18,7 @@ export default function AdminSettings() {
           <p className="text-sm text-muted-foreground mt-1">システム全体の設定</p>
         </div>
 
-        <div className="max-w-2xl space-y-6">
+        <div className="space-y-6">
           <Card>
             <CardContent className="p-4">
               <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">

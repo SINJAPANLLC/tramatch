@@ -19,7 +19,7 @@ export default function TruckDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="px-4 sm:px-6 py-8">
         <Skeleton className="h-8 w-32 mb-6" />
         <Card>
           <CardContent className="p-6 space-y-4">
@@ -36,7 +36,7 @@ export default function TruckDetail() {
 
   if (error || !listing) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 text-center">
+      <div className="px-4 sm:px-6 py-8 text-center">
         <Truck className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
         <h2 className="text-xl font-semibold text-foreground mb-2">車両情報が見つかりません</h2>
         <p className="text-sm text-muted-foreground mb-6">指定された車両情報は存在しないか、削除されました。</p>
@@ -52,7 +52,7 @@ export default function TruckDetail() {
 
   return (
     <div className="h-full overflow-y-auto">
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="px-4 sm:px-6 py-8">
       <Link href="/trucks">
         <Button variant="ghost" className="mb-4" data-testid="button-back-trucks">
           <ArrowLeft className="w-4 h-4 mr-1.5" />

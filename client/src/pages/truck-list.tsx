@@ -26,7 +26,8 @@ export default function TruckList() {
 
   const filtered = useMemo(() => {
     if (!listings) return [];
-    return listings.filter((item) => {
+    let result = listings.filter((item) => item.status === "active");
+    return result.filter((item) => {
       const matchesSearch = !searchText ||
         item.title.includes(searchText) ||
         item.currentArea.includes(searchText) ||
