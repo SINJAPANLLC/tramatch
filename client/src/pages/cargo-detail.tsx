@@ -93,7 +93,6 @@ export default function CargoDetail() {
                   )}
                   <div className="text-xs text-muted-foreground mt-1">
                     {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
-                    {listing.loadingTime && <span className="ml-1">(積み時間: {listing.loadingTime})</span>}
                   </div>
                 </div>
 
@@ -106,7 +105,6 @@ export default function CargoDetail() {
                   )}
                   <div className="text-xs text-muted-foreground mt-1">
                     {listing.arrivalDate || "指定なし"} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
-                    {listing.unloadingTime && <span className="ml-1">(卸し時間: {listing.unloadingTime})</span>}
                   </div>
                 </div>
               </div>
@@ -142,7 +140,7 @@ export default function CargoDetail() {
               <div className="p-4 rounded-md bg-primary/5 border border-primary/10">
                 <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
                 <div className="text-xl font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
-                {listing.taxType && <div className="text-xs text-muted-foreground mt-1">{listing.taxType}</div>}
+                <div className="text-xs text-muted-foreground mt-1">税別</div>
               </div>
               <div className="p-4 rounded-md bg-muted/40">
                 <div className="text-xs text-muted-foreground mb-1">高速代</div>
