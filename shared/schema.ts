@@ -51,6 +51,7 @@ export const users = pgTable("users", {
 
 export const cargoListings = pgTable("cargo_listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cargoNumber: integer("cargo_number"),
   title: text("title").notNull(),
   departureArea: text("departure_area").notNull(),
   departureAddress: text("departure_address"),
@@ -131,7 +132,7 @@ export const announcements = pgTable("announcements", {
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
-export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true, userId: true, viewCount: true });
+export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, cargoNumber: true, createdAt: true, status: true, userId: true, viewCount: true });
 export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
