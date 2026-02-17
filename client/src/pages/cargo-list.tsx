@@ -608,31 +608,31 @@ export default function CargoList() {
           <table className="w-full" data-testid="table-cargo">
             <thead>
               <tr className="border-b bg-muted/60">
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">形態</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">企業名</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap min-w-[280px]">発着情報</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">運賃</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">積合</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">重量</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">車種</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">荷種</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">作業</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">備考</th>
+                <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap min-w-[220px]">発着情報</th>
+                <th className="text-right px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
+                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">積合</th>
+                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">重量</th>
+                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車種</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷種</th>
+                <th className="text-left px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">作業</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">備考</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-14" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-28" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-10 w-56" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-8" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-12" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-14" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
-                  <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-10 w-48" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-4 w-16" /></td>
+                  <td className="px-1.5 py-3"><Skeleton className="h-4 w-8" /></td>
+                  <td className="px-1.5 py-3"><Skeleton className="h-4 w-10" /></td>
+                  <td className="px-1.5 py-3"><Skeleton className="h-4 w-12" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-4 w-14" /></td>
+                  <td className="px-1.5 py-3"><Skeleton className="h-4 w-12" /></td>
+                  <td className="px-2 py-3"><Skeleton className="h-4 w-20" /></td>
                 </tr>
               ))}
 
@@ -643,9 +643,9 @@ export default function CargoList() {
                   onClick={() => setSelectedCargoId(listing.id)}
                   data-testid={`row-cargo-${listing.id}`}
                 >
-                  <td className="px-4 py-3.5 text-center align-top">
+                  <td className="px-2 py-3 text-center align-top">
                     {listing.transportType ? (
-                      <Badge variant="outline" className={`text-[11px] px-1.5 ${
+                      <Badge variant="outline" className={`text-[10px] px-1 ${
                         listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
                         listing.transportType === "定期" ? "border-primary/30 text-primary" : ""
                       }`}>{listing.transportType}</Badge>
@@ -653,91 +653,86 @@ export default function CargoList() {
                       <span className="text-xs text-muted-foreground font-bold">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 align-top">
-                    <div className="font-bold text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5 font-bold">{listing.title}</div>
+                  <td className="px-2 py-3 align-top max-w-[120px]">
+                    <div className="font-bold text-foreground text-[12px] leading-tight truncate">{listing.companyName}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 font-bold truncate">{listing.title}</div>
                   </td>
-                  <td className="px-4 py-3.5 align-top">
-                    <div className="space-y-1.5">
-                      <div className="flex items-start gap-2">
-                        <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                          <Navigation className="w-3 h-3 fill-primary text-primary" />
-                        </div>
+                  <td className="px-2 py-3 align-top">
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-1.5">
+                        <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className="font-bold text-[12px] text-foreground">{listing.departureArea}</span>
                             {listing.departureAddress && (
-                              <span className="text-xs text-muted-foreground font-bold">{listing.departureAddress}</span>
+                              <span className="text-[11px] text-muted-foreground font-bold">{listing.departureAddress}</span>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5 font-bold">
+                          <div className="text-[11px] text-muted-foreground font-bold">
                             {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 pl-1">
-                        <div className="w-px h-3 bg-border ml-[4px]" />
-                        <ArrowRight className="w-3 h-3 text-muted-foreground/50 ml-1" />
+                      <div className="flex items-center gap-1 pl-0.5">
+                        <div className="w-px h-2 bg-border ml-[4px]" />
                       </div>
 
-                      <div className="flex items-start gap-2">
-                        <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                          <MapPin className="w-3 h-3 text-blue-600" />
-                        </div>
+                      <div className="flex items-start gap-1.5">
+                        <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className="font-bold text-[12px] text-foreground">{listing.arrivalArea}</span>
                             {listing.arrivalAddress && (
-                              <span className="text-xs text-muted-foreground font-bold">{listing.arrivalAddress}</span>
+                              <span className="text-[11px] text-muted-foreground font-bold">{listing.arrivalAddress}</span>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5 font-bold">
+                          <div className="text-[11px] text-muted-foreground font-bold">
                             {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                           </div>
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-right align-top">
-                    <div className="font-bold text-[14px] text-foreground whitespace-nowrap">
+                  <td className="px-2 py-3 text-right align-top">
+                    <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
-                    <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
+                    <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
                       高速代: {listing.highwayFee ? "有" : "無"}
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-center align-top">
+                  <td className="px-1.5 py-3 text-center align-top">
                     {listing.consolidation === "可" ? (
-                      <Badge variant="outline" className="text-[11px] border-primary/30 text-primary px-1.5">可</Badge>
+                      <Badge variant="outline" className="text-[10px] border-primary/30 text-primary px-1">可</Badge>
                     ) : listing.consolidation === "不可" ? (
-                      <span className="text-xs text-muted-foreground font-bold">不可</span>
+                      <span className="text-[11px] text-muted-foreground font-bold">不可</span>
                     ) : (
-                      <span className="text-xs text-muted-foreground font-bold">-</span>
+                      <span className="text-[11px] text-muted-foreground font-bold">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-center align-top">
-                    <span className="whitespace-nowrap text-[13px] font-bold">{listing.weight}</span>
+                  <td className="px-1.5 py-3 text-center align-top">
+                    <span className="whitespace-nowrap text-[12px] font-bold">{listing.weight}</span>
                   </td>
-                  <td className="px-4 py-3.5 text-center align-top">
-                    <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                  <td className="px-1.5 py-3 text-center align-top">
+                    <div className="text-[12px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
                     {listing.bodyType && (
-                      <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
+                      <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 align-top">
-                    <span className="whitespace-nowrap text-[13px] font-bold">{listing.cargoType}</span>
+                  <td className="px-2 py-3 align-top">
+                    <span className="whitespace-nowrap text-[12px] font-bold">{listing.cargoType}</span>
                     {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
                       <div className="mt-0.5">
-                        <Badge variant="outline" className="text-[10px] px-1.5">{listing.temperatureControl}</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1">{listing.temperatureControl}</Badge>
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 align-top">
-                    <span className="text-[13px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
+                  <td className="px-1.5 py-3 align-top">
+                    <span className="text-[12px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
                   </td>
-                  <td className="px-4 py-3.5 align-top">
-                    <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px] font-bold">
+                  <td className="px-2 py-3 align-top">
+                    <span className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
                       {listing.description || "-"}
                     </span>
                   </td>
