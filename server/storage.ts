@@ -4,7 +4,8 @@ import {
   type TruckListing, type InsertTruckListing,
   type Notification, type InsertNotification,
   type Announcement, type InsertAnnouncement,
-  users, cargoListings, truckListings, notifications, announcements
+  type DispatchRequest, type InsertDispatchRequest,
+  users, cargoListings, truckListings, notifications, announcements, dispatchRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -48,6 +49,10 @@ export interface IStorage {
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
   updateAnnouncement(id: string, data: Partial<InsertAnnouncement & { isPublished: boolean }>): Promise<Announcement | undefined>;
   deleteAnnouncement(id: string): Promise<boolean>;
+
+  getDispatchRequestByCargoId(cargoId: string): Promise<DispatchRequest | undefined>;
+  createDispatchRequest(data: InsertDispatchRequest): Promise<DispatchRequest>;
+  updateDispatchRequest(id: string, data: Partial<DispatchRequest>): Promise<DispatchRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -230,6 +235,25 @@ export class DatabaseStorage implements IStorage {
   async deleteAnnouncement(id: string): Promise<boolean> {
     const result = await db.delete(announcements).where(eq(announcements.id, id)).returning();
     return result.length > 0;
+  }
+
+  async getDispatchRequestByCargoId(cargoId: string): Promise<DispatchRequest | undefined> {
+    const [request] = await db.select().from(dispatchRequests).where(eq(dispatchRequests.cargoId, cargoId));
+    return request;
+  }
+
+  async createDispatchRequest(data: InsertDispatchRequest): Promise<DispatchRequest> {
+    const [request] = await db.insert(dispatchRequests).values(data).returning();
+    return request;
+  }
+
+  async updateDispatchRequest(id: string, data: Partial<DispatchRequest>): Promise<DispatchRequest | undefined> {
+    const { id: _id, createdAt: _createdAt, ...safeData } = data as any;
+    const [updated] = await db.update(dispatchRequests)
+      .set(safeData)
+      .where(eq(dispatchRequests.id, id))
+      .returning();
+    return updated;
   }
 }
 

@@ -130,6 +130,15 @@
 - `PATCH /api/admin/announcements/:id` - Update announcement (admin only)
 - `DELETE /api/admin/announcements/:id` - Delete announcement (admin only)
 
+## Dispatch Request (配車依頼書) System
+- dispatch_requests table stores dispatch request forms for completed cargo deals
+- Fields: operation info (transport/shipper company, loading/unloading), cargo info, fare info, transaction parties, vehicle/driver
+- Status: "draft" (editable) or "sent" (submitted)
+- Auto-prefills from cargo listing data
+- Can be saved as draft, edited, and sent
+- Print functionality generates formatted HTML print view
+- API: GET /api/dispatch-requests/:cargoId, POST /api/dispatch-requests, PATCH /api/dispatch-requests/:id, PATCH /api/dispatch-requests/:id/send
+
 ## Notification System
 - Notifications table: id, userId, type, title, message, relatedId, isRead, createdAt
 - Auto-generated on: user registration (to admins), user approval (to user), cargo creation (to all users), truck creation (to all users)
