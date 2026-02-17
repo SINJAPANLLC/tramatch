@@ -65,7 +65,7 @@ export default function TruckForm() {
 
   return (
     <DashboardLayout>
-    <div className="px-4 sm:px-6 py-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/trucks">
         <Button variant="ghost" className="mb-4" data-testid="button-back-truck-form">
           <ArrowLeft className="w-4 h-4 mr-1.5" />

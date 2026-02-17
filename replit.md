@@ -24,9 +24,6 @@
   - `my-cargo.tsx` - 登録した荷物 page
   - `completed-cargo.tsx` - 成約した荷物 page
   - `cancelled-cargo.tsx` - 成約しなかった荷物 page
-  - `my-trucks.tsx` - 登録した車両 page
-  - `completed-trucks.tsx` - 成約した車両 page
-  - `cancelled-trucks.tsx` - 成約しなかった車両 page
   - `companies.tsx` - 企業検索 page
   - `partners.tsx` - 取引先管理 page
   - `transport-ledger.tsx` - 実運送体制管理簿 page
@@ -61,9 +58,6 @@
 - `/my-cargo` - 登録した荷物 (requires login)
 - `/completed-cargo` - 成約した荷物 (requires login)
 - `/cancelled-cargo` - 成約しなかった荷物 (requires login)
-- `/my-trucks` - 登録した車両 (requires login)
-- `/completed-trucks` - 成約した車両 (requires login)
-- `/cancelled-trucks` - 成約しなかった車両 (requires login)
 - `/companies` - 企業検索 (requires login)
 - `/partners` - 取引先管理 (requires login)
 - `/transport-ledger` - 実運送体制管理簿 (requires login)
@@ -98,9 +92,9 @@
 - **Header**: Cargo/truck counts, notification bell with turquoise dot (unread indicator), notification dropdown, username, logout button
 - **Footer**: Hidden on all dashboard pages, shown on public pages
 - **DashboardLayout**: Shared component wrapping all authenticated pages with sidebar
-- **Sidebar (User Menu - 16 items)**:
+- **Sidebar (User Menu - 13 items)**:
   - AI荷物検索, AI荷物登録, 登録した荷物, 成約した荷物, 成約しなかった荷物
-  - AI空車検索, AI空車登録, 登録した車両, 成約した車両, 成約しなかった車両
+  - AI空車検索, AI空車登録
   - 企業検索, 取引先管理, 実運送体制管理簿
   - お支払い, 便利サービス, 設定
 - **Sidebar (Admin Menu - 8 items, separated by divider line + label)**:
@@ -116,12 +110,10 @@
 - `GET /api/cargo` - List all cargo listings
 - `GET /api/cargo/:id` - Get cargo listing detail
 - `POST /api/cargo` - Create cargo listing (auth required)
-- `PATCH /api/cargo/:id/status` - Update cargo status (auth required, owner only)
 - `DELETE /api/cargo/:id` - Delete cargo listing (auth required)
 - `GET /api/trucks` - List all truck listings
 - `GET /api/trucks/:id` - Get truck listing detail
 - `POST /api/trucks` - Create truck listing (auth required)
-- `PATCH /api/trucks/:id/status` - Update truck status (auth required, owner only)
 - `DELETE /api/trucks/:id` - Delete truck listing (auth required)
 - `GET /api/admin/stats` - Admin stats (admin only)
 - `GET /api/admin/users` - List users (admin only)

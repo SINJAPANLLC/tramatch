@@ -216,7 +216,7 @@ export default function CargoList() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="font-bold text-sm">AI荷物検索</span>
+              <span className="font-semibold text-sm">AI荷物検索</span>
             </div>
             <div className="flex items-center gap-1">
               <Button
@@ -294,12 +294,12 @@ export default function CargoList() {
                 {isProcessing ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm font-bold text-muted-foreground">AIがファイルを解析中...</p>
+                    <p className="text-sm text-muted-foreground">AIがファイルを解析中...</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <FileText className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm font-bold text-muted-foreground">画像やスクリーンショットからAIが荷物情報を読み取ります</p>
+                    <p className="text-sm text-muted-foreground">画像やスクリーンショットからAIが荷物情報を読み取ります</p>
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
@@ -308,7 +308,7 @@ export default function CargoList() {
                       <Upload className="w-4 h-4 mr-1.5" />
                       ファイルを選択
                     </Button>
-                    <p className="text-xs font-bold text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
+                    <p className="text-xs text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
                   </div>
                 )}
               </div>
@@ -342,7 +342,7 @@ export default function CargoList() {
                 {isProcessing ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm font-bold text-muted-foreground">AIが音声を解析中...</p>
+                    <p className="text-sm text-muted-foreground">AIが音声を解析中...</p>
                   </div>
                 ) : isRecording ? (
                   <div className="flex flex-col items-center gap-3">
@@ -352,8 +352,8 @@ export default function CargoList() {
                         <MicOff className="w-7 h-7 text-white" />
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-destructive">録音中...</p>
-                    <p className="text-xs font-bold text-muted-foreground">「神奈川から大阪、3月5日、10トン」のように話してください</p>
+                    <p className="text-sm font-medium text-destructive">録音中...</p>
+                    <p className="text-xs text-muted-foreground">「神奈川から大阪、3月5日、10トン」のように話してください</p>
                     <Button
                       variant="destructive"
                       onClick={stopRecording}
@@ -366,7 +366,7 @@ export default function CargoList() {
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <Mic className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm font-bold text-muted-foreground">音声で荷物を検索できます</p>
+                    <p className="text-sm text-muted-foreground">音声で荷物を検索できます</p>
                     <Button
                       onClick={startRecording}
                       data-testid="button-start-recording"
@@ -374,7 +374,7 @@ export default function CargoList() {
                       <Mic className="w-4 h-4 mr-1.5" />
                       録音開始
                     </Button>
-                    <p className="text-xs font-bold text-muted-foreground">マイクへのアクセスを許可してください</p>
+                    <p className="text-xs text-muted-foreground">マイクへのアクセスを許可してください</p>
                   </div>
                 )}
               </div>
@@ -420,7 +420,7 @@ export default function CargoList() {
 
       <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-sm" data-testid="text-result-count">
+          <span className="font-semibold text-sm" data-testid="text-result-count">
             検索結果 {filtered.length} 件
           </span>
           <Button
@@ -478,16 +478,16 @@ export default function CargoList() {
           <table className="w-full" data-testid="table-cargo">
             <thead>
               <tr className="border-b bg-muted/60">
-                <th className="text-center px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">形態</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">企業名</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap min-w-[280px]">発着情報</th>
-                <th className="text-right px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">運賃</th>
-                <th className="text-center px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">積合</th>
-                <th className="text-center px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">重量</th>
-                <th className="text-center px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">車種</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">荷種</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">作業</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">備考</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">形態</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">企業名</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap min-w-[280px]">発着情報</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">運賃</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">積合</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">重量</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">車種</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">荷種</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">作業</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">備考</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -520,7 +520,7 @@ export default function CargoList() {
                           listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
                         }`}>{listing.transportType}</Badge>
                       ) : (
-                        <span className="text-xs font-bold text-muted-foreground">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </Link>
                   </td>
@@ -540,10 +540,10 @@ export default function CargoList() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
                               {listing.departureAddress && (
-                                <span className="text-xs font-bold text-muted-foreground">{listing.departureAddress}</span>
+                                <span className="text-xs text-muted-foreground">{listing.departureAddress}</span>
                               )}
                             </div>
-                            <div className="text-xs font-bold text-muted-foreground mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                             </div>
                           </div>
@@ -562,10 +562,10 @@ export default function CargoList() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
                               {listing.arrivalAddress && (
-                                <span className="text-xs font-bold text-muted-foreground">{listing.arrivalAddress}</span>
+                                <span className="text-xs text-muted-foreground">{listing.arrivalAddress}</span>
                               )}
                             </div>
-                            <div className="text-xs font-bold text-muted-foreground mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                             </div>
                           </div>
@@ -579,7 +579,7 @@ export default function CargoList() {
                         {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                       </div>
                       {listing.highwayFee && (
-                        <div className="text-[11px] font-bold text-muted-foreground whitespace-nowrap mt-0.5">
+                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">
                           高速代: {listing.highwayFee}
                         </div>
                       )}
@@ -590,9 +590,9 @@ export default function CargoList() {
                       {listing.consolidation === "可" ? (
                         <Badge variant="outline" className="text-[11px] border-primary/30 text-primary px-1.5">可</Badge>
                       ) : listing.consolidation === "不可" ? (
-                        <span className="text-xs font-bold text-muted-foreground">不可</span>
+                        <span className="text-xs text-muted-foreground">不可</span>
                       ) : (
-                        <span className="text-xs font-bold text-muted-foreground">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </Link>
                   </td>
@@ -605,7 +605,7 @@ export default function CargoList() {
                     <Link href={`/cargo/${listing.id}`} className="block">
                       <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
                       {listing.bodyType && (
-                        <div className="text-[11px] font-bold text-muted-foreground whitespace-nowrap mt-0.5">{listing.bodyType}</div>
+                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5">{listing.bodyType}</div>
                       )}
                     </Link>
                   </td>
@@ -621,12 +621,12 @@ export default function CargoList() {
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-[13px] font-bold whitespace-nowrap">{listing.driverWork || "-"}</span>
+                      <span className="text-[13px] whitespace-nowrap">{listing.driverWork || "-"}</span>
                     </Link>
                   </td>
                   <td className="px-4 py-3.5 align-top">
                     <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-muted-foreground font-bold text-xs leading-relaxed line-clamp-3 max-w-[200px]">
+                      <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px]">
                         {listing.description || "-"}
                       </span>
                     </Link>
@@ -638,8 +638,8 @@ export default function CargoList() {
                 <tr>
                   <td colSpan={10} className="text-center py-16">
                     <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
-                    <p className="font-bold text-muted-foreground">荷物情報が見つかりませんでした</p>
-                    <p className="text-xs font-bold text-muted-foreground mt-1">検索条件を変更してお試しください</p>
+                    <p className="font-medium text-muted-foreground">荷物情報が見つかりませんでした</p>
+                    <p className="text-xs text-muted-foreground mt-1">検索条件を変更してお試しください</p>
                   </td>
                 </tr>
               )}

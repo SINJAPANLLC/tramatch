@@ -68,7 +68,6 @@ export const truckListings = pgTable("truck_listings", {
   contactEmail: text("contact_email"),
   status: text("status").notNull().default("active"),
   userId: varchar("user_id"),
-  viewCount: integer("view_count").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -95,7 +94,7 @@ export const announcements = pgTable("announcements", {
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
 export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, createdAt: true, status: true, userId: true, viewCount: true });
-export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true, viewCount: true });
+export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
 
