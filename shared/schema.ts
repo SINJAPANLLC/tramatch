@@ -177,12 +177,70 @@ export const dispatchRequests = pgTable("dispatch_requests", {
   sentAt: timestamp("sent_at"),
 });
 
+export const partners = pgTable("partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  companyName: text("company_name").notNull(),
+  companyNameKana: text("company_name_kana"),
+  representative: text("representative"),
+  contactName: text("contact_name"),
+  phone: text("phone"),
+  fax: text("fax"),
+  email: text("email"),
+  postalCode: text("postal_code"),
+  address: text("address"),
+  businessType: text("business_type"),
+  truckCount: text("truck_count"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const transportRecords = pgTable("transport_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  cargoId: varchar("cargo_id"),
+  transportCompany: text("transport_company").notNull(),
+  shipperName: text("shipper_name"),
+  driverName: text("driver_name"),
+  driverPhone: text("driver_phone"),
+  vehicleNumber: text("vehicle_number"),
+  vehicleType: text("vehicle_type"),
+  departureArea: text("departure_area"),
+  arrivalArea: text("arrival_area"),
+  transportDate: text("transport_date"),
+  cargoDescription: text("cargo_description"),
+  fare: text("fare"),
+  status: text("status").notNull().default("active"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const seoArticles = pgTable("seo_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topic: text("topic").notNull(),
+  keywords: text("keywords"),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  status: text("status").notNull().default("draft"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const adminSettings = pgTable("admin_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
 export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, cargoNumber: true, createdAt: true, status: true, userId: true, viewCount: true });
 export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertDispatchRequestSchema = createInsertSchema(dispatchRequests).omit({ id: true, createdAt: true, sentAt: true });
+export const insertPartnerSchema = createInsertSchema(partners).omit({ id: true, createdAt: true });
+export const insertTransportRecordSchema = createInsertSchema(transportRecords).omit({ id: true, createdAt: true });
+export const insertSeoArticleSchema = createInsertSchema(seoArticles).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -196,3 +254,10 @@ export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertDispatchRequest = z.infer<typeof insertDispatchRequestSchema>;
 export type DispatchRequest = typeof dispatchRequests.$inferSelect;
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;
+export type Partner = typeof partners.$inferSelect;
+export type InsertTransportRecord = z.infer<typeof insertTransportRecordSchema>;
+export type TransportRecord = typeof transportRecords.$inferSelect;
+export type InsertSeoArticle = z.infer<typeof insertSeoArticleSchema>;
+export type SeoArticle = typeof seoArticles.$inferSelect;
+export type AdminSetting = typeof adminSettings.$inferSelect;

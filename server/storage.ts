@@ -5,10 +5,15 @@ import {
   type Notification, type InsertNotification,
   type Announcement, type InsertAnnouncement,
   type DispatchRequest, type InsertDispatchRequest,
-  users, cargoListings, truckListings, notifications, announcements, dispatchRequests
+  type Partner, type InsertPartner,
+  type TransportRecord, type InsertTransportRecord,
+  type SeoArticle, type InsertSeoArticle,
+  type AdminSetting,
+  users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
+  partners, transportRecords, seoArticles, adminSettings
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, ilike, or } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -28,7 +33,7 @@ export interface IStorage {
   getTruckListing(id: string): Promise<TruckListing | undefined>;
   createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing>;
 
-  updateUserProfile(id: string, data: Partial<Pick<User, "companyName" | "address" | "contactName" | "phone" | "fax" | "email">>): Promise<User | undefined>;
+  updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
 
   deleteCargoListing(id: string): Promise<boolean>;
@@ -53,6 +58,29 @@ export interface IStorage {
   getDispatchRequestByCargoId(cargoId: string): Promise<DispatchRequest | undefined>;
   createDispatchRequest(data: InsertDispatchRequest): Promise<DispatchRequest>;
   updateDispatchRequest(id: string, data: Partial<DispatchRequest>): Promise<DispatchRequest | undefined>;
+
+  searchCompanies(query: string): Promise<Partial<User>[]>;
+
+  getPartnersByUserId(userId: string): Promise<Partner[]>;
+  getPartner(id: string): Promise<Partner | undefined>;
+  createPartner(data: InsertPartner): Promise<Partner>;
+  updatePartner(id: string, data: Partial<InsertPartner>): Promise<Partner | undefined>;
+  deletePartner(id: string): Promise<boolean>;
+
+  getTransportRecordsByUserId(userId: string): Promise<TransportRecord[]>;
+  getTransportRecord(id: string): Promise<TransportRecord | undefined>;
+  createTransportRecord(data: InsertTransportRecord): Promise<TransportRecord>;
+  updateTransportRecord(id: string, data: Partial<InsertTransportRecord>): Promise<TransportRecord | undefined>;
+  deleteTransportRecord(id: string): Promise<boolean>;
+
+  getSeoArticles(): Promise<SeoArticle[]>;
+  createSeoArticle(data: InsertSeoArticle): Promise<SeoArticle>;
+  updateSeoArticle(id: string, data: Partial<InsertSeoArticle>): Promise<SeoArticle | undefined>;
+  deleteSeoArticle(id: string): Promise<boolean>;
+
+  getAdminSetting(key: string): Promise<string | undefined>;
+  setAdminSetting(key: string, value: string): Promise<void>;
+  getAllAdminSettings(): Promise<AdminSetting[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -91,15 +119,21 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserProfile(id: string, data: Partial<Pick<User, "companyName" | "address" | "contactName" | "phone" | "fax" | "email">>): Promise<User | undefined> {
+  async updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined> {
+    const allowedFields = [
+      "companyName", "companyNameKana", "address", "postalCode", "contactName",
+      "phone", "fax", "email", "paymentTerms", "businessDescription",
+      "representative", "establishedDate", "capital", "employeeCount",
+      "businessArea", "transportLicenseNumber", "websiteUrl",
+      "invoiceRegistrationNumber", "truckCount", "officeLocations", "majorClients"
+    ] as const;
     const updateData: Record<string, string | null> = {};
-    if (data.companyName !== undefined) updateData.companyName = data.companyName;
-    if (data.address !== undefined) updateData.address = data.address;
-    if (data.contactName !== undefined) updateData.contactName = data.contactName;
-    if (data.phone !== undefined) updateData.phone = data.phone;
-    if (data.fax !== undefined) updateData.fax = data.fax;
+    for (const field of allowedFields) {
+      if ((data as any)[field] !== undefined) {
+        updateData[field] = (data as any)[field];
+      }
+    }
     if (data.email !== undefined) {
-      updateData.email = data.email;
       updateData.username = data.email;
     }
     const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
@@ -254,6 +288,122 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dispatchRequests.id, id))
       .returning();
     return updated;
+  }
+
+  async searchCompanies(query: string): Promise<Partial<User>[]> {
+    const pattern = `%${query}%`;
+    const results = await db.select({
+      id: users.id,
+      companyName: users.companyName,
+      companyNameKana: users.companyNameKana,
+      address: users.address,
+      phone: users.phone,
+      fax: users.fax,
+      email: users.email,
+      contactName: users.contactName,
+      userType: users.userType,
+      truckCount: users.truckCount,
+      businessArea: users.businessArea,
+      representative: users.representative,
+      businessDescription: users.businessDescription,
+      transportLicenseNumber: users.transportLicenseNumber,
+    }).from(users).where(
+      and(
+        eq(users.approved, true),
+        or(
+          ilike(users.companyName, pattern),
+          ilike(users.address, pattern),
+          ilike(users.businessArea, pattern),
+          ilike(users.contactName, pattern),
+        )
+      )
+    );
+    return results;
+  }
+
+  async getPartnersByUserId(userId: string): Promise<Partner[]> {
+    return db.select().from(partners).where(eq(partners.userId, userId)).orderBy(desc(partners.createdAt));
+  }
+
+  async getPartner(id: string): Promise<Partner | undefined> {
+    const [p] = await db.select().from(partners).where(eq(partners.id, id));
+    return p;
+  }
+
+  async createPartner(data: InsertPartner): Promise<Partner> {
+    const [p] = await db.insert(partners).values(data).returning();
+    return p;
+  }
+
+  async updatePartner(id: string, data: Partial<InsertPartner>): Promise<Partner | undefined> {
+    const [p] = await db.update(partners).set(data).where(eq(partners.id, id)).returning();
+    return p;
+  }
+
+  async deletePartner(id: string): Promise<boolean> {
+    const result = await db.delete(partners).where(eq(partners.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getTransportRecordsByUserId(userId: string): Promise<TransportRecord[]> {
+    return db.select().from(transportRecords).where(eq(transportRecords.userId, userId)).orderBy(desc(transportRecords.createdAt));
+  }
+
+  async getTransportRecord(id: string): Promise<TransportRecord | undefined> {
+    const [r] = await db.select().from(transportRecords).where(eq(transportRecords.id, id));
+    return r;
+  }
+
+  async createTransportRecord(data: InsertTransportRecord): Promise<TransportRecord> {
+    const [r] = await db.insert(transportRecords).values(data).returning();
+    return r;
+  }
+
+  async updateTransportRecord(id: string, data: Partial<InsertTransportRecord>): Promise<TransportRecord | undefined> {
+    const [r] = await db.update(transportRecords).set(data).where(eq(transportRecords.id, id)).returning();
+    return r;
+  }
+
+  async deleteTransportRecord(id: string): Promise<boolean> {
+    const result = await db.delete(transportRecords).where(eq(transportRecords.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getSeoArticles(): Promise<SeoArticle[]> {
+    return db.select().from(seoArticles).orderBy(desc(seoArticles.createdAt));
+  }
+
+  async createSeoArticle(data: InsertSeoArticle): Promise<SeoArticle> {
+    const [a] = await db.insert(seoArticles).values(data).returning();
+    return a;
+  }
+
+  async updateSeoArticle(id: string, data: Partial<InsertSeoArticle>): Promise<SeoArticle | undefined> {
+    const [a] = await db.update(seoArticles).set(data).where(eq(seoArticles.id, id)).returning();
+    return a;
+  }
+
+  async deleteSeoArticle(id: string): Promise<boolean> {
+    const result = await db.delete(seoArticles).where(eq(seoArticles.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAdminSetting(key: string): Promise<string | undefined> {
+    const [s] = await db.select().from(adminSettings).where(eq(adminSettings.key, key));
+    return s?.value;
+  }
+
+  async setAdminSetting(key: string, value: string): Promise<void> {
+    const existing = await this.getAdminSetting(key);
+    if (existing !== undefined) {
+      await db.update(adminSettings).set({ value, updatedAt: new Date() }).where(eq(adminSettings.key, key));
+    } else {
+      await db.insert(adminSettings).values({ key, value });
+    }
+  }
+
+  async getAllAdminSettings(): Promise<AdminSetting[]> {
+    return db.select().from(adminSettings);
   }
 }
 
