@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   userType: text("user_type").notNull(),
   role: text("role").notNull().default("user"),
   approved: boolean("approved").notNull().default(false),
+  paymentTerms: text("payment_terms"),
+  businessDescription: text("business_description"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
