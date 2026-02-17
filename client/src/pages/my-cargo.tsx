@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, MapPin, Trash2, Plus, Calendar, Weight, Truck, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -13,148 +14,65 @@ import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 
-function CargoCard({ item, onDelete, isDeleting, onComplete, isCompleting, onCancel, isCancelling, isSelected, onSelect }: { item: CargoListing; onDelete: () => void; isDeleting: boolean; onComplete: () => void; isCompleting: boolean; onCancel: () => void; isCancelling: boolean; isSelected: boolean; onSelect: () => void }) {
-  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-  const timeLabel = daysAgo === 0 ? "今日" : daysAgo === 1 ? "昨日" : `${daysAgo}日前`;
+const STATUS_FILTERS = [
+  { label: "全て", value: "all" },
+  { label: "掲載中", value: "active" },
+  { label: "成約済み", value: "completed" },
+  { label: "不成約", value: "cancelled" },
+];
+
+const PER_PAGE_OPTIONS = [10, 20, 50];
+
+function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
+  const pages: (number | "...")[] = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (page > 3) pages.push("...");
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+      pages.push(i);
+    }
+    if (page < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
 
   return (
-    <Card className={`hover-elevate cursor-pointer ${isSelected ? "ring-2 ring-primary" : ""}`} data-testid={`card-my-cargo-${item.id}`} onClick={onSelect}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0 space-y-2.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer" data-testid={`link-cargo-title-${item.id}`}>
-                {item.title}
-              </span>
-              {item.transportType && (
-                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-blue-300 text-blue-600" : "border-primary/30 text-primary"}`} data-testid={`badge-transport-${item.id}`}>
-                  {item.transportType}
-                </Badge>
-              )}
-              <Badge variant="outline" className={`text-xs ${item.status === "completed" ? "border-orange-300 text-orange-600" : item.status === "cancelled" ? "border-red-300 text-red-600" : ""}`} data-testid={`badge-status-${item.id}`}>
-                {item.status === "completed" ? (
-                  <><CheckCircle2 className="w-3 h-3 mr-1 text-orange-500" />成約済み</>
-                ) : item.status === "cancelled" ? (
-                  <><XCircle className="w-3 h-3 mr-1 text-red-500" />不成約</>
-                ) : (
-                  <><CircleDot className="w-3 h-3 mr-1 text-green-500" />掲載中</>
-                )}
-              </Badge>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-sm">
-              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-              <span className="font-medium text-foreground">{item.departureArea}</span>
-              {item.departureAddress && <span className="text-muted-foreground text-xs">({item.departureAddress})</span>}
-              <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground mx-1" />
-              <span className="font-medium text-foreground">{item.arrivalArea}</span>
-              {item.arrivalAddress && <span className="text-muted-foreground text-xs">({item.arrivalAddress})</span>}
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
-              {item.desiredDate && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {item.desiredDate}
-                  {item.departureTime && <span>({item.departureTime})</span>}
-                </span>
-              )}
-              {item.arrivalDate && (
-                <span className="flex items-center gap-1">
-                  <ArrowRight className="w-3 h-3" />
-                  {item.arrivalDate}
-                  {item.arrivalTime && <span>({item.arrivalTime})</span>}
-                </span>
-              )}
-              {item.cargoType && (
-                <span className="flex items-center gap-1">
-                  <Package className="w-3 h-3" />
-                  {item.cargoType}
-                </span>
-              )}
-              {item.weight && (
-                <span className="flex items-center gap-1">
-                  <Weight className="w-3 h-3" />
-                  {item.weight}
-                </span>
-              )}
-              {item.vehicleType && (
-                <span className="flex items-center gap-1">
-                  <Truck className="w-3 h-3" />
-                  {item.vehicleType}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              {item.price && (
-                <span className="text-sm font-semibold text-primary" data-testid={`text-price-${item.id}`}>
-                  {formatPrice(item.price)}円
-                </span>
-              )}
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Eye className="w-3 h-3" />
-                {item.viewCount ?? 0}人が閲覧
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                {timeLabel}に登録
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            {item.status === "active" ? (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => { e.stopPropagation(); onComplete(); }}
-                  disabled={isCompleting}
-                  className="text-orange-600 border-orange-300"
-                  data-testid={`button-complete-cargo-${item.id}`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  成約にする
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => { e.stopPropagation(); onCancel(); }}
-                  disabled={isCancelling}
-                  className="text-red-600 border-red-300"
-                  data-testid={`button-cancel-cargo-${item.id}`}
-                >
-                  <XCircle className="w-3.5 h-3.5 mr-1" />
-                  不成約にする
-                </Button>
-              </>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => { e.stopPropagation(); if (item.status === "completed") onComplete(); else onCancel(); }}
-                disabled={isCompleting || isCancelling}
-                className="text-green-600 border-green-300"
-                data-testid={`button-reactivate-cargo-${item.id}`}
-              >
-                <CircleDot className="w-3.5 h-3.5 mr-1" />
-                掲載に戻す
-              </Button>
-            )}
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              disabled={isDeleting}
-              data-testid={`button-delete-cargo-${item.id}`}
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-0.5" data-testid="pagination">
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        data-testid="button-prev-page"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span key={`dots-${i}`} className="px-1 text-xs text-muted-foreground">...</span>
+        ) : (
+          <Button
+            key={p}
+            variant={page === p ? "default" : "ghost"}
+            size="icon"
+            onClick={() => onPageChange(p as number)}
+            data-testid={`button-page-${p}`}
+          >
+            <span className="text-xs">{p}</span>
+          </Button>
+        )
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+        data-testid="button-next-page"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </Button>
+    </div>
   );
 }
 
@@ -481,7 +399,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="締め日" value={companyInfo?.closingDay} />
             <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
-
           </div>
 
           <h4 className="text-sm font-bold text-foreground">信用情報</h4>
@@ -507,13 +424,53 @@ export default function MyCargo() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price">("newest");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
   });
 
   const myCargo = allCargo?.filter((c) => c.userId === user?.id) ?? [];
-  const sortedCargo = [...myCargo].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const filtered = useMemo(() => {
+    let result = [...myCargo];
+
+    if (statusFilter !== "all") {
+      result = result.filter((c) => c.status === statusFilter);
+    }
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "departDate": {
+          const dA = a.desiredDate || "";
+          const dB = b.desiredDate || "";
+          return dA.localeCompare(dB) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        case "arriveDate": {
+          const aA = a.arrivalDate || "";
+          const aB = b.arrivalDate || "";
+          return aA.localeCompare(aB) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        case "price": {
+          const pA = parseInt(a.price?.replace(/[^0-9]/g, "") || "0");
+          const pB = parseInt(b.price?.replace(/[^0-9]/g, "") || "0");
+          return pB - pA;
+        }
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [myCargo, statusFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   const selectedCargo = useMemo(() => {
     if (!selectedCargoId || !allCargo) return null;
@@ -527,6 +484,7 @@ export default function MyCargo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
       toast({ title: "荷物情報を削除しました" });
+      if (selectedCargoId) setSelectedCargoId(null);
     },
   });
 
@@ -540,17 +498,26 @@ export default function MyCargo() {
     },
   });
 
+  const statusCounts = useMemo(() => {
+    const counts = { all: myCargo.length, active: 0, completed: 0, cancelled: 0 };
+    myCargo.forEach((c) => {
+      if (c.status === "active") counts.active++;
+      else if (c.status === "completed") counts.completed++;
+      else if (c.status === "cancelled") counts.cancelled++;
+    });
+    return counts;
+  }, [myCargo]);
+
   return (
     <DashboardLayout>
       <div className="flex h-full">
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 py-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
+        <div className={`flex-1 overflow-y-auto transition-all duration-300`}>
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
               <div>
                 <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">登録した荷物</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   自分が登録した荷物情報の一覧
-                  {sortedCargo.length > 0 && <span className="ml-2">({sortedCargo.length}件)</span>}
                 </p>
               </div>
               <Link href="/cargo/new">
@@ -561,43 +528,281 @@ export default function MyCargo() {
               </Link>
             </div>
 
-            {isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
-                ))}
+            <div className="flex items-center gap-1.5 flex-wrap mb-4">
+              {STATUS_FILTERS.map((f) => (
+                <Badge
+                  key={f.value}
+                  variant={statusFilter === f.value ? "default" : "outline"}
+                  className="cursor-pointer text-xs"
+                  onClick={() => { setStatusFilter(f.value); setPage(1); }}
+                  data-testid={`filter-status-${f.value}`}
+                >
+                  {f.label} ({statusCounts[f.value as keyof typeof statusCounts]})
+                </Badge>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-sm" data-testid="text-result-count">
+                  {filtered.length} 件
+                </span>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger className="w-[140px] text-xs h-8" data-testid="select-sort">
+                    <ArrowUpDown className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">新着順</SelectItem>
+                    <SelectItem value="departDate">発日時</SelectItem>
+                    <SelectItem value="arriveDate">着日時</SelectItem>
+                    <SelectItem value="price">運賃</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ) : sortedCargo.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground" data-testid="text-empty-state">登録した荷物はありません</p>
-                  <Link href="/cargo/new">
-                    <Button className="mt-4" data-testid="button-empty-add-cargo">
-                      <Plus className="w-4 h-4 mr-1.5" />
-                      荷物を登録する
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {sortedCargo.map((item) => (
-                  <CargoCard
-                    key={item.id}
-                    item={item}
-                    onDelete={() => deleteCargo.mutate(item.id)}
-                    isDeleting={deleteCargo.isPending}
-                    onComplete={() => toggleCargoStatus.mutate({ id: item.id, status: item.status === "active" ? "completed" : "active" })}
-                    isCompleting={toggleCargoStatus.isPending}
-                    onCancel={() => toggleCargoStatus.mutate({ id: item.id, status: item.status === "active" ? "cancelled" : "active" })}
-                    isCancelling={toggleCargoStatus.isPending}
-                    isSelected={selectedCargoId === item.id}
-                    onSelect={() => setSelectedCargoId(item.id)}
-                  />
-                ))}
+              <div className="flex items-center gap-2">
+                <Select value={String(perPage)} onValueChange={(v) => { setPerPage(Number(v)); setPage(1); }}>
+                  <SelectTrigger className="w-auto text-xs" data-testid="select-per-page">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PER_PAGE_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}件/ページ</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
-            )}
+            </div>
+
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full" data-testid="table-my-cargo">
+                  <thead>
+                    <tr className="border-b bg-muted/60">
+                      <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">状態</th>
+                      <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
+                      <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap min-w-[220px]">発着情報</th>
+                      <th className="text-right px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
+                      <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">重量</th>
+                      <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車種</th>
+                      <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷種</th>
+                      <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">閲覧</th>
+                      <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {isLoading && Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-10 w-48" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-16" /></td>
+                        <td className="px-1.5 py-3"><Skeleton className="h-4 w-10" /></td>
+                        <td className="px-1.5 py-3"><Skeleton className="h-4 w-12" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-14" /></td>
+                        <td className="px-1.5 py-3"><Skeleton className="h-4 w-8" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-20" /></td>
+                      </tr>
+                    ))}
+
+                    {!isLoading && paginated.map((listing, index) => {
+                      const daysAgo = Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+                      const timeLabel = daysAgo === 0 ? "今日" : daysAgo === 1 ? "昨日" : `${daysAgo}日前`;
+
+                      return (
+                        <tr
+                          key={listing.id}
+                          className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedCargoId === listing.id ? "bg-primary/10" : ""}`}
+                          onClick={() => setSelectedCargoId(listing.id)}
+                          data-testid={`row-my-cargo-${listing.id}`}
+                        >
+                          <td className="px-2 py-3 text-center align-top">
+                            {listing.status === "active" ? (
+                              <Badge variant="outline" className="text-[10px] px-1 border-green-300 text-green-600">
+                                <CircleDot className="w-2.5 h-2.5 mr-0.5" />掲載中
+                              </Badge>
+                            ) : listing.status === "completed" ? (
+                              <Badge variant="outline" className="text-[10px] px-1 border-orange-300 text-orange-600">
+                                <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />成約
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] px-1 border-red-300 text-red-600">
+                                <XCircle className="w-2.5 h-2.5 mr-0.5" />不成約
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-2 py-3 text-center align-top">
+                            {listing.transportType ? (
+                              <Badge variant="outline" className={`text-[10px] px-1 ${
+                                listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
+                                listing.transportType === "定期" ? "border-primary/30 text-primary" : ""
+                              }`}>{listing.transportType}</Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground font-bold">-</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-3 align-top">
+                            <div className="space-y-1">
+                              <div className="flex items-start gap-1.5">
+                                <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    <span className="font-bold text-[12px] text-foreground">{listing.departureArea}</span>
+                                    {listing.departureAddress && (
+                                      <span className="text-[11px] text-muted-foreground font-bold">{listing.departureAddress}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-muted-foreground font-bold">
+                                    {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 pl-0.5">
+                                <div className="w-px h-2 bg-border ml-[4px]" />
+                              </div>
+
+                              <div className="flex items-start gap-1.5">
+                                <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    <span className="font-bold text-[12px] text-foreground">{listing.arrivalArea}</span>
+                                    {listing.arrivalAddress && (
+                                      <span className="text-[11px] text-muted-foreground font-bold">{listing.arrivalAddress}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-muted-foreground font-bold">
+                                    {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-2 py-3 text-right align-top">
+                            <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
+                              {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
+                              高速代: {listing.highwayFee ? "有" : "無"}
+                            </div>
+                          </td>
+                          <td className="px-1.5 py-3 text-center align-top">
+                            <span className="whitespace-nowrap text-[12px] font-bold">{listing.weight}</span>
+                          </td>
+                          <td className="px-1.5 py-3 text-center align-top">
+                            <div className="text-[12px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                            {listing.bodyType && (
+                              <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
+                            )}
+                          </td>
+                          <td className="px-2 py-3 align-top">
+                            <span className="whitespace-nowrap text-[12px] font-bold">{listing.cargoType}</span>
+                            {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
+                              <div className="mt-0.5">
+                                <Badge variant="outline" className="text-[10px] px-1">{listing.temperatureControl}</Badge>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-1.5 py-3 text-center align-top">
+                            <div className="flex items-center justify-center gap-0.5">
+                              <Eye className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-[11px] text-muted-foreground font-bold">{listing.viewCount ?? 0}</span>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-bold mt-0.5">{timeLabel}</div>
+                          </td>
+                          <td className="px-2 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex flex-col items-center gap-1">
+                              {listing.status === "active" ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-[10px] h-6 px-2 text-orange-600 border-orange-300"
+                                    onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "completed" })}
+                                    disabled={toggleCargoStatus.isPending}
+                                    data-testid={`button-complete-${listing.id}`}
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 mr-0.5" />成約
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-[10px] h-6 px-2 text-red-600 border-red-300"
+                                    onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "cancelled" })}
+                                    disabled={toggleCargoStatus.isPending}
+                                    data-testid={`button-cancel-${listing.id}`}
+                                  >
+                                    <XCircle className="w-3 h-3 mr-0.5" />不成約
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-[10px] h-6 px-2 text-green-600 border-green-300"
+                                  onClick={() => toggleCargoStatus.mutate({ id: listing.id, status: "active" })}
+                                  disabled={toggleCargoStatus.isPending}
+                                  data-testid={`button-reactivate-${listing.id}`}
+                                >
+                                  <CircleDot className="w-3 h-3 mr-0.5" />掲載に戻す
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[10px] h-6 px-2 text-destructive"
+                                onClick={() => deleteCargo.mutate(listing.id)}
+                                disabled={deleteCargo.isPending}
+                                data-testid={`button-delete-${listing.id}`}
+                              >
+                                <Trash2 className="w-3 h-3 mr-0.5" />削除
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {!isLoading && paginated.length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="text-center py-16">
+                          <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
+                          <p className="font-medium text-muted-foreground" data-testid="text-empty-state">
+                            {statusFilter === "all" ? "登録した荷物はありません" :
+                             statusFilter === "active" ? "掲載中の荷物はありません" :
+                             statusFilter === "completed" ? "成約済みの荷物はありません" :
+                             "不成約の荷物はありません"}
+                          </p>
+                          {statusFilter === "all" && (
+                            <Link href="/cargo/new">
+                              <Button className="mt-4" data-testid="button-empty-add-cargo">
+                                <Plus className="w-4 h-4 mr-1.5" />
+                                荷物を登録する
+                              </Button>
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <div className="flex items-center justify-end gap-2 flex-wrap mt-4">
+              <Select value={String(perPage)} onValueChange={(v) => { setPerPage(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-auto text-xs" data-testid="select-per-page-bottom">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PER_PAGE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}件/ページ</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </div>
         </div>
         {selectedCargoId && selectedCargo && (
