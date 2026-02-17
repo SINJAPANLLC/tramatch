@@ -33,12 +33,15 @@ const BODY_TYPES = [
   "コンテナ車", "海上コンテナ", "低床", "高床", "その他"
 ];
 const TEMP_CONTROLS = ["指定なし", "常温", "冷蔵（0〜10℃）", "冷凍（-18℃以下）", "定温"];
-const HIGHWAY_FEE_OPTIONS = ["込み", "別途", "高速代なし"];
+const HIGHWAY_FEE_OPTIONS = ["別途支払う", "支払わない", "込み"];
 const TRANSPORT_TYPE_OPTIONS = ["スポット", "定期"];
-const CONSOLIDATION_OPTIONS = ["可", "不可"];
+const CONSOLIDATION_OPTIONS = ["不可", "可能"];
 const DRIVER_WORK_OPTIONS = ["手積み手降ろし", "フォークリフト", "クレーン", "ゲート車", "パレット", "作業なし（車上渡し）", "その他"];
-const LOADING_METHODS = ["バラ積み", "パレット積み", "段ボール", "フレコン", "その他"];
+const LOADING_METHODS = ["パレット", "バラ積み", "段ボール", "フレコン", "その他"];
 const TIME_OPTIONS = ["指定なし", "午前中", "午後", "夕方以降", "終日可", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+const TAX_TYPE_OPTIONS = ["課税", "非課税", "要相談"];
+const URGENCY_OPTIONS = ["通常", "至急"];
+const AUTO_INVOICE_OPTIONS = ["推奨", "受入可", "受入不可", "未定"];
 
 const AREAS = [
   "北海道", "青森", "岩手", "宮城", "秋田", "山形", "福島",
@@ -64,6 +67,8 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
   consolidation: CONSOLIDATION_OPTIONS,
   driverWork: DRIVER_WORK_OPTIONS,
   loadingMethod: LOADING_METHODS,
+  taxType: TAX_TYPE_OPTIONS,
+  urgency: URGENCY_OPTIONS,
 };
 
 function findBestMatch(value: string, options: string[]): string {
@@ -78,9 +83,12 @@ function findBestMatch(value: string, options: string[]): string {
 const CARGO_FIELDS = [
   "title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress",
   "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
+  "loadingTime", "unloadingTime",
   "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
-  "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
-  "highwayFee", "description",
+  "price", "taxType", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
+  "highwayFee", "equipment", "vehicleSpec",
+  "urgency", "movingJob", "contactPerson", "paymentDate",
+  "description",
 ];
 
 const MULTI_SELECT_FIELDS = ["vehicleType", "bodyType"];
@@ -89,10 +97,14 @@ const FIELD_LABELS: Record<string, string> = {
   title: "タイトル", departureArea: "発地", departureAddress: "発地詳細",
   arrivalArea: "着地", arrivalAddress: "着地詳細",
   desiredDate: "発日", departureTime: "発時間", arrivalDate: "着日", arrivalTime: "着時間",
+  loadingTime: "積み時間", unloadingTime: "卸し時間",
   cargoType: "荷種", weight: "重量", vehicleType: "車種", bodyType: "車体",
-  temperatureControl: "温度管理", price: "運賃", transportType: "形態",
+  temperatureControl: "温度管理", price: "運賃", taxType: "課税区分", transportType: "形態",
   consolidation: "積合", driverWork: "作業", packageCount: "個数",
-  loadingMethod: "荷姿", highwayFee: "高速代", description: "備考",
+  loadingMethod: "荷姿", highwayFee: "高速代",
+  equipment: "必要装備", vehicleSpec: "車両指定",
+  urgency: "緊急度", movingJob: "引越し", contactPerson: "担当者", paymentDate: "入金予定日",
+  description: "備考",
 };
 
 function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
@@ -166,6 +178,8 @@ export default function CargoForm() {
       temperatureControl: "", price: "", highwayFee: "", transportType: "",
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
+      loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
+      taxType: "", urgency: "", movingJob: "", contactPerson: "", paymentDate: "",
     },
   });
 
@@ -218,6 +232,8 @@ export default function CargoForm() {
         temperatureControl: "", price: "", highwayFee: "", transportType: "",
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
+        loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
+        taxType: "", urgency: "", movingJob: "", contactPerson: "", paymentDate: "",
       });
       const normalized = normalizeAiItem(nextItem);
       setExtractedFields(normalized);
@@ -731,6 +747,13 @@ export default function CargoForm() {
                             </FormItem>
                           )} />
                         </div>
+                        <FormField control={form.control} name="loadingTime" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">積み時間</FormLabel>
+                            <FormControl><Input placeholder="積み時間を入力してください" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-loading-time" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
                     </div>
 
@@ -788,6 +811,13 @@ export default function CargoForm() {
                             </FormItem>
                           )} />
                         </div>
+                        <FormField control={form.control} name="unloadingTime" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">卸し時間</FormLabel>
+                            <FormControl><Input placeholder="卸し時間を入力してください" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-unloading-time" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
                     </div>
 
@@ -933,19 +963,93 @@ export default function CargoForm() {
                             </FormItem>
                           )} />
                         </div>
+                        <FormField control={form.control} name="equipment" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">必要装備</FormLabel>
+                            <FormControl><Input placeholder="りん木、コンパネ、発泡、ラップ、ラッシング等" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-equipment" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="vehicleSpec" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">車両指定</FormLabel>
+                            <FormControl><Input placeholder="使用できる車両を指定する場合に入力" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-vehicle-spec" /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
                     </div>
 
                     <div className="border-t border-border pt-3">
-                      <h3 className="text-xs font-bold text-muted-foreground mb-2">運賃・備考</h3>
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">運賃</h3>
                       <div className="space-y-2">
-                        <FormField control={form.control} name="price" render={({ field }) => (
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="price" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">運賃 円(税別)</FormLabel>
+                              <FormControl><Input placeholder="例: 50000" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-price" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="taxType" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">課税区分</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-tax-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{TAX_TYPE_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <FormField control={form.control} name="paymentDate" render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">希望運賃</FormLabel>
-                            <FormControl><Input placeholder="例: 50000" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-price" /></FormControl>
+                            <FormLabel className="text-xs">入金予定日</FormLabel>
+                            <FormControl><Input placeholder="例: 2026/04/30" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-payment-date" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-3">
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">その他</h3>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormField control={form.control} name="urgency" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">緊急度</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-urgency"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                                <SelectContent>{URGENCY_OPTIONS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="contactPerson" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">担当者</FormLabel>
+                              <FormControl><Input placeholder="担当者名" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-contact-person" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <FormField control={form.control} name="movingJob" render={({ field }) => (
+                            <FormItem className="flex items-center gap-1.5 space-y-0">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value === "引っ越し案件"}
+                                  onChange={(e) => field.onChange(e.target.checked ? "引っ越し案件" : "")}
+                                  className="rounded border-border"
+                                  data-testid="checkbox-moving-job"
+                                />
+                              </FormControl>
+                              <FormLabel className="text-xs cursor-pointer">引っ越し案件</FormLabel>
+                            </FormItem>
+                          )} />
+                        </div>
                         <FormField control={form.control} name="description" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">備考</FormLabel>
