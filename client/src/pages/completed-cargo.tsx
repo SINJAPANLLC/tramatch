@@ -224,7 +224,7 @@ function EditDealForm({ listing, onClose }: { listing: CargoListing; onClose: ()
   );
 }
 
-function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; companyInfo: CompanyInfo | undefined }) {
+function DispatchRequestTab({ listing, companyInfo, isContracted = false }: { listing: CargoListing; companyInfo: CompanyInfo | undefined; isContracted?: boolean }) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -378,7 +378,7 @@ function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; c
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/dispatch-requests/${listing.id}`] });
-      toast({ title: "配車依頼書を送信しました" });
+      toast({ title: isContracted ? "車番連絡を送信しました" : "配車依頼書を送信しました" });
       setIsEditing(false);
     },
     onError: () => {
@@ -433,7 +433,7 @@ function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; c
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">配車依頼書</h3>
+            <h3 className="text-sm font-bold text-foreground">{isContracted ? "車番連絡" : "配車依頼書"}</h3>
           </div>
           {isSent ? (
             <Badge variant="outline" className="text-[10px] border-green-300 text-green-600">送信済み</Badge>
@@ -518,12 +518,14 @@ function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; c
     <div className="p-3 space-y-3">
       <div className="flex items-center gap-2 mb-1">
         <FileText className="w-5 h-5 text-primary" />
-        <h3 className="text-sm font-bold text-foreground">配車依頼書{dispatchRequest ? "を編集" : "を作成"}</h3>
+        <h3 className="text-sm font-bold text-foreground">{isContracted ? "車番連絡" : "配車依頼書"}{dispatchRequest ? "を編集" : "を作成"}</h3>
       </div>
 
       {!dispatchRequest && (
         <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2.5">
-          配車依頼書はまだ送信されていません。内容を編集して送信することができます。
+          {isContracted
+            ? "車番連絡はまだ送信されていません。車番・ドライバー情報を入力して送信してください。"
+            : "配車依頼書はまだ送信されていません。内容を編集して送信することができます。"}
         </div>
       )}
 
@@ -733,7 +735,7 @@ function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; c
           disabled={sendMutation.isPending}
           data-testid="button-send-dispatch"
         >
-          {sendMutation.isPending ? "送信中..." : "送信する"}
+          {sendMutation.isPending ? "送信中..." : isContracted ? "車番連絡を送信" : "送信する"}
         </Button>
         {dispatchRequest && (
           <Button
@@ -751,7 +753,7 @@ function DispatchRequestTab({ listing, companyInfo }: { listing: CargoListing; c
   );
 }
 
-function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
+function CargoDetailPanel({ listing, onClose, isContracted = false }: { listing: CargoListing | null; onClose: () => void; isContracted?: boolean }) {
   const [panelTab, setPanelTab] = useState<"deal" | "company" | "request">("deal");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -827,7 +829,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             {[
               { key: "deal" as const, label: "成約情報" },
               { key: "company" as const, label: "企業情報" },
-              { key: "request" as const, label: "依頼書" },
+              { key: "request" as const, label: isContracted ? "車番連絡" : "依頼書" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -1058,7 +1060,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           </div>
         </div>
       ) : (
-        <DispatchRequestTab listing={listing} companyInfo={companyInfo} />
+        <DispatchRequestTab listing={listing} companyInfo={companyInfo} isContracted={isContracted} />
       )}
     </div>
   );
@@ -1253,7 +1255,7 @@ export default function CompletedCargo() {
           </div>
         </div>
         {selectedCargoId && selectedCargo && (
-          <CargoDetailPanel listing={selectedCargo} onClose={() => setSelectedCargoId(null)} />
+          <CargoDetailPanel listing={selectedCargo} onClose={() => setSelectedCargoId(null)} isContracted={mainTab === "contracted"} />
         )}
       </div>
     </DashboardLayout>
