@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -644,8 +644,8 @@ export default function CargoList() {
                   <td className="px-4 py-3.5 text-center align-top">
                     {listing.transportType ? (
                       <Badge variant="outline" className={`text-[11px] px-1.5 ${
-                        listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
-                        listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
+                        listing.transportType === "スポット" ? "border-primary/30 text-primary" :
+                        listing.transportType === "定期" ? "border-blue-300 text-blue-600" : ""
                       }`}>{listing.transportType}</Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground font-bold">-</span>
@@ -658,7 +658,7 @@ export default function CargoList() {
                     <div className="space-y-1.5">
                       <div className="flex items-start gap-2">
                         <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                          <Circle className="w-2.5 h-2.5 fill-primary text-primary" />
+                          <Navigation className="w-3 h-3 fill-primary text-primary" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -861,7 +861,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           <div className="relative pl-6">
             <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
             <div className="relative mb-5">
-              <Circle className="absolute -left-[17px] top-1 w-3 h-3 fill-primary text-primary" />
+              <Navigation className="absolute -left-[17px] top-1 w-3 h-3 fill-primary text-primary" />
               <div className="text-xs text-muted-foreground font-medium mb-0.5">発地</div>
               <div className="text-base font-semibold text-foreground">{listing.departureArea}</div>
               {listing.departureAddress && (

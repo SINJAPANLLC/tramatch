@@ -26,7 +26,7 @@ function CancelledCard({ item, onReactivate, isReactivating, isSelected, onSelec
                 {item.title}
               </span>
               {item.transportType && (
-                <Badge variant={item.transportType === "スポット" ? "default" : "secondary"} className="text-xs">
+                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-primary/30 text-primary" : "border-blue-300 text-blue-600"}`}>
                   {item.transportType}
                 </Badge>
               )}
