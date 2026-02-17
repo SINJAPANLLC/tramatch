@@ -101,6 +101,8 @@
 - `POST /api/login` - Login (checks approved status)
 - `POST /api/logout` - Logout
 - `GET /api/user` - Get current user
+- `PATCH /api/user/profile` - Update user profile (auth required)
+- `PATCH /api/user/password` - Change password (auth required)
 - `GET /api/cargo` - List all cargo listings
 - `GET /api/cargo/:id` - Get cargo listing detail
 - `POST /api/cargo` - Create cargo listing (auth required)
