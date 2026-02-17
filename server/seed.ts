@@ -111,7 +111,7 @@ export async function seedDatabase() {
       contactEmail: "info@kansai-apparel.co.jp",
     },
     {
-      transportType: "チャーター",
+      transportType: "スポット",
       title: "北海道→東京 農産物",
       departureArea: "北海道",
       departureAddress: "帯広市西",
@@ -192,7 +192,7 @@ export async function seedDatabase() {
       contactEmail: "",
     },
     {
-      transportType: "チャーター",
+      transportType: "定期",
       title: "神奈川→香川 シャフト",
       departureArea: "神奈川",
       departureAddress: "横浜市",
