@@ -928,7 +928,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
             <div className="text-xs text-muted-foreground font-bold mb-1">希望運賃</div>
-            <div className="text-lg font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
+            <div className="text-lg font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
           </div>
           <div className="p-3 rounded-md bg-muted/40">
             <div className="text-xs text-muted-foreground font-bold mb-1">高速代</div>
