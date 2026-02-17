@@ -5,12 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2 } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck } from "lucide-react";
 import type { CargoListing } from "@shared/schema";
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
-import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 
@@ -48,6 +47,7 @@ export default function CargoList() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -56,6 +56,11 @@ export default function CargoList() {
   const { data: listings, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
   });
+
+  const selectedCargo = useMemo(() => {
+    if (!selectedCargoId || !listings) return null;
+    return listings.find((l) => l.id === selectedCargoId) || null;
+  }, [selectedCargoId, listings]);
 
   const handleSearch = () => {
     setActiveSearch(parseAISearch(aiSearchText));
@@ -509,127 +514,108 @@ export default function CargoList() {
               {!isLoading && paginated.map((listing, index) => (
                 <tr
                   key={listing.id}
-                  className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
+                  className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedCargoId === listing.id ? "bg-primary/10" : ""}`}
+                  onClick={() => setSelectedCargoId(listing.id)}
                   data-testid={`row-cargo-${listing.id}`}
                 >
                   <td className="px-4 py-3.5 text-center align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      {listing.transportType ? (
-                        <Badge variant="outline" className={`text-[11px] px-1.5 ${
-                          listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
-                          listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
-                        }`}>{listing.transportType}</Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground font-bold">-</span>
-                      )}
-                    </Link>
+                    {listing.transportType ? (
+                      <Badge variant="outline" className={`text-[11px] px-1.5 ${
+                        listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
+                        listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
+                      }`}>{listing.transportType}</Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground font-bold">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="font-bold text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
-                    </Link>
+                    <div className="font-bold text-foreground whitespace-nowrap text-[13px] leading-tight">{listing.companyName}</div>
                   </td>
                   <td className="px-4 py-3.5 align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="space-y-1.5">
-                        <div className="flex items-start gap-2">
-                          <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                            <Circle className="w-2.5 h-2.5 fill-primary text-primary" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
-                              {listing.departureAddress && (
-                                <span className="text-xs text-muted-foreground font-bold">{listing.departureAddress}</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-0.5 font-bold">
-                              {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
-                            </div>
-                          </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-2">
+                        <div className="flex items-center gap-1 mt-0.5 shrink-0">
+                          <Circle className="w-2.5 h-2.5 fill-primary text-primary" />
                         </div>
-
-                        <div className="flex items-center gap-1 pl-1">
-                          <div className="w-px h-3 bg-border ml-[4px]" />
-                          <ArrowRight className="w-3 h-3 text-muted-foreground/50 ml-1" />
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                            <MapPin className="w-3 h-3 text-destructive" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
+                            {listing.departureAddress && (
+                              <span className="text-xs text-muted-foreground font-bold">{listing.departureAddress}</span>
+                            )}
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
-                              {listing.arrivalAddress && (
-                                <span className="text-xs text-muted-foreground font-bold">{listing.arrivalAddress}</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-0.5 font-bold">
-                              {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
-                            </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 font-bold">
+                            {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
                       </div>
-                    </Link>
+
+                      <div className="flex items-center gap-1 pl-1">
+                        <div className="w-px h-3 bg-border ml-[4px]" />
+                        <ArrowRight className="w-3 h-3 text-muted-foreground/50 ml-1" />
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <div className="flex items-center gap-1 mt-0.5 shrink-0">
+                          <MapPin className="w-3 h-3 text-destructive" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
+                            {listing.arrivalAddress && (
+                              <span className="text-xs text-muted-foreground font-bold">{listing.arrivalAddress}</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 font-bold">
+                            {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3.5 text-right align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="font-bold text-[14px] text-foreground whitespace-nowrap">
-                        {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
+                    <div className="font-bold text-[14px] text-foreground whitespace-nowrap">
+                      {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
+                    </div>
+                    {listing.highwayFee && (
+                      <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
+                        高速代: {listing.highwayFee}
                       </div>
-                      {listing.highwayFee && (
-                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
-                          高速代: {listing.highwayFee}
-                        </div>
-                      )}
-                    </Link>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      {listing.consolidation === "可" ? (
-                        <Badge variant="outline" className="text-[11px] border-primary/30 text-primary px-1.5">可</Badge>
-                      ) : listing.consolidation === "不可" ? (
-                        <span className="text-xs text-muted-foreground font-bold">不可</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground font-bold">-</span>
-                      )}
-                    </Link>
+                    {listing.consolidation === "可" ? (
+                      <Badge variant="outline" className="text-[11px] border-primary/30 text-primary px-1.5">可</Badge>
+                    ) : listing.consolidation === "不可" ? (
+                      <span className="text-xs text-muted-foreground font-bold">不可</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground font-bold">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap text-[13px] font-bold">{listing.weight}</span>
-                    </Link>
+                    <span className="whitespace-nowrap text-[13px] font-bold">{listing.weight}</span>
                   </td>
                   <td className="px-4 py-3.5 text-center align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
-                      {listing.bodyType && (
-                        <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
-                      )}
-                    </Link>
+                    <div className="text-[13px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                    {listing.bodyType && (
+                      <div className="text-[11px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="whitespace-nowrap text-[13px] font-bold">{listing.cargoType}</span>
-                      {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
-                        <div className="mt-0.5">
-                          <Badge variant="outline" className="text-[10px] px-1.5">{listing.temperatureControl}</Badge>
-                        </div>
-                      )}
-                    </Link>
+                    <span className="whitespace-nowrap text-[13px] font-bold">{listing.cargoType}</span>
+                    {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
+                      <div className="mt-0.5">
+                        <Badge variant="outline" className="text-[10px] px-1.5">{listing.temperatureControl}</Badge>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-[13px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
-                    </Link>
+                    <span className="text-[13px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
                   </td>
                   <td className="px-4 py-3.5 align-top">
-                    <Link href={`/cargo/${listing.id}`} className="block">
-                      <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px] font-bold">
-                        {listing.description || "-"}
-                      </span>
-                    </Link>
+                    <span className="text-muted-foreground text-xs leading-relaxed line-clamp-3 max-w-[200px] font-bold">
+                      {listing.description || "-"}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -657,10 +643,182 @@ export default function CargoList() {
   );
 
   if (isAuthenticated) {
-    return <DashboardLayout>{content}</DashboardLayout>;
+    return (
+      <DashboardLayout>
+        <div className="flex h-full">
+          <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedCargoId ? "mr-0" : ""}`}>
+            {content}
+          </div>
+          {selectedCargoId && (
+            <CargoDetailPanel
+              listing={selectedCargo}
+              onClose={() => setSelectedCargoId(null)}
+            />
+          )}
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return content;
+}
+
+function PanelSectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+      <span className="text-primary">{icon}</span>
+      {title}
+    </h3>
+  );
+}
+
+function PanelInfoItem({ label, value, highlight }: { label: string; value: string | null | undefined; highlight?: boolean }) {
+  return (
+    <div>
+      <div className="text-[11px] text-muted-foreground mb-0.5">{label}</div>
+      <div className={`text-sm font-medium ${highlight ? "text-primary" : "text-foreground"}`}>{value || "-"}</div>
+    </div>
+  );
+}
+
+function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  if (!listing) {
+    return (
+      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-cargo-detail">
+      <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between gap-2 z-10">
+        <h2 className="text-sm font-bold text-foreground truncate">{listing.title}</h2>
+        <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="p-4 space-y-5">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-xs text-muted-foreground">
+            掲載日: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString("ja-JP") : "---"}
+          </p>
+          <div className="flex items-center gap-1.5">
+            {listing.transportType && (
+              <Badge variant="outline" className="text-xs">{listing.transportType}</Badge>
+            )}
+            <Badge variant="default">{listing.status === "active" ? "募集中" : "終了"}</Badge>
+          </div>
+        </div>
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<MapPin className="w-4 h-4" />} title="発着情報" />
+        <div className="ml-1">
+          <div className="relative pl-6">
+            <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
+            <div className="relative mb-5">
+              <Circle className="absolute -left-[17px] top-1 w-3 h-3 fill-primary text-primary" />
+              <div className="text-xs text-muted-foreground font-medium mb-0.5">発地</div>
+              <div className="text-base font-semibold text-foreground">{listing.departureArea}</div>
+              {listing.departureAddress && (
+                <div className="text-sm text-muted-foreground">{listing.departureAddress}</div>
+              )}
+              <div className="text-xs text-muted-foreground mt-1">
+                {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+              </div>
+            </div>
+            <div className="relative">
+              <MapPin className="absolute -left-[19px] top-1 w-3.5 h-3.5 text-destructive" />
+              <div className="text-xs text-muted-foreground font-medium mb-0.5">着地</div>
+              <div className="text-base font-semibold text-foreground">{listing.arrivalArea}</div>
+              {listing.arrivalAddress && (
+                <div className="text-sm text-muted-foreground">{listing.arrivalAddress}</div>
+              )}
+              <div className="text-xs text-muted-foreground mt-1">
+                {listing.arrivalDate || "指定なし"} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<Package className="w-4 h-4" />} title="荷物情報" />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <PanelInfoItem label="荷種" value={listing.cargoType} />
+          <PanelInfoItem label="重量" value={listing.weight} />
+          <PanelInfoItem label="個数" value={listing.packageCount} />
+          <PanelInfoItem label="荷姿" value={listing.loadingMethod} />
+          <PanelInfoItem label="温度管理" value={listing.temperatureControl} highlight={listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温"} />
+        </div>
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<Truck className="w-4 h-4" />} title="車両・作業条件" />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <PanelInfoItem label="希望車種" value={listing.vehicleType} />
+          <PanelInfoItem label="車体タイプ" value={listing.bodyType} />
+          <PanelInfoItem label="ドライバー作業" value={listing.driverWork} />
+          <PanelInfoItem label="積合" value={listing.consolidation} />
+        </div>
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<DollarSign className="w-4 h-4" />} title="運賃" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
+            <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
+            <div className="text-lg font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
+          </div>
+          <div className="p-3 rounded-md bg-muted/40">
+            <div className="text-xs text-muted-foreground mb-1">高速代</div>
+            <div className="text-sm font-medium text-foreground">{listing.highwayFee || "-"}</div>
+          </div>
+        </div>
+
+        {listing.description && (
+          <>
+            <div className="border-t border-border" />
+            <PanelSectionHeader icon={<FileText className="w-4 h-4" />} title="備考" />
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 rounded-md bg-muted/30">{listing.description}</p>
+          </>
+        )}
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<Building2 className="w-4 h-4" />} title="連絡先情報" />
+        <div className="space-y-2.5 pl-1">
+          <div className="flex items-center gap-3 text-sm">
+            <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="font-medium text-foreground">{listing.companyName}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-foreground">{listing.contactPhone}</span>
+          </div>
+          {listing.contactEmail && (
+            <div className="flex items-center gap-3 text-sm">
+              <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-foreground">{listing.contactEmail}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
