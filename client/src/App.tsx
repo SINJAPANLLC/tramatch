@@ -109,7 +109,7 @@ function AppLayout() {
 
   if (isDashboardPage) {
     return (
-      <div className="flex flex-col h-dvh overflow-hidden">
+      <div className="fixed inset-0 flex flex-col">
         <Header />
         <div className="flex-1 min-h-0 overflow-hidden">
           <Router />
