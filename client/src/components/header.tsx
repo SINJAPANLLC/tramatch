@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2 } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -156,6 +156,81 @@ function NotificationDropdown() {
   );
 }
 
+function ProfileDropdown() {
+  const [open, setOpen] = useState(false);
+  const { user, isAdmin, logout } = useAuth();
+  const [, navigate] = useLocation();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 hover-elevate cursor-pointer"
+          data-testid="button-profile"
+        >
+          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <span className="hidden sm:inline text-foreground text-xs font-medium" data-testid="text-header-username">
+            {user?.contactName || user?.companyName}
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-0" data-testid="dropdown-profile">
+        <div className="p-3 border-b border-border">
+          <p className="text-sm font-semibold text-foreground" data-testid="text-profile-name">{user?.contactName || user?.companyName}</p>
+          <p className="text-xs text-muted-foreground mt-0.5" data-testid="text-profile-email">{user?.email}</p>
+          {isAdmin && (
+            <Badge variant="outline" className="mt-1.5 text-[10px]">管理者</Badge>
+          )}
+        </div>
+        <div className="p-1.5">
+          <div className="space-y-0.5">
+            <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <Building2 className="w-3.5 h-3.5" />
+              <span data-testid="text-profile-company">{user?.companyName}</span>
+            </div>
+            {user?.phone && (
+              <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                <Phone className="w-3.5 h-3.5" />
+                <span data-testid="text-profile-phone">{user?.phone}</span>
+              </div>
+            )}
+            {user?.address && (
+              <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                <MapPin className="w-3.5 h-3.5" />
+                <span data-testid="text-profile-address">{user?.address}</span>
+              </div>
+            )}
+          </div>
+          <div className="border-t border-border mt-1.5 pt-1.5 space-y-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-xs"
+              onClick={() => { setOpen(false); navigate("/settings"); }}
+              data-testid="button-profile-settings"
+            >
+              <Settings className="w-3.5 h-3.5 mr-2" />
+              プロフィール設定
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-xs text-destructive"
+              onClick={() => { setOpen(false); logout.mutate(); }}
+              data-testid="button-profile-logout"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-2" />
+              ログアウト
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function Header() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -203,24 +278,9 @@ export default function Header() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <NotificationDropdown />
-              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <span className="text-foreground text-xs font-medium" data-testid="text-header-username">{user?.contactName || user?.companyName}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => logout.mutate()}
-                data-testid="button-logout"
-                className="text-xs"
-              >
-                <LogOut className="w-3.5 h-3.5 mr-1" />
-                ログアウト
-              </Button>
+              <ProfileDropdown />
             </div>
           </div>
         </div>

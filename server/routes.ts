@@ -3,6 +3,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema } from "@shared/schema";
+import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
 import multer from "multer";
@@ -163,6 +164,64 @@ export async function registerRoutes(
     }
     const { password, ...safeUser } = user;
     res.json(safeUser);
+  });
+
+  const profileUpdateSchema = z.object({
+    companyName: z.string().min(1).max(200).optional(),
+    address: z.string().max(500).optional(),
+    contactName: z.string().max(100).optional(),
+    phone: z.string().max(20).optional(),
+    fax: z.string().max(20).optional(),
+    email: z.string().email().max(200).optional(),
+  });
+
+  app.patch("/api/user/profile", requireAuth, async (req, res) => {
+    try {
+      const parsed = profileUpdateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: fromError(parsed.error).toString() });
+      }
+      const data = parsed.data;
+      if (data.email) {
+        const existing = await storage.getUserByEmail(data.email);
+        if (existing && existing.id !== req.session.userId) {
+          return res.status(400).json({ message: "このメールアドレスは既に使用されています" });
+        }
+      }
+      const user = await storage.updateUserProfile(req.session.userId as string, data);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "プロフィールの更新に失敗しました" });
+    }
+  });
+
+  app.patch("/api/user/password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "現在のパスワードと新しいパスワードを入力してください" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "新しいパスワードは6文字以上にしてください" });
+      }
+      const user = await storage.getUser(req.session.userId as string);
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) {
+        return res.status(400).json({ message: "現在のパスワードが正しくありません" });
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(user.id, hashedPassword);
+      res.json({ message: "パスワードを変更しました" });
+    } catch (error) {
+      res.status(500).json({ message: "パスワードの変更に失敗しました" });
+    }
   });
 
   app.get("/api/cargo", async (_req, res) => {

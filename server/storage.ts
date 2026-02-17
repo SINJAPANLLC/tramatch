@@ -26,6 +26,9 @@ export interface IStorage {
   getTruckListing(id: string): Promise<TruckListing | undefined>;
   createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing>;
 
+  updateUserProfile(id: string, data: Partial<Pick<User, "companyName" | "address" | "contactName" | "phone" | "fax" | "email">>): Promise<User | undefined>;
+  updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
+
   deleteCargoListing(id: string): Promise<boolean>;
   deleteTruckListing(id: string): Promise<boolean>;
 
@@ -70,6 +73,26 @@ export class DatabaseStorage implements IStorage {
 
   async approveUser(id: string): Promise<User | undefined> {
     const [user] = await db.update(users).set({ approved: true }).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async updateUserProfile(id: string, data: Partial<Pick<User, "companyName" | "address" | "contactName" | "phone" | "fax" | "email">>): Promise<User | undefined> {
+    const updateData: Record<string, string | null> = {};
+    if (data.companyName !== undefined) updateData.companyName = data.companyName;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.contactName !== undefined) updateData.contactName = data.contactName;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.fax !== undefined) updateData.fax = data.fax;
+    if (data.email !== undefined) {
+      updateData.email = data.email;
+      updateData.username = data.email;
+    }
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
+    const [user] = await db.update(users).set({ password: hashedPassword }).where(eq(users.id, id)).returning();
     return user;
   }
 
