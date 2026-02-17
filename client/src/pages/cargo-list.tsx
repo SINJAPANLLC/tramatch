@@ -516,8 +516,7 @@ export default function CargoList() {
                       {listing.transportType ? (
                         <Badge variant="outline" className={`text-[11px] px-1.5 ${
                           listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
-                          listing.transportType === "定期" ? "border-green-300 text-green-600" :
-                          listing.transportType === "チャーター" ? "border-orange-300 text-orange-600" : ""
+                          listing.transportType === "定期" ? "border-green-300 text-green-600" : ""
                         }`}>{listing.transportType}</Badge>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
