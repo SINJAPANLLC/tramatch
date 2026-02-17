@@ -323,6 +323,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="企業名">
               <div>
                 <div className="font-bold">{listing.companyName}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{listing.title}</div>
                 <div className="flex items-center gap-3 mt-1">
                   <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">他の荷物をみる &gt;</button>
                   <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">実績をみる &gt;</button>
