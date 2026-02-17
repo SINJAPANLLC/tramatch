@@ -436,7 +436,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="締め日" value={companyInfo?.closingDay} />
             <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
-            <DetailRow label="おまかせ請求受入" value={companyInfo?.autoInvoiceAcceptance || "未設定"} />
+
           </div>
 
           <h4 className="text-sm font-bold text-foreground">信用情報</h4>
