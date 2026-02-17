@@ -336,6 +336,23 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/cargo/:id", requireAuth, async (req, res) => {
+    try {
+      const cargoId = req.params.id as string;
+      const listing = await storage.getCargoListing(cargoId);
+      if (!listing) {
+        return res.status(404).json({ message: "Cargo listing not found" });
+      }
+      if (listing.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const updated = await storage.updateCargoListing(cargoId, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update cargo listing" });
+    }
+  });
+
   app.delete("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
       const deleted = await storage.deleteCargoListing(req.params.id as string);

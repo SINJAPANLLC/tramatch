@@ -34,6 +34,7 @@ export interface IStorage {
   deleteTruckListing(id: string): Promise<boolean>;
   incrementCargoViewCount(id: string): Promise<void>;
   updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined>;
+  updateCargoListing(id: string, data: Partial<CargoListing>): Promise<CargoListing | undefined>;
 
   getNotificationsByUserId(userId: string): Promise<Notification[]>;
   getUnreadNotificationCount(userId: string): Promise<number>;
@@ -157,6 +158,15 @@ export class DatabaseStorage implements IStorage {
   async updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined> {
     const [updated] = await db.update(cargoListings)
       .set({ status })
+      .where(eq(cargoListings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateCargoListing(id: string, data: Partial<CargoListing>): Promise<CargoListing | undefined> {
+    const { id: _id, createdAt: _createdAt, userId: _userId, ...safeData } = data as any;
+    const [updated] = await db.update(cargoListings)
+      .set(safeData)
       .where(eq(cargoListings.id, id))
       .returning();
     return updated;
