@@ -64,8 +64,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isAdmin } = useAuth();
 
   return (
-    <div className="flex h-full">
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30 overflow-y-auto" data-testid="panel-sidebar">
+    <div className="flex h-full overflow-hidden">
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
         <div className="flex-1 overflow-y-auto p-2">
           <SidebarMenu items={userMenuItems} />
           {isAdmin && (
