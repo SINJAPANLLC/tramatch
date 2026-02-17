@@ -51,6 +51,7 @@ export default function CargoDetail() {
   }
 
   return (
+    <div className="h-full overflow-y-auto">
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/cargo">
         <Button variant="ghost" className="mb-4" data-testid="button-back-cargo">
@@ -174,6 +175,7 @@ export default function CargoDetail() {
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }
