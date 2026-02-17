@@ -93,6 +93,7 @@ export default function CargoDetail() {
                   )}
                   <div className="text-xs text-muted-foreground mt-1">
                     {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+                    {listing.loadingTime && <span className="ml-1">(積み時間: {listing.loadingTime})</span>}
                   </div>
                 </div>
 
@@ -105,6 +106,7 @@ export default function CargoDetail() {
                   )}
                   <div className="text-xs text-muted-foreground mt-1">
                     {listing.arrivalDate || "指定なし"} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+                    {listing.unloadingTime && <span className="ml-1">(卸し時間: {listing.unloadingTime})</span>}
                   </div>
                 </div>
               </div>
@@ -129,6 +131,8 @@ export default function CargoDetail() {
               <InfoItem label="車体タイプ" value={listing.bodyType} />
               <InfoItem label="ドライバー作業" value={listing.driverWork} />
               <InfoItem label="積合" value={listing.consolidation} />
+              <InfoItem label="必要装備" value={listing.equipment} />
+              <InfoItem label="車両指定" value={listing.vehicleSpec} />
             </div>
 
             <div className="border-t border-border" />
@@ -138,12 +142,26 @@ export default function CargoDetail() {
               <div className="p-4 rounded-md bg-primary/5 border border-primary/10">
                 <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
                 <div className="text-xl font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
+                {listing.taxType && <div className="text-xs text-muted-foreground mt-1">{listing.taxType}</div>}
               </div>
               <div className="p-4 rounded-md bg-muted/40">
                 <div className="text-xs text-muted-foreground mb-1">高速代</div>
                 <div className="text-sm font-medium text-foreground">{listing.highwayFee || "-"}</div>
+                {listing.paymentDate && (
+                  <div className="text-xs text-muted-foreground mt-2">入金予定日: {listing.paymentDate}</div>
+                )}
               </div>
             </div>
+
+            {(listing.urgency === "至急" || listing.movingJob) && (
+              <>
+                <div className="border-t border-border" />
+                <div className="flex items-center gap-2 flex-wrap">
+                  {listing.urgency === "至急" && <Badge variant="destructive" className="text-xs">至急</Badge>}
+                  {listing.movingJob && <Badge variant="outline" className="text-xs">引っ越し案件</Badge>}
+                </div>
+              </>
+            )}
 
             {listing.description && (
               <>
@@ -160,6 +178,7 @@ export default function CargoDetail() {
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="font-medium text-foreground">{listing.companyName}</span>
+                {listing.contactPerson && <span className="text-muted-foreground">({listing.contactPerson})</span>}
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
