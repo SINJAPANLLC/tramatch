@@ -757,11 +757,19 @@ export default function CargoList() {
         </div>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex justify-end mt-4">
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </div>
-      )}
+      <div className="flex items-center justify-end gap-2 flex-wrap mt-4">
+        <Select value={String(perPage)} onValueChange={(v) => { setPerPage(Number(v)); setPage(1); }}>
+          <SelectTrigger className="w-auto text-xs" data-testid="select-per-page-bottom">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PER_PAGE_OPTIONS.map((n) => (
+              <SelectItem key={n} value={String(n)}>{n}件/ページ</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
     </div>
   );
 
