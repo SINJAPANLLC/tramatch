@@ -796,7 +796,7 @@ export default function CargoList() {
 
 function PanelSectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+    <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
       <span className="text-primary">{icon}</span>
       {title}
     </h3>
@@ -806,13 +806,29 @@ function PanelSectionHeader({ icon, title }: { icon: React.ReactNode; title: str
 function PanelInfoItem({ label, value, highlight }: { label: string; value: string | null | undefined; highlight?: boolean }) {
   return (
     <div>
-      <div className="text-[11px] text-muted-foreground mb-0.5">{label}</div>
-      <div className={`text-sm font-medium ${highlight ? "text-primary" : "text-foreground"}`}>{value || "-"}</div>
+      <div className="text-[11px] text-muted-foreground font-bold mb-0.5">{label}</div>
+      <div className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{value || "-"}</div>
     </div>
   );
 }
 
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
+  const { data: companyInfo } = useQuery<{
+    companyName: string;
+    address: string | null;
+    phone: string;
+    fax: string | null;
+    email: string;
+    contactName: string | null;
+    userType: string;
+    truckCount: string | null;
+    paymentTerms: string | null;
+    businessDescription: string | null;
+  }>({
+    queryKey: ["/api/companies", listing?.userId],
+    enabled: !!listing?.userId,
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -843,12 +859,12 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
 
       <div className="p-4 space-y-5">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground font-bold">
             掲載日: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString("ja-JP") : "---"}
           </p>
           <div className="flex items-center gap-1.5">
             {listing.transportType && (
-              <Badge variant="outline" className="text-xs">{listing.transportType}</Badge>
+              <Badge variant="outline" className={`text-xs ${listing.transportType === "スポット" ? "border-primary/30 text-primary" : listing.transportType === "定期" ? "border-blue-300 text-blue-600" : ""}`}>{listing.transportType}</Badge>
             )}
             <Badge variant="default">{listing.status === "active" ? "募集中" : "終了"}</Badge>
           </div>
@@ -862,23 +878,23 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
             <div className="relative mb-5">
               <Navigation className="absolute -left-[17px] top-1 w-3 h-3 fill-primary text-primary" />
-              <div className="text-xs text-muted-foreground font-medium mb-0.5">発地</div>
-              <div className="text-base font-semibold text-foreground">{listing.departureArea}</div>
+              <div className="text-xs text-muted-foreground font-bold mb-0.5">発地</div>
+              <div className="text-base font-bold text-foreground">{listing.departureArea}</div>
               {listing.departureAddress && (
-                <div className="text-sm text-muted-foreground">{listing.departureAddress}</div>
+                <div className="text-sm text-muted-foreground font-bold">{listing.departureAddress}</div>
               )}
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-muted-foreground font-bold mt-1">
                 {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
               </div>
             </div>
             <div className="relative">
               <MapPin className="absolute -left-[19px] top-1 w-3.5 h-3.5 text-destructive" />
-              <div className="text-xs text-muted-foreground font-medium mb-0.5">着地</div>
-              <div className="text-base font-semibold text-foreground">{listing.arrivalArea}</div>
+              <div className="text-xs text-muted-foreground font-bold mb-0.5">着地</div>
+              <div className="text-base font-bold text-foreground">{listing.arrivalArea}</div>
               {listing.arrivalAddress && (
-                <div className="text-sm text-muted-foreground">{listing.arrivalAddress}</div>
+                <div className="text-sm text-muted-foreground font-bold">{listing.arrivalAddress}</div>
               )}
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-muted-foreground font-bold mt-1">
                 {listing.arrivalDate || "指定なし"} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
               </div>
             </div>
@@ -911,12 +927,12 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
         <PanelSectionHeader icon={<DollarSign className="w-4 h-4" />} title="運賃" />
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-md bg-primary/5 border border-primary/10">
-            <div className="text-xs text-muted-foreground mb-1">希望運賃</div>
+            <div className="text-xs text-muted-foreground font-bold mb-1">希望運賃</div>
             <div className="text-lg font-bold text-primary">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</div>
           </div>
           <div className="p-3 rounded-md bg-muted/40">
-            <div className="text-xs text-muted-foreground mb-1">高速代</div>
-            <div className="text-sm font-medium text-foreground">{listing.highwayFee || "-"}</div>
+            <div className="text-xs text-muted-foreground font-bold mb-1">高速代</div>
+            <div className="text-sm font-bold text-foreground">{listing.highwayFee || "-"}</div>
           </div>
         </div>
 
@@ -924,26 +940,69 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           <>
             <div className="border-t border-border" />
             <PanelSectionHeader icon={<FileText className="w-4 h-4" />} title="備考" />
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 rounded-md bg-muted/30">{listing.description}</p>
+            <p className="text-sm text-muted-foreground font-bold leading-relaxed whitespace-pre-wrap p-3 rounded-md bg-muted/30">{listing.description}</p>
           </>
         )}
 
         <div className="border-t border-border" />
 
-        <PanelSectionHeader icon={<Building2 className="w-4 h-4" />} title="連絡先情報" />
+        <PanelSectionHeader icon={<Building2 className="w-4 h-4" />} title="掲載企業情報" />
         <div className="space-y-2.5 pl-1">
           <div className="flex items-center gap-3 text-sm">
             <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="font-medium text-foreground">{listing.companyName}</span>
+            <span className="font-bold text-foreground">{companyInfo?.companyName || listing.companyName}</span>
           </div>
+          {companyInfo?.contactName && (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-4 h-4 shrink-0" />
+              <span className="font-bold text-muted-foreground">担当: {companyInfo.contactName}</span>
+            </div>
+          )}
+          {companyInfo?.address && (
+            <div className="flex items-center gap-3 text-sm">
+              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="font-bold text-foreground">{companyInfo.address}</span>
+            </div>
+          )}
           <div className="flex items-center gap-3 text-sm">
             <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="text-foreground">{listing.contactPhone}</span>
+            <span className="font-bold text-foreground">{listing.contactPhone}</span>
           </div>
+          {companyInfo?.fax && (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-4 h-4 shrink-0" />
+              <span className="font-bold text-muted-foreground">FAX: {companyInfo.fax}</span>
+            </div>
+          )}
           {listing.contactEmail && (
             <div className="flex items-center gap-3 text-sm">
               <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="text-foreground">{listing.contactEmail}</span>
+              <span className="font-bold text-foreground">{listing.contactEmail}</span>
+            </div>
+          )}
+          {companyInfo?.userType && (
+            <div className="flex items-center gap-3 text-sm">
+              <Truck className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="font-bold text-foreground">{companyInfo.userType}</span>
+              {companyInfo?.truckCount && (
+                <span className="font-bold text-muted-foreground">（保有台数: {companyInfo.truckCount}）</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border" />
+
+        <PanelSectionHeader icon={<DollarSign className="w-4 h-4" />} title="支払い条件" />
+        <div className="grid grid-cols-1 gap-3">
+          <div className="p-3 rounded-md bg-muted/30">
+            <div className="text-[11px] text-muted-foreground font-bold mb-0.5">支払いサイト</div>
+            <div className="text-sm font-bold text-foreground">{companyInfo?.paymentTerms || "未設定"}</div>
+          </div>
+          {companyInfo?.businessDescription && (
+            <div className="p-3 rounded-md bg-muted/30">
+              <div className="text-[11px] text-muted-foreground font-bold mb-0.5">事業内容</div>
+              <div className="text-sm font-bold text-foreground">{companyInfo.businessDescription}</div>
             </div>
           )}
         </div>

@@ -166,6 +166,29 @@ export async function registerRoutes(
     res.json(safeUser);
   });
 
+  app.get("/api/companies/:userId", async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.userId);
+      if (!user) {
+        return res.status(404).json({ message: "企業情報が見つかりません" });
+      }
+      res.json({
+        companyName: user.companyName,
+        address: user.address,
+        phone: user.phone,
+        fax: user.fax,
+        email: user.email,
+        contactName: user.contactName,
+        userType: user.userType,
+        truckCount: user.truckCount,
+        paymentTerms: user.paymentTerms,
+        businessDescription: user.businessDescription,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "企業情報の取得に失敗しました" });
+    }
+  });
+
   const profileUpdateSchema = z.object({
     companyName: z.string().min(1).max(200).optional(),
     address: z.string().max(500).optional(),
@@ -173,6 +196,8 @@ export async function registerRoutes(
     phone: z.string().max(20).optional(),
     fax: z.string().max(20).optional(),
     email: z.string().email().max(200).optional(),
+    paymentTerms: z.string().max(200).optional(),
+    businessDescription: z.string().max(500).optional(),
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
