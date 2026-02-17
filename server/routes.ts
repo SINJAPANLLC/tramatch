@@ -328,6 +328,7 @@ export async function registerRoutes(
       if (!listing) {
         return res.status(404).json({ message: "Truck listing not found" });
       }
+      await storage.incrementTruckViewCount(req.params.id);
       res.json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch truck listing" });
@@ -358,6 +359,27 @@ export async function registerRoutes(
       res.status(201).json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to create truck listing" });
+    }
+  });
+
+  app.patch("/api/trucks/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status || !["active", "completed", "cancelled"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const truckId = req.params.id as string;
+      const listing = await storage.getTruckListing(truckId);
+      if (!listing) {
+        return res.status(404).json({ message: "Truck listing not found" });
+      }
+      if (listing.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const updated = await storage.updateTruckStatus(truckId, status);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update truck status" });
     }
   });
 
