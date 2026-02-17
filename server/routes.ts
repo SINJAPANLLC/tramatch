@@ -172,17 +172,27 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ message: "企業情報が見つかりません" });
       }
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+
+      const allCargo = await storage.getCargoListings();
+      const allTrucks = await storage.getTruckListings();
+      const userCargo = allCargo.filter(c => c.userId === req.params.userId);
+      const userTrucks = allTrucks.filter(t => t.userId === req.params.userId);
+
+      const cargo1m = userCargo.filter(c => new Date(c.createdAt) >= oneMonthAgo).length;
+      const cargo3m = userCargo.filter(c => new Date(c.createdAt) >= threeMonthsAgo).length;
+      const truck1m = userTrucks.filter(t => new Date(t.createdAt) >= oneMonthAgo).length;
+      const truck3m = userTrucks.filter(t => new Date(t.createdAt) >= threeMonthsAgo).length;
+
+      const { password, id, role, approved, permitFile, username, ...companyData } = user;
       res.json({
-        companyName: user.companyName,
-        address: user.address,
-        phone: user.phone,
-        fax: user.fax,
-        email: user.email,
-        contactName: user.contactName,
-        userType: user.userType,
-        truckCount: user.truckCount,
-        paymentTerms: user.paymentTerms,
-        businessDescription: user.businessDescription,
+        ...companyData,
+        cargoCount1m: cargo1m,
+        cargoCount3m: cargo3m,
+        truckCount1m: truck1m,
+        truckCount3m: truck3m,
       });
     } catch (error) {
       res.status(500).json({ message: "企業情報の取得に失敗しました" });
