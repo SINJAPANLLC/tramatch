@@ -14,7 +14,6 @@ import TruckList from "@/pages/truck-list";
 import CargoDetail from "@/pages/cargo-detail";
 import TruckDetail from "@/pages/truck-detail";
 import CargoForm from "@/pages/cargo-form";
-import TruckForm from "@/pages/truck-form";
 import MyCargo from "@/pages/my-cargo";
 import CompletedCargo from "@/pages/completed-cargo";
 import CancelledCargo from "@/pages/cancelled-cargo";
@@ -85,7 +84,6 @@ function Router() {
       <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id" component={CargoDetail} />
       <Route path="/cargo" component={CargoList} />
-      <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/:id" component={TruckDetail} />
       <Route path="/trucks" component={TruckList} />
       <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
