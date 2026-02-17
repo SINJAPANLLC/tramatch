@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck } from "lucide-react";
+import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck, Pencil } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -693,7 +693,17 @@ export default function MyCargo() {
                             <div className="text-[10px] text-muted-foreground font-bold mt-0.5">{timeLabel}</div>
                           </td>
                           <td className="px-2 py-3 align-top" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Link href={`/cargo/edit/${listing.id}`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-[10px] h-6 px-2"
+                                  data-testid={`button-edit-${listing.id}`}
+                                >
+                                  <Pencil className="w-3 h-3 mr-0.5" />編集
+                                </Button>
+                              </Link>
                               <Button
                                 size="sm"
                                 variant="ghost"

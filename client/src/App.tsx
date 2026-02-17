@@ -82,6 +82,7 @@ function Router() {
       <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
       <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
       <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
+      <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id" component={CargoDetail} />
       <Route path="/cargo" component={CargoList} />
       <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>

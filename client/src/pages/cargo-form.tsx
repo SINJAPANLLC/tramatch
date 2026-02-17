@@ -143,13 +143,25 @@ type ChatMessage = {
 };
 
 export default function CargoForm() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const editMatch = location.match(/^\/cargo\/edit\/(.+)$/);
+  const editId = editMatch ? editMatch[1] : null;
+  const isEditMode = !!editId;
+
+  const { data: editCargo, isLoading: isLoadingEdit } = useQuery<import("@shared/schema").CargoListing>({
+    queryKey: ["/api/cargo", editId],
+    enabled: isEditMode,
+  });
+
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "荷物登録のお手伝いをします！\n\n荷物の情報をテキストで貼り付けるか、ファイルをアップロードしてください。運賃の相談もできます。\n\n例：「3月5日に横浜から大阪まで食品10トンを冷凍車で運びたい」",
+      content: isEditMode
+        ? "荷物情報を編集できます。フォームの内容を変更して「更新する」ボタンを押してください。"
+        : "荷物登録のお手伝いをします！\n\n荷物の情報をテキストで貼り付けるか、ファイルをアップロードしてください。運賃の相談もできます。\n\n例：「3月5日に横浜から大阪まで食品10トンを冷凍車で運びたい」",
       status: "chatting",
     },
   ]);
@@ -165,6 +177,7 @@ export default function CargoForm() {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [extractedFields, setExtractedFields] = useState<Record<string, string>>({});
+  const [editLoaded, setEditLoaded] = useState(false);
 
   const form = useForm<InsertCargoListing>({
     resolver: zodResolver(insertCargoListingSchema),
@@ -187,6 +200,24 @@ export default function CargoForm() {
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages, scrollToBottom]);
+
+  useEffect(() => {
+    if (isEditMode && editCargo && !editLoaded) {
+      const fields: Record<string, string> = {};
+      for (const key of CARGO_FIELDS) {
+        const val = (editCargo as any)[key];
+        if (val != null && val !== "") {
+          fields[key] = String(val);
+          form.setValue(key as keyof InsertCargoListing, String(val));
+        }
+      }
+      if (editCargo.companyName) form.setValue("companyName", editCargo.companyName);
+      if (editCargo.contactPhone) form.setValue("contactPhone", editCargo.contactPhone);
+      if (editCargo.contactEmail) form.setValue("contactEmail", editCargo.contactEmail || "");
+      setExtractedFields(fields);
+      setEditLoaded(true);
+    }
+  }, [isEditMode, editCargo, editLoaded, form]);
 
   const applyFieldsToForm = useCallback((fields: Record<string, string>) => {
     let count = 0;
@@ -249,12 +280,19 @@ export default function CargoForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertCargoListing) => {
+      if (isEditMode && editId) {
+        const res = await apiRequest("PATCH", `/api/cargo/${editId}`, data);
+        return res.json();
+      }
       const res = await apiRequest("POST", "/api/cargo", data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      if (pendingItems.length > 0) {
+      if (isEditMode) {
+        toast({ title: "荷物情報を更新しました" });
+        setLocation("/my-cargo");
+      } else if (pendingItems.length > 0) {
         toast({ title: "荷物情報を掲載しました", description: "次の荷物を読み込みます..." });
         loadNextPendingItem();
       } else {
@@ -458,7 +496,7 @@ export default function CargoForm() {
         <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
           <Package className="w-5 h-5 text-primary-foreground" />
           <div>
-            <h1 className="text-lg font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">AI荷物登録</h1>
+            <h1 className="text-lg font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">{isEditMode ? "荷物情報の編集" : "AI荷物登録"}</h1>
             <p className="text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
           </div>
         </div>
@@ -1033,7 +1071,7 @@ export default function CargoForm() {
                         </Button>
                       )}
                       <Button type="submit" className="flex-1 text-sm font-bold" disabled={mutation.isPending} data-testid="button-submit-cargo">
-                        {mutation.isPending ? "掲載中..." : totalItems > 1 ? `掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
+                        {mutation.isPending ? (isEditMode ? "更新中..." : "掲載中...") : isEditMode ? "荷物情報を更新する" : totalItems > 1 ? `掲載する（${currentItemIndex + 1}/${totalItems}）` : "荷物情報を掲載する"}
                       </Button>
                     </div>
                   </form>
