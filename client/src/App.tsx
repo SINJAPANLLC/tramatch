@@ -18,9 +18,6 @@ import TruckForm from "@/pages/truck-form";
 import MyCargo from "@/pages/my-cargo";
 import CompletedCargo from "@/pages/completed-cargo";
 import CancelledCargo from "@/pages/cancelled-cargo";
-import MyTrucks from "@/pages/my-trucks";
-import CompletedTrucks from "@/pages/completed-trucks";
-import CancelledTrucks from "@/pages/cancelled-trucks";
 import Companies from "@/pages/companies";
 import Partners from "@/pages/partners";
 import TransportLedger from "@/pages/transport-ledger";
@@ -62,9 +59,7 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
 
 const DASHBOARD_PATHS = [
   "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
-  "/my-cargo", "/completed-cargo", "/cancelled-cargo",
-  "/my-trucks", "/completed-trucks", "/cancelled-trucks",
-  "/companies", "/partners",
+  "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
   "/admin/notifications", "/admin/announcements", "/admin/seo", "/admin/settings",
@@ -80,9 +75,6 @@ function Router() {
       <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
       <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
       <Route path="/cancelled-cargo">{() => <ProtectedRoute component={CancelledCargo} />}</Route>
-      <Route path="/my-trucks">{() => <ProtectedRoute component={MyTrucks} />}</Route>
-      <Route path="/completed-trucks">{() => <ProtectedRoute component={CompletedTrucks} />}</Route>
-      <Route path="/cancelled-trucks">{() => <ProtectedRoute component={CancelledTrucks} />}</Route>
       <Route path="/companies">{() => <ProtectedRoute component={Companies} />}</Route>
       <Route path="/partners">{() => <ProtectedRoute component={Partners} />}</Route>
       <Route path="/transport-ledger">{() => <ProtectedRoute component={TransportLedger} />}</Route>

@@ -19,7 +19,7 @@ export default function CargoDetail() {
 
   if (isLoading) {
     return (
-      <div className="px-4 sm:px-6 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <Skeleton className="h-8 w-32 mb-6" />
         <Card>
           <CardContent className="p-6 space-y-4">
@@ -36,7 +36,7 @@ export default function CargoDetail() {
 
   if (error || !listing) {
     return (
-      <div className="px-4 sm:px-6 py-8 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 text-center">
         <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
         <h2 className="text-xl font-semibold text-foreground mb-2">荷物情報が見つかりません</h2>
         <p className="text-sm text-muted-foreground mb-6">指定された荷物情報は存在しないか、削除されました。</p>
@@ -52,7 +52,7 @@ export default function CargoDetail() {
 
   return (
     <div className="h-full overflow-y-auto">
-    <div className="px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/cargo">
         <Button variant="ghost" className="mb-4" data-testid="button-back-cargo">
           <ArrowLeft className="w-4 h-4 mr-1.5" />

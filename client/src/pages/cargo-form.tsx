@@ -354,7 +354,7 @@ export default function CargoForm() {
 
   return (
     <DashboardLayout>
-    <div className="px-4 sm:px-6 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <Link href="/cargo">
         <Button variant="ghost" className="mb-4" data-testid="button-back-cargo-form">
           <ArrowLeft className="w-4 h-4 mr-1.5" />
