@@ -18,6 +18,7 @@ const STATUS_FILTERS = [
   { label: "全て", value: "all" },
   { label: "掲載中", value: "active" },
   { label: "成約済み", value: "completed" },
+  { label: "不成約", value: "cancelled" },
 ];
 
 const PER_PAGE_OPTIONS = [10, 20, 50];
