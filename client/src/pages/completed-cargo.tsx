@@ -26,7 +26,7 @@ function CompletedCard({ item, onReactivate, isReactivating, isSelected, onSelec
                 {item.title}
               </span>
               {item.transportType && (
-                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-primary/30 text-primary" : "border-blue-300 text-blue-600"}`}>
+                <Badge variant="outline" className={`text-xs ${item.transportType === "スポット" ? "border-blue-300 text-blue-600" : "border-primary/30 text-primary"}`}>
                   {item.transportType}
                 </Badge>
               )}

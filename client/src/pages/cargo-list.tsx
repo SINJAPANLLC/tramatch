@@ -644,8 +644,8 @@ export default function CargoList() {
                   <td className="px-4 py-3.5 text-center align-top">
                     {listing.transportType ? (
                       <Badge variant="outline" className={`text-[11px] px-1.5 ${
-                        listing.transportType === "スポット" ? "border-primary/30 text-primary" :
-                        listing.transportType === "定期" ? "border-blue-300 text-blue-600" : ""
+                        listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
+                        listing.transportType === "定期" ? "border-primary/30 text-primary" : ""
                       }`}>{listing.transportType}</Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground font-bold">-</span>
@@ -680,7 +680,7 @@ export default function CargoList() {
 
                       <div className="flex items-start gap-2">
                         <div className="flex items-center gap-1 mt-0.5 shrink-0">
-                          <MapPin className="w-3 h-3 text-destructive" />
+                          <MapPin className="w-3 h-3 text-blue-600" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -864,7 +864,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
           </p>
           <div className="flex items-center gap-1.5">
             {listing.transportType && (
-              <Badge variant="outline" className={`text-xs ${listing.transportType === "スポット" ? "border-primary/30 text-primary" : listing.transportType === "定期" ? "border-blue-300 text-blue-600" : ""}`}>{listing.transportType}</Badge>
+              <Badge variant="outline" className={`text-xs ${listing.transportType === "スポット" ? "border-blue-300 text-blue-600" : listing.transportType === "定期" ? "border-primary/30 text-primary" : ""}`}>{listing.transportType}</Badge>
             )}
             <Badge variant="default">{listing.status === "active" ? "募集中" : "終了"}</Badge>
           </div>
@@ -888,7 +888,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
               </div>
             </div>
             <div className="relative">
-              <MapPin className="absolute -left-[19px] top-1 w-3.5 h-3.5 text-destructive" />
+              <MapPin className="absolute -left-[19px] top-1 w-3.5 h-3.5 text-blue-600" />
               <div className="text-xs text-muted-foreground font-bold mb-0.5">着地</div>
               <div className="text-base font-bold text-foreground">{listing.arrivalArea}</div>
               {listing.arrivalAddress && (
