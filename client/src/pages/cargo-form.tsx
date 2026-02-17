@@ -78,6 +78,45 @@ function findBestMatch(value: string, options: string[]): string {
   return "";
 }
 
+const CARGO_FIELDS = [
+  "title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress",
+  "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
+  "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
+  "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
+  "highwayFee", "description",
+];
+
+const MULTI_SELECT_FIELDS = ["vehicleType", "bodyType"];
+
+function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const key of CARGO_FIELDS) {
+    const val = raw[key];
+    if (val == null) { result[key] = ""; continue; }
+    const str = String(val).trim();
+    if (!str) { result[key] = ""; continue; }
+
+    if (MULTI_SELECT_FIELDS.includes(key)) {
+      const options = SELECT_FIELD_OPTIONS[key];
+      if (options) {
+        const parts = str.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+        const matched = parts.map(p => findBestMatch(p, options)).filter(Boolean);
+        result[key] = matched.join(", ");
+      } else {
+        result[key] = str;
+      }
+    } else {
+      const options = SELECT_FIELD_OPTIONS[key];
+      if (options) {
+        result[key] = findBestMatch(str, options);
+      } else {
+        result[key] = str;
+      }
+    }
+  }
+  return result;
+}
+
 export default function CargoForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -135,30 +174,14 @@ export default function CargoForm() {
     },
   });
 
-  const applyAiFields = useCallback((fields: Record<string, string>) => {
-    const formFields = [
-      "title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress",
-      "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
-      "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
-      "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
-      "highwayFee", "description",
-    ];
-
+  const applyAiFields = useCallback((rawFields: Record<string, unknown>) => {
+    const normalized = normalizeAiItem(rawFields);
     let filledCount = 0;
-    for (const key of formFields) {
-      const val = fields[key];
-      if (val && typeof val === "string" && val.trim()) {
-        const options = SELECT_FIELD_OPTIONS[key];
-        if (options) {
-          const matched = findBestMatch(val.trim(), options);
-          if (matched) {
-            form.setValue(key as keyof InsertCargoListing, matched);
-            filledCount++;
-          }
-        } else {
-          form.setValue(key as keyof InsertCargoListing, val.trim());
-          filledCount++;
-        }
+    for (const key of CARGO_FIELDS) {
+      const val = normalized[key];
+      if (val) {
+        form.setValue(key as keyof InsertCargoListing, val);
+        filledCount++;
       }
     }
     return filledCount;
@@ -177,8 +200,43 @@ export default function CargoForm() {
       if (!response.ok) throw new Error("解析に失敗しました");
 
       const data = await response.json();
-      if (data.fields) {
-        const count = applyAiFields(data.fields);
+      const items = data.items || (data.fields ? [data.fields] : []);
+
+      if (items.length === 0) {
+        toast({ title: "エラー", description: "荷物情報を検出できませんでした", variant: "destructive" });
+        return;
+      }
+
+      const count = applyAiFields(items[0]);
+
+      if (items.length > 1) {
+        let autoRegistered = 0;
+        let failedCount = 0;
+        for (let i = 1; i < items.length; i++) {
+          try {
+            const normalized = normalizeAiItem(items[i]);
+            const cargoData = {
+              ...normalized,
+              companyName: "",
+              contactPhone: "",
+              contactEmail: "",
+            };
+            await apiRequest("POST", "/api/cargo", cargoData);
+            autoRegistered++;
+          } catch (e) {
+            console.error("Auto-register failed for item", i, e);
+            failedCount++;
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+        const desc = failedCount > 0
+          ? `1件目をフォームに反映（${count}項目）。${autoRegistered}件を自動掲載、${failedCount}件は登録に失敗しました。`
+          : `1件目をフォームに反映しました（${count}項目）。残り${autoRegistered}件は自動掲載しました。内容を確認してください。`;
+        toast({
+          title: `${items.length}件の荷物を検出`,
+          description: desc,
+        });
+      } else {
         toast({
           title: "AI入力完了",
           description: `${count}項目を自動入力しました。内容を確認して必要に応じて修正してください。`,
