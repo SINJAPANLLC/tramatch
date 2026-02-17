@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import type { User as UserType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +85,7 @@ const CARGO_FIELDS = [
   "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
   "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
   "highwayFee", "equipment", "vehicleSpec",
-  "urgency", "movingJob", "contactPerson", "paymentDate",
+  "urgency", "movingJob", "contactPerson",
   "description",
 ];
 
@@ -99,7 +100,7 @@ const FIELD_LABELS: Record<string, string> = {
   consolidation: "積合", driverWork: "作業", packageCount: "個数",
   loadingMethod: "荷姿", highwayFee: "高速代",
   equipment: "必要装備", vehicleSpec: "車両指定",
-  urgency: "緊急度", movingJob: "引越し", contactPerson: "担当者", paymentDate: "入金予定日",
+  urgency: "緊急度", movingJob: "引越し", contactPerson: "担当者",
   description: "備考",
 };
 
@@ -159,7 +160,7 @@ export default function CargoForm() {
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [showForm, setShowForm] = useState(false);
+  const { data: currentUser } = useQuery<UserType>({ queryKey: ["/api/user"] });
   const [pendingItems, setPendingItems] = useState<Record<string, unknown>[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
@@ -175,7 +176,7 @@ export default function CargoForm() {
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
       loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-      urgency: "", movingJob: "", contactPerson: "", paymentDate: "",
+      urgency: "", movingJob: "", contactPerson: "",
     },
   });
 
@@ -229,7 +230,7 @@ export default function CargoForm() {
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
         loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-        urgency: "", movingJob: "", contactPerson: "", paymentDate: "",
+        urgency: "", movingJob: "", contactPerson: "",
       });
       const normalized = normalizeAiItem(nextItem);
       setExtractedFields(normalized);
@@ -308,7 +309,6 @@ export default function CargoForm() {
       if (data.extractedFields && Object.keys(data.extractedFields).length > 0) {
         const merged = mergeExtractedFields(data.extractedFields);
         applyFieldsToForm(merged);
-        if (!showForm) setShowForm(true);
       }
 
       if (data.items && data.items.length > 0) {
@@ -318,7 +318,6 @@ export default function CargoForm() {
           if (hasFields) {
             mergeExtractedFields(singleItem);
             applyFieldsToForm(singleItem);
-            setShowForm(true);
           }
         } else {
           const firstItem = normalizeAiItem(data.items[0]);
@@ -327,7 +326,6 @@ export default function CargoForm() {
           setPendingItems(data.items.slice(1));
           setCurrentItemIndex(0);
           setTotalItems(data.items.length);
-          setShowForm(true);
         }
       }
 
@@ -350,7 +348,7 @@ export default function CargoForm() {
     } finally {
       setIsAiProcessing(false);
     }
-  }, [chatMessages, extractedFields, isAiProcessing, mergeExtractedFields, applyFieldsToForm, showForm]);
+  }, [chatMessages, extractedFields, isAiProcessing, mergeExtractedFields, applyFieldsToForm]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -638,36 +636,21 @@ export default function CargoForm() {
             </div>
           </div>
 
-          <div className={`border-l border-border bg-background overflow-y-auto transition-all duration-300 ${showForm ? "w-[420px]" : "w-[52px]"}`}>
+          <div className="border-l border-border bg-background overflow-y-auto w-[420px]">
             <div
-              className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2 cursor-pointer"
-              onClick={() => setShowForm(!showForm)}
-              data-testid="button-toggle-form"
+              className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2"
+              data-testid="form-panel-header"
             >
-              {showForm ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-bold">登録フォーム</span>
-                    {filledFieldCount > 0 && (
-                      <Badge variant="secondary" className="text-[10px]">{filledFieldCount}項目入力済</Badge>
-                    )}
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground rotate-90" />
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-1 w-full py-2">
-                  <FileText className="w-4 h-4 text-primary" />
-                  <span className="text-[10px] font-bold text-primary writing-vertical" style={{ writingMode: "vertical-rl" }}>登録フォーム</span>
-                  {filledFieldCount > 0 && (
-                    <Badge variant="default" className="text-[9px] px-1 py-0">{filledFieldCount}</Badge>
-                  )}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold">登録フォーム</span>
+                {filledFieldCount > 0 && (
+                  <Badge variant="secondary" className="text-[10px]">{filledFieldCount}項目入力済</Badge>
+                )}
+              </div>
             </div>
 
-            {showForm && (
-              <div className="p-3">
+            <div className="p-3">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
                     <FormField control={form.control} name="title" render={({ field }) => (
@@ -972,13 +955,14 @@ export default function CargoForm() {
                             <FormMessage />
                           </FormItem>
                         )} />
-                        <FormField control={form.control} name="paymentDate" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">入金予定日</FormLabel>
-                            <FormControl><Input placeholder="例: 2026/04/30" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-payment-date" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
+                        <div>
+                          <div className="text-xs font-medium mb-1">支払サイト</div>
+                          <div className="h-8 flex items-center text-xs text-muted-foreground bg-muted/50 rounded-md px-3" data-testid="text-payment-terms">
+                            {currentUser?.paymentTerms || currentUser?.closingDay || currentUser?.paymentMonth
+                              ? [currentUser.closingDay && `締日: ${currentUser.closingDay}`, currentUser.paymentMonth && `支払月: ${currentUser.paymentMonth}`, currentUser.paymentTerms].filter(Boolean).join(" / ")
+                              : "設定画面で支払サイトを登録してください"}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1055,7 +1039,6 @@ export default function CargoForm() {
                   </form>
                 </Form>
               </div>
-            )}
           </div>
         </div>
       </div>
