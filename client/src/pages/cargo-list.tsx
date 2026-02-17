@@ -987,7 +987,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="積合" value={listing.consolidation || "不可"} />
             <DetailRow label="希望車種" value={`重量：${listing.weight || "-"} 車種：${listing.vehicleType}${listing.bodyType ? `-${listing.bodyType}` : ""}`} />
             <DetailRow label="車両指定" value={listing.vehicleSpec || "指定なし"} />
-            <DetailRow label="必要装備" value={listing.equipment || "標準備品"} />
+            <DetailRow label="必要装備" value={listing.equipment || "標準装備"} />
             <DetailRow label="備考" value={listing.description} />
             <DetailRow label="発着日時">
               <div>
