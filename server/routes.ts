@@ -2,7 +2,7 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -283,7 +283,7 @@ export async function registerRoutes(
   app.patch("/api/cargo/:id/status", requireAuth, async (req, res) => {
     try {
       const { status } = req.body;
-      if (!status || !["active", "completed"].includes(status)) {
+      if (!status || !["active", "completed", "cancelled"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
       const cargoId = req.params.id as string;
@@ -616,6 +616,63 @@ JSONのみを返してください。説明文は不要です。`,
       res.json({ message: "通知を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "通知の削除に失敗しました" });
+    }
+  });
+
+  // Announcements API (public: published only, admin: all CRUD)
+  app.get("/api/announcements", async (_req, res) => {
+    try {
+      const all = await storage.getAnnouncements();
+      const published = all.filter(a => a.isPublished);
+      res.json(published);
+    } catch (error) {
+      res.status(500).json({ message: "お知らせの取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/announcements", requireAdmin, async (_req, res) => {
+    try {
+      const all = await storage.getAnnouncements();
+      res.json(all);
+    } catch (error) {
+      res.status(500).json({ message: "お知らせの取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/announcements", requireAdmin, async (req, res) => {
+    try {
+      const parsed = insertAnnouncementSchema.parse(req.body);
+      const created = await storage.createAnnouncement(parsed);
+      res.status(201).json(created);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromError(error).toString() });
+      }
+      res.status(500).json({ message: "お知らせの作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/announcements/:id", requireAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateAnnouncement(req.params.id as string, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "お知らせが見つかりません" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "お知らせの更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/announcements/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteAnnouncement(req.params.id as string);
+      if (!deleted) {
+        return res.status(404).json({ message: "お知らせが見つかりません" });
+      }
+      res.json({ message: "お知らせを削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "お知らせの削除に失敗しました" });
     }
   });
 

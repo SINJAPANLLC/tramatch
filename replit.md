@@ -23,6 +23,7 @@
   - `cargo-form.tsx`, `truck-form.tsx` - Create listing forms (auth required)
   - `my-cargo.tsx` - 登録した荷物 page
   - `completed-cargo.tsx` - 成約した荷物 page
+  - `cancelled-cargo.tsx` - 成約しなかった荷物 page
   - `companies.tsx` - 企業検索 page
   - `partners.tsx` - 取引先管理 page
   - `transport-ledger.tsx` - 実運送体制管理簿 page
@@ -34,6 +35,7 @@
   - `admin-users.tsx` - ユーザー管理 (admin)
   - `admin-revenue.tsx` - 収益管理 (admin)
   - `admin-notifications.tsx` - 通知管理 (admin)
+  - `admin-announcements.tsx` - お知らせ管理 (admin)
   - `admin-seo.tsx` - SEO記事生成 (admin)
   - `admin-settings.tsx` - 管理設定 (admin)
 - `client/src/components/` - Shared components (header, footer, dashboard-layout)
@@ -55,6 +57,7 @@
 - `/trucks/new` - AI空車登録 (requires login)
 - `/my-cargo` - 登録した荷物 (requires login)
 - `/completed-cargo` - 成約した荷物 (requires login)
+- `/cancelled-cargo` - 成約しなかった荷物 (requires login)
 - `/companies` - 企業検索 (requires login)
 - `/partners` - 取引先管理 (requires login)
 - `/transport-ledger` - 実運送体制管理簿 (requires login)
@@ -66,6 +69,7 @@
 - `/admin/users` - ユーザー管理 (requires admin role)
 - `/admin/revenue` - 収益管理 (requires admin role)
 - `/admin/notifications` - 通知管理 (requires admin role)
+- `/admin/announcements` - お知らせ管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
 - `/admin/settings` - 管理設定 (requires admin role)
 - `/guide` - ご利用ガイド (public)
@@ -88,13 +92,13 @@
 - **Header**: Cargo/truck counts, notification bell with turquoise dot (unread indicator), notification dropdown, username, logout button
 - **Footer**: Hidden on all dashboard pages, shown on public pages
 - **DashboardLayout**: Shared component wrapping all authenticated pages with sidebar
-- **Sidebar (User Menu - 12 items)**:
-  - AI荷物検索, AI荷物登録, 登録した荷物, 成約した荷物
+- **Sidebar (User Menu - 13 items)**:
+  - AI荷物検索, AI荷物登録, 登録した荷物, 成約した荷物, 成約しなかった荷物
   - AI空車検索, AI空車登録
   - 企業検索, 取引先管理, 実運送体制管理簿
   - お支払い, 便利サービス, 設定
-- **Sidebar (Admin Menu - 7 items, separated by divider line + label)**:
-  - 管理画面, 申請管理, ユーザー管理, 収益管理, 通知管理, SEO記事生成, 管理設定
+- **Sidebar (Admin Menu - 8 items, separated by divider line + label)**:
+  - 管理画面, 申請管理, ユーザー管理, 収益管理, 通知管理, お知らせ, SEO記事生成, 管理設定
 
 ## API Endpoints
 - `POST /api/register` - Register new user (with permit file upload)
@@ -120,6 +124,11 @@
 - `PATCH /api/notifications/:id/read` - Mark notification as read (auth required)
 - `PATCH /api/notifications/read-all` - Mark all notifications as read (auth required)
 - `DELETE /api/notifications/:id` - Delete notification (auth required)
+- `GET /api/announcements` - Get published announcements (public)
+- `GET /api/admin/announcements` - Get all announcements (admin only)
+- `POST /api/admin/announcements` - Create announcement (admin only)
+- `PATCH /api/admin/announcements/:id` - Update announcement (admin only)
+- `DELETE /api/admin/announcements/:id` - Delete announcement (admin only)
 
 ## Notification System
 - Notifications table: id, userId, type, title, message, relatedId, isRead, createdAt
