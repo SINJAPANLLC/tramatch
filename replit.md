@@ -85,7 +85,7 @@
 
 ## UI Layout (Finalized)
 - **Dashboard**: Fixed header + fixed left sidebar, only main content scrolls
-- **Header**: Cargo/truck counts, notification bell with red dot, username, logout button
+- **Header**: Cargo/truck counts, notification bell with turquoise dot (unread indicator), notification dropdown, username, logout button
 - **Footer**: Hidden on all dashboard pages, shown on public pages
 - **DashboardLayout**: Shared component wrapping all authenticated pages with sidebar
 - **Sidebar (User Menu - 12 items)**:
@@ -113,6 +113,18 @@
 - `GET /api/admin/users` - List users (admin only)
 - `DELETE /api/admin/users/:id` - Delete user (admin only)
 - `PATCH /api/admin/users/:id/approve` - Approve user (admin only)
+- `GET /api/notifications` - Get user notifications (auth required)
+- `GET /api/notifications/unread-count` - Get unread notification count (auth required)
+- `PATCH /api/notifications/:id/read` - Mark notification as read (auth required)
+- `PATCH /api/notifications/read-all` - Mark all notifications as read (auth required)
+- `DELETE /api/notifications/:id` - Delete notification (auth required)
+
+## Notification System
+- Notifications table: id, userId, type, title, message, relatedId, isRead, createdAt
+- Auto-generated on: user registration (to admins), user approval (to user), cargo creation (to all users), truck creation (to all users)
+- Types: cargo_new, truck_new, user_approved, user_registered
+- Header dropdown with turquoise unread dot, mark read, mark all read, delete
+- Auto-refresh: notifications every 30s, unread count every 15s
 
 ## Running
 - `npm run dev` starts Express server (backend + Vite frontend) on port 5000
