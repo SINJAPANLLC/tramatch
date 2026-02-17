@@ -275,16 +275,6 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
           </div>
 
-          {listing.status === "active" && (
-            <Button
-              className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-sm rounded-full no-default-hover-elevate"
-              data-testid="button-proceed-contract"
-              onClick={() => completeCargoMutation.mutate(listing.id)}
-              disabled={completeCargoMutation.isPending}
-            >
-              {completeCargoMutation.isPending ? "処理中..." : "成約へ進む"}
-            </Button>
-          )}
 
           <div className="border border-border rounded-md overflow-hidden">
             <DetailRow label="荷物番号" value={listing.cargoNumber ? String(listing.cargoNumber) : "-"} />

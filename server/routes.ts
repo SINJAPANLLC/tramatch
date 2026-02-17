@@ -347,7 +347,10 @@ export async function registerRoutes(
       if (!listing) {
         return res.status(404).json({ message: "Cargo listing not found" });
       }
-      if (listing.userId !== req.session.userId) {
+      if (status === "completed" && listing.userId === req.session.userId) {
+        return res.status(403).json({ message: "自分の荷物を成約にすることはできません" });
+      }
+      if (status !== "completed" && listing.userId !== req.session.userId) {
         return res.status(403).json({ message: "Not authorized" });
       }
       const updated = await storage.updateCargoStatus(cargoId, status);
