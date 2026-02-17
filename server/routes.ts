@@ -475,15 +475,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "テキストが必要です" });
       }
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
-以下のJSON形式で返してください。情報が不明な場合はそのフィールドを空文字にしてください。
-
-{
+      const cargoFieldSchema = `{
   "title": "タイトル（出発地→到着地 荷種 重量の形式）",
   "departureArea": "都道府県名のみ（例: 神奈川）",
   "departureAddress": "詳細住所（市区町村以下）",
@@ -495,8 +487,8 @@ export async function registerRoutes(
   "arrivalTime": "着時間（同上の選択肢から）",
   "cargoType": "荷種（例: 食品、機械部品、建材）",
   "weight": "重量（例: 5t、500kg）",
-  "vehicleType": "車種（以下から選択: 軽車両, 1t車, 1.5t車, 2t車, 3t車, 4t車, 5t車, 6t車, 7t車, 8t車, 10t車, 11t車, 13t車, 15t車, 増トン車, 大型車, トレーラー, フルトレーラー, その他）",
-  "bodyType": "車体タイプ（以下から選択: 平ボディ, バン, ウイング, 幌ウイング, 冷蔵車, 冷凍車, 冷凍冷蔵車, ダンプ, タンクローリー, 車載車, セルフローダー, セーフティローダー, ユニック, クレーン付き, パワーゲート付き, エアサス, コンテナ車, 海上コンテナ, 低床, 高床, その他）",
+  "vehicleType": "車種（以下から選択、複数可: 軽車両, 1t車, 1.5t車, 2t車, 3t車, 4t車, 5t車, 6t車, 7t車, 8t車, 10t車, 11t車, 13t車, 15t車, 増トン車, 大型車, トレーラー, フルトレーラー, その他）",
+  "bodyType": "車体タイプ（以下から選択、複数可: 平ボディ, バン, ウイング, 幌ウイング, 冷蔵車, 冷凍車, 冷凍冷蔵車, ダンプ, タンクローリー, 車載車, セルフローダー, セーフティローダー, ユニック, クレーン付き, パワーゲート付き, エアサス, コンテナ車, 海上コンテナ, 低床, 高床, その他）",
   "temperatureControl": "温度管理（以下から選択: 指定なし, 常温, 冷蔵（0〜10℃）, 冷凍（-18℃以下）, 定温）",
   "price": "運賃（数字のみ、例: 50000）",
   "transportType": "輸送形態（以下から選択: スポット, 定期）",
@@ -506,8 +498,26 @@ export async function registerRoutes(
   "loadingMethod": "荷姿（以下から選択: バラ積み, パレット積み, 段ボール, フレコン, その他）",
   "highwayFee": "高速代（以下から選択: 込み, 別途, 高速代なし）",
   "description": "備考"
-}
+}`;
 
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
+
+入力に複数の案件（荷物）が含まれている場合は、それぞれ個別のオブジェクトとして配列で返してください。
+1件だけの場合も配列で返してください。
+
+各案件のフォーマット:
+${cargoFieldSchema}
+
+返却形式:
+{ "items": [ {案件1}, {案件2}, ... ] }
+
+情報が不明な場合はそのフィールドを空文字にしてください。
+vehicleTypeとbodyTypeは複数選択の場合カンマ区切りで返してください（例: "4t車, 10t車"）。
 JSONのみを返してください。説明文は不要です。`,
           },
           {
@@ -515,16 +525,20 @@ JSONのみを返してください。説明文は不要です。`,
             content: text,
           },
         ],
-        max_tokens: 800,
+        max_tokens: 2000,
         response_format: { type: "json_object" },
       });
 
       const content = response.choices[0]?.message?.content || "{}";
       try {
         const parsed = JSON.parse(content);
-        res.json({ fields: parsed });
+        if (parsed.items && Array.isArray(parsed.items)) {
+          res.json({ items: parsed.items });
+        } else {
+          res.json({ items: [parsed] });
+        }
       } catch {
-        res.json({ fields: {} });
+        res.json({ items: [{}] });
       }
     } catch (error) {
       console.error("Cargo parse error:", error);
