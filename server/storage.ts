@@ -14,9 +14,11 @@ import {
   type ContactInquiry, type InsertContactInquiry,
   type PlanChangeRequest, type InsertPlanChangeRequest,
   type UserAddRequest, type InsertUserAddRequest,
+  type Invoice, type InsertInvoice,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
-  passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests
+  passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
+  invoices
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -132,6 +134,16 @@ export interface IStorage {
   getUserAddRequests(): Promise<UserAddRequest[]>;
   getUserAddRequestsByRequesterId(requesterId: string): Promise<UserAddRequest[]>;
   updateUserAddRequestStatus(id: string, status: string, adminNote?: string): Promise<UserAddRequest | undefined>;
+
+  createInvoice(data: InsertInvoice): Promise<Invoice>;
+  getInvoices(): Promise<Invoice[]>;
+  getInvoicesByUserId(userId: string): Promise<Invoice[]>;
+  getInvoice(id: string): Promise<Invoice | undefined>;
+  updateInvoiceStatus(id: string, status: string, paidAt?: Date): Promise<Invoice | undefined>;
+  updateInvoiceSentAt(id: string, sentAt: Date): Promise<Invoice | undefined>;
+  updateInvoice(id: string, data: Partial<Invoice>): Promise<Invoice | undefined>;
+  deleteInvoice(id: string): Promise<boolean>;
+  getNextInvoiceNumber(): Promise<string>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -642,6 +654,54 @@ export class DatabaseStorage implements IStorage {
   async updateUserAddRequestStatus(id: string, status: string, adminNote?: string): Promise<UserAddRequest | undefined> {
     const [request] = await db.update(userAddRequests).set({ status, adminNote, reviewedAt: new Date() }).where(eq(userAddRequests.id, id)).returning();
     return request;
+  }
+
+  async createInvoice(data: InsertInvoice): Promise<Invoice> {
+    const [invoice] = await db.insert(invoices).values(data).returning();
+    return invoice;
+  }
+
+  async getInvoices(): Promise<Invoice[]> {
+    return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoicesByUserId(userId: string): Promise<Invoice[]> {
+    return db.select().from(invoices).where(eq(invoices.userId, userId)).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoice(id: string): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice;
+  }
+
+  async updateInvoiceStatus(id: string, status: string, paidAt?: Date): Promise<Invoice | undefined> {
+    const updateData: any = { status };
+    if (paidAt) updateData.paidAt = paidAt;
+    const [invoice] = await db.update(invoices).set(updateData).where(eq(invoices.id, id)).returning();
+    return invoice;
+  }
+
+  async updateInvoiceSentAt(id: string, sentAt: Date): Promise<Invoice | undefined> {
+    const [invoice] = await db.update(invoices).set({ sentAt }).where(eq(invoices.id, id)).returning();
+    return invoice;
+  }
+
+  async updateInvoice(id: string, data: Partial<Invoice>): Promise<Invoice | undefined> {
+    const [invoice] = await db.update(invoices).set(data).where(eq(invoices.id, id)).returning();
+    return invoice;
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    const result = await db.delete(invoices).where(eq(invoices.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getNextInvoiceNumber(): Promise<string> {
+    const now = new Date();
+    const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const [result] = await db.select({ count: sql<number>`count(*)` }).from(invoices).where(sql`invoice_number LIKE ${yearMonth + "%"}`);
+    const seq = (Number(result?.count || 0) + 1).toString().padStart(4, "0");
+    return `INV-${yearMonth}-${seq}`;
   }
 }
 
