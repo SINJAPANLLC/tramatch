@@ -1,0 +1,46 @@
+
+^C
+root@srv1087935:/var/www/tramatch# cat .env
+DATABASE_URL=postgresql://neondb_owner:npg_ZOBp5n6RymGd@ep-wispy-sky-ai3gvzlm-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
+OPENAI_API_KEY=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
+SESSION_SECRET=jWyIs4Bs1ypDPriZESb54PdoaXoI7K55gVAc+dN7QZCoUAQDjKLORebsVYeHd0W+kBPfnX2UCH7SggbDuq6YSw==
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USER=info@tramatch-sinjapan.com
+SMTP_PASS=@Kazuya8008
+SMTP_FROM=info@tramatch-sinjapan.com
+SQUARE_ACCESS_TOKEN=EAAAlyLnjXwy0SxmvZiD8_Rtmvvshz1S2DjyqOPgCCd0XjNPqez5DZI8sD5QeSen
+SQUARE_LOCATION_ID=LD95R63AEZZRH
+SQUARE_ENVIRONMENT=production
+VITE_SQUARE_APP_ID=sq0idp-_B3lrgtH3hmJc4TNy4lZUw
+VITE_SQUARE_LOCATION_ID=LD95R63AEZZRH
+VITE_SQUARE_ENVIRONMENT=production
+NODE_ENV=production
+root@srv1087935:/var/www/tramatch# pm2 delete tramatch
+pm2 start dist/index.cjs --name "tramatch" --env .env
+[PM2] Applying action deleteProcessId on app [tramatch](ids: [ 6 ])
+[PM2] [tramatch](6) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 70.5mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 141.1mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 96.5mb   │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 225.1mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 88.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /var/www/tramatch/dist/index.cjs in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 70.5mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 141.1mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 96.5mb   │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 225.1mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 88.1mb   │
+│ 7  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 
