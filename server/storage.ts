@@ -125,7 +125,12 @@ export class DatabaseStorage implements IStorage {
       "phone", "fax", "email", "paymentTerms", "businessDescription",
       "representative", "establishedDate", "capital", "employeeCount",
       "businessArea", "transportLicenseNumber", "websiteUrl",
-      "invoiceRegistrationNumber", "truckCount", "officeLocations", "majorClients"
+      "invoiceRegistrationNumber", "truckCount", "officeLocations", "majorClients",
+      "annualRevenue", "bankInfo", "closingMonth", "closingDay", "paymentMonth", "paymentDay",
+      "memberOrganization", "digitalTachographCount", "gpsCount",
+      "safetyExcellenceCert", "greenManagementCert", "iso9000", "iso14000", "iso39001",
+      "cargoInsurance", "bankName", "bankBranch", "accountType", "accountNumber",
+      "accountHolderKana", "plan"
     ] as const;
     const updateData: Record<string, string | null> = {};
     for (const field of allowedFields) {

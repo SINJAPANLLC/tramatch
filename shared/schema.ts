@@ -48,6 +48,13 @@ export const users = pgTable("users", {
   iso39001: text("iso39001"),
   cargoInsurance: text("cargo_insurance"),
   plan: text("plan").notNull().default("premium"),
+  closingMonth: text("closing_month"),
+  paymentDay: text("payment_day"),
+  bankName: text("bank_name"),
+  bankBranch: text("bank_branch"),
+  accountType: text("account_type"),
+  accountNumber: text("account_number"),
+  accountHolderKana: text("account_holder_kana"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
