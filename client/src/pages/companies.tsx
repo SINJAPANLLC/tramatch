@@ -2,7 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Building, Search, MapPin, Phone, User, Truck, Globe, FileText, ChevronDown, ChevronUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -40,7 +39,6 @@ function CompanyCardSkeleton() {
 export default function Companies() {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "carrier" | "shipper">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,23 +53,14 @@ export default function Companies() {
     enabled: searchQuery.length > 0,
   });
 
-  const filtered = companies?.filter((c) => {
-    if (filterType === "all") return true;
-    return c.userType === filterType;
-  }) ?? [];
-
-  const userTypeBadge = (type: string) => {
-    if (type === "carrier") return <Badge variant="default" className="text-xs shrink-0">運送会社</Badge>;
-    if (type === "shipper") return <Badge variant="secondary" className="text-xs shrink-0">荷主</Badge>;
-    return <Badge variant="outline" className="text-xs shrink-0">{type}</Badge>;
-  };
+  const filtered = companies ?? [];
 
   return (
     <DashboardLayout>
       <div className="px-4 sm:px-6 py-6">
         <div className="mb-6">
           <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">企業検索</h1>
-          <p className="text-sm text-muted-foreground mt-1">運送会社・荷主企業を検索</p>
+          <p className="text-sm text-muted-foreground mt-1">登録企業を検索</p>
         </div>
 
         <Card className="mb-6">
@@ -93,39 +82,11 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <Button
-            variant={filterType === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("all")}
-            data-testid="button-filter-all"
-          >
-            全て
-          </Button>
-          <Button
-            variant={filterType === "carrier" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("carrier")}
-            data-testid="button-filter-carrier"
-          >
-            <Truck className="w-4 h-4 mr-1.5" />
-            運送会社
-          </Button>
-          <Button
-            variant={filterType === "shipper" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("shipper")}
-            data-testid="button-filter-shipper"
-          >
-            <Building className="w-4 h-4 mr-1.5" />
-            荷主
-          </Button>
-          {companies && searchQuery && (
-            <span className="text-sm text-muted-foreground ml-2">
-              {filtered.length}件の結果
-            </span>
-          )}
-        </div>
+        {companies && searchQuery && (
+          <div className="mb-4">
+            <span className="text-sm text-muted-foreground">{filtered.length}件の結果</span>
+          </div>
+        )}
 
         {isLoading && (
           <div className="space-y-3">
@@ -170,7 +131,6 @@ export default function Companies() {
                     <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-medium text-foreground">{company.companyName}</h3>
-                        {userTypeBadge(company.userType)}
                       </div>
                       <Button variant="ghost" size="icon" data-testid={`button-expand-${company.id}`}>
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
