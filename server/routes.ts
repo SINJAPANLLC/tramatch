@@ -605,6 +605,23 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/admin/users/:id/plan", requireAdmin, async (req, res) => {
+    try {
+      const { plan } = req.body;
+      if (!plan || !["free", "premium"].includes(plan)) {
+        return res.status(400).json({ message: "無効なプランです" });
+      }
+      const user = await storage.updateUserProfile(req.params.id as string, { plan });
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "プラン変更に失敗しました" });
+    }
+  });
+
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
       const deleted = await storage.deleteUser(req.params.id as string);
