@@ -350,7 +350,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-primary py-8 sm:py-12">
+      <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
           .logo-wall{width:100%;}
           .logo-slider{height:120px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
