@@ -28,7 +28,7 @@ const VEHICLE_TYPES = [
   "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他"
 ];
 const BODY_TYPES = [
-  "平ボディ", "バン", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
+  "平ボディ", "バン", "箱車", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
   "ダンプ", "タンクローリー", "車載車", "セルフローダー", "セーフティローダー",
   "ユニック", "クレーン付き", "パワーゲート付き", "エアサス",
   "コンテナ車", "海上コンテナ", "低床", "高床", "その他"
@@ -73,6 +73,7 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
 const FIELD_ALIASES: Record<string, Record<string, string>> = {
   highwayFee: { "あり": "込み", "なし": "高速代なし", "高速代あり": "込み", "高速代込み": "込み", "高速代別途": "別途" },
   driverWork: { "作業なし（車上渡し）": "作業なし", "車上渡し": "作業なし" },
+  bodyType: { "箱": "箱車" },
 };
 
 function findBestMatch(value: string, options: string[], fieldName?: string): string {
