@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare } from "lucide-react";
+import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
 
 type MenuItem = {
   href: string;
@@ -65,6 +66,9 @@ function SidebarMenu({ items }: { items: MenuItem[] }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAuth();
+  const [location] = useLocation();
+  const isAdminPage = location.startsWith("/admin");
+  const [adminMenuOpen, setAdminMenuOpen] = useState(isAdminPage);
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -74,8 +78,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {isAdmin && (
             <>
               <div className="my-3 mx-2 border-t border-border" />
-              <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">管理者メニュー</p>
-              <SidebarMenu items={adminMenuItems} />
+              <button
+                onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md"
+                data-testid="button-toggle-admin-menu"
+              >
+                <span>管理者メニュー</span>
+                {adminMenuOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5" />
+                )}
+              </button>
+              {adminMenuOpen && <SidebarMenu items={adminMenuItems} />}
             </>
           )}
         </div>
