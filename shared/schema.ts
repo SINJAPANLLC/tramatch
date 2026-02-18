@@ -333,3 +333,20 @@ export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertNotificationTemplate = z.infer<typeof insertNotificationTemplateSchema>;
 export type NotificationTemplate = typeof notificationTemplates.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
+
+export const contactInquiries = pgTable("contact_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  category: text("category").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("unread"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({ id: true, status: true, adminNote: true, createdAt: true });
+export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
+export type ContactInquiry = typeof contactInquiries.$inferSelect;
