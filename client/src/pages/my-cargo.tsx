@@ -137,7 +137,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
       await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "completed" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
       toast({ title: "成約しました", description: "荷物のステータスが成約済みに変更されました" });
       onClose();
     },
@@ -419,10 +419,10 @@ export default function MyCargo() {
   const [perPage, setPerPage] = useState(20);
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
-    queryKey: ["/api/cargo"],
+    queryKey: ["/api/my-cargo"],
   });
 
-  const myCargo = allCargo?.filter((c) => c.userId === user?.id) ?? [];
+  const myCargo = allCargo ?? [];
 
   const filtered = useMemo(() => {
     let result = [...myCargo].filter((c) => c.status !== "completed");
@@ -471,7 +471,7 @@ export default function MyCargo() {
       await apiRequest("DELETE", `/api/cargo/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
       toast({ title: "荷物情報を削除しました" });
       if (selectedCargoId) setSelectedCargoId(null);
     },
