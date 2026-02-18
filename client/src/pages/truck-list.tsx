@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
@@ -150,11 +150,13 @@ function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; 
     );
   }
 
+  const isExpired = new Date(listing.availableDate) < new Date(new Date().toDateString());
+
   return (
     <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-detail">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
-          <span className="text-sm font-bold text-foreground">空車情報</span>
+          <span className="text-sm font-bold text-foreground">空車詳細</span>
           <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-truck-panel">
             <X className="w-4 h-4" />
           </Button>
@@ -162,49 +164,75 @@ function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; 
       </div>
 
       <div className="p-4 space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-foreground mb-1" data-testid="text-truck-panel-title">{listing.title}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isExpired ? (
+              <Badge variant="outline" className="text-[10px]">期限切れ</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">掲載中</Badge>
+            )}
+            <span className="text-[10px] text-muted-foreground">
+              登録: {listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
+            </span>
+          </div>
+        </div>
+
         <div className="border border-border rounded-md p-3">
-          <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <div className="text-sm font-bold text-foreground">{listing.currentArea}</div>
-              <div className="text-xs text-muted-foreground font-bold mt-0.5">現在地</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">現在地</div>
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
             <div className="flex-1 text-right">
               <div className="text-sm font-bold text-foreground">{listing.destinationArea}</div>
-              <div className="text-xs text-muted-foreground font-bold mt-0.5">行き先</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">行き先</div>
             </div>
           </div>
         </div>
 
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
+          <span className="text-xs text-muted-foreground">最低運賃</span>
         </div>
 
-        <div className="border border-border rounded-md overflow-hidden">
-          <DetailRow label="タイトル" value={listing.title} />
-          <DetailRow label="企業名">
-            <div className="font-bold">{listing.companyName}</div>
-          </DetailRow>
-          <DetailRow label="車種" value={listing.vehicleType} />
-          <DetailRow label="車体タイプ" value={listing.bodyType || "-"} />
-          <DetailRow label="最大積載量" value={listing.maxWeight} />
-          <DetailRow label="空車日" value={listing.availableDate} />
-          <DetailRow label="連絡先">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+        <div>
+          <h3 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+            <Truck className="w-3.5 h-3.5" />
+            空車情報
+          </h3>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="車種" value={listing.vehicleType} />
+            <DetailRow label="車体タイプ" value={listing.bodyType || "-"} />
+            <DetailRow label="最大積載量" value={listing.maxWeight} />
+            <DetailRow label="空車日" value={listing.availableDate} />
+            {listing.description && <DetailRow label="備考" value={listing.description} />}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5" />
+            企業情報
+          </h3>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="企業名" value={listing.companyName} />
+            <DetailRow label="電話番号">
+              <a href={`tel:${listing.contactPhone}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                <Phone className="w-3.5 h-3.5" />
                 <span>{listing.contactPhone}</span>
-              </div>
-              {listing.contactEmail && (
-                <div className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+            </DetailRow>
+            {listing.contactEmail && (
+              <DetailRow label="メール">
+                <a href={`mailto:${listing.contactEmail}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                  <Mail className="w-3.5 h-3.5" />
                   <span>{listing.contactEmail}</span>
-                </div>
-              )}
-            </div>
-          </DetailRow>
-          <DetailRow label="備考" value={listing.description} />
-          <DetailRow label="登録日時" value={listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"} />
+                </a>
+              </DetailRow>
+            )}
+          </div>
         </div>
       </div>
     </div>
