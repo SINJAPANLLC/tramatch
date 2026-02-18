@@ -694,6 +694,28 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/trucks/:id", requireAuth, async (req, res) => {
+    try {
+      const truckId = req.params.id as string;
+      const listing = await storage.getTruckListing(truckId);
+      if (!listing) {
+        return res.status(404).json({ message: "Truck listing not found" });
+      }
+      if (listing.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const allowedFields = ["title", "currentArea", "destinationArea", "vehicleType", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
+      const safeBody: Record<string, any> = {};
+      for (const key of allowedFields) {
+        if (key in req.body) safeBody[key] = req.body[key];
+      }
+      const updated = await storage.updateTruckListing(truckId, safeBody);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update truck listing" });
+    }
+  });
+
   app.delete("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
       const deleted = await storage.deleteTruckListing(req.params.id as string);
@@ -744,6 +766,17 @@ export async function registerRoutes(
         message: "アカウントが承認されました。ログインしてサービスをご利用ください。",
       });
 
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "approve",
+        targetType: "user",
+        targetId: user.id,
+        details: `ユーザー「${user.companyName}」を承認`,
+        ipAddress: req.ip,
+      });
+
       const { password, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
@@ -770,13 +803,165 @@ export async function registerRoutes(
 
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
+      const user = await storage.getUser(req.params.id as string);
       const deleted = await storage.deleteUser(req.params.id as string);
       if (!deleted) {
         return res.status(404).json({ message: "User not found" });
       }
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "delete",
+        targetType: "user",
+        targetId: req.params.id as string,
+        details: `ユーザー「${user?.companyName}」を削除`,
+        ipAddress: req.ip,
+      });
       res.json({ message: "Deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.patch("/api/admin/cargo/:id", requireAdmin, async (req, res) => {
+    try {
+      const listing = await storage.getCargoListing(req.params.id as string);
+      if (!listing) {
+        return res.status(404).json({ message: "Cargo listing not found" });
+      }
+      const cargoAllowed = ["title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress", "desiredDate", "arrivalDate", "departureTime", "arrivalTime", "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl", "price", "highwayFee", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod", "urgency", "description", "status"];
+      const safeBody: Record<string, any> = {};
+      for (const key of cargoAllowed) { if (key in req.body) safeBody[key] = req.body[key]; }
+      const updated = await storage.updateCargoListing(req.params.id as string, safeBody);
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "edit",
+        targetType: "cargo",
+        targetId: req.params.id as string,
+        details: `荷物「${listing.title}」を管理者が編集`,
+        ipAddress: req.ip,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update cargo listing" });
+    }
+  });
+
+  app.delete("/api/admin/cargo/:id", requireAdmin, async (req, res) => {
+    try {
+      const listing = await storage.getCargoListing(req.params.id as string);
+      if (!listing) {
+        return res.status(404).json({ message: "Cargo listing not found" });
+      }
+      await storage.deleteCargoListing(req.params.id as string);
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "delete",
+        targetType: "cargo",
+        targetId: req.params.id as string,
+        details: `荷物「${listing.title}」を管理者が削除`,
+        ipAddress: req.ip,
+      });
+      res.json({ message: "Deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete cargo listing" });
+    }
+  });
+
+  app.patch("/api/admin/trucks/:id", requireAdmin, async (req, res) => {
+    try {
+      const listing = await storage.getTruckListing(req.params.id as string);
+      if (!listing) {
+        return res.status(404).json({ message: "Truck listing not found" });
+      }
+      const truckAllowed = ["title", "currentArea", "destinationArea", "vehicleType", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
+      const safeBody: Record<string, any> = {};
+      for (const key of truckAllowed) { if (key in req.body) safeBody[key] = req.body[key]; }
+      const updated = await storage.updateTruckListing(req.params.id as string, safeBody);
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "edit",
+        targetType: "truck",
+        targetId: req.params.id as string,
+        details: `車両「${listing.title}」を管理者が編集`,
+        ipAddress: req.ip,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update truck listing" });
+    }
+  });
+
+  app.delete("/api/admin/trucks/:id", requireAdmin, async (req, res) => {
+    try {
+      const listing = await storage.getTruckListing(req.params.id as string);
+      if (!listing) {
+        return res.status(404).json({ message: "Truck listing not found" });
+      }
+      await storage.deleteTruckListing(req.params.id as string);
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "delete",
+        targetType: "truck",
+        targetId: req.params.id as string,
+        details: `車両「${listing.title}」を管理者が削除`,
+        ipAddress: req.ip,
+      });
+      res.json({ message: "Deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete truck listing" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs", requireAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = (page - 1) * limit;
+      const [logs, total] = await Promise.all([
+        storage.getAuditLogs(limit, offset),
+        storage.getAuditLogCount(),
+      ]);
+      res.json({ logs, total, page, totalPages: Math.ceil(total / limit) });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.post("/api/partners/invite", requireAuth, async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "メールアドレスを入力してください" });
+      }
+      const user = await storage.getUser(req.session.userId as string);
+      if (!user) {
+        return res.status(401).json({ message: "ユーザーが見つかりません" });
+      }
+
+      const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+      const emailResult = await sendEmail(
+        email,
+        "【トラマッチ】取引先招待のご案内",
+        `${user.companyName}様よりトラマッチへの招待が届いています。\n\n${user.companyName}様があなたを取引先として招待しました。\n以下のリンクからトラマッチに登録して、取引を開始しましょう。\n\n${appBaseUrl}/register\n\nトラマッチ - 求荷求車マッチングプラットフォーム\n${appBaseUrl}`
+      );
+
+      if (!emailResult.success) {
+        return res.status(500).json({ message: "招待メールの送信に失敗しました: " + (emailResult.error || "") });
+      }
+
+      res.json({ message: "招待メールを送信しました" });
+    } catch (error) {
+      res.status(500).json({ message: "招待の送信に失敗しました" });
     }
   });
 
@@ -1296,6 +1481,53 @@ statusの意味:
       res.json({ message: "取引先を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "取引先の削除に失敗しました" });
+    }
+  });
+
+  // Transport Ledger Excel Export
+  app.get("/api/transport-records/export", requireAuth, async (req, res) => {
+    try {
+      let records = await storage.getTransportRecordsByUserId(req.session.userId as string);
+      const { dateFrom, dateTo, shipperName } = req.query as Record<string, string>;
+      if (dateFrom) {
+        records = records.filter(r => (r.transportDate || "") >= dateFrom);
+      }
+      if (dateTo) {
+        records = records.filter(r => (r.transportDate || "") <= dateTo);
+      }
+      if (shipperName) {
+        records = records.filter(r => (r.shipperName || "").includes(shipperName));
+      }
+      const XLSX = require("xlsx");
+
+      const data = records.map(r => ({
+        "運送日": r.transportDate || "",
+        "荷主名": r.shipperName || "",
+        "発地": r.departureArea || "",
+        "着地": r.arrivalArea || "",
+        "荷種": r.cargoDescription || "",
+        "車種": r.vehicleType || "",
+        "運賃": r.fare || "",
+        "実運送会社": r.transportCompany || "",
+        "ドライバー名": r.driverName || "",
+        "ドライバー電話": r.driverPhone || "",
+        "車両番号": r.vehicleNumber || "",
+        "ステータス": r.status || "",
+        "備考": r.notes || "",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "実運送体制管理簿");
+
+      const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", "attachment; filename=transport-ledger.xlsx");
+      res.send(buffer);
+    } catch (error) {
+      console.error("Export error:", error);
+      res.status(500).json({ message: "エクスポートに失敗しました" });
     }
   });
 

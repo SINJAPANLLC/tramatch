@@ -29,12 +29,31 @@ export default function TransportLedger() {
   const [shipperName, setShipperName] = useState("");
   const [matchType, setMatchType] = useState("exact");
 
-  const handleExport = () => {
-    if (!dateFrom || !dateTo) {
+  const handleExport = async () => {
+    if (!dateFrom) {
       toast({ title: "発日範囲は必須です", variant: "destructive" });
       return;
     }
-    toast({ title: "Excel出力", description: "エクスポート機能は現在準備中です" });
+    try {
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      if (shipperName) params.set("shipperName", shipperName);
+      const response = await fetch(`/api/transport-records/export?${params.toString()}`, { credentials: "include" });
+      if (!response.ok) throw new Error("エクスポートに失敗しました");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transport-ledger.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Excel出力完了" });
+    } catch (error: any) {
+      toast({ title: "エクスポートに失敗しました", description: error.message, variant: "destructive" });
+    }
   };
 
   return (

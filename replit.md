@@ -73,6 +73,8 @@
 - `/admin/notifications` - 通知管理 (requires admin role) - 3 category tabs (auto_reply, auto_notification, regular) + bulk send tab
 - `/admin/announcements` - お知らせ管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
+- `/admin/listings` - 掲載管理 (requires admin role) - edit/delete cargo and truck listings
+- `/admin/audit-logs` - 操作ログ (requires admin role) - view admin action audit trail
 - `/admin/settings` - 管理設定 (requires admin role)
 - `/columns` - コラム記事一覧 (public)
 - `/columns/:slug` - コラム記事詳細 (public)
@@ -101,8 +103,8 @@
   - AI空車検索, AI空車登録
   - 企業検索, 取引先管理, 実運送体制管理簿
   - お支払い, 便利サービス, 設定
-- **Sidebar (Admin Menu - 8 items, separated by divider line + label)**:
-  - 管理画面, 申請管理, ユーザー管理, 収益管理, 通知管理, お知らせ, SEO記事生成, 管理設定
+- **Sidebar (Admin Menu - 10 items, separated by divider line + label)**:
+  - 管理画面, 申請管理, ユーザー管理, 収益管理, 通知管理, お知らせ, SEO記事生成, 掲載管理, 操作ログ, 管理設定
 
 ## API Endpoints
 - `POST /api/register` - Register new user (with permit file upload)
@@ -118,11 +120,19 @@
 - `GET /api/trucks` - List all truck listings
 - `GET /api/trucks/:id` - Get truck listing detail
 - `POST /api/trucks` - Create truck listing (auth required)
+- `PATCH /api/trucks/:id` - Update truck listing (auth required, owner only)
 - `DELETE /api/trucks/:id` - Delete truck listing (auth required)
+- `POST /api/partners/invite` - Send partner invitation email (auth required)
+- `GET /api/transport-records/export` - Export transport records as Excel (auth required)
 - `GET /api/admin/stats` - Admin stats (admin only)
 - `GET /api/admin/users` - List users (admin only)
 - `DELETE /api/admin/users/:id` - Delete user (admin only)
 - `PATCH /api/admin/users/:id/approve` - Approve user (admin only)
+- `PATCH /api/admin/cargo/:id` - Admin edit cargo listing (admin only, audit logged)
+- `DELETE /api/admin/cargo/:id` - Admin delete cargo listing (admin only, audit logged)
+- `PATCH /api/admin/trucks/:id` - Admin edit truck listing (admin only, audit logged)
+- `DELETE /api/admin/trucks/:id` - Admin delete truck listing (admin only, audit logged)
+- `GET /api/admin/audit-logs` - Get paginated audit logs (admin only)
 - `GET /api/notifications` - Get user notifications (auth required)
 - `GET /api/notifications/unread-count` - Get unread notification count (auth required)
 - `PATCH /api/notifications/:id/read` - Mark notification as read (auth required)
