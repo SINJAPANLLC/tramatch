@@ -1,13 +1,13 @@
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserCog, Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, Shield, ChevronDown, ChevronUp, Image, ExternalLink, Clock, UserCheck, UserX } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 
 type SafeUser = {
@@ -30,10 +30,14 @@ type SafeUser = {
   createdAt?: string;
   registrationDate?: string;
   representative?: string;
+  establishedDate?: string;
+  capital?: string;
+  employeeCount?: string;
+  websiteUrl?: string;
+  transportLicenseNumber?: string;
   businessArea?: string;
   businessDescription?: string;
-  transportLicenseNumber?: string;
-  websiteUrl?: string;
+  invoiceRegistrationNumber?: string;
 };
 
 function isImageFile(path: string): boolean {
@@ -41,33 +45,52 @@ function isImageFile(path: string): boolean {
   return ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(ext);
 }
 
-function userTypeLabel(type: string) {
-  switch (type) {
-    case "carrier": return "運送会社";
-    case "shipper": return "荷主";
-    case "both": return "運送会社・荷主";
-    default: return type;
-  }
+function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: import("react").ReactNode }) {
+  return (
+    <div className="flex border-b border-border last:border-b-0">
+      <div className="w-[100px] shrink-0 bg-muted/30 px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
+      <div className="flex-1 px-3 py-2.5 text-sm font-bold text-foreground whitespace-pre-wrap break-all">{children || value || "-"}</div>
+    </div>
+  );
 }
 
 export default function AdminUsers() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<"all" | "approved" | "pending" | "admin">("all");
 
   const { data: users, isLoading } = useQuery<SafeUser[]>({
     queryKey: ["/api/admin/users"],
   });
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const allNonAdmin = users?.filter(u => u.role !== "admin") ?? [];
+  const approvedCount = allNonAdmin.filter(u => u.approved).length;
+  const pendingCount = allNonAdmin.filter(u => !u.approved).length;
+  const adminCount = users?.filter(u => u.role === "admin")?.length ?? 0;
+
+  const filtered = useMemo(() => {
+    return (users ?? []).filter((u) => {
+      if (filterType === "approved" && (u.role === "admin" || !u.approved)) return false;
+      if (filterType === "pending" && (u.role === "admin" || u.approved)) return false;
+      if (filterType === "admin" && u.role !== "admin") return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return u.companyName.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.contactName && u.contactName.toLowerCase().includes(q));
+      }
+      return true;
     });
-  };
+  }, [users, filterType, searchQuery]);
+
+  const selectedUser = filtered.find((u) => u.id === selectedUserId) ?? null;
+
+  useEffect(() => {
+    if (selectedUserId && !filtered.find((u) => u.id === selectedUserId)) {
+      setSelectedUserId(null);
+    }
+  }, [filtered, selectedUserId]);
 
   const approveUser = useMutation({
     mutationFn: async (id: string) => {
@@ -86,6 +109,7 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "ユーザーを削除しました" });
+      setSelectedUserId(null);
     },
   });
 
@@ -102,24 +126,6 @@ export default function AdminUsers() {
     },
   });
 
-  const allNonAdmin = users?.filter(u => u.role !== "admin") ?? [];
-  const approvedCount = allNonAdmin.filter(u => u.approved).length;
-  const pendingCount = allNonAdmin.filter(u => !u.approved).length;
-  const adminCount = users?.filter(u => u.role === "admin")?.length ?? 0;
-
-  const filteredUsers = users?.filter((u) => {
-    if (filterType === "approved" && (u.role === "admin" || !u.approved)) return false;
-    if (filterType === "pending" && (u.role === "admin" || u.approved)) return false;
-    if (filterType === "admin" && u.role !== "admin") return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return u.companyName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        (u.contactName && u.contactName.toLowerCase().includes(q));
-    }
-    return true;
-  }) ?? [];
-
   const formatDate = (user: SafeUser) => {
     if (user.registrationDate) return user.registrationDate;
     if (user.createdAt) return new Date(user.createdAt).toLocaleDateString("ja-JP");
@@ -128,338 +134,431 @@ export default function AdminUsers() {
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 py-6 max-w-[1200px] mx-auto">
-        <div className="bg-primary rounded-md p-5 mb-6">
-          <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">ユーザー管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">全ユーザーの管理・プラン切替</p>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card
-            className={`cursor-pointer hover-elevate ${filterType === "all" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setFilterType("all")}
-            data-testid="card-filter-all"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{users?.length ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">全ユーザー</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer hover-elevate ${filterType === "approved" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setFilterType("approved")}
-            data-testid="card-filter-approved"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
-                  <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
-                  <p className="text-xs text-muted-foreground">承認済み</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer hover-elevate ${filterType === "pending" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setFilterType("pending")}
-            data-testid="card-filter-pending"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center shrink-0">
-                  <UserX className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
-                  <p className="text-xs text-muted-foreground">承認待ち</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer hover-elevate ${filterType === "admin" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setFilterType("admin")}
-            data-testid="card-filter-admin"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{adminCount}</p>
-                  <p className="text-xs text-muted-foreground">管理者</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="企業名、メールアドレス、担当者名で検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                data-testid="input-user-search"
-              />
+      <div className="flex h-full">
+        <div className="flex-1 overflow-y-auto transition-all duration-300">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="bg-primary rounded-md p-5 mb-5">
+              <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">ユーザー管理</h1>
+              <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">全ユーザーの管理・プラン切替</p>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <p className="text-sm text-muted-foreground">
-            {filteredUsers.length}件表示
-            {searchQuery && ` (「${searchQuery}」で検索中)`}
-          </p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+              <Card
+                className={`cursor-pointer hover-elevate ${filterType === "all" ? "ring-2 ring-primary" : ""}`}
+                onClick={() => setFilterType("all")}
+                data-testid="card-filter-all"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-md bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{users?.length ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">全ユーザー</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card
+                className={`cursor-pointer hover-elevate ${filterType === "approved" ? "ring-2 ring-primary" : ""}`}
+                onClick={() => setFilterType("approved")}
+                data-testid="card-filter-approved"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
+                      <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
+                      <p className="text-xs text-muted-foreground">承認済み</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card
+                className={`cursor-pointer hover-elevate ${filterType === "pending" ? "ring-2 ring-primary" : ""}`}
+                onClick={() => setFilterType("pending")}
+                data-testid="card-filter-pending"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-md bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center shrink-0">
+                      <UserX className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+                      <p className="text-xs text-muted-foreground">承認待ち</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card
+                className={`cursor-pointer hover-elevate ${filterType === "admin" ? "ring-2 ring-primary" : ""}`}
+                onClick={() => setFilterType("admin")}
+                data-testid="card-filter-admin"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
+                      <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{adminCount}</p>
+                      <p className="text-xs text-muted-foreground">管理者</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="mb-4">
+              <CardContent className="p-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="企業名・メール・担当者で検索..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-user-search"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+              <span className="font-semibold text-sm" data-testid="text-result-count">
+                {filtered.length} 件表示
+                {searchQuery && ` (「${searchQuery}」で検索中)`}
+              </span>
+            </div>
+
+            {isLoading ? (
+              <Card>
+                <div className="divide-y divide-border">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="px-4 py-3"><Skeleton className="h-12 w-full" /></div>
+                  ))}
+                </div>
+              </Card>
+            ) : filtered.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Users className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">該当するユーザーがいません</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <div className="overflow-x-auto">
+                  <table className="w-full" data-testid="table-users">
+                    <thead>
+                      <tr className="border-b bg-muted/60">
+                        <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
+                        <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">担当者</th>
+                        <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">連絡先</th>
+                        <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">ステータス</th>
+                        <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">プラン</th>
+                        <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">登録日</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filtered.map((u, index) => {
+                        const isAdmin = u.role === "admin";
+                        return (
+                          <tr
+                            key={u.id}
+                            className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedUserId === u.id ? "bg-primary/10" : ""}`}
+                            onClick={() => setSelectedUserId(u.id)}
+                            data-testid={`row-user-${u.id}`}
+                          >
+                            <td className="px-3 py-3 align-top">
+                              <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[140px]">{u.companyName}</div>
+                              {u.companyNameKana && <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[140px]">{u.companyNameKana}</div>}
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <span className="text-[12px] font-bold text-foreground">{u.contactName || "-"}</span>
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <div className="text-[12px] text-foreground font-bold truncate max-w-[180px]">{u.email}</div>
+                              {u.phone && <div className="text-[11px] text-muted-foreground font-bold mt-0.5">{u.phone}</div>}
+                            </td>
+                            <td className="px-3 py-3 text-center align-top">
+                              {isAdmin ? (
+                                <Badge variant="default" className="text-[10px]">管理者</Badge>
+                              ) : u.approved ? (
+                                <Badge variant="default" className="text-[10px]">承認済</Badge>
+                              ) : (
+                                <Badge variant="destructive" className="text-[10px]">未承認</Badge>
+                              )}
+                            </td>
+                            <td className="px-3 py-3 text-center align-top">
+                              {isAdmin ? (
+                                <span className="text-[11px] text-muted-foreground font-bold">-</span>
+                              ) : (
+                                <Badge variant={u.plan === "premium" ? "default" : "outline"} className="text-[10px]">
+                                  {u.plan === "premium" ? "プレミアム" : "フリー"}
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="px-3 py-3 align-top">
+                              <span className="text-[12px] text-muted-foreground font-bold whitespace-nowrap">{formatDate(u)}</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i}><CardContent className="p-5"><Skeleton className="h-24 w-full" /></CardContent></Card>
-            ))}
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="w-10 h-10 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">該当するユーザーがいません</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {filteredUsers.map((u) => {
-              const expanded = expandedIds.has(u.id);
-              const isAdmin = u.role === "admin";
-
-              return (
-                <Card key={u.id} data-testid={`card-user-${u.id}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${isAdmin ? "bg-blue-50 dark:bg-blue-950/30" : "bg-primary/10"}`}>
-                          {isAdmin ? <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" /> : <Building2 className="w-5 h-5 text-primary" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-foreground">{u.companyName}</h3>
-                            {u.companyNameKana && <span className="text-xs text-muted-foreground">({u.companyNameKana})</span>}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
-                              {isAdmin ? "管理者" : "一般"}
-                            </Badge>
-                            {!isAdmin && (
-                              <Badge variant={u.approved ? "default" : "destructive"} className="text-xs">
-                                {u.approved ? "承認済" : "未承認"}
-                              </Badge>
-                            )}
-                            {!isAdmin && (
-                              <Badge variant={u.plan === "premium" ? "default" : "outline"} className="text-xs">
-                                <Crown className="w-3 h-3 mr-1" />
-                                {u.plan === "premium" ? "プレミアム" : "フリー"}
-                              </Badge>
-                            )}
-                            <span className="text-xs text-muted-foreground">{formatDate(u)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      {!isAdmin && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {!u.approved && (
-                            <Button
-                              size="sm"
-                              onClick={() => approveUser.mutate(u.id)}
-                              disabled={approveUser.isPending}
-                              data-testid={`button-approve-user-${u.id}`}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1.5" />
-                              承認
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant={u.plan === "premium" ? "outline" : "default"}
-                            onClick={() => changePlan.mutate({ id: u.id, plan: u.plan === "premium" ? "free" : "premium" })}
-                            disabled={changePlan.isPending}
-                            data-testid={`button-plan-toggle-${u.id}`}
-                          >
-                            <Crown className="w-4 h-4 mr-1.5" />
-                            {u.plan === "premium" ? "フリーに変更" : "プレミアムに変更"}
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              if (confirm(`${u.companyName} を削除しますか？`)) {
-                                deleteUser.mutate(u.id);
-                              }
-                            }}
-                            disabled={deleteUser.isPending}
-                            data-testid={`button-delete-user-${u.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-3 pl-[52px]">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-foreground truncate">{u.email}</span>
-                      </div>
-                      {u.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-foreground">{u.phone}</span>
-                          {u.fax && <span className="text-xs text-muted-foreground">(FAX: {u.fax})</span>}
-                        </div>
-                      )}
-                      {u.contactName && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-muted-foreground">担当者:</span>
-                          <span className="text-foreground">{u.contactName}</span>
-                        </div>
-                      )}
-                      {u.address && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-foreground truncate">{u.postalCode ? `〒${u.postalCode} ` : ""}{u.address}</span>
-                        </div>
-                      )}
-                      {u.truckCount && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Truck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-muted-foreground">保有台数:</span>
-                          <span className="text-foreground">{u.truckCount}台</span>
-                        </div>
-                      )}
-                      {u.businessArea && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-muted-foreground">営業エリア:</span>
-                          <span className="text-foreground truncate">{u.businessArea}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {(u.permitFile || u.transportLicenseNumber || u.businessDescription || u.representative) && (
-                      <div className="pl-[52px] mt-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleExpand(u.id)}
-                          data-testid={`button-expand-user-${u.id}`}
-                        >
-                          {expanded ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
-                          {expanded ? "詳細を閉じる" : "詳細を見る"}
-                        </Button>
-
-                        {expanded && (
-                          <div className="mt-3 pt-3 border-t space-y-3">
-                            {u.representative && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-muted-foreground">代表者:</span>
-                                <span className="text-foreground">{u.representative}</span>
-                              </div>
-                            )}
-                            {u.transportLicenseNumber && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-muted-foreground">運送許可番号:</span>
-                                <span className="text-foreground">{u.transportLicenseNumber}</span>
-                              </div>
-                            )}
-                            {u.businessDescription && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground shrink-0">事業内容:</span>
-                                <span className="text-foreground">{u.businessDescription}</span>
-                              </div>
-                            )}
-                            {u.websiteUrl && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                <a href={u.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">{u.websiteUrl}</a>
-                              </div>
-                            )}
-
-                            {u.permitFile && (
-                              <div>
-                                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                                  <Shield className="w-3.5 h-3.5" />
-                                  許可証・資格証明書
-                                </p>
-                                {isImageFile(u.permitFile) ? (
-                                  <div>
-                                    <div className="relative rounded-md border overflow-hidden max-w-[300px]">
-                                      <img
-                                        src={u.permitFile}
-                                        alt="許可証"
-                                        className="w-full object-contain max-h-[400px]"
-                                        onError={(e) => {
-                                          (e.target as HTMLImageElement).style.display = "none";
-                                        }}
-                                      />
-                                    </div>
-                                    <a
-                                      href={u.permitFile}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-2"
-                                      data-testid={`link-permit-${u.id}`}
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                      新しいタブで開く
-                                    </a>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-3 p-3 rounded-md bg-muted/40 max-w-[300px]">
-                                    <div className="w-10 h-10 rounded-md bg-red-50 dark:bg-red-950/30 flex items-center justify-center shrink-0">
-                                      <FileText className="w-5 h-5 text-red-500" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium text-foreground truncate">許可証ファイル</p>
-                                      <p className="text-xs text-muted-foreground truncate">{u.permitFile.split("/").pop()}</p>
-                                    </div>
-                                    <a href={u.permitFile} target="_blank" rel="noopener noreferrer" data-testid={`link-permit-${u.id}`}>
-                                      <Button variant="outline" size="sm">
-                                        <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                                        開く
-                                      </Button>
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        {selectedUserId && (
+          <UserDetailPanel
+            user={selectedUser}
+            onClose={() => setSelectedUserId(null)}
+            onApprove={(id) => approveUser.mutate(id)}
+            onDelete={(id) => {
+              if (confirm(`${selectedUser?.companyName} を削除しますか？`)) {
+                deleteUser.mutate(id);
+              }
+            }}
+            onChangePlan={(id, plan) => changePlan.mutate({ id, plan })}
+            isApproving={approveUser.isPending}
+            isDeleting={deleteUser.isPending}
+            isChangingPlan={changePlan.isPending}
+          />
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+function UserDetailPanel({
+  user,
+  onClose,
+  onApprove,
+  onDelete,
+  onChangePlan,
+  isApproving,
+  isDeleting,
+  isChangingPlan,
+}: {
+  user: SafeUser | null;
+  onClose: () => void;
+  onApprove: (id: string) => void;
+  onDelete: (id: string) => void;
+  onChangePlan: (id: string, plan: string) => void;
+  isApproving: boolean;
+  isDeleting: boolean;
+  isChangingPlan: boolean;
+}) {
+  const [permitExpanded, setPermitExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
+    setPermitExpanded(false);
+  }, [user?.id]);
+
+  if (!user) {
+    return (
+      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">読み込み中...</p>
+      </div>
+    );
+  }
+
+  const isAdmin = user.role === "admin";
+
+  const formatDate = () => {
+    if (user.registrationDate) return user.registrationDate;
+    if (user.createdAt) return new Date(user.createdAt).toLocaleDateString("ja-JP");
+    return "-";
+  };
+
+  return (
+    <div className="w-full sm:w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto absolute sm:relative right-0 top-0 z-40 sm:z-auto" data-testid="panel-user-detail">
+      <div className="sticky top-0 bg-background z-50">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
+          <span className="text-sm font-bold text-foreground">ユーザー詳細</span>
+          <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${isAdmin ? "bg-blue-50 dark:bg-blue-950/30" : "bg-primary/10"}`}>
+            {isAdmin ? <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" /> : <Building2 className="w-5 h-5 text-primary" />}
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-foreground text-base truncate">{user.companyName}</h3>
+            {user.companyNameKana && <p className="text-xs text-muted-foreground">{user.companyNameKana}</p>}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {isAdmin ? (
+            <Badge variant="default" className="text-xs">管理者</Badge>
+          ) : (
+            <>
+              <Badge variant={user.approved ? "default" : "destructive"} className="text-xs">
+                {user.approved ? "承認済" : "未承認"}
+              </Badge>
+              <Badge variant={user.plan === "premium" ? "default" : "outline"} className="text-xs">
+                <Crown className="w-3 h-3 mr-1" />
+                {user.plan === "premium" ? "プレミアム" : "フリー"}
+              </Badge>
+            </>
+          )}
+          <span className="text-xs text-muted-foreground">{formatDate()}</span>
+        </div>
+
+        {!isAdmin && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              {!user.approved && (
+                <Button
+                  className="flex-1"
+                  onClick={() => onApprove(user.id)}
+                  disabled={isApproving}
+                  data-testid={`button-approve-user-${user.id}`}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1.5" />
+                  {isApproving ? "承認中..." : "承認する"}
+                </Button>
+              )}
+              <Button
+                variant={user.plan === "premium" ? "outline" : "default"}
+                className="flex-1"
+                onClick={() => onChangePlan(user.id, user.plan === "premium" ? "free" : "premium")}
+                disabled={isChangingPlan}
+                data-testid={`button-plan-toggle-${user.id}`}
+              >
+                <Crown className="w-4 h-4 mr-1.5" />
+                {user.plan === "premium" ? "フリーに変更" : "プレミアムに変更"}
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full text-destructive"
+              onClick={() => onDelete(user.id)}
+              disabled={isDeleting}
+              data-testid={`button-delete-user-${user.id}`}
+            >
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              ユーザーを削除
+            </Button>
+          </div>
+        )}
+
+        <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+        <div className="border border-border rounded-md overflow-hidden">
+          <DetailRow label="企業名" value={user.companyName} />
+          <DetailRow label="担当者" value={user.contactName} />
+          <DetailRow label="メール" value={user.email} />
+          <DetailRow label="電話番号" value={user.phone} />
+          {user.fax && <DetailRow label="FAX" value={user.fax} />}
+          <DetailRow label="住所" value={`${user.postalCode ? `〒${user.postalCode}\n` : ""}${user.address || "-"}`} />
+          {user.truckCount && <DetailRow label="保有台数" value={`${user.truckCount}台`} />}
+        </div>
+
+        {(user.representative || user.establishedDate || user.capital || user.employeeCount || user.websiteUrl || user.transportLicenseNumber || user.invoiceRegistrationNumber || user.businessArea || user.businessDescription) && (
+          <>
+            <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+            <div className="border border-border rounded-md overflow-hidden">
+              {user.representative && <DetailRow label="代表者" value={user.representative} />}
+              {user.establishedDate && <DetailRow label="設立" value={user.establishedDate} />}
+              {user.capital && <DetailRow label="資本金" value={user.capital} />}
+              {user.employeeCount && <DetailRow label="従業員数" value={`${user.employeeCount}名`} />}
+              {user.websiteUrl && (
+                <DetailRow label="URL">
+                  <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm break-all">{user.websiteUrl}</a>
+                </DetailRow>
+              )}
+              {user.transportLicenseNumber && <DetailRow label="運送許可番号" value={user.transportLicenseNumber} />}
+              {user.invoiceRegistrationNumber && <DetailRow label="インボイス" value={user.invoiceRegistrationNumber} />}
+              {user.businessArea && <DetailRow label="営業エリア" value={user.businessArea} />}
+              {user.businessDescription && <DetailRow label="事業内容" value={user.businessDescription} />}
+            </div>
+          </>
+        )}
+
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <Shield className="w-3.5 h-3.5" />
+          許可証・資格証明書
+        </h4>
+        {user.permitFile ? (
+          isImageFile(user.permitFile) ? (
+            <div>
+              <div
+                className="relative rounded-md border overflow-hidden cursor-pointer group"
+                onClick={() => setPermitExpanded(!permitExpanded)}
+                data-testid={`permit-image-${user.id}`}
+              >
+                <img
+                  src={user.permitFile}
+                  alt="許可証"
+                  className={`w-full object-cover transition-all ${permitExpanded ? "max-h-[600px] object-contain" : "max-h-[160px]"}`}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                {!permitExpanded && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-xs font-medium">クリックで拡大</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Button variant="ghost" size="sm" onClick={() => setPermitExpanded(!permitExpanded)}>
+                  {permitExpanded ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
+                  {permitExpanded ? "縮小" : "拡大表示"}
+                </Button>
+                <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
+                  <Button variant="ghost" size="sm">
+                    <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                    新しいタブ
+                  </Button>
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 p-3 rounded-md bg-muted/40">
+              <div className="w-10 h-10 rounded-md bg-red-50 dark:bg-red-950/30 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-red-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">許可証ファイル（PDF）</p>
+                <p className="text-xs text-muted-foreground truncate">{user.permitFile.split("/").pop()}</p>
+              </div>
+              <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm">
+                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                  開く
+                </Button>
+              </a>
+            </div>
+          )
+        ) : (
+          <div className="p-4 rounded-md bg-muted/30 text-center">
+            <Shield className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
+            <p className="text-xs text-muted-foreground">未アップロード</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
