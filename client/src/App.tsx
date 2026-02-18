@@ -104,6 +104,7 @@ function Router() {
       <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
       <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
       <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
+      <Route path="/admin/invoices">{() => <AdminRoute component={AdminInvoices} />}</Route>
       <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
       <Route path="/admin/announcements">{() => <AdminRoute component={AdminAnnouncements} />}</Route>
       <Route path="/admin/listings">{() => <AdminRoute component={AdminListings} />}</Route>

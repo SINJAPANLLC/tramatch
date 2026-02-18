@@ -28,6 +28,7 @@ const adminMenuItems: MenuItem[] = [
   { href: "/admin/applications", label: "申請管理", icon: ClipboardList },
   { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
   { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
+  { href: "/admin/invoices", label: "請求書発行", icon: FileText },
   { href: "/admin/notifications", label: "通知管理", icon: Bell },
   { href: "/admin/announcements", label: "お知らせ", icon: Megaphone },
   { href: "/admin/seo", label: "SEO記事生成", icon: PenTool },

@@ -2685,7 +2685,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
     try {
-      const invoice = await storage.getInvoice(req.params.id);
+      const invoice = await storage.getInvoice(req.params.id as string);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json(invoice);
     } catch (error) {
@@ -2743,7 +2743,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/invoices/:id/send", requireAdmin, async (req, res) => {
     try {
-      const invoice = await storage.getInvoice(req.params.id);
+      const invoice = await storage.getInvoice(req.params.id as string);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
 
       const invoiceHtml = generateInvoiceEmailHtml(invoice);
@@ -2804,7 +2804,7 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(400).json({ message: "無効なステータスです" });
       }
       const paidAt = status === "paid" ? new Date() : undefined;
-      const invoice = await storage.updateInvoiceStatus(req.params.id, status, paidAt);
+      const invoice = await storage.updateInvoiceStatus(req.params.id as string, status, paidAt);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json(invoice);
     } catch (error) {
@@ -2814,7 +2814,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteInvoice(req.params.id);
+      const deleted = await storage.deleteInvoice(req.params.id as string);
       if (!deleted) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json({ message: "請求書を削除しました" });
     } catch (error) {
