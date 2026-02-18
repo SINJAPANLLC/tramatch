@@ -597,7 +597,7 @@ export default function UserSettings() {
                             {currentPlan === "premium" ? "プレミアムプラン" : "フリープラン"}
                           </span>
                           {currentPlan === "premium" && (
-                            <span className="text-sm text-muted-foreground">1ヶ月：9,900円</span>
+                            <span className="text-sm text-muted-foreground">1ヶ月：5,500円</span>
                           )}
                         </div>
                         {currentPlan === "premium" && (
@@ -1013,7 +1013,7 @@ export default function UserSettings() {
                             months.push(
                               <tr key={`${year}-${month}`} className="border-b last:border-b-0" data-testid={`row-usage-${year}${month}`}>
                                 <td className="py-3 pr-4 text-foreground">{year}年{month}月</td>
-                                <td className="py-3 text-right text-foreground">{isPremium ? "9,900円" : "0円"}</td>
+                                <td className="py-3 text-right text-foreground">{isPremium ? "5,500円" : "0円"}</td>
                               </tr>
                             );
                           }

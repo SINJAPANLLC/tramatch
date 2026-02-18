@@ -112,7 +112,7 @@ export default function Payment() {
                   プレミアムプラン
                 </h3>
                 <div className="mt-2">
-                  <span className="text-3xl font-bold text-foreground">¥9,900</span>
+                  <span className="text-3xl font-bold text-foreground">¥5,500</span>
                   <span className="text-sm text-muted-foreground">/月（税込）</span>
                 </div>
               </div>
