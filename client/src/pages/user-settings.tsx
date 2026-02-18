@@ -542,20 +542,31 @@ export default function UserSettings() {
                   <div className="space-y-4">
                     <div>
                       <h3 className="text-sm font-medium text-foreground mb-3">基本契約</h3>
-                      <div className="p-4 rounded-md bg-muted/50">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div className="p-4 rounded-md bg-muted/50 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Crown className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium text-foreground">
                             {currentPlan === "premium" ? "プレミアムプラン" : "フリープラン"}
                           </span>
                           {currentPlan === "premium" && (
-                            <span className="text-sm text-muted-foreground">1ヶ月：¥5,000（税別）</span>
+                            <span className="text-sm text-muted-foreground">1ヶ月：9,900円</span>
                           )}
                         </div>
                         {currentPlan === "premium" && (
-                          <p className="text-xs text-muted-foreground">
-                            ベータ期間中は無料でご利用いただけます。
-                          </p>
+                          <>
+                            <p className="text-sm text-muted-foreground">
+                              契約期間：{(() => {
+                                const now = new Date();
+                                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                const fmt = (d: Date) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+                                return `${fmt(start)} 〜 ${fmt(end)}`;
+                              })()}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              ベータ期間中は無料でご利用いただけます。
+                            </p>
+                          </>
                         )}
                       </div>
                     </div>
@@ -617,8 +628,11 @@ export default function UserSettings() {
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-base font-bold text-foreground mb-2">口座情報</h2>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    トラマッチからの入金先として利用されます。
+                  </p>
                   <p className="text-sm text-muted-foreground mb-6">
-                    請求書を発行する際の入金先として利用されます。
+                    請求書を発行する際に、入金先として利用されます。
                   </p>
                   <div className="space-y-5">
                     <div className="space-y-2">
