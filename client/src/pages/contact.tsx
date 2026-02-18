@@ -54,8 +54,8 @@ export default function Contact() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-3" data-testid="text-page-title">お問い合わせ</h1>
-        <p className="text-muted-foreground text-lg">ご不明な点がございましたらお気軽にお問い合わせください</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-3" data-testid="text-page-title">お問い合わせ</h1>
+        <p className="text-muted-foreground text-base sm:text-lg">ご不明な点がございましたらお気軽にお問い合わせください</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

@@ -62,7 +62,7 @@ export default function TransportLedger() {
         <h1 className="text-xl font-bold text-foreground mb-6" data-testid="text-page-title">実運送体制管理簿出力</h1>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="max-w-2xl mx-auto space-y-5">
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1 shrink-0">
@@ -74,7 +74,7 @@ export default function TransportLedger() {
                     type="date"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-[160px] text-sm"
+                    className="w-full sm:w-[160px] text-sm"
                     data-testid="input-date-from"
                   />
                   <span className="text-muted-foreground text-sm">～</span>
@@ -82,7 +82,7 @@ export default function TransportLedger() {
                     type="date"
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
-                    className="w-[160px] text-sm"
+                    className="w-full sm:w-[160px] text-sm"
                     data-testid="input-date-to"
                   />
                 </div>
@@ -90,7 +90,7 @@ export default function TransportLedger() {
 
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1 shrink-0">
-                  <div className="w-[30px]" />
+                  <div className="hidden sm:block w-[30px]" />
                   <Label className="font-bold text-sm">真荷主名</Label>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -98,7 +98,7 @@ export default function TransportLedger() {
                     placeholder="真荷主名"
                     value={shipperName}
                     onChange={(e) => setShipperName(e.target.value)}
-                    className="w-[220px] text-sm"
+                    className="w-full sm:w-[220px] text-sm"
                     data-testid="input-shipper-name"
                   />
                   <Select value={matchType} onValueChange={setMatchType}>

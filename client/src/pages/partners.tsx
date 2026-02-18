@@ -35,7 +35,7 @@ export default function Partners() {
         </div>
 
         <Card>
-          <CardContent className="p-8 text-center">
+          <CardContent className="p-4 sm:p-8 text-center">
             <UserPlus className="w-12 h-12 text-primary mx-auto mb-4" />
             <h2 className="text-lg font-bold text-foreground mb-2" data-testid="text-invite-heading">取引先を招待</h2>
             <p className="text-sm text-muted-foreground mb-6">メールアドレスを入力して取引先をトラマッチに招待しましょう</p>

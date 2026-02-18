@@ -47,7 +47,7 @@ function isImageFile(path: string): boolean {
 function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: import("react").ReactNode }) {
   return (
     <div className="flex border-b border-border last:border-b-0">
-      <div className="w-[100px] shrink-0 bg-muted/30 px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
+      <div className="w-[80px] sm:w-[100px] shrink-0 bg-muted/30 px-2 sm:px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
       <div className="flex-1 px-3 py-2.5 text-sm font-bold text-foreground whitespace-pre-wrap break-all">{children || value || "-"}</div>
     </div>
   );
@@ -206,7 +206,7 @@ export default function AdminApplications() {
               <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">新規ユーザー・プラン変更の承認・却下を行います</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">

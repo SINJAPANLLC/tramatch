@@ -493,7 +493,7 @@ function UsageAmountSection() {
 
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <h2 className="text-base font-bold text-foreground mb-4">ご利用金額</h2>
         <div className="space-y-1 mb-6">
           <p className="text-sm text-muted-foreground">※ご利用金額は月末締めで翌月1日に更新されます。</p>
@@ -766,7 +766,7 @@ export default function UserSettings() {
           <p className="text-sm text-muted-foreground mt-1">企業情報・アカウント設定</p>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           <div className="w-56 shrink-0 hidden md:block">
             <nav className="space-y-1" data-testid="settings-nav">
               {Object.entries(groups).map(([group, tabs], groupIdx) => {
@@ -853,7 +853,7 @@ export default function UserSettings() {
           <div className="flex-1 min-w-0">
             {activeTab === "basic" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-6">企業基本情報</h2>
                   <div className="mb-4">
                     <span className="text-sm font-medium text-foreground">{user?.companyName}</span>
@@ -924,7 +924,7 @@ export default function UserSettings() {
 
             {activeTab === "detail" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-2">企業詳細情報</h2>
                   <p className="text-sm text-muted-foreground mb-6">{user?.companyName}</p>
                   <div className="space-y-5">
@@ -1044,7 +1044,7 @@ export default function UserSettings() {
 
             {activeTab === "credit" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-6">企業信用情報</h2>
                   <div className="space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1113,7 +1113,7 @@ export default function UserSettings() {
 
             {activeTab === "contract" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">ご契約内容</h2>
                   <p className="text-sm text-muted-foreground mb-6">
                     特記がない限り税込金額で表示しております。また、サービス利用状況に応じて従量料金が別途発生します。
@@ -1206,7 +1206,7 @@ export default function UserSettings() {
 
             {activeTab === "bank" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-2">口座情報</h2>
                   <p className="text-sm text-muted-foreground mb-1">
                     トラマッチからの入金先として利用されます。
@@ -1255,7 +1255,7 @@ export default function UserSettings() {
             {activeTab === "payment-method" && (
               <div className="space-y-4">
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
                     <p className="text-sm text-muted-foreground mb-6">請求書をメールにて送付致しますので銀行振込かクレジットカードにてお支払いください。</p>
 
@@ -1298,7 +1298,7 @@ export default function UserSettings() {
                 </Card>
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base font-bold text-foreground mb-4">決済履歴</h2>
                     <PaymentHistory />
                   </CardContent>
@@ -1308,7 +1308,7 @@ export default function UserSettings() {
 
             {activeTab === "invoice-receive" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">請求書受領設定</h2>
                   <div className="space-y-1 mb-6">
                     <p className="text-sm text-muted-foreground">過去の請求書には反映されません。必要な場合はお問い合わせください。</p>
@@ -1345,7 +1345,7 @@ export default function UserSettings() {
 
             {activeTab === "invoice-issue" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">請求書発行設定</h2>
                   <p className="text-sm text-muted-foreground mb-6">支払通知書にも反映されます。</p>
                   <div className="space-y-4">
@@ -1379,7 +1379,7 @@ export default function UserSettings() {
 
             {activeTab === "accounting-contact" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">経理連絡先</h2>
                   <p className="text-sm text-muted-foreground mb-6">
                     トラマッチから請求・お支払いに関する確認時、実務担当者様へスムーズにご連絡するために使用します。
@@ -1428,7 +1428,7 @@ export default function UserSettings() {
 
             {activeTab === "user-mgmt" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">ユーザー管理</h2>
                   <p className="text-sm text-muted-foreground mb-6">
                     ユーザー追加には月額2,750円（税込）が発生いたします。
@@ -1443,7 +1443,7 @@ export default function UserSettings() {
 
             {activeTab === "notification-prefs" && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <h2 className="text-base font-bold text-foreground mb-6">通知設定</h2>
                   <p className="text-sm text-muted-foreground mb-6">
                     通知の受信方法を選択できます。各チャネルのオン/オフを切り替えてください。
@@ -1528,7 +1528,7 @@ export default function UserSettings() {
             {activeTab === "email-cargo" && (
               <div className="space-y-6">
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base font-bold text-foreground mb-4">荷物情報のメール受信設定</h2>
                     <p className="text-sm text-muted-foreground mb-1">
                       保存している「よく使う検索条件」の中から、該当する荷物情報を定期的にメールでお知らせします。メールでお知らせできる「よく使う検索条件」は1件のみです。
@@ -1559,7 +1559,7 @@ export default function UserSettings() {
                 </Card>
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <h2 className="text-base font-bold text-foreground mb-6">その他のメール受信設定</h2>
                     <div className="space-y-4">
                       <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-cargo">

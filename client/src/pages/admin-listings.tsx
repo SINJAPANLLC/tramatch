@@ -163,7 +163,7 @@ export default function AdminListings() {
           <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">荷物・空車掲載の管理</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
           <Card
             className={`cursor-pointer hover-elevate ${activeTab === "cargo" ? "ring-2 ring-primary" : ""}`}
             onClick={() => setActiveTab("cargo")}
