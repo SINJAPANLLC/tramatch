@@ -6,7 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing, Announcement, SeoArticle } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { X } from "lucide-react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
 import { formatPrice } from "@/lib/utils";
 
@@ -699,6 +700,57 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <PromoBanner />
+    </div>
+  );
+}
+
+function PromoBanner() {
+  const [visible, setVisible] = useState(true);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4 duration-500"
+      data-testid="promo-banner"
+      style={{ maxWidth: "340px" }}
+    >
+      <div className="relative bg-white rounded-md shadow-lg border border-border overflow-visible">
+        <button
+          onClick={() => setVisible(false)}
+          className="absolute -top-2 -right-2 bg-white rounded-full shadow-md border border-border w-6 h-6 flex items-center justify-center z-10"
+          data-testid="button-close-promo"
+          aria-label="閉じる"
+        >
+          <X className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+        <Link href="/register">
+          <div className="cursor-pointer">
+            <div className="flex items-stretch">
+              <div className="bg-primary flex items-center justify-center px-3 py-3 rounded-l-md">
+                <Truck className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <div className="flex-1 px-3 py-2.5">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    β版プレミアムプラン
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold text-foreground">成約し放題</span>
+                  <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">今だけ無料でプレミアム機能が使える</p>
+              </div>
+            </div>
+            <div className="bg-primary text-primary-foreground text-center py-2 text-xs font-bold rounded-b-md">
+              新規登録はこちら <ChevronRight className="w-3.5 h-3.5 inline-block" />
+            </div>
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }
