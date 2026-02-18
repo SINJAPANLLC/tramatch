@@ -22,7 +22,8 @@ declare global {
 
 function SquareCardPayment() {
   const { toast } = useToast();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const squareContainerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<any>(null);
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [cardReady, setCardReady] = useState(false);
@@ -70,9 +71,17 @@ function SquareCardPayment() {
   }, [appId, locationId]);
 
   useEffect(() => {
-    if (!sdkLoaded || !window.Square || !containerRef.current || !appId || !locationId) return;
+    if (!sdkLoaded || !window.Square || !wrapperRef.current || !appId || !locationId) return;
 
     let cancelled = false;
+
+    const container = document.createElement("div");
+    container.style.minHeight = "40px";
+    squareContainerRef.current = container;
+
+    if (wrapperRef.current) {
+      wrapperRef.current.appendChild(container);
+    }
 
     async function initCard() {
       try {
@@ -80,15 +89,9 @@ function SquareCardPayment() {
         const card = await payments.card();
         if (cancelled) return;
 
-        const container = containerRef.current;
-        if (container) {
-          while (container.firstChild) {
-            container.removeChild(container.firstChild);
-          }
-          await card.attach(container);
-          cardRef.current = card;
-          setCardReady(true);
-        }
+        await card.attach(container);
+        cardRef.current = card;
+        setCardReady(true);
       } catch (err) {
         console.error("Square card init error:", err);
       }
@@ -102,14 +105,12 @@ function SquareCardPayment() {
       const card = cardRef.current;
       cardRef.current = null;
       if (card) {
-        try { card.destroy(); } catch (_e) { /* Square may throw if DOM already cleaned */ }
+        try { card.destroy(); } catch (_e) { /* ignore */ }
       }
-      const container = containerRef.current;
-      if (container) {
-        while (container.firstChild) {
-          try { container.removeChild(container.firstChild); } catch (_e) { break; }
-        }
+      if (container.parentNode) {
+        try { container.parentNode.removeChild(container); } catch (_e) { /* ignore */ }
       }
+      squareContainerRef.current = null;
     };
   }, [sdkLoaded, appId, locationId]);
 
@@ -140,7 +141,7 @@ function SquareCardPayment() {
 
   return (
     <div className="rounded-md border p-4 space-y-4" data-testid="square-card-payment">
-      <div ref={containerRef} className="min-h-[40px]">
+      <div ref={wrapperRef} className="min-h-[40px]">
         {!cardReady && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" />
