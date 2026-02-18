@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
 import { Truck, ArrowLeft } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -52,9 +53,6 @@ export default function TruckForm() {
       availableDate: "",
       price: "",
       description: "",
-      companyName: "",
-      contactPhone: "",
-      contactEmail: "",
     },
   });
 
@@ -186,19 +184,26 @@ export default function TruckForm() {
                   name="bodyType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>車体タイプ</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-truck-body-type">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {BODY_TYPES.map((b) => (
-                            <SelectItem key={b} value={b}>{b}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>車体タイプ（複数選択可）</FormLabel>
+                      <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto border border-border rounded-md p-3" data-testid="select-truck-body-type">
+                        {BODY_TYPES.map(b => {
+                          const selected = (field.value || "").split(",").map((s: string) => s.trim()).filter(Boolean);
+                          const isChecked = selected.includes(b);
+                          return (
+                            <label key={b} className="flex items-center gap-2 cursor-pointer text-sm hover-elevate rounded px-1.5 py-1">
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  const current = (field.value || "").split(",").map((s: string) => s.trim()).filter(Boolean);
+                                  const next = checked ? [...current, b] : current.filter((v: string) => v !== b);
+                                  field.onChange(next.join(", "));
+                                }}
+                              />
+                              <span>{b}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,7 +233,7 @@ export default function TruckForm() {
                   <FormItem>
                     <FormLabel>空車日</FormLabel>
                     <FormControl>
-                      <Input placeholder="例: 2026/03/01" {...field} data-testid="input-available-date" />
+                      <Input type="date" {...field} data-testid="input-available-date" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -242,8 +247,25 @@ export default function TruckForm() {
                   <FormItem>
                     <FormLabel>希望運賃（任意）</FormLabel>
                     <FormControl>
-                      <Input placeholder="例: 80,000円" {...field} value={field.value || ""} data-testid="input-truck-price" />
+                      <Input
+                        placeholder="例: 80,000円"
+                        {...field}
+                        value={field.value === "要相談" ? "" : (field.value || "")}
+                        disabled={field.value === "要相談"}
+                        data-testid="input-truck-price"
+                      />
                     </FormControl>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Checkbox
+                        id="price-negotiable-form"
+                        checked={field.value === "要相談"}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked ? "要相談" : "");
+                        }}
+                        data-testid="checkbox-price-negotiable"
+                      />
+                      <label htmlFor="price-negotiable-form" className="text-sm text-muted-foreground cursor-pointer">要相談</label>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -268,53 +290,6 @@ export default function TruckForm() {
                   </FormItem>
                 )}
               />
-
-              <div className="pt-4 border-t border-border">
-                <h3 className="text-sm font-semibold text-foreground mb-4">連絡先情報</h3>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="companyName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>会社名</FormLabel>
-                        <FormControl>
-                          <Input placeholder="例: 株式会社トラマッチ運送" {...field} data-testid="input-truck-company" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="contactPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>電話番号</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: 03-1234-5678" {...field} data-testid="input-truck-phone" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contactEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>メールアドレス（任意）</FormLabel>
-                          <FormControl>
-                            <Input placeholder="例: info@example.com" {...field} value={field.value || ""} data-testid="input-truck-email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
 
               <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-submit-truck">
                 {mutation.isPending ? "掲載中..." : "車両情報を掲載する"}

@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2 } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
@@ -56,7 +57,6 @@ type InputMode = "text" | "file" | "voice";
 const TRUCK_FIELDS = [
   "title", "currentArea", "destinationArea", "vehicleType", "bodyType",
   "maxWeight", "availableDate", "price", "description",
-  "companyName", "contactPhone", "contactEmail",
 ];
 
 const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
@@ -70,7 +70,6 @@ const FIELD_LABELS: Record<string, string> = {
   title: "タイトル", currentArea: "空車地", destinationArea: "行先地",
   vehicleType: "車種", bodyType: "車体タイプ", maxWeight: "最大積載量", availableDate: "空車日",
   price: "最低運賃", description: "備考",
-  companyName: "会社名", contactPhone: "電話番号", contactEmail: "メール",
 };
 
 function findBestMatch(value: string, options: string[]): string {
@@ -281,7 +280,6 @@ function TruckRegisterTab() {
     defaultValues: {
       title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
       maxWeight: "", availableDate: "", price: "", description: "",
-      companyName: "", contactPhone: "", contactEmail: "",
     },
   });
 
@@ -509,9 +507,8 @@ function TruckRegisterTab() {
       setPendingItems(remaining);
       setCurrentItemIndex(prev => prev + 1);
       form.reset({
-        title: "", currentArea: "", destinationArea: "", vehicleType: "",
+        title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
         maxWeight: "", availableDate: "", price: "", description: "",
-        companyName: "", contactPhone: "", contactEmail: "",
       });
       const normalized = normalizeAiItem(nextItem);
       setExtractedFields(normalized);
@@ -807,30 +804,43 @@ function TruckRegisterTab() {
                           <FormMessage />
                         </FormItem>
                       )} />
-                      <FormField control={form.control} name="bodyType" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">車体タイプ</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
-                            <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-truck-body-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
-                            <SelectContent>{BODY_TYPES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <FormField control={form.control} name="maxWeight" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">最大積載量</FormLabel>
-                          <FormControl><Input placeholder="例: 10t" {...field} className="h-8 text-xs" data-testid="input-max-weight" /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
+                    <FormField control={form.control} name="bodyType" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">車体タイプ（複数選択可）</FormLabel>
+                        <div className="grid grid-cols-3 gap-1.5 max-h-[140px] overflow-y-auto border border-border rounded-md p-2" data-testid="select-truck-body-type">
+                          {BODY_TYPES.map(b => {
+                            const selected = (field.value || "").split(",").map(s => s.trim()).filter(Boolean);
+                            const isChecked = selected.includes(b);
+                            return (
+                              <label key={b} className="flex items-center gap-1.5 cursor-pointer text-[11px] hover-elevate rounded px-1 py-0.5">
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => {
+                                    const current = (field.value || "").split(",").map(s => s.trim()).filter(Boolean);
+                                    const next = checked ? [...current, b] : current.filter(v => v !== b);
+                                    field.onChange(next.join(", "));
+                                  }}
+                                />
+                                <span>{b}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="maxWeight" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">最大積載量</FormLabel>
+                        <FormControl><Input placeholder="例: 10t" {...field} className="h-8 text-xs" data-testid="input-max-weight" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
                     <FormField control={form.control} name="availableDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">空車日</FormLabel>
-                        <FormControl><Input placeholder="例: 2026/03/01" {...field} className="h-8 text-xs" data-testid="input-available-date" /></FormControl>
+                        <FormControl><Input type="date" {...field} className="h-8 text-xs" data-testid="input-available-date" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -843,7 +853,27 @@ function TruckRegisterTab() {
                     <FormField control={form.control} name="price" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">最低運賃 円(税別)</FormLabel>
-                        <FormControl><Input placeholder="金額を入力 または 要相談" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-truck-price" /></FormControl>
+                        <FormControl>
+                          <Input
+                            placeholder="金額を入力"
+                            {...field}
+                            value={field.value === "要相談" ? "" : (field.value || "")}
+                            disabled={field.value === "要相談"}
+                            className="h-8 text-xs"
+                            data-testid="input-truck-price"
+                          />
+                        </FormControl>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <Checkbox
+                            id="price-negotiable"
+                            checked={field.value === "要相談"}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked ? "要相談" : "");
+                            }}
+                            data-testid="checkbox-price-negotiable"
+                          />
+                          <label htmlFor="price-negotiable" className="text-xs text-muted-foreground cursor-pointer">要相談</label>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -871,34 +901,6 @@ function TruckRegisterTab() {
                   </div>
                 </div>
 
-                <div className="border-t border-border pt-3">
-                  <h3 className="text-xs font-bold text-muted-foreground mb-2">連絡先情報</h3>
-                  <div className="space-y-2">
-                    <FormField control={form.control} name="companyName" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">会社名</FormLabel>
-                        <FormControl><Input placeholder="例: 株式会社トラマッチ運送" {...field} className="h-8 text-xs" data-testid="input-truck-company" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <div className="grid grid-cols-2 gap-2">
-                      <FormField control={form.control} name="contactPhone" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">電話番号</FormLabel>
-                          <FormControl><Input placeholder="例: 03-1234-5678" {...field} className="h-8 text-xs" data-testid="input-truck-phone" /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="contactEmail" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">メール（任意）</FormLabel>
-                          <FormControl><Input placeholder="例: info@example.com" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-truck-email" /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-                  </div>
-                </div>
 
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" className="flex-1" disabled={mutation.isPending} data-testid="button-submit-truck">
