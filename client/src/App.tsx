@@ -34,6 +34,7 @@ import AdminAnnouncements from "@/pages/admin-announcements";
 import AdminListings from "@/pages/admin-listings";
 import AdminAuditLogs from "@/pages/admin-audit-logs";
 import AdminContactInquiries from "@/pages/admin-contact-inquiries";
+import AdminInvoices from "@/pages/admin-invoices";
 import Guide from "@/pages/guide";
 import Faq from "@/pages/faq";
 import Contact from "@/pages/contact";
@@ -69,7 +70,7 @@ const DASHBOARD_PATHS = [
   "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new", "/my-trucks",
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
-  "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
+  "/admin", "/admin/applications", "/admin/users", "/admin/revenue", "/admin/invoices",
   "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs",
 ];
 

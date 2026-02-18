@@ -61,6 +61,62 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+function generateInvoiceEmailHtml(invoice: any): string {
+  const statusLabel = invoice.status === "paid" ? "入金済み" : invoice.status === "overdue" ? "支払い期限超過" : "未入金";
+  return `
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"></head>
+<body style="font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN',sans-serif;max-width:700px;margin:0 auto;padding:20px;color:#333;">
+  <div style="text-align:center;border-bottom:3px solid #0d9488;padding-bottom:15px;margin-bottom:20px;">
+    <h1 style="color:#0d9488;margin:0;font-size:24px;">請求書</h1>
+    <p style="margin:5px 0 0;color:#666;font-size:14px;">トラマッチ - 求荷求車マッチングプラットフォーム</p>
+  </div>
+  <table style="width:100%;margin-bottom:20px;font-size:14px;">
+    <tr><td style="width:50%;vertical-align:top;">
+      <p style="margin:0 0 5px;"><strong>請求書番号:</strong> ${invoice.invoiceNumber}</p>
+      <p style="margin:0 0 5px;"><strong>請求日:</strong> ${new Date(invoice.createdAt).toLocaleDateString("ja-JP")}</p>
+      <p style="margin:0 0 5px;"><strong>お支払い期限:</strong> ${invoice.dueDate}</p>
+      <p style="margin:0 0 5px;"><strong>ステータス:</strong> ${statusLabel}</p>
+    </td><td style="width:50%;vertical-align:top;text-align:right;">
+      <p style="margin:0 0 3px;font-weight:bold;">発行元</p>
+      <p style="margin:0 0 2px;">合同会社SIN JAPAN</p>
+      <p style="margin:0 0 2px;">〒243-0018</p>
+      <p style="margin:0 0 2px;">神奈川県厚木市中町3-6-17</p>
+      <p style="margin:0 0 2px;">Tel: 046-212-2325</p>
+      <p style="margin:0;">info@sinjapan.jp</p>
+    </td></tr>
+  </table>
+  <div style="background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:20px;">
+    <p style="margin:0 0 5px;font-weight:bold;">請求先</p>
+    <p style="margin:0;font-size:16px;">${invoice.companyName} 御中</p>
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <thead><tr style="background:#0d9488;color:white;">
+      <th style="padding:10px;text-align:left;border:1px solid #0d9488;">項目</th>
+      <th style="padding:10px;text-align:right;border:1px solid #0d9488;">金額</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:10px;border:1px solid #ddd;">${invoice.description || "月額利用料"}</td>
+          <td style="padding:10px;text-align:right;border:1px solid #ddd;">¥${invoice.amount.toLocaleString()}</td></tr>
+      <tr><td style="padding:10px;border:1px solid #ddd;">消費税（10%）</td>
+          <td style="padding:10px;text-align:right;border:1px solid #ddd;">¥${invoice.tax.toLocaleString()}</td></tr>
+      <tr style="background:#f8f9fa;font-weight:bold;">
+        <td style="padding:10px;border:1px solid #ddd;">合計金額（税込）</td>
+        <td style="padding:10px;text-align:right;border:1px solid #ddd;color:#0d9488;font-size:18px;">¥${invoice.totalAmount.toLocaleString()}</td></tr>
+    </tbody>
+  </table>
+  <div style="background:#f0fdfa;padding:15px;border-radius:6px;border:1px solid #99f6e4;margin-bottom:20px;">
+    <p style="margin:0 0 8px;font-weight:bold;color:#0d9488;">お振込先</p>
+    <p style="margin:0 0 3px;font-size:14px;">銀行名：（管理者にお問い合わせください）</p>
+    <p style="margin:0;font-size:13px;color:#666;">※振込手数料はお客様のご負担となります。</p>
+  </div>
+  <div style="text-align:center;padding-top:15px;border-top:1px solid #eee;color:#999;font-size:12px;">
+    <p>合同会社SIN JAPAN ｜ トラマッチ</p>
+  </div>
+</body></html>`;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -2613,6 +2669,156 @@ JSON形式で以下を返してください（日本語で）:
       res.json(payments);
     } catch (error) {
       res.status(500).json({ message: "決済履歴の取得に失敗しました" });
+    }
+  });
+
+  // ===== Invoice Management (Admin) =====
+
+  app.get("/api/admin/invoices", requireAdmin, async (_req, res) => {
+    try {
+      const allInvoices = await storage.getInvoices();
+      res.json(allInvoices);
+    } catch (error) {
+      res.status(500).json({ message: "請求書一覧の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
+      res.json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "請求書の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/invoices/generate", requireAdmin, async (req, res) => {
+    try {
+      const { userIds, billingMonth } = req.body;
+      if (!billingMonth) return res.status(400).json({ message: "請求月を指定してください" });
+
+      const allUsers = await storage.getAllUsers();
+      const targetUsers = userIds && userIds.length > 0
+        ? allUsers.filter((u: any) => userIds.includes(u.id))
+        : allUsers.filter((u: any) => u.role !== "admin" && u.approved && (u.plan === "premium" || u.plan === "premium_full"));
+
+      const generated: any[] = [];
+      for (const user of targetUsers) {
+        const baseAmount = user.plan === "premium_full" ? 5500 : 0;
+        if (baseAmount === 0) continue;
+
+        const tax = Math.floor(baseAmount * 0.1);
+        const totalAmount = baseAmount + tax;
+        const invoiceNumber = await storage.getNextInvoiceNumber();
+
+        const [year, month] = billingMonth.split("-");
+        const dueMonth = parseInt(month) + 1;
+        const dueYear = dueMonth > 12 ? parseInt(year) + 1 : parseInt(year);
+        const dueMonthStr = dueMonth > 12 ? 1 : dueMonth;
+        const dueDate = `${dueYear}-${String(dueMonthStr).toString().padStart(2, "0")}-末日`;
+
+        const invoice = await storage.createInvoice({
+          invoiceNumber,
+          userId: user.id,
+          companyName: user.companyName,
+          email: user.email,
+          planType: user.plan,
+          amount: baseAmount,
+          tax,
+          totalAmount,
+          billingMonth,
+          dueDate,
+          description: `トラマッチ プレミアムプラン月額利用料（${billingMonth}）`,
+        });
+        generated.push(invoice);
+      }
+
+      res.json({ message: `${generated.length}件の請求書を発行しました`, invoices: generated });
+    } catch (error) {
+      console.error("Invoice generation error:", error);
+      res.status(500).json({ message: "請求書の発行に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/invoices/:id/send", requireAdmin, async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
+
+      const invoiceHtml = generateInvoiceEmailHtml(invoice);
+      const result = await sendEmail(
+        invoice.email,
+        `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
+        invoiceHtml
+      );
+
+      if (result.success) {
+        await storage.updateInvoiceSentAt(invoice.id, new Date());
+        res.json({ message: "請求書をメールで送信しました" });
+      } else {
+        res.status(500).json({ message: `メール送信に失敗しました: ${result.error}` });
+      }
+    } catch (error) {
+      console.error("Invoice send error:", error);
+      res.status(500).json({ message: "請求書の送信に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/invoices/bulk-send", requireAdmin, async (req, res) => {
+    try {
+      const { invoiceIds } = req.body;
+      if (!invoiceIds || invoiceIds.length === 0) return res.status(400).json({ message: "請求書を選択してください" });
+
+      let sentCount = 0;
+      let failCount = 0;
+      for (const id of invoiceIds) {
+        const invoice = await storage.getInvoice(id);
+        if (!invoice) continue;
+
+        const invoiceHtml = generateInvoiceEmailHtml(invoice);
+        const result = await sendEmail(
+          invoice.email,
+          `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
+          invoiceHtml
+        );
+
+        if (result.success) {
+          await storage.updateInvoiceSentAt(invoice.id, new Date());
+          sentCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      res.json({ message: `${sentCount}件送信成功、${failCount}件失敗` });
+    } catch (error) {
+      res.status(500).json({ message: "一括送信に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/invoices/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!["unpaid", "paid", "overdue", "cancelled"].includes(status)) {
+        return res.status(400).json({ message: "無効なステータスです" });
+      }
+      const paidAt = status === "paid" ? new Date() : undefined;
+      const invoice = await storage.updateInvoiceStatus(req.params.id, status, paidAt);
+      if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
+      res.json(invoice);
+    } catch (error) {
+      res.status(500).json({ message: "ステータスの更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteInvoice(req.params.id);
+      if (!deleted) return res.status(404).json({ message: "請求書が見つかりません" });
+      res.json({ message: "請求書を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "請求書の削除に失敗しました" });
     }
   });
 
