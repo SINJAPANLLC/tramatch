@@ -1126,7 +1126,157 @@ function TruckRegisterTab() {
   );
 }
 
-function MyTrucksTab() {
+function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: () => void }) {
+  const { toast } = useToast();
+  const [editFields, setEditFields] = useState({
+    title: listing.title,
+    currentArea: listing.currentArea,
+    destinationArea: listing.destinationArea,
+    vehicleType: listing.vehicleType,
+    bodyType: listing.bodyType || "",
+    maxWeight: listing.maxWeight,
+    availableDate: listing.availableDate,
+    price: listing.price || "",
+    description: listing.description || "",
+  });
+
+  useEffect(() => {
+    setEditFields({
+      title: listing.title,
+      currentArea: listing.currentArea,
+      destinationArea: listing.destinationArea,
+      vehicleType: listing.vehicleType,
+      bodyType: listing.bodyType || "",
+      maxWeight: listing.maxWeight,
+      availableDate: listing.availableDate,
+      price: listing.price || "",
+      description: listing.description || "",
+    });
+  }, [listing.id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: Record<string, string>) => {
+      const res = await apiRequest("PATCH", `/api/trucks/${listing.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-trucks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({ title: "空車情報を更新しました" });
+    },
+    onError: () => {
+      toast({ title: "更新に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate(editFields);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setEditFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-edit">
+      <div className="sticky top-0 bg-background z-10">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
+          <span className="text-sm font-bold text-foreground">空車情報を編集</span>
+          <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-truck-edit">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-3">
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">タイトル</label>
+          <Input value={editFields.title} onChange={e => handleChange("title", e.target.value)} data-testid="input-edit-title" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">現在地</label>
+            <Select value={editFields.currentArea} onValueChange={v => handleChange("currentArea", v)}>
+              <SelectTrigger data-testid="select-edit-currentArea"><SelectValue /></SelectTrigger>
+              <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">行き先</label>
+            <Select value={editFields.destinationArea} onValueChange={v => handleChange("destinationArea", v)}>
+              <SelectTrigger data-testid="select-edit-destinationArea"><SelectValue /></SelectTrigger>
+              <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">車種</label>
+            <Select value={editFields.vehicleType} onValueChange={v => handleChange("vehicleType", v)}>
+              <SelectTrigger data-testid="select-edit-vehicleType"><SelectValue /></SelectTrigger>
+              <SelectContent>{VEHICLE_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">車体タイプ</label>
+            <Select value={editFields.bodyType} onValueChange={v => handleChange("bodyType", v)}>
+              <SelectTrigger data-testid="select-edit-bodyType"><SelectValue /></SelectTrigger>
+              <SelectContent>{BODY_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">最大積載量</label>
+          <Input value={editFields.maxWeight} onChange={e => handleChange("maxWeight", e.target.value)} placeholder="例: 10t" data-testid="input-edit-maxWeight" />
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">空車日</label>
+          <Input value={editFields.availableDate} onChange={e => handleChange("availableDate", e.target.value)} placeholder="YYYY/MM/DD" data-testid="input-edit-availableDate" />
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">最低運賃</label>
+          <Input value={editFields.price} onChange={e => handleChange("price", e.target.value)} placeholder="例: 50000" data-testid="input-edit-price" />
+        </div>
+
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">備考</label>
+          <Textarea value={editFields.description} onChange={e => handleChange("description", e.target.value)} rows={3} data-testid="input-edit-description" />
+        </div>
+
+        <Button
+          className="w-full"
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
+          data-testid="button-save-truck-edit"
+        >
+          {updateMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              保存中...
+            </>
+          ) : (
+            "保存する"
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MyTrucksTab({ selectedTruckId, onSelectTruck }: { selectedTruckId: string | null; onSelectTruck: (id: string | null) => void }) {
   const { toast } = useToast();
   const [myPage, setMyPage] = useState(1);
   const myPerPage = 10;
@@ -1139,9 +1289,10 @@ function MyTrucksTab() {
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/trucks/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-trucks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      if (selectedTruckId === deletedId) onSelectTruck(null);
       toast({ title: "空車情報を削除しました" });
     },
     onError: () => {
@@ -1189,15 +1340,21 @@ function MyTrucksTab() {
         <div className="space-y-3">
           {paginated.map((truck) => {
             const isExpired = new Date(truck.availableDate) < new Date(new Date().toDateString());
+            const isSelected = selectedTruckId === truck.id;
             return (
-              <Card key={truck.id} className={isExpired ? "opacity-60" : ""} data-testid={`card-my-truck-${truck.id}`}>
+              <Card
+                key={truck.id}
+                className={`cursor-pointer hover-elevate ${isExpired ? "opacity-60" : ""} ${isSelected ? "border-primary" : ""}`}
+                onClick={() => onSelectTruck(truck.id)}
+                data-testid={`card-my-truck-${truck.id}`}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <a href={`/trucks/${truck.id}`} className="font-bold text-sm hover:underline cursor-pointer" data-testid={`link-my-truck-title-${truck.id}`}>
+                        <span className="font-bold text-sm" data-testid={`link-my-truck-title-${truck.id}`}>
                           {truck.title}
-                        </a>
+                        </span>
                         {isExpired ? (
                           <Badge variant="outline" className="text-[10px]">期限切れ</Badge>
                         ) : (
@@ -1226,15 +1383,19 @@ function MyTrucksTab() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <a href={`/trucks/edit/${truck.id}`}>
-                        <Button variant="ghost" size="icon" data-testid={`button-edit-my-truck-${truck.id}`}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </a>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
+                        onClick={(e) => { e.stopPropagation(); onSelectTruck(truck.id); }}
+                        data-testid={`button-edit-my-truck-${truck.id}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm("この空車情報を削除しますか？")) {
                             deleteMutation.mutate(truck.id);
                           }
@@ -1287,6 +1448,7 @@ export default function TruckList() {
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTruckId, setSelectedTruckId] = useState<string | null>(null);
+  const [editTruckId, setEditTruckId] = useState<string | null>(null);
   const [prefectureFilter, setPrefectureFilter] = useState("all");
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
@@ -1303,6 +1465,16 @@ export default function TruckList() {
     if (!selectedTruckId || !listings) return null;
     return listings.find((l) => l.id === selectedTruckId) || null;
   }, [selectedTruckId, listings]);
+
+  const { data: myTrucksData } = useQuery<TruckListing[]>({
+    queryKey: ["/api/my-trucks"],
+    enabled: isAuthenticated,
+  });
+
+  const editTruck = useMemo(() => {
+    if (!editTruckId || !myTrucksData) return null;
+    return myTrucksData.find((l) => l.id === editTruckId) || null;
+  }, [editTruckId, myTrucksData]);
 
   const handleSearch = () => {
     setActiveSearch(parseAISearch(aiSearchText));
@@ -1847,14 +2019,22 @@ export default function TruckList() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="px-4 sm:px-6 pt-4 shrink-0">
-                {tabBar(false)}
+            <>
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="px-4 sm:px-6 pt-4 shrink-0">
+                  {tabBar(false)}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <MyTrucksTab selectedTruckId={editTruckId} onSelectTruck={setEditTruckId} />
+                </div>
               </div>
-              <div className="flex-1 overflow-hidden">
-                <MyTrucksTab />
-              </div>
-            </div>
+              {editTruckId && editTruck && (
+                <TruckEditPanel
+                  listing={editTruck}
+                  onClose={() => setEditTruckId(null)}
+                />
+              )}
+            </>
           )}
         </div>
       </DashboardLayout>
