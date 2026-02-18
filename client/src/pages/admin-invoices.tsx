@@ -160,7 +160,7 @@ export default function AdminInvoices() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-6" data-testid="admin-invoices-page">
+      <div className="space-y-4 sm:space-y-6 p-3 sm:p-6" data-testid="admin-invoices-page">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
             <FileText className="w-6 h-6 text-primary" />

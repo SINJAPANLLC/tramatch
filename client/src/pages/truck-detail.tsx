@@ -63,10 +63,10 @@ export default function TruckDetail() {
       </Link>
 
       <Card data-testid="card-truck-detail">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
             <div>
-              <h1 className="text-xl font-bold text-foreground" data-testid="text-truck-detail-title">{listing.title}</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground" data-testid="text-truck-detail-title">{listing.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 掲載日: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString("ja-JP") : "---"}
               </p>

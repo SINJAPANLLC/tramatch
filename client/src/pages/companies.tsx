@@ -71,7 +71,7 @@ type CompanyDetail = {
 function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: React.ReactNode }) {
   return (
     <div className="flex border-b border-border last:border-b-0">
-      <div className="w-[130px] shrink-0 bg-muted/30 px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
+      <div className="w-[100px] sm:w-[130px] shrink-0 bg-muted/30 px-2 sm:px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
       <div className="flex-1 px-3 py-2.5 text-sm font-bold text-foreground whitespace-pre-wrap">{children || value || "-"}</div>
     </div>
   );
@@ -149,7 +149,7 @@ ${row("荷物保険", detail?.cargoInsurance)}
 
   if (isLoading) {
     return (
-      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+      <div className="w-full sm:w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">読み込み中...</p>
@@ -159,7 +159,7 @@ ${row("荷物保険", detail?.cargoInsurance)}
   }
 
   return (
-    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-company-detail">
+    <div className="w-full sm:w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-company-detail">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
           <span className="text-sm font-bold text-foreground">企業情報</span>

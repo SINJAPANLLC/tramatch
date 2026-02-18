@@ -37,7 +37,7 @@ function formatDateFull(dateStr: string | null | undefined) {
 function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: React.ReactNode }) {
   return (
     <div className="flex border-b border-border last:border-b-0">
-      <div className="w-[120px] shrink-0 bg-muted/30 px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
+      <div className="w-[90px] sm:w-[120px] shrink-0 bg-muted/30 px-2 sm:px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
       <div className="flex-1 px-3 py-2.5 text-sm text-foreground whitespace-pre-wrap">{children || value || "-"}</div>
     </div>
   );

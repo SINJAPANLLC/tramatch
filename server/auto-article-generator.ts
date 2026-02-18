@@ -53,7 +53,7 @@ function generateSlug(title: string): string {
 const DAILY_ARTICLE_COUNT = 10;
 
 async function generateSingleArticle(selectedTopic: { topic: string; keywords: string }, articleIndex: number) {
-
+  try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
