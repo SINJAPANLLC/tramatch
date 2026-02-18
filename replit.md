@@ -37,6 +37,7 @@
   - `admin-notifications.tsx` - 通知管理 (admin)
   - `admin-announcements.tsx` - お知らせ管理 (admin)
   - `admin-seo.tsx` - SEO記事生成 (admin)
+  - `admin-agents.tsx` - エージェント管理 (admin) - 47都道府県の代理店管理
   - `admin-contact-inquiries.tsx` - お問い合わせ管理 (admin)
   - `admin-settings.tsx` - 管理設定 (admin)
 - `client/src/components/` - Shared components (header, footer, dashboard-layout)
@@ -78,6 +79,7 @@
 - `/admin/listings` - 掲載管理 (requires admin role) - edit/delete cargo and truck listings
 - `/admin/contact-inquiries` - お問い合わせ管理 (requires admin role) - view/manage contact inquiries
 - `/admin/audit-logs` - 操作ログ (requires admin role) - view admin action audit trail
+- `/admin/agents` - エージェント管理 (requires admin role) - 47都道府県の代理店管理
 - `/admin/settings` - 管理設定 (requires admin role)
 - `/columns` - コラム記事一覧 (public)
 - `/columns/:slug` - コラム記事詳細 (public)

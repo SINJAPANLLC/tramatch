@@ -35,6 +35,7 @@ import AdminListings from "@/pages/admin-listings";
 import AdminAuditLogs from "@/pages/admin-audit-logs";
 import AdminContactInquiries from "@/pages/admin-contact-inquiries";
 import AdminInvoices from "@/pages/admin-invoices";
+import AdminAgents from "@/pages/admin-agents";
 import Guide from "@/pages/guide";
 import Faq from "@/pages/faq";
 import Contact from "@/pages/contact";
@@ -71,7 +72,7 @@ const DASHBOARD_PATHS = [
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue", "/admin/invoices",
-  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs",
+  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs", "/admin/agents",
 ];
 
 function Router() {
@@ -112,6 +113,7 @@ function Router() {
       <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
       <Route path="/admin/contact-inquiries">{() => <AdminRoute component={AdminContactInquiries} />}</Route>
       <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
+      <Route path="/admin/agents">{() => <AdminRoute component={AdminAgents} />}</Route>
       <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
       <Route path="/guide" component={Guide} />
       <Route path="/faq" component={Faq} />

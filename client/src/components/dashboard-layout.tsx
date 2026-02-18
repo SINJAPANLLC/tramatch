@@ -22,6 +22,7 @@ const userMenuItems: MenuItem[] = [
   { href: "/payment", label: "プラン", icon: CreditCard },
   { href: "/services", label: "便利サービス", icon: Star },
   { href: "/settings", label: "設定", icon: Settings },
+  { href: "/admin/agents", label: "エージェント", icon: Building },
 ];
 
 const adminMenuItems: MenuItem[] = [
