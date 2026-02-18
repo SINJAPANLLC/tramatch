@@ -2702,7 +2702,12 @@ JSON形式で以下を返してください（日本語で）:
 
   app.patch("/api/admin/agents/:id", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.updateAgent(req.params.id, req.body);
+      const updateSchema = insertAgentSchema.partial();
+      const parsed = updateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
+      }
+      const agent = await storage.updateAgent(req.params.id, parsed.data);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       await storage.createAuditLog({
         userId: (req as any).user?.id,
