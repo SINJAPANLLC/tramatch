@@ -1,11 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, X } from "lucide-react";
+import { Check, Crown, X, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Payment() {
@@ -13,17 +13,29 @@ export default function Payment() {
   const { toast } = useToast();
   const currentPlan = user?.plan || "free";
 
+  const { data: pendingStatus } = useQuery<{ pending: boolean }>({
+    queryKey: ["/api/plan-change-requests/pending"],
+  });
+
+  const hasPendingRequest = pendingStatus?.pending || false;
+
   const planMutation = useMutation({
     mutationFn: async (plan: string) => {
       const res = await apiRequest("PATCH", "/api/user/plan", { plan });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({ title: "プランを変更しました" });
+      queryClient.invalidateQueries({ queryKey: ["/api/plan-change-requests/pending"] });
+      if (data.pending) {
+        toast({ title: "プラン変更を申請しました", description: "管理者の承認をお待ちください。" });
+      } else {
+        toast({ title: "プランを変更しました" });
+      }
     },
-    onError: () => {
-      toast({ title: "プランの変更に失敗しました", variant: "destructive" });
+    onError: (error: any) => {
+      const message = error?.message || "プランの変更に失敗しました";
+      toast({ title: message, variant: "destructive" });
     },
   });
 
@@ -166,6 +178,14 @@ export default function Payment() {
                 <Badge className="text-xs">現在のプラン</Badge>
               </div>
             )}
+            {hasPendingRequest && currentPlan !== "premium_full" && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge variant="outline" className="text-xs bg-background">
+                  <Clock className="w-3 h-3 mr-1" />
+                  申請中
+                </Badge>
+              </div>
+            )}
             <CardContent className="p-6 flex flex-col flex-1">
               <div className="text-center mb-6">
                 <h3 className="font-bold text-foreground text-lg h-7 flex items-center justify-center gap-1.5">
@@ -209,14 +229,20 @@ export default function Payment() {
                 </div>
               </div>
 
-              <Button
-                className="w-full mt-6"
-                disabled={currentPlan === "premium_full" || planMutation.isPending}
-                onClick={() => handleChangePlan("premium_full")}
-                data-testid="button-select-premium"
-              >
-                {currentPlan === "premium_full" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "プレミアムプランに変更"}
-              </Button>
+              {hasPendingRequest && currentPlan !== "premium_full" ? (
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground">管理者の承認をお待ちください</p>
+                </div>
+              ) : (
+                <Button
+                  className="w-full mt-6"
+                  disabled={currentPlan === "premium_full" || planMutation.isPending}
+                  onClick={() => handleChangePlan("premium_full")}
+                  data-testid="button-select-premium"
+                >
+                  {currentPlan === "premium_full" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "プレミアムプランに申請"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
