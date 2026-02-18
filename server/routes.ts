@@ -2587,12 +2587,22 @@ JSON形式で以下を返してください（日本語で）:
     } catch (error: any) {
       console.error("Square payment error:", error);
       if (error instanceof SquareError) {
-        return res.status(400).json({
-          message: "カード決済に失敗しました",
-          detail: error.message,
-        });
+        const errorCode = error.errors?.[0]?.code || "";
+        const japaneseMessages: Record<string, string> = {
+          "INSUFFICIENT_FUNDS": "カードの残高が不足しています。別のカードをお試しください。",
+          "CARD_DECLINED": "カードが拒否されました。カード発行会社にお問い合わせください。",
+          "INVALID_CARD": "カード情報が無効です。入力内容をご確認ください。",
+          "CARD_EXPIRED": "カードの有効期限が切れています。",
+          "CVV_FAILURE": "セキュリティコード（CVV）が正しくありません。",
+          "INVALID_EXPIRATION": "有効期限が正しくありません。",
+          "ADDRESS_VERIFICATION_FAILURE": "住所の確認に失敗しました。",
+          "GENERIC_DECLINE": "カードが拒否されました。別のカードをお試しください。",
+          "TEMPORARILY_UNAVAILABLE": "一時的にサービスが利用できません。しばらくしてから再度お試しください。",
+        };
+        const message = japaneseMessages[errorCode] || "カード決済に失敗しました。別のカードをお試しください。";
+        return res.status(400).json({ message });
       }
-      res.status(500).json({ message: "決済処理中にエラーが発生しました" });
+      res.status(500).json({ message: "決済処理中にエラーが発生しました。しばらくしてから再度お試しください。" });
     }
   });
 
