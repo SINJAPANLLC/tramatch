@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown } from "lucide-react";
+import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronUp, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ const PREFECTURES = [
   "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
 ];
 
-type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "contact" | "password" | "email" | "usage";
+type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "email-cargo" | "usage";
 
 const TABS: { key: SettingsTab; label: string; group: string }[] = [
   { key: "basic", label: "基本情報", group: "企業情報管理" },
@@ -31,9 +31,12 @@ const TABS: { key: SettingsTab; label: string; group: string }[] = [
   { key: "credit", label: "信用情報", group: "企業情報管理" },
   { key: "contract", label: "契約内容", group: "企業情報管理" },
   { key: "bank", label: "口座情報", group: "企業情報管理" },
-  { key: "contact", label: "担当者情報", group: "企業情報管理" },
-  { key: "password", label: "パスワード変更", group: "ユーザー管理" },
-  { key: "email", label: "メール受信設定", group: "メール受信設定" },
+  { key: "payment-method", label: "お支払い方法", group: "企業情報管理" },
+  { key: "invoice-receive", label: "請求書受領設定", group: "企業情報管理" },
+  { key: "invoice-issue", label: "請求書発行設定", group: "企業情報管理" },
+  { key: "accounting-contact", label: "経理連絡先", group: "企業情報管理" },
+  { key: "user-mgmt", label: "ユーザー管理", group: "ユーザー管理" },
+  { key: "email-cargo", label: "荷物情報", group: "メール受信設定" },
   { key: "usage", label: "ご利用金額", group: "ご利用金額" },
 ];
 
@@ -96,6 +99,13 @@ export default function UserSettings() {
   const [emailTruck, setEmailTruck] = useState(true);
   const [emailAnnouncement, setEmailAnnouncement] = useState(true);
 
+  const [acctContactName, setAcctContactName] = useState("");
+  const [acctContactEmail, setAcctContactEmail] = useState("");
+  const [acctContactPhone, setAcctContactPhone] = useState("");
+  const [acctContactFax, setAcctContactFax] = useState("");
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     if (user) {
       setCompanyName(user.companyName || "");
@@ -154,6 +164,10 @@ export default function UserSettings() {
       setAccountHolderKana(user.accountHolderKana || "");
       setContactName(user.contactName || "");
       setEmail(user.email || "");
+      setAcctContactName(user.accountingContactName || "");
+      setAcctContactEmail(user.accountingContactEmail || "");
+      setAcctContactPhone(user.accountingContactPhone || "");
+      setAcctContactFax(user.accountingContactFax || "");
     }
   }, [user]);
 
@@ -242,29 +256,62 @@ export default function UserSettings() {
 
         <div className="flex gap-6">
           <div className="w-48 shrink-0 hidden md:block">
-            <nav className="space-y-4" data-testid="settings-nav">
-              {Object.entries(groups).map(([group, tabs]) => (
-                <div key={group}>
-                  <p className="text-xs font-bold text-primary mb-1 px-2">{group}</p>
-                  <ul className="space-y-0.5">
-                    {tabs.map((tab) => (
-                      <li key={tab.key}>
-                        <button
-                          onClick={() => setActiveTab(tab.key)}
-                          className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
-                            activeTab === tab.key
-                              ? "bg-primary text-primary-foreground font-medium"
-                              : "text-foreground hover-elevate"
-                          }`}
-                          data-testid={`button-tab-${tab.key}`}
-                        >
-                          {tab.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            <nav className="space-y-1" data-testid="settings-nav">
+              {Object.entries(groups).map(([group, tabs]) => {
+                const isCollapsible = tabs.length > 1;
+                const isCollapsed = collapsedGroups[group];
+                const hasActiveTab = tabs.some(t => t.key === activeTab);
+                return (
+                  <div key={group}>
+                    {isCollapsible ? (
+                      <button
+                        onClick={() => setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }))}
+                        className="w-full flex items-center justify-between text-xs font-bold text-primary px-2 py-1.5"
+                        data-testid={`button-group-${group}`}
+                      >
+                        <span>{group}</span>
+                        {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                      </button>
+                    ) : (
+                      <div className="px-2 py-1">
+                        {tabs.map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
+                              activeTab === tab.key
+                                ? "border-l-2 border-primary font-medium text-foreground"
+                                : "text-foreground hover-elevate"
+                            }`}
+                            data-testid={`button-tab-${tab.key}`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {isCollapsible && !isCollapsed && (
+                      <ul className="space-y-0.5 ml-1">
+                        {tabs.map((tab) => (
+                          <li key={tab.key}>
+                            <button
+                              onClick={() => setActiveTab(tab.key)}
+                              className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
+                                activeTab === tab.key
+                                  ? "border-l-2 border-primary font-medium text-foreground"
+                                  : "text-foreground hover-elevate"
+                              }`}
+                              data-testid={`button-tab-${tab.key}`}
+                            >
+                              {tab.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
           </div>
 
@@ -673,22 +720,152 @@ export default function UserSettings() {
               </Card>
             )}
 
-            {activeTab === "contact" && (
+            {activeTab === "payment-method" && (
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-base font-bold text-foreground mb-6">担当者情報</h2>
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <Label className="text-sm"><span className="text-destructive mr-1">必須</span>担当者名</Label>
-                      <Input value={contactName} onChange={(e) => setContactName(e.target.value)} className="max-w-sm" data-testid="input-contact-name" />
+                  <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
+                  <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">お支払い</span>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm"><span className="text-destructive mr-1">必須</span>メールアドレス</Label>
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="max-w-sm" data-testid="input-email" />
+                    <Badge variant="secondary" className="text-xs">銀行振込設定中</Badge>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-4 space-y-3">
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm text-muted-foreground shrink-0 w-24">銀行・支店</span>
+                      <span className="text-sm text-foreground">三井住友銀行 ドットコム支店(店番号 953)</span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座種別</span>
+                      <span className="text-sm text-foreground">当座預金</span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座番号</span>
+                      <span className="text-sm text-foreground">5534446</span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座名義</span>
+                      <span className="text-sm text-foreground">トラマッチ株式会社</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "invoice-receive" && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-base font-bold text-foreground mb-4">請求書受領設定</h2>
+                  <div className="space-y-1 mb-6">
+                    <p className="text-sm text-muted-foreground">過去の請求書には反映されません。必要な場合はお問い合わせください。</p>
+                    <p className="text-sm text-muted-foreground">法人名の変更が必要な場合は、お問い合わせください。</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">法人名</span>
+                      <p className="text-sm text-foreground">{user?.companyName || "未登録"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">宛名</span>
+                      <p className="text-sm text-foreground">{user?.contactName || "ご担当者"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">住所</span>
+                      <p className="text-sm text-foreground">
+                        {user?.postalCode ? `〒${user.postalCode}` : "未登録"}
+                        {user?.address ? ` ${user.address}` : ""}
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">電話番号</span>
+                      <p className="text-sm text-foreground">{user?.phone || "未登録"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">FAX番号</span>
+                      <p className="text-sm text-foreground">{user?.fax || "未登録"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "invoice-issue" && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-base font-bold text-foreground mb-4">請求書発行設定</h2>
+                  <p className="text-sm text-muted-foreground mb-6">支払通知書にも反映されます。</p>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">会社名</span>
+                      <p className="text-sm text-foreground">{user?.companyName || "未登録"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">担当者名</span>
+                      <p className="text-sm text-foreground">{user?.contactName || "ご担当者"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">住所</span>
+                      <p className="text-sm text-foreground">
+                        {user?.postalCode ? `〒${user.postalCode}` : "未登録"}
+                        {user?.address ? ` ${user.address}` : ""}
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">電話番号</span>
+                      <p className="text-sm text-foreground">{user?.phone || "未登録"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-sm text-muted-foreground">FAX番号</span>
+                      <p className="text-sm text-foreground">{user?.fax || "未登録"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "accounting-contact" && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-base font-bold text-foreground mb-4">経理連絡先</h2>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    トラマッチから請求・お支払いに関する確認時、実務担当者様へスムーズにご連絡するために使用します。
+                  </p>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">経理連絡先名</Label>
+                      <Input value={acctContactName} onChange={(e) => setAcctContactName(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-name" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">経理連絡先メールアドレス</Label>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Input type="email" value={acctContactEmail} onChange={(e) => setAcctContactEmail(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-email" />
+                        {acctContactEmail && (
+                          <span className="flex items-center gap-1 text-xs text-primary">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            認証済み
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">電話番号</Label>
+                      <Input value={acctContactPhone} onChange={(e) => setAcctContactPhone(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-phone" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">FAX番号</Label>
+                      <Input value={acctContactFax} onChange={(e) => setAcctContactFax(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-fax" />
                     </div>
                   </div>
                   <div className="mt-6">
-                    <Button onClick={handleSaveContact} disabled={updateProfile.isPending} data-testid="button-save-contact">
+                    <Button onClick={() => {
+                      updateProfile.mutate({
+                        accountingContactName: acctContactName,
+                        accountingContactEmail: acctContactEmail,
+                        accountingContactPhone: acctContactPhone,
+                        accountingContactFax: acctContactFax,
+                      });
+                    }} disabled={updateProfile.isPending} data-testid="button-save-acct-contact">
                       {updateProfile.isPending ? "保存中..." : "保存"}
                     </Button>
                   </div>
@@ -696,34 +873,59 @@ export default function UserSettings() {
               </Card>
             )}
 
-            {activeTab === "password" && (
+            {activeTab === "user-mgmt" && (
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-base font-bold text-foreground mb-6">パスワード変更</h2>
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <Label className="text-sm">現在のパスワード</Label>
-                      <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="max-w-sm" data-testid="input-current-password" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">新しいパスワード</Label>
-                      <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="max-w-sm" data-testid="input-new-password" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">新しいパスワード（確認）</Label>
-                      <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="max-w-sm" data-testid="input-confirm-password" />
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <Button onClick={handleSavePassword} disabled={updatePassword.isPending} data-testid="button-save-password">
-                      {updatePassword.isPending ? "変更中..." : "パスワードを変更"}
+                  <h2 className="text-base font-bold text-foreground mb-4">ユーザー管理</h2>
+                  <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+                    <p className="text-sm text-muted-foreground">
+                      ユーザー追加には月額4,500円が発生する場合があります。詳しくはヘルプをご覧ください。
+                    </p>
+                    <Button variant="outline" size="sm" data-testid="button-help-user-mgmt">
+                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                      ヘルプを見る
                     </Button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm" data-testid="table-user-management">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">担当者</th>
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">役職</th>
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メールアドレス</th>
+                          <th className="py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b" data-testid="row-user-self">
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <User className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <div>
+                                <span className="text-foreground">{user?.contactName || user?.companyName || "未設定"}</span>
+                                <span className="text-xs text-muted-foreground ml-1">（本人）</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="secondary" className="text-xs">管理者</Badge>
+                              <span className="text-muted-foreground text-xs">{user?.representative ? "代表者" : ""}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 text-foreground">{user?.email || "未設定"}</td>
+                          <td className="py-3"></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {activeTab === "email" && (
+            {activeTab === "email-cargo" && (
               <div className="space-y-6">
                 <Card>
                   <CardContent className="p-6">
