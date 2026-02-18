@@ -7,13 +7,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { MapPin, Plus, Pencil, Trash2, Search, Building2, Phone, Mail, Globe, Users, ChevronDown, ChevronRight, UserPlus, KeyRound, Copy, CheckCircle2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Search, Building2, Phone, Mail, Globe, Users, ChevronDown, ChevronRight, UserPlus, KeyRound, Copy, CheckCircle2, Package, Truck, TrendingUp, BarChart3, Eye } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardLayout from "@/components/dashboard-layout";
 import type { Agent } from "@shared/schema";
+
+type AgentStat = {
+  agentId: string;
+  userId: string;
+  cargoCount: number;
+  truckCount: number;
+  completedCargoCount: number;
+  completedTruckCount: number;
+  activeCargoCount: number;
+  activeTruckCount: number;
+  totalCargoAmount: number;
+  totalTruckAmount: number;
+  completedCargoAmount: number;
+  completedTruckAmount: number;
+  recentCargo: Array<{ id: string; title: string; status: string; price: string | null; createdAt: string }>;
+  recentTrucks: Array<{ id: string; title: string; status: string; price: string | null; createdAt: string }>;
+};
 
 const PREFECTURES = [
   { region: "北海道・東北", items: ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"] },
@@ -41,6 +58,16 @@ const REGION_COLORS: Record<string, { bg: string; text: string }> = {
 
 function getRegionForPrefecture(pref: string): string {
   return PREFECTURES.find(r => r.items.includes(pref))?.region ?? "";
+}
+
+function formatAmount(amount: number): string {
+  if (amount === 0) return "¥0";
+  return `¥${amount.toLocaleString()}`;
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 type FormData = {
@@ -83,10 +110,22 @@ export default function AdminAgents() {
   const [form, setForm] = useState<FormData>(emptyForm);
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set(PREFECTURES.map(r => r.region)));
   const [credentialDialog, setCredentialDialog] = useState<{ open: boolean; loginEmail: string; password: string }>({ open: false, loginEmail: "", password: "" });
+  const [detailAgent, setDetailAgent] = useState<Agent | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "performance">("list");
 
   const { data: agents, isLoading } = useQuery<Agent[]>({
     queryKey: ["/api/admin/agents"],
   });
+
+  const { data: agentStats, isLoading: statsLoading } = useQuery<AgentStat[]>({
+    queryKey: ["/api/admin/agents/stats"],
+  });
+
+  const statsMap = useMemo(() => {
+    const map: Record<string, AgentStat> = {};
+    agentStats?.forEach(s => { map[s.agentId] = s; });
+    return map;
+  }, [agentStats]);
 
   const createAgent = useMutation({
     mutationFn: async (data: FormData) => {
@@ -95,6 +134,7 @@ export default function AdminAgents() {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/agents/stats"] });
       setDialogOpen(false);
       resetForm();
       if (data.generatedPassword) {
@@ -129,6 +169,7 @@ export default function AdminAgents() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/agents/stats"] });
       toast({ title: "代理店を削除しました" });
     },
     onError: () => {
@@ -258,6 +299,33 @@ export default function AdminAgents() {
   const activeAgents = agents?.filter(a => a.status === "active").length ?? 0;
   const coveredPrefectures = new Set(agents?.map(a => a.prefecture) ?? []).size;
 
+  const totalStats = useMemo(() => {
+    if (!agentStats) return { cargo: 0, truck: 0, completedCargo: 0, completedTruck: 0, completedAmount: 0 };
+    return {
+      cargo: agentStats.reduce((s, a) => s + a.cargoCount, 0),
+      truck: agentStats.reduce((s, a) => s + a.truckCount, 0),
+      completedCargo: agentStats.reduce((s, a) => s + a.completedCargoCount, 0),
+      completedTruck: agentStats.reduce((s, a) => s + a.completedTruckCount, 0),
+      completedAmount: agentStats.reduce((s, a) => s + a.completedCargoAmount + a.completedTruckAmount, 0),
+    };
+  }, [agentStats]);
+
+  const performanceRanking = useMemo(() => {
+    if (!agents || !agentStats) return [];
+    return agents
+      .map(a => ({
+        agent: a,
+        stats: statsMap[a.id],
+      }))
+      .filter(item => item.stats)
+      .sort((a, b) => {
+        const aTotal = (a.stats?.completedCargoAmount ?? 0) + (a.stats?.completedTruckAmount ?? 0);
+        const bTotal = (b.stats?.completedCargoAmount ?? 0) + (b.stats?.completedTruckAmount ?? 0);
+        if (bTotal !== aTotal) return bTotal - aTotal;
+        return (b.stats?.completedCargoCount ?? 0) + (b.stats?.completedTruckCount ?? 0) - (a.stats?.completedCargoCount ?? 0) - (a.stats?.completedTruckCount ?? 0);
+      });
+  }, [agents, agentStats, statsMap]);
+
   const toggleRegion = (region: string) => {
     setExpandedRegions(prev => {
       const next = new Set(prev);
@@ -272,45 +340,84 @@ export default function AdminAgents() {
       <div className="px-4 sm:px-6 py-4 overflow-y-auto h-full">
         <div className="bg-primary rounded-md p-5 mb-5">
           <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">エージェント管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">47都道府県の代理店を管理</p>
+          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">47都道府県の代理店を管理・実績確認</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
           <Card data-testid="card-stat-total">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center shrink-0">
-                  <Building2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center shrink-0">
+                  <Building2 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{totalAgents}</p>
-                  <p className="text-xs text-muted-foreground">総代理店数</p>
+                  <p className="text-lg font-bold text-foreground">{totalAgents}</p>
+                  <p className="text-[10px] text-muted-foreground">総代理店数</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card data-testid="card-stat-active">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{activeAgents}</p>
-                  <p className="text-xs text-muted-foreground">稼働中</p>
+                  <p className="text-lg font-bold text-foreground">{activeAgents}</p>
+                  <p className="text-[10px] text-muted-foreground">稼働中</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card data-testid="card-stat-coverage">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{coveredPrefectures} / 47</p>
-                  <p className="text-xs text-muted-foreground">カバー地域</p>
+                  <p className="text-lg font-bold text-foreground">{coveredPrefectures}/47</p>
+                  <p className="text-[10px] text-muted-foreground">カバー地域</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card data-testid="card-stat-cargo">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{totalStats.cargo}</p>
+                  <p className="text-[10px] text-muted-foreground">荷物登録数</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card data-testid="card-stat-truck">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-cyan-50 dark:bg-cyan-950/30 flex items-center justify-center shrink-0">
+                  <Truck className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{totalStats.truck}</p>
+                  <p className="text-[10px] text-muted-foreground">空車登録数</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card data-testid="card-stat-completed-amount">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{totalStats.completedCargo + totalStats.completedTruck}</p>
+                  <p className="text-[10px] text-muted-foreground">成約件数</p>
                 </div>
               </div>
             </CardContent>
@@ -353,6 +460,14 @@ export default function AdminAgents() {
               ))}
             </SelectContent>
           </Select>
+          <div className="flex items-center gap-1">
+            <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")} data-testid="button-view-list">
+              <Building2 className="w-4 h-4 mr-1" />一覧
+            </Button>
+            <Button variant={viewMode === "performance" ? "default" : "outline"} size="sm" onClick={() => setViewMode("performance")} data-testid="button-view-performance">
+              <BarChart3 className="w-4 h-4 mr-1" />実績
+            </Button>
+          </div>
           {agents && agents.some(a => !a.userId) && (
             <Button variant="outline" onClick={() => {
               if (confirm("アカウント未作成の代理店全てにログインアカウントを一括作成しますか？")) bulkCreateAccounts.mutate();
@@ -367,7 +482,94 @@ export default function AdminAgents() {
           </Button>
         </div>
 
-        {isLoading ? (
+        {viewMode === "performance" ? (
+          statsLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : (
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  <h2 className="font-bold text-foreground text-sm">成約金額合計</h2>
+                  <span className="text-lg font-bold text-primary ml-auto">{formatAmount(totalStats.completedAmount)}</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>荷物成約: {totalStats.completedCargo}件</span>
+                  <span>空車成約: {totalStats.completedTruck}件</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              エージェント別実績ランキング
+            </h3>
+
+            {performanceRanking.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <BarChart3 className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">まだ実績データがありません</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {performanceRanking.map((item, idx) => {
+                  const s = item.stats;
+                  const totalCompleted = s.completedCargoCount + s.completedTruckCount;
+                  const totalAmount = s.completedCargoAmount + s.completedTruckAmount;
+                  const region = getRegionForPrefecture(item.agent.prefecture);
+                  const colors = REGION_COLORS[region] ?? { bg: "bg-muted", text: "text-muted-foreground" };
+
+                  return (
+                    <Card key={item.agent.id} className="hover-elevate cursor-pointer" onClick={() => setDetailAgent(item.agent)} data-testid={`card-ranking-${item.agent.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 font-bold text-sm ${idx < 3 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
+                            {idx + 1}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-foreground text-sm truncate">{item.agent.companyName}</span>
+                              <Badge variant="outline" className={`text-[10px] shrink-0 ${colors.text}`}>{item.agent.prefecture}</Badge>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Package className="w-3 h-3" />荷物: {s.cargoCount}件
+                              </span>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Truck className="w-3 h-3" />空車: {s.truckCount}件
+                              </span>
+                              <span className="text-xs flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                <CheckCircle2 className="w-3 h-3" />成約: {totalCompleted}件
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-bold text-foreground">{formatAmount(totalAmount)}</p>
+                            <p className="text-[10px] text-muted-foreground">成約金額</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {performanceRanking.length < (agents?.length ?? 0) && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                ※ アカウント未作成のエージェントは表示されません
+              </p>
+            )}
+          </div>
+          )
+        ) : isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full" />
@@ -386,11 +588,11 @@ export default function AdminAgents() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {filtered.map(agent => (
-                  <AgentCard key={agent.id} agent={agent} onEdit={openEditDialog} onDelete={(id) => {
+                  <AgentCard key={agent.id} agent={agent} stats={statsMap[agent.id]} onEdit={openEditDialog} onDelete={(id) => {
                     if (confirm("この代理店を削除しますか？")) deleteAgent.mutate(id);
                   }} onCreateAccount={(id) => createAccount.mutate(id)} onResetPassword={(id) => {
                     if (confirm("パスワードをリセットしますか？")) resetPassword.mutate(id);
-                  }} />
+                  }} onViewDetail={setDetailAgent} />
                 ))}
               </div>
             )}
@@ -448,11 +650,11 @@ export default function AdminAgents() {
                               {prefAgents.length > 0 ? (
                                 <div className="space-y-2 ml-2 mb-3">
                                   {prefAgents.map(agent => (
-                                    <AgentCard key={agent.id} agent={agent} compact onEdit={openEditDialog} onDelete={(id) => {
+                                    <AgentCard key={agent.id} agent={agent} stats={statsMap[agent.id]} compact onEdit={openEditDialog} onDelete={(id) => {
                                       if (confirm("この代理店を削除しますか？")) deleteAgent.mutate(id);
                                     }} onCreateAccount={(id) => createAccount.mutate(id)} onResetPassword={(id) => {
                                       if (confirm("パスワードをリセットしますか？")) resetPassword.mutate(id);
-                                    }} />
+                                    }} onViewDetail={setDetailAgent} />
                                   ))}
                                 </div>
                               ) : (
@@ -514,7 +716,7 @@ export default function AdminAgents() {
                 </div>
                 <div>
                   <Label>担当者名</Label>
-                  <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="田中 一郎" data-testid="input-contact" />
+                  <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="鈴木 花子" data-testid="input-contact-name" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -523,27 +725,27 @@ export default function AdminAgents() {
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="03-1234-5678" data-testid="input-phone" />
                 </div>
                 <div>
-                  <Label>メールアドレス</Label>
-                  <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="info@example.com" data-testid="input-email" />
+                  <Label>メール</Label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="agent@example.com" data-testid="input-email" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>郵便番号</Label>
-                  <Input value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} placeholder="123-4567" data-testid="input-postal-code" />
+                  <Input value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} placeholder="100-0001" data-testid="input-postal-code" />
                 </div>
                 <div>
-                  <Label>Webサイト</Label>
+                  <Label>WebサイトURL</Label>
                   <Input value={form.websiteUrl} onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })} placeholder="https://example.com" data-testid="input-website" />
                 </div>
               </div>
               <div>
                 <Label>住所</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="〇〇市〇〇町1-2-3" data-testid="input-address" />
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="東京都千代田区..." data-testid="input-address" />
               </div>
               <div>
-                <Label>営業エリア</Label>
-                <Input value={form.businessArea} onChange={(e) => setForm({ ...form, businessArea: e.target.value })} placeholder="関東一円, 東北エリア" data-testid="input-business-area" />
+                <Label>対応エリア</Label>
+                <Input value={form.businessArea} onChange={(e) => setForm({ ...form, businessArea: e.target.value })} placeholder="関東全域、東北エリア等" data-testid="input-business-area" />
               </div>
               <div>
                 <Label>備考</Label>
@@ -564,6 +766,7 @@ export default function AdminAgents() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
         <Dialog open={credentialDialog.open} onOpenChange={(open) => { if (!open) setCredentialDialog({ open: false, loginEmail: "", password: "" }); }}>
           <DialogContent className="max-w-sm" data-testid="dialog-credentials">
             <DialogHeader>
@@ -603,18 +806,184 @@ export default function AdminAgents() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={!!detailAgent} onOpenChange={(open) => { if (!open) setDetailAgent(null); }}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dialog-agent-detail">
+            {detailAgent && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 flex-wrap">
+                    {detailAgent.companyName}
+                    <Badge variant="outline" className="text-xs">{detailAgent.prefecture}</Badge>
+                  </DialogTitle>
+                </DialogHeader>
+                <AgentDetailContent agent={detailAgent} stats={statsMap[detailAgent.id]} />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDetailAgent(null)} data-testid="button-close-detail">
+                    閉じる
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
 }
 
-function AgentCard({ agent, compact, onEdit, onDelete, onCreateAccount, onResetPassword }: {
+function AgentDetailContent({ agent, stats }: { agent: Agent; stats?: AgentStat }) {
+  const region = getRegionForPrefecture(agent.prefecture);
+  const colors = REGION_COLORS[region] ?? { bg: "bg-muted", text: "text-muted-foreground" };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Package className="w-5 h-5 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{stats?.cargoCount ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">荷物登録数</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Truck className="w-5 h-5 text-cyan-600 dark:text-cyan-400 mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{stats?.truckCount ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">空車登録数</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{(stats?.completedCargoCount ?? 0) + (stats?.completedTruckCount ?? 0)}</p>
+            <p className="text-[10px] text-muted-foreground">成約件数</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <TrendingUp className="w-5 h-5 text-rose-600 dark:text-rose-400 mx-auto mb-1" />
+            <p className="text-xl font-bold text-foreground">{formatAmount((stats?.completedCargoAmount ?? 0) + (stats?.completedTruckAmount ?? 0))}</p>
+            <p className="text-[10px] text-muted-foreground">成約金額</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h4 className="text-xs font-bold text-foreground mb-1 flex items-center gap-1">
+            <Package className="w-3.5 h-3.5" />荷物内訳
+          </h4>
+          <div className="flex gap-3 text-xs text-muted-foreground">
+            <span>掲載中: {stats?.activeCargoCount ?? 0}件</span>
+            <span>成約: {stats?.completedCargoCount ?? 0}件</span>
+            <span>成約金額: {formatAmount(stats?.completedCargoAmount ?? 0)}</span>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-xs font-bold text-foreground mb-1 flex items-center gap-1">
+            <Truck className="w-3.5 h-3.5" />空車内訳
+          </h4>
+          <div className="flex gap-3 text-xs text-muted-foreground">
+            <span>掲載中: {stats?.activeTruckCount ?? 0}件</span>
+            <span>成約: {stats?.completedTruckCount ?? 0}件</span>
+            <span>成約金額: {formatAmount(stats?.completedTruckAmount ?? 0)}</span>
+          </div>
+        </div>
+      </div>
+
+      {stats && stats.recentCargo.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-foreground mb-2">最近の荷物登録</h4>
+          <div className="space-y-1">
+            {stats.recentCargo.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-2 text-xs py-1 border-b last:border-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant={c.status === "completed" ? "default" : c.status === "active" ? "outline" : "secondary"} className="text-[10px] shrink-0">
+                    {c.status === "completed" ? "成約" : c.status === "active" ? "掲載中" : "終了"}
+                  </Badge>
+                  <span className="truncate text-foreground">{c.title}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {c.price && <span className="text-muted-foreground">{c.price}</span>}
+                  <span className="text-muted-foreground">{formatDate(c.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {stats && stats.recentTrucks.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-foreground mb-2">最近の空車登録</h4>
+          <div className="space-y-1">
+            {stats.recentTrucks.map(t => (
+              <div key={t.id} className="flex items-center justify-between gap-2 text-xs py-1 border-b last:border-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant={t.status === "completed" ? "default" : t.status === "active" ? "outline" : "secondary"} className="text-[10px] shrink-0">
+                    {t.status === "completed" ? "成約" : t.status === "active" ? "掲載中" : "終了"}
+                  </Badge>
+                  <span className="truncate text-foreground">{t.title}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {t.price && <span className="text-muted-foreground">{t.price}</span>}
+                  <span className="text-muted-foreground">{formatDate(t.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!stats && (
+        <div className="text-center py-6">
+          <BarChart3 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            {agent.userId ? "実績データはまだありません" : "アカウントが未作成のため実績を取得できません"}
+          </p>
+        </div>
+      )}
+
+      <div className="border-t pt-3">
+        <h4 className="text-xs font-bold text-foreground mb-2">基本情報</h4>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {agent.representativeName && (
+            <div><span className="text-muted-foreground">代表者:</span> <span className="text-foreground">{agent.representativeName}</span></div>
+          )}
+          {agent.contactName && (
+            <div><span className="text-muted-foreground">担当者:</span> <span className="text-foreground">{agent.contactName}</span></div>
+          )}
+          {agent.phone && (
+            <div><span className="text-muted-foreground">電話:</span> <span className="text-foreground">{agent.phone}</span></div>
+          )}
+          {agent.email && (
+            <div><span className="text-muted-foreground">メール:</span> <span className="text-foreground">{agent.email}</span></div>
+          )}
+          {agent.address && (
+            <div className="col-span-2"><span className="text-muted-foreground">住所:</span> <span className="text-foreground">{agent.address}</span></div>
+          )}
+          {agent.loginEmail && (
+            <div className="col-span-2"><span className="text-muted-foreground">ログイン:</span> <span className="text-foreground">{agent.loginEmail}</span></div>
+          )}
+          {agent.businessArea && (
+            <div className="col-span-2"><span className="text-muted-foreground">対応エリア:</span> <span className="text-foreground">{agent.businessArea}</span></div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgentCard({ agent, stats, compact, onEdit, onDelete, onCreateAccount, onResetPassword, onViewDetail }: {
   agent: Agent;
+  stats?: AgentStat;
   compact?: boolean;
   onEdit: (agent: Agent) => void;
   onDelete: (id: string) => void;
   onCreateAccount: (id: string) => void;
   onResetPassword: (id: string) => void;
+  onViewDetail: (agent: Agent) => void;
 }) {
   const region = getRegionForPrefecture(agent.prefecture);
   const colors = REGION_COLORS[region] ?? { bg: "bg-muted", text: "text-muted-foreground" };
@@ -677,8 +1046,30 @@ function AgentCard({ agent, compact, onEdit, onDelete, onCreateAccount, onResetP
                 <span className="text-xs text-muted-foreground mt-0.5">エリア: {agent.businessArea}</span>
               )}
             </div>
+
+            {stats && (
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Package className="w-3 h-3 text-amber-500" />{stats.cargoCount}
+                </span>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Truck className="w-3 h-3 text-cyan-500" />{stats.truckCount}
+                </span>
+                <span className="text-[11px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" />成約{stats.completedCargoCount + stats.completedTruckCount}
+                </span>
+                {(stats.completedCargoAmount + stats.completedTruckAmount) > 0 && (
+                  <span className="text-[11px] font-medium text-foreground">
+                    {formatAmount(stats.completedCargoAmount + stats.completedTruckAmount)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => onViewDetail(agent)} data-testid={`button-detail-agent-${agent.id}`} title="詳細表示">
+              <Eye className="w-3.5 h-3.5" />
+            </Button>
             {!agent.userId && (
               <Button variant="ghost" size="icon" onClick={() => onCreateAccount(agent.id)} data-testid={`button-create-account-${agent.id}`} title="アカウント作成">
                 <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
