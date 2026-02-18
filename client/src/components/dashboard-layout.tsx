@@ -122,16 +122,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="lg:hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed bottom-4 right-4 z-[60] rounded-full shadow-lg bg-primary text-primary-foreground"
+        <button
+          className="fixed bottom-5 right-5 z-[60] w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white/30"
           onClick={() => setMobileOpen(true)}
           style={{ display: mobileOpen ? "none" : "flex" }}
           data-testid="button-mobile-sidebar-open"
         >
-          <Menu className="w-5 h-5" />
-        </Button>
+          <Menu className="w-6 h-6" />
+        </button>
 
         {mobileOpen && (
           <div className="fixed inset-0 z-[70]" data-testid="panel-mobile-sidebar">
