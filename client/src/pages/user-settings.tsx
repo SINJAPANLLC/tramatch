@@ -1162,7 +1162,7 @@ export default function UserSettings() {
                 <Card>
                   <CardContent className="p-6">
                     <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
-                    <p className="text-sm text-muted-foreground mb-6">お支払いは請求書払いかクレジットカード払いとなります。</p>
+                    <p className="text-sm text-muted-foreground mb-6">請求書をメールにて送付致しますので銀行振込かクレジットカードにてお支払いください。</p>
 
                     <div className="space-y-6">
                       <div>
