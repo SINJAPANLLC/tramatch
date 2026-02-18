@@ -1259,12 +1259,12 @@ export default function CompletedCargo() {
   const [mainTab, setMainTab] = useState<"own" | "contracted" | "billing">("own");
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
-    queryKey: ["/api/cargo"],
+    queryKey: ["/api/my-cargo"],
   });
 
-  const completedOwn = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed" && (c as any).listingType !== "contracted") ?? [];
-  const completedContracted = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed" && (c as any).listingType === "contracted") ?? [];
-  const allCompleted = allCargo?.filter((c) => c.userId === user?.id && c.status === "completed") ?? [];
+  const completedOwn = allCargo?.filter((c) => c.status === "completed" && (c as any).listingType !== "contracted") ?? [];
+  const completedContracted = allCargo?.filter((c) => c.status === "completed" && (c as any).listingType === "contracted") ?? [];
+  const allCompleted = allCargo?.filter((c) => c.status === "completed") ?? [];
   const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedBilling = [...allCompleted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
