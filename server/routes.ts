@@ -61,8 +61,27 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-function generateInvoiceEmailHtml(invoice: any): string {
+function generateInvoiceEmailHtml(invoice: any, adminInfo?: any): string {
   const statusLabel = invoice.status === "paid" ? "入金済み" : invoice.status === "overdue" ? "支払い期限超過" : "未入金";
+  const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+  const paymentUrl = `${appBaseUrl}/payment`;
+
+  const bankName = adminInfo?.bankName || "";
+  const bankBranch = adminInfo?.bankBranch || "";
+  const accountType = adminInfo?.accountType || "普通";
+  const accountNumber = adminInfo?.accountNumber || "";
+  const accountHolderKana = adminInfo?.accountHolderKana || "";
+  const adminAddress = adminInfo?.address || "神奈川県愛甲郡愛川町中津7287";
+  const adminPostalCode = adminInfo?.postalCode || "2430303";
+  const formattedPostalCode = adminPostalCode.length === 7 ? `${adminPostalCode.slice(0, 3)}-${adminPostalCode.slice(3)}` : adminPostalCode;
+  const adminPhone = adminInfo?.phone || "046-212-2325";
+
+  const descriptionLines = (invoice.description || "月額利用料").split("\n");
+  const descriptionRows = descriptionLines.map((line: string) => {
+    return `<tr><td style="padding:10px;border:1px solid #ddd;">${line}</td>
+        <td style="padding:10px;text-align:right;border:1px solid #ddd;"></td></tr>`;
+  }).join("");
+
   return `
 <!DOCTYPE html>
 <html lang="ja">
@@ -81,9 +100,9 @@ function generateInvoiceEmailHtml(invoice: any): string {
     </td><td style="width:50%;vertical-align:top;text-align:right;">
       <p style="margin:0 0 3px;font-weight:bold;">発行元</p>
       <p style="margin:0 0 2px;">合同会社SIN JAPAN</p>
-      <p style="margin:0 0 2px;">〒243-0018</p>
-      <p style="margin:0 0 2px;">神奈川県厚木市中町3-6-17</p>
-      <p style="margin:0 0 2px;">Tel: 046-212-2325</p>
+      <p style="margin:0 0 2px;">〒${formattedPostalCode}</p>
+      <p style="margin:0 0 2px;">${adminAddress}</p>
+      <p style="margin:0 0 2px;">Tel: ${adminPhone}</p>
       <p style="margin:0;">info@sinjapan.jp</p>
     </td></tr>
   </table>
@@ -97,7 +116,7 @@ function generateInvoiceEmailHtml(invoice: any): string {
       <th style="padding:10px;text-align:right;border:1px solid #0d9488;">金額</th>
     </tr></thead>
     <tbody>
-      <tr><td style="padding:10px;border:1px solid #ddd;">${invoice.description || "月額利用料"}</td>
+      <tr><td style="padding:10px;border:1px solid #ddd;">${descriptionLines[0] || "月額利用料"}</td>
           <td style="padding:10px;text-align:right;border:1px solid #ddd;">¥${invoice.amount.toLocaleString()}</td></tr>
       <tr><td style="padding:10px;border:1px solid #ddd;">消費税（10%）</td>
           <td style="padding:10px;text-align:right;border:1px solid #ddd;">¥${invoice.tax.toLocaleString()}</td></tr>
@@ -107,9 +126,19 @@ function generateInvoiceEmailHtml(invoice: any): string {
     </tbody>
   </table>
   <div style="background:#f0fdfa;padding:15px;border-radius:6px;border:1px solid #99f6e4;margin-bottom:20px;">
-    <p style="margin:0 0 8px;font-weight:bold;color:#0d9488;">お振込先</p>
-    <p style="margin:0 0 3px;font-size:14px;">銀行名：（管理者にお問い合わせください）</p>
-    <p style="margin:0;font-size:13px;color:#666;">※振込手数料はお客様のご負担となります。</p>
+    <p style="margin:0 0 10px;font-weight:bold;color:#0d9488;">お振込先</p>
+    <table style="font-size:14px;border-collapse:collapse;">
+      <tr><td style="padding:3px 15px 3px 0;color:#666;">銀行名</td><td style="padding:3px 0;font-weight:bold;">${bankName}</td></tr>
+      <tr><td style="padding:3px 15px 3px 0;color:#666;">支店名</td><td style="padding:3px 0;font-weight:bold;">${bankBranch}</td></tr>
+      <tr><td style="padding:3px 15px 3px 0;color:#666;">口座種別</td><td style="padding:3px 0;font-weight:bold;">${accountType}</td></tr>
+      <tr><td style="padding:3px 15px 3px 0;color:#666;">口座番号</td><td style="padding:3px 0;font-weight:bold;">${accountNumber}</td></tr>
+      <tr><td style="padding:3px 15px 3px 0;color:#666;">口座名義</td><td style="padding:3px 0;font-weight:bold;">${accountHolderKana}</td></tr>
+    </table>
+    <p style="margin:10px 0 0;font-size:13px;color:#666;">※振込手数料はお客様のご負担となります。</p>
+  </div>
+  <div style="text-align:center;margin-bottom:20px;">
+    <p style="margin:0 0 10px;font-size:14px;color:#333;">クレジットカードでのお支払いも可能です</p>
+    <a href="${paymentUrl}" style="display:inline-block;background:#0d9488;color:white;text-decoration:none;padding:12px 30px;border-radius:6px;font-size:16px;font-weight:bold;">カード決済はこちら</a>
   </div>
   <div style="text-align:center;padding-top:15px;border-top:1px solid #eee;color:#999;font-size:12px;">
     <p>合同会社SIN JAPAN ｜ トラマッチ</p>
@@ -2813,7 +2842,9 @@ JSON形式で以下を返してください（日本語で）:
       const invoice = await storage.getInvoice(req.params.id as string);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
 
-      const invoiceHtml = generateInvoiceEmailHtml(invoice);
+      const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
+      const adminInfo = admins[0] || null;
+      const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
       const result = await sendEmail(
         invoice.email,
         `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
@@ -2837,13 +2868,15 @@ JSON形式で以下を返してください（日本語で）:
       const { invoiceIds } = req.body;
       if (!invoiceIds || invoiceIds.length === 0) return res.status(400).json({ message: "請求書を選択してください" });
 
+      const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
+      const adminInfo = admins[0] || null;
       let sentCount = 0;
       let failCount = 0;
       for (const id of invoiceIds) {
         const invoice = await storage.getInvoice(id);
         if (!invoice) continue;
 
-        const invoiceHtml = generateInvoiceEmailHtml(invoice);
+        const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
         const result = await sendEmail(
           invoice.email,
           `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
