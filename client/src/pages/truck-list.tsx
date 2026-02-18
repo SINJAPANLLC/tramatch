@@ -275,8 +275,9 @@ function TruckRegisterTab() {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
 
+  const truckFormSchema = insertTruckListingSchema.omit({ companyName: true, contactPhone: true, contactEmail: true });
   const form = useForm<InsertTruckListing>({
-    resolver: zodResolver(insertTruckListingSchema),
+    resolver: zodResolver(truckFormSchema),
     defaultValues: {
       title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
       maxWeight: "", availableDate: "", price: "", description: "",
