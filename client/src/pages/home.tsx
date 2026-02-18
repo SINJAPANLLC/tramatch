@@ -489,15 +489,15 @@ export default function Home() {
               <div className="space-y-4 mt-6">
                 <div>
                   <p className="text-base text-primary-foreground mb-1">初期費用</p>
-                  <p className="text-2xl font-bold text-primary-foreground">50,000円</p>
+                  <p className="text-2xl font-bold text-primary-foreground">20,000円</p>
                 </div>
                 <div>
                   <p className="text-base text-primary-foreground mb-1">成約手数料</p>
-                  <p className="text-2xl font-bold text-primary-foreground">10%</p>
+                  <p className="text-2xl font-bold text-primary-foreground">3%</p>
                 </div>
                 <div>
                   <p className="text-base text-primary-foreground mb-1">月額費用</p>
-                  <p className="text-2xl font-bold text-primary-foreground">30,000円</p>
+                  <p className="text-2xl font-bold text-primary-foreground">10,000円</p>
                 </div>
               </div>
             </div>
@@ -527,15 +527,15 @@ export default function Home() {
               <div className="space-y-4 mt-6">
                 <div>
                   <p className="text-base text-primary-foreground mb-1">初期費用</p>
-                  <p className="text-2xl font-bold text-primary-foreground">100,000円</p>
+                  <p className="text-2xl font-bold text-primary-foreground">0円</p>
                 </div>
                 <div>
                   <p className="text-base text-primary-foreground mb-1">成約手数料</p>
-                  <p className="text-2xl font-bold text-primary-foreground">15%</p>
+                  <p className="text-2xl font-bold text-primary-foreground">0%</p>
                 </div>
                 <div>
                   <p className="text-base text-primary-foreground mb-1">月額費用</p>
-                  <p className="text-2xl font-bold text-primary-foreground">50,000円</p>
+                  <p className="text-2xl font-bold text-primary-foreground">9,000円</p>
                 </div>
               </div>
             </div>
