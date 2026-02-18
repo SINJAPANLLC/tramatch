@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Search, MapPin, Phone, User, Truck, Globe, FileText, X, Mail, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Building, Search, MapPin, Phone, User, Truck, Globe, FileText, X, Mail, Briefcase, Package, Loader2, Printer } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -24,54 +25,230 @@ type CompanyResult = {
   transportLicenseNumber: string | null;
 };
 
-function DetailRow({ label, value, icon }: { label: string; value: string | null | undefined; icon?: React.ReactNode }) {
-  if (!value) return null;
+type CompanyDetail = {
+  companyName: string;
+  companyNameKana: string | null;
+  address: string | null;
+  postalCode: string | null;
+  phone: string | null;
+  fax: string | null;
+  email: string | null;
+  contactName: string | null;
+  userType: string;
+  truckCount: string | null;
+  businessArea: string | null;
+  representative: string | null;
+  businessDescription: string | null;
+  transportLicenseNumber: string | null;
+  websiteUrl: string | null;
+  invoiceRegistrationNumber: string | null;
+  registrationDate: string | null;
+  establishedDate: string | null;
+  capital: string | null;
+  employeeCount: string | null;
+  officeLocations: string | null;
+  annualRevenue: string | null;
+  bankInfo: string | null;
+  majorClients: string | null;
+  closingDay: string | null;
+  paymentMonth: string | null;
+  paymentTerms: string | null;
+  memberOrganization: string | null;
+  digitalTachographCount: string | null;
+  gpsCount: string | null;
+  safetyExcellenceCert: string | null;
+  greenManagementCert: string | null;
+  iso9000: string | null;
+  iso14000: string | null;
+  iso39001: string | null;
+  cargoInsurance: string | null;
+  cargoCount1m: number;
+  cargoCount3m: number;
+  truckCount1m: number;
+  truckCount3m: number;
+};
+
+function DetailRow({ label, value, children }: { label: string; value?: string | null | undefined; children?: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 py-1.5">
-      {icon && <div className="shrink-0 mt-0.5 text-primary">{icon}</div>}
-      <div className="min-w-0">
-        <div className="text-[11px] text-muted-foreground">{label}</div>
-        <div className="text-sm text-foreground break-words">{value}</div>
-      </div>
+    <div className="flex border-b border-border last:border-b-0">
+      <div className="w-[130px] shrink-0 bg-muted/30 px-3 py-2.5 text-xs font-bold text-muted-foreground">{label}</div>
+      <div className="flex-1 px-3 py-2.5 text-sm font-bold text-foreground whitespace-pre-wrap">{children || value || "-"}</div>
     </div>
   );
 }
 
 function CompanyDetailPanel({ company, onClose }: { company: CompanyResult; onClose: () => void }) {
+  const { data: detail, isLoading } = useQuery<CompanyDetail>({
+    queryKey: ["/api/companies", company.id],
+    enabled: !!company.id,
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const handlePrint = () => {
+    const info = detail || company;
+    const row = (label: string, value: string | null | undefined) =>
+      `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap;border:1px solid #ddd;background:#f9f9f9;font-size:13px;width:140px">${label}</td><td style="padding:6px 10px;border:1px solid #ddd;font-size:13px">${value || "-"}</td></tr>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>企業情報 - ${info.companyName}</title>
+<style>body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:20px;color:#333}
+h2{font-size:18px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px}
+table{border-collapse:collapse;width:100%;margin-bottom:16px}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:22px;color:#40E0D0;margin:0}
+@media print{body{margin:10px}}</style></head><body>
+<div class="header"><h1>トラマッチ 企業情報</h1><p style="font-size:12px;color:#888">印刷日: ${new Date().toLocaleString("ja-JP")}</p></div>
+<h2>基本情報</h2>
+<table>
+${row("法人名・事業者名", info.companyName)}
+${row("住所", detail?.postalCode ? `〒${detail.postalCode} ${detail.address || "-"}` : info.address)}
+${row("電話番号", info.phone)}
+${row("FAX番号", info.fax)}
+${row("メール", info.email)}
+${row("請求事業者登録番号", detail?.invoiceRegistrationNumber)}
+${row("業務内容・会社PR", info.businessDescription)}
+${row("保有車両台数", info.truckCount ? `${info.truckCount} 台` : "-")}
+${row("ウェブサイトURL", detail?.websiteUrl)}
+</table>
+<h2>詳細情報</h2>
+<table>
+${row("代表者", info.representative)}
+${row("設立", detail?.establishedDate)}
+${row("資本金", detail?.capital ? `${detail.capital} 万円` : "-")}
+${row("従業員数", detail?.employeeCount)}
+${row("事業所所在地", detail?.officeLocations)}
+${row("年間売上", detail?.annualRevenue ? `${detail.annualRevenue} 万円` : "-")}
+${row("取引先銀行", detail?.bankInfo)}
+${row("主要取引先", detail?.majorClients)}
+${row("営業地域", info.businessArea)}
+</table>
+<h2>信用情報</h2>
+<table>
+${row("加入組織", detail?.memberOrganization)}
+${row("国交省認可番号", info.transportLicenseNumber)}
+${row("安全性優良事業所", detail?.safetyExcellenceCert || "無")}
+${row("グリーン経営認証", detail?.greenManagementCert || "無")}
+${row("ISO9000", detail?.iso9000 || "無")}
+${row("ISO14000", detail?.iso14000 || "無")}
+${row("ISO39001", detail?.iso39001 || "無")}
+${row("荷物保険", detail?.cargoInsurance)}
+</table>
+</body></html>`;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-[340px] shrink-0 border-l border-border bg-background overflow-y-auto" data-testid="panel-company-detail">
-      <div className="sticky top-0 bg-background z-10 px-4 py-3 border-b border-border flex items-center justify-between gap-2">
-        <h2 className="font-bold text-sm text-foreground truncate">{company.companyName}</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-company-panel">
-          <X className="w-4 h-4" />
-        </Button>
+    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-company-detail">
+      <div className="sticky top-0 bg-background z-10">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
+          <span className="text-sm font-bold text-foreground">企業情報</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={handlePrint} data-testid="button-company-print">
+              印刷
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-company-panel">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 py-4 space-y-1">
-        {company.companyNameKana && (
-          <p className="text-xs text-muted-foreground mb-3">{company.companyNameKana}</p>
-        )}
+      <div className="p-4 space-y-4">
+        <h3 className="text-base font-bold text-foreground">{detail?.companyName || company.companyName}</h3>
 
-        <div className="border-b border-border pb-3 mb-3">
-          <h3 className="text-xs font-bold text-muted-foreground mb-2">基本情報</h3>
-          <DetailRow label="住所" value={company.address} icon={<MapPin className="w-3.5 h-3.5" />} />
-          <DetailRow label="電話番号" value={company.phone} icon={<Phone className="w-3.5 h-3.5" />} />
-          <DetailRow label="FAX" value={company.fax} icon={<Phone className="w-3.5 h-3.5" />} />
-          <DetailRow label="メール" value={company.email} icon={<Mail className="w-3.5 h-3.5" />} />
+        <Card className="p-3">
+          <div className="text-xs font-bold text-muted-foreground mb-3">トラマッチでの実績</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Package className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-bold">委託</span>
+              </div>
+              <div className="text-xs text-muted-foreground font-bold">成約 <span className="text-lg text-foreground">{detail?.cargoCount1m ?? 0}</span></div>
+              <div className="text-xs text-muted-foreground font-bold">登録 <span className="text-lg text-foreground">{detail?.cargoCount3m ?? 0}</span></div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Truck className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-bold">受託</span>
+              </div>
+              <div className="text-xs text-muted-foreground font-bold">成約 <span className="text-lg text-foreground">{detail?.truckCount1m ?? 0}</span></div>
+              <div className="text-xs text-muted-foreground font-bold">登録 <span className="text-lg text-foreground">{detail?.truckCount3m ?? 0}</span></div>
+            </div>
+          </div>
+          <div className="text-[10px] text-muted-foreground font-bold text-right mt-2">
+            トラマッチ登録年月 {detail?.registrationDate || "-"}
+          </div>
+        </Card>
+
+        <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+        <div className="border border-border rounded-md overflow-hidden">
+          <DetailRow label="法人名・事業者名">
+            <div>
+              {(detail?.companyNameKana || company.companyNameKana) && (
+                <div className="text-[10px] text-muted-foreground mb-0.5">{detail?.companyNameKana || company.companyNameKana}</div>
+              )}
+              <div className="text-primary font-bold">{detail?.companyName || company.companyName}</div>
+            </div>
+          </DetailRow>
+          <DetailRow label="住所" value={detail?.postalCode ? `〒${detail.postalCode}\n${detail.address || "-"}` : company.address} />
+          <DetailRow label="電話番号" value={detail?.phone || company.phone} />
+          <DetailRow label="FAX番号" value={detail?.fax || company.fax} />
+          <DetailRow label="請求事業者登録番号" value={detail?.invoiceRegistrationNumber} />
+          <DetailRow label="業務内容・会社PR" value={detail?.businessDescription || company.businessDescription} />
+          <DetailRow label="保有車両台数" value={(detail?.truckCount || company.truckCount) ? `${detail?.truckCount || company.truckCount} 台` : "-"} />
+          <DetailRow label="ウェブサイトURL" value={detail?.websiteUrl} />
+          <DetailRow label="登録年月" value={detail?.registrationDate} />
         </div>
 
-        <div className="border-b border-border pb-3 mb-3">
-          <h3 className="text-xs font-bold text-muted-foreground mb-2">担当者・代表者</h3>
-          <DetailRow label="担当者" value={company.contactName} icon={<User className="w-3.5 h-3.5" />} />
-          <DetailRow label="代表者" value={company.representative} icon={<User className="w-3.5 h-3.5" />} />
+        <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+        <div className="border border-border rounded-md overflow-hidden">
+          <DetailRow label="代表者" value={detail?.representative || company.representative} />
+          <DetailRow label="設立" value={detail?.establishedDate} />
+          <DetailRow label="資本金" value={detail?.capital ? `${detail.capital} 万円` : null} />
+          <DetailRow label="従業員数" value={detail?.employeeCount} />
+          <DetailRow label="事業所所在地" value={detail?.officeLocations} />
+          <DetailRow label="年間売上" value={detail?.annualRevenue ? `${detail.annualRevenue} 万円` : null} />
+          <DetailRow label="取引先銀行" value={detail?.bankInfo} />
+          <DetailRow label="主要取引先" value={detail?.majorClients} />
+          <DetailRow label="締め日" value={detail?.closingDay} />
+          <DetailRow label="支払月・支払日" value={detail?.paymentMonth} />
+          <DetailRow label="営業地域" value={detail?.businessArea || company.businessArea} />
         </div>
 
-        <div className="border-b border-border pb-3 mb-3">
-          <h3 className="text-xs font-bold text-muted-foreground mb-2">事業情報</h3>
-          <DetailRow label="保有台数" value={company.truckCount ? `${company.truckCount}台` : null} icon={<Truck className="w-3.5 h-3.5" />} />
-          <DetailRow label="対応エリア" value={company.businessArea} icon={<Globe className="w-3.5 h-3.5" />} />
-          <DetailRow label="事業内容" value={company.businessDescription} icon={<Briefcase className="w-3.5 h-3.5" />} />
-          <DetailRow label="許可番号" value={company.transportLicenseNumber} icon={<FileText className="w-3.5 h-3.5" />} />
+        <h4 className="text-sm font-bold text-foreground">信用情報</h4>
+        <div className="border border-border rounded-md overflow-hidden">
+          <DetailRow label="加入組織" value={detail?.memberOrganization} />
+          <DetailRow label="国交省認可番号" value={detail?.transportLicenseNumber || company.transportLicenseNumber} />
+          <DetailRow label="デジタコ搭載数" value={detail?.digitalTachographCount} />
+          <DetailRow label="GPS搭載数" value={detail?.gpsCount} />
+          <DetailRow label="安全性優良事業所" value={detail?.safetyExcellenceCert || "無"} />
+          <DetailRow label="グリーン経営認証" value={detail?.greenManagementCert || "無"} />
+          <DetailRow label="ISO9000" value={detail?.iso9000 || "無"} />
+          <DetailRow label="ISO14000" value={detail?.iso14000 || "無"} />
+          <DetailRow label="ISO39001" value={detail?.iso39001 || "無"} />
+          <DetailRow label="荷物保険" value={detail?.cargoInsurance} />
         </div>
       </div>
     </div>
