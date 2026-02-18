@@ -614,8 +614,8 @@ export default function Home() {
             <style dangerouslySetInnerHTML={{ __html: `
               .listing-slider{overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);}
               .listing-track{display:flex;gap:16px;will-change:transform;}
-              .listing-track-cargo{animation:listingScrollCargo 35s linear infinite;}
-              .listing-track-truck{animation:listingScrollTruck 35s linear infinite;}
+              .listing-track-cargo{animation:listingScrollCargo ${Math.max(Math.min(cargoListings.length, 20) * 2.5, 15)}s linear infinite;}
+              .listing-track-truck{animation:listingScrollTruck ${Math.max(Math.min((truckListings?.length || 0), 20) * 2.5, 15)}s linear infinite;}
               .listing-card-lp{flex:0 0 280px;width:280px;}
               @keyframes listingScrollCargo{0%{transform:translateX(0);}100%{transform:translateX(calc(-296px * ${Math.min(cargoListings.length, 20)}));}}
               @keyframes listingScrollTruck{0%{transform:translateX(0);}100%{transform:translateX(calc(-296px * ${Math.min((truckListings?.length || 0), 20)}));}}
