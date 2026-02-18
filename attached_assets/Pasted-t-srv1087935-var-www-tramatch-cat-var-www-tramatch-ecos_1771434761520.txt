@@ -1,0 +1,50 @@
+t@srv1087935:/var/www/tramatch# cat > /var/www/tramatch/ecosystem.config.js << 'EOF'
+const fs = require('fs');
+const envFile = fs.readFileSync('/var/www/tramatch/.env', 'utf8');
+const env = {};
+envFile.split('\n').forEach(line => {
+  const [key, ...val] = line.split('=');
+  if (key && val.length) env[key.trim()] = val.join('=').trim();
+});
+module.exports = {
+  apps: [{
+    name: 'tramatch',
+    script: '/var/www/tramatch/dist/index.cjs',
+    cwd: '/var/www/tramatch',
+    env: env
+  }]
+};
+EOF
+pm2 delete tramatch
+pm2 start /var/www/tramatch/ecosystem.config.js
+pm2 save
+pm2 logs tramatch --lines 10
+[PM2] Applying action deleteProcessId on app [tramatch](ids: [ 7 ])
+[PM2] [tramatch](7) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 70.2mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 140.7mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 96.9mb   │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 224.9mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 88.6mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2][ERROR] File /var/www/tramatch/ecosystem.config.js malformated
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/var/www/tramatch/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///var/www/tramatch/ecosystem.config.js:1:12
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:437:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:389:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1363:24)
+    at Module._compile (node:internal/modules/cjs/loader:1503:5)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at require (node:internal/modules/helpers:182:18)
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+[TAILING] Tailing last 10 lines for [tramatch] process (change the value with --lines option)
+
