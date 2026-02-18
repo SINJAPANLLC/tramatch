@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
+import type { TruckListing } from "@shared/schema";
 import { Truck, ArrowLeft } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "wouter";
@@ -38,8 +40,17 @@ const AREAS = [
 ];
 
 export default function TruckForm() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const editMatch = location.match(/^\/trucks\/edit\/(.+)$/);
+  const editId = editMatch ? editMatch[1] : null;
+  const isEditMode = !!editId;
+
+  const { data: editTruck, isLoading: isLoadingEdit } = useQuery<TruckListing>({
+    queryKey: ["/api/trucks", editId],
+    enabled: isEditMode,
+  });
 
   const form = useForm<InsertTruckListing>({
     resolver: zodResolver(insertTruckListingSchema),
@@ -56,15 +67,40 @@ export default function TruckForm() {
     },
   });
 
+  useEffect(() => {
+    if (editTruck) {
+      form.reset({
+        title: editTruck.title || "",
+        currentArea: editTruck.currentArea || "",
+        destinationArea: editTruck.destinationArea || "",
+        vehicleType: editTruck.vehicleType || "",
+        bodyType: editTruck.bodyType || "",
+        maxWeight: editTruck.maxWeight || "",
+        availableDate: editTruck.availableDate || "",
+        price: editTruck.price || "",
+        description: editTruck.description || "",
+      });
+    }
+  }, [editTruck]);
+
   const mutation = useMutation({
     mutationFn: async (data: InsertTruckListing) => {
+      if (isEditMode && editId) {
+        const res = await apiRequest("PATCH", `/api/trucks/${editId}`, data);
+        return res.json();
+      }
       const res = await apiRequest("POST", "/api/trucks", data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
-      toast({ title: "車両情報を掲載しました" });
-      setLocation("/trucks");
+      if (isEditMode) {
+        toast({ title: "車両情報を更新しました" });
+        setLocation("/trucks");
+      } else {
+        toast({ title: "車両情報を掲載しました" });
+        setLocation("/trucks");
+      }
     },
     onError: (error: Error) => {
       toast({ title: "エラーが発生しました", description: error.message, variant: "destructive" });
@@ -85,8 +121,8 @@ export default function TruckForm() {
         <div className="flex items-center gap-3">
           <Truck className="w-6 h-6 text-primary-foreground" />
           <div>
-            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-form-title">車両情報の掲載</h1>
-            <p className="text-base text-primary-foreground text-shadow">空車の情報を入力してください</p>
+            <h1 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-form-title">{isEditMode ? "車両情報の編集" : "車両情報の掲載"}</h1>
+            <p className="text-base text-primary-foreground text-shadow">{isEditMode ? "車両情報を編集してください" : "空車の情報を入力してください"}</p>
           </div>
         </div>
       </div>
@@ -291,8 +327,8 @@ export default function TruckForm() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-submit-truck">
-                {mutation.isPending ? "掲載中..." : "車両情報を掲載する"}
+              <Button type="submit" className="w-full" disabled={mutation.isPending || (isEditMode && isLoadingEdit)} data-testid="button-submit-truck">
+                {mutation.isPending ? (isEditMode ? "更新中..." : "掲載中...") : (isEditMode ? "車両情報を更新する" : "車両情報を掲載する")}
               </Button>
             </form>
           </Form>

@@ -13,7 +13,7 @@ import {
   type NotificationTemplate, type InsertNotificationTemplate,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
-  passwordResetTokens
+  passwordResetTokens, auditLogs, type AuditLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -104,6 +104,12 @@ export interface IStorage {
   createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
   getPasswordResetToken(token: string): Promise<{ id: string; userId: string; token: string; expiresAt: Date; used: boolean } | undefined>;
   markPasswordResetTokenUsed(token: string): Promise<void>;
+
+  updateTruckListing(id: string, data: Partial<TruckListing>): Promise<TruckListing | undefined>;
+
+  createAuditLog(log: { userId?: string; userName?: string; action: string; targetType: string; targetId?: string; details?: string; ipAddress?: string }): Promise<void>;
+  getAuditLogs(limit?: number, offset?: number): Promise<AuditLog[]>;
+  getAuditLogCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -513,6 +519,28 @@ export class DatabaseStorage implements IStorage {
 
   async markPasswordResetTokenUsed(token: string): Promise<void> {
     await db.update(passwordResetTokens).set({ used: true }).where(eq(passwordResetTokens.token, token));
+  }
+
+  async updateTruckListing(id: string, data: Partial<TruckListing>): Promise<TruckListing | undefined> {
+    const { id: _id, createdAt: _createdAt, userId: _userId, ...safeData } = data as any;
+    const [updated] = await db.update(truckListings)
+      .set(safeData)
+      .where(eq(truckListings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createAuditLog(log: { userId?: string; userName?: string; action: string; targetType: string; targetId?: string; details?: string; ipAddress?: string }): Promise<void> {
+    await db.insert(auditLogs).values(log);
+  }
+
+  async getAuditLogs(limit = 100, offset = 0): Promise<AuditLog[]> {
+    return db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(limit).offset(offset);
+  }
+
+  async getAuditLogCount(): Promise<number> {
+    const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(auditLogs);
+    return row?.count || 0;
   }
 }
 

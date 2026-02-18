@@ -188,6 +188,7 @@ export default function Partners() {
   const [form, setForm] = useState<PartnerFormData>(emptyForm);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
+  const [inviteEmail, setInviteEmail] = useState("");
 
   const { data: partners, isLoading } = useQuery<Partner[]>({
     queryKey: ["/api/partners"],
@@ -235,6 +236,20 @@ export default function Partners() {
     },
     onError: () => {
       toast({ title: "取引先の削除に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const res = await apiRequest("POST", "/api/partners/invite", { email });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "招待メールを送信しました" });
+      setInviteEmail("");
+    },
+    onError: (error: Error) => {
+      toast({ title: "招待に失敗しました", description: error.message, variant: "destructive" });
     },
   });
 
@@ -505,8 +520,10 @@ export default function Partners() {
               <p className="text-muted-foreground font-medium">取引先を招待</p>
               <p className="text-xs text-muted-foreground mt-2 mb-4">メールアドレスを入力して取引先を招待できます</p>
               <div className="max-w-md mx-auto flex items-center gap-2">
-                <Input placeholder="メールアドレスを入力..." className="text-sm" data-testid="input-invite-email" />
-                <Button data-testid="button-send-invite">招待する</Button>
+                <Input placeholder="メールアドレスを入力..." className="text-sm" data-testid="input-invite-email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                <Button data-testid="button-send-invite" onClick={() => inviteMutation.mutate(inviteEmail)} disabled={inviteMutation.isPending || !inviteEmail.trim()}>
+                  {inviteMutation.isPending ? "送信中..." : "招待する"}
+                </Button>
               </div>
             </CardContent>
           </Card>

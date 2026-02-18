@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, MapPin, Calendar, Weight, Building2, Phone, Mail, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Weight, Building2, Phone, Mail, Truck, Pencil } from "lucide-react";
 import type { TruckListing } from "@shared/schema";
 import { formatPrice } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function TruckDetail() {
   const [, params] = useRoute("/trucks/:id");
   const id = params?.id;
+  const { user } = useAuth();
 
   const { data: listing, isLoading, error } = useQuery<TruckListing>({
     queryKey: ["/api/trucks", id],
@@ -69,7 +71,17 @@ export default function TruckDetail() {
                 掲載日: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString("ja-JP") : "---"}
               </p>
             </div>
-            <Badge variant="default" className="shrink-0">{listing.status === "active" ? "空車あり" : "終了"}</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="default" className="shrink-0">{listing.status === "active" ? "空車あり" : "終了"}</Badge>
+              {user && listing.userId === user.id && (
+                <Link href={`/trucks/edit/${id}`}>
+                  <Button variant="outline" size="sm" data-testid="button-edit-truck">
+                    <Pencil className="w-4 h-4 mr-1.5" />
+                    編集
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">

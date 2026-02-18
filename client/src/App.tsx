@@ -31,6 +31,8 @@ import AdminNotifications from "@/pages/admin-notifications";
 import AdminSeo from "@/pages/admin-seo";
 import AdminSettings from "@/pages/admin-settings";
 import AdminAnnouncements from "@/pages/admin-announcements";
+import AdminListings from "@/pages/admin-listings";
+import AdminAuditLogs from "@/pages/admin-audit-logs";
 import Guide from "@/pages/guide";
 import Faq from "@/pages/faq";
 import Contact from "@/pages/contact";
@@ -41,6 +43,7 @@ import Columns from "@/pages/columns";
 import ColumnDetail from "@/pages/column-detail";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import TruckForm from "@/pages/truck-form";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -65,7 +68,7 @@ const DASHBOARD_PATHS = [
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
-  "/admin/notifications", "/admin/announcements", "/admin/seo", "/admin/settings",
+  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/audit-logs",
 ];
 
 function Router() {
@@ -90,6 +93,8 @@ function Router() {
       <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
       <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
+      <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>
+      <Route path="/trucks/edit/:id">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
       <Route path="/trucks">{() => <ProtectedRoute component={TruckList} />}</Route>
       <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
@@ -97,8 +102,10 @@ function Router() {
       <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
       <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
       <Route path="/admin/announcements">{() => <AdminRoute component={AdminAnnouncements} />}</Route>
+      <Route path="/admin/listings">{() => <AdminRoute component={AdminListings} />}</Route>
       <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
       <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
+      <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
       <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
       <Route path="/guide" component={Guide} />
       <Route path="/faq" component={Faq} />
