@@ -362,7 +362,19 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/cargo", async (_req, res) => {
+  app.get("/api/public/counts", async (_req, res) => {
+    try {
+      const cargo = await storage.getCargoListings();
+      const trucks = await storage.getTruckListings();
+      const activeCargo = cargo.filter(c => c.status === "active").length;
+      const activeTrucks = trucks.filter(t => t.status === "active").length;
+      res.json({ cargoCount: activeCargo, truckCount: activeTrucks });
+    } catch (error) {
+      res.json({ cargoCount: 0, truckCount: 0 });
+    }
+  });
+
+  app.get("/api/cargo", requireAuth, async (_req, res) => {
     try {
       const listings = await storage.getCargoListings();
 
@@ -553,7 +565,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/trucks", async (_req, res) => {
+  app.get("/api/trucks", requireAuth, async (_req, res) => {
     try {
       const listings = await storage.getTruckListings();
       res.json(listings);

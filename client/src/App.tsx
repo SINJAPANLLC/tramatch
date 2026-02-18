@@ -85,9 +85,9 @@ function Router() {
       <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
-      <Route path="/cargo" component={CargoList} />
+      <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
       <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
-      <Route path="/trucks" component={TruckList} />
+      <Route path="/trucks">{() => <ProtectedRoute component={TruckList} />}</Route>
       <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
       <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
       <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
