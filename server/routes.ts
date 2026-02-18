@@ -299,18 +299,21 @@ export async function registerRoutes(
       const userCargo = allCargo.filter(c => c.userId === req.params.userId);
       const userTrucks = allTrucks.filter(t => t.userId === req.params.userId);
 
-      const cargo1m = userCargo.filter(c => new Date(c.createdAt) >= oneMonthAgo).length;
-      const cargo3m = userCargo.filter(c => new Date(c.createdAt) >= threeMonthsAgo).length;
-      const truck1m = userTrucks.filter(t => new Date(t.createdAt) >= oneMonthAgo).length;
-      const truck3m = userTrucks.filter(t => new Date(t.createdAt) >= threeMonthsAgo).length;
+      const cargoCompleted = userCargo.filter(c => c.status === "completed").length;
+      const cargoRegistered = userCargo.length;
+      const truckCompleted = userTrucks.filter(t => t.status === "completed").length;
+      const truckRegistered = userTrucks.length;
+
+      const registrationDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long" }) : null;
 
       const { password, id, role, approved, permitFile, username, ...companyData } = user;
       res.json({
         ...companyData,
-        cargoCount1m: cargo1m,
-        cargoCount3m: cargo3m,
-        truckCount1m: truck1m,
-        truckCount3m: truck3m,
+        cargoCount1m: cargoCompleted,
+        cargoCount3m: cargoRegistered,
+        truckCount1m: truckCompleted,
+        truckCount3m: truckRegistered,
+        registrationDate,
       });
     } catch (error) {
       res.status(500).json({ message: "企業情報の取得に失敗しました" });
