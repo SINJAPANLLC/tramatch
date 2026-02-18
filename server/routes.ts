@@ -601,14 +601,23 @@ export async function registerRoutes(
 
   app.post("/api/user-add-requests", requireAuth, async (req, res) => {
     try {
-      const { name, email, role, note } = req.body;
-      if (!name || !email) {
-        return res.status(400).json({ message: "担当者名とメールアドレスは必須です" });
+      const { name, email, password, role, note } = req.body;
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: "担当者名、メールアドレス、パスワードは必須です" });
       }
+      if (password.length < 8) {
+        return res.status(400).json({ message: "パスワードは8文字以上で入力してください" });
+      }
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています" });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
       const request = await storage.createUserAddRequest({
         requesterId: req.session.userId as string,
         name,
         email,
+        password: hashedPassword,
         role: role || "member",
         note: note || null,
       });
@@ -664,15 +673,33 @@ export async function registerRoutes(
       if (request.status !== "pending") {
         return res.status(400).json({ message: "この申請は既に処理済みです" });
       }
+      const existingUser = await storage.getUserByEmail(request.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています" });
+      }
+      const requester = await storage.getUser(request.requesterId);
+      const newUser = await storage.createUser({
+        username: request.email,
+        email: request.email,
+        password: request.password,
+        companyName: requester?.companyName || request.name,
+        contactName: request.name,
+        phone: requester?.phone || "未設定",
+        userType: requester?.userType || "carrier",
+        role: "user",
+        approved: true,
+        plan: requester?.plan || "free",
+      });
       const updated = await storage.updateUserAddRequestStatus(id, "approved", adminNote);
       await storage.createNotification({
         userId: request.requesterId,
         type: "user_add_request",
         title: "ユーザー追加承認",
-        message: `「${request.name}」のユーザー追加申請が承認されました`,
+        message: `「${request.name}」のユーザー追加申請が承認されました。ログイン可能です。`,
       });
       res.json(updated);
     } catch (error) {
+      console.error("User add approve error:", error);
       res.status(500).json({ message: "承認に失敗しました" });
     }
   });

@@ -241,6 +241,7 @@ function UserAddRequestSection() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("member");
   const [note, setNote] = useState("");
 
@@ -250,7 +251,7 @@ function UserAddRequestSection() {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/user-add-requests", { name, email, role, note });
+      const res = await apiRequest("POST", "/api/user-add-requests", { name, email, password, role, note });
       return res.json();
     },
     onSuccess: () => {
@@ -259,6 +260,7 @@ function UserAddRequestSection() {
       setShowForm(false);
       setName("");
       setEmail("");
+      setPassword("");
       setRole("member");
       setNote("");
     },
@@ -313,6 +315,18 @@ function UserAddRequestSection() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
+              <Label className="text-xs mb-1">パスワード <span className="text-destructive">*</span></Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="8文字以上のパスワード"
+                data-testid="input-user-add-password"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               <Label className="text-xs mb-1">役割</Label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger data-testid="select-user-add-role">
@@ -339,7 +353,7 @@ function UserAddRequestSection() {
             <Button
               size="sm"
               onClick={() => submitMutation.mutate()}
-              disabled={!name || !email || submitMutation.isPending}
+              disabled={!name || !email || !password || password.length < 8 || submitMutation.isPending}
               data-testid="button-submit-user-add"
             >
               {submitMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
