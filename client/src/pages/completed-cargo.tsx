@@ -106,7 +106,7 @@ function EditDealForm({ listing, onClose }: { listing: CargoListing; onClose: ()
       await apiRequest("PATCH", `/api/cargo/${listing.id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
       toast({ title: "成約内容を変更しました" });
       onClose();
     },
@@ -761,11 +761,11 @@ function CargoDetailPanel({ listing, onClose, isContracted = false }: { listing:
 
   const cancelDealMutation = useMutation({
     mutationFn: async (cargoId: string) => {
-      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "cancelled" });
+      await apiRequest("PATCH", `/api/cargo/${cargoId}/status`, { status: "active" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "成約を取り消しました", description: "荷物は「成約しなかった荷物」に移動しました" });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
+      toast({ title: "成約を取り消しました", description: "荷物は「登録した荷物」に戻りました" });
       onClose();
     },
     onError: () => {
