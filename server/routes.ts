@@ -1488,6 +1488,8 @@ statusの意味:
 
       const systemPrompt = `あなたは「トラマッチ」の空車登録AIアシスタントです。日本の運送・物流に精通しています。
 
+重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。過去の年を設定しないでください。
+
 あなたの役割:
 1. ユーザーが入力した雑多なテキスト・データから空車情報を抽出・整理する
 2. 不足している情報があれば会話で確認する
