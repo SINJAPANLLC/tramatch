@@ -48,6 +48,8 @@
 - `/` - LP (Landing Page) - public
 - `/login` - ログイン
 - `/register` - 新規登録
+- `/forgot-password` - パスワードリセット申請 (public)
+- `/reset-password?token=xxx` - パスワード再設定 (public)
 - `/home` - ホーム (dashboard, requires login)
 - `/cargo` - AI荷物検索 / 荷物一覧 (public, sidebar when authenticated)
 - `/cargo/:id` - 荷物詳細 (public)
