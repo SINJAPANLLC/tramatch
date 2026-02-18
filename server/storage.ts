@@ -82,6 +82,7 @@ export interface IStorage {
   createPayment(data: InsertPayment): Promise<Payment>;
   updatePaymentStatus(id: string, status: string, squarePaymentId: string | null): Promise<void>;
   getPaymentsByUser(userId: string): Promise<Payment[]>;
+  getAllPayments(): Promise<Payment[]>;
 
   getAdminSetting(key: string): Promise<string | undefined>;
   setAdminSetting(key: string, value: string): Promise<void>;
@@ -424,6 +425,10 @@ export class DatabaseStorage implements IStorage {
 
   async getPaymentsByUser(userId: string): Promise<Payment[]> {
     return db.select().from(payments).where(eq(payments.userId, userId)).orderBy(desc(payments.createdAt));
+  }
+
+  async getAllPayments(): Promise<Payment[]> {
+    return db.select().from(payments).orderBy(desc(payments.createdAt));
   }
 
   async getAllAdminSettings(): Promise<AdminSetting[]> {
