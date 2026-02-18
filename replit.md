@@ -139,10 +139,23 @@
 - Print functionality generates formatted HTML print view
 - API: GET /api/dispatch-requests/:cargoId, POST /api/dispatch-requests, PATCH /api/dispatch-requests/:id, PATCH /api/dispatch-requests/:id/send
 
-## Notification System
-- Notifications table: id, userId, type, title, message, relatedId, isRead, createdAt
-- Auto-generated on: user registration (to admins), user approval (to user), cargo creation (to all users), truck creation (to all users)
-- Types: cargo_new, truck_new, user_approved, user_registered
+## Notification System (Multi-Channel)
+- **3 Channels**: system (in-app bell), email (nodemailer SMTP), LINE (LINE Messaging API)
+- **Notification Templates**: notification_templates table with channel field (system/email/line), category (auto_reply/auto_notification/regular), subject (optional, required for email), body, triggerEvent, isActive
+- **User Preferences**: notifySystem, notifyEmail, notifyLine boolean fields on users table; lineUserId for LINE integration
+- **notification-service.ts**: sendEmail(), sendLineMessage(), isEmailConfigured(), isLineConfigured(), replaceTemplateVariables()
+- **Admin Notifications Page** (/admin/notifications): 4 tabs - システム通知, メール通知, LINE通知, 一括送信
+  - Each channel tab: template CRUD, AI generation (channel-aware), category filter, preview/edit/toggle/delete
+  - Bulk send tab: multi-channel selection, target filter, channel config status display
+- **User Settings** (/settings → 通知設定 tab): toggle system/email/LINE notifications, LINE User ID input
+- **API Endpoints**:
+  - GET /api/admin/notification-channels/status - Channel configuration status
+  - POST /api/admin/notification-channels/test - Test send to specific channel
+  - POST /api/admin/notifications/send - Multi-channel bulk send (respects user preferences)
+  - GET /api/admin/notification-templates?channel=&category= - Filter by channel and/or category
+  - POST /api/admin/notification-templates/generate - AI generate (channel-aware)
+- **Env vars needed**: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM (email), LINE_CHANNEL_ACCESS_TOKEN (LINE)
+- Auto-generated notifications: user registration (to admins), user approval (to user), cargo/truck creation (to all users)
 - Header dropdown with turquoise unread dot, mark read, mark all read, delete
 - Auto-refresh: notifications every 30s, unread count every 15s
 
