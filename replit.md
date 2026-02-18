@@ -71,6 +71,7 @@
 - `/admin/applications` - 申請管理 (requires admin role)
 - `/admin/users` - ユーザー管理 (requires admin role)
 - `/admin/revenue` - 収益管理 (requires admin role)
+- `/admin/invoices` - 請求書発行 (requires admin role) - auto-generate invoices, email send, payment status tracking
 - `/admin/notifications` - 通知管理 (requires admin role) - 3 category tabs (auto_reply, auto_notification, regular) + bulk send tab
 - `/admin/announcements` - お知らせ管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
