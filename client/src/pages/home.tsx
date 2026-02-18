@@ -6,9 +6,32 @@ import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing, Announcement, SeoArticle } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
 import { formatPrice } from "@/lib/utils";
+
+const LOGO_WALL_IMAGES_ROW1 = [
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/47db33b0-d7f4-013e-9799-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).jpeg",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/517bff70-d7f4-013e-979c-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/5938c4f0-d7f4-013e-979f-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).jpeg",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/60df44a0-d7f4-013e-97a0-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/66db27b0-d7f4-013e-97a2-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).jpeg",
+];
+
+const LOGO_WALL_IMAGES_ROW2 = [
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/6d8d1910-d7f4-013e-97a3-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/728486c0-d7f4-013e-97a6-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(4).png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/7cf28db0-d7f4-013e-97a8-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(5).png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/883e8b30-d7f4-013e-97a9-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.jpeg",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/916e7710-d7f4-013e-97ab-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.png",
+];
+
+const LOGO_WALL_IMAGES_BOTTOM = [
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1c9b1920-d996-013e-3faf-0a58a9feac02/70617d441cf711e88062963aecd2c947.jpg",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/095c3f70-d994-013e-82c3-0a58a9feac02/m_logo.png",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/0f974c20-d994-013e-82c4-0a58a9feac02/nikko-logo.jpg",
+  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1412ad40-d994-013e-82c6-0a58a9feac02/tmp-75613e906c3e5ab6ea00c4f39150e44f-cff486a9ddccba3a97b5c4297fb3c057.jpg",
+];
 
 function useCountUp(target: number, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -371,32 +394,20 @@ export default function Home() {
         <div className="logo-wall" data-testid="section-logo-wall">
           <div className="logo-slider">
             <div className="slide-track track-1">
-              {[...Array(2)].map((_, loop) => (
-                [
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/47db33b0-d7f4-013e-9799-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).jpeg",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/517bff70-d7f4-013e-979c-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/5938c4f0-d7f4-013e-979f-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).jpeg",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/60df44a0-d7f4-013e-97a0-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/66db27b0-d7f4-013e-97a2-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).jpeg",
-                ].map((src, i) => (
-                  <div className="logo-slide" key={`row1-${loop}-${i}`}><img src={src} alt="" /></div>
+              {[...Array(2)].map((_, loop) =>
+                LOGO_WALL_IMAGES_ROW1.map((src, i) => (
+                  <div className="logo-slide" key={`row1-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
-              ))}
+              )}
             </div>
           </div>
           <div className="logo-slider">
             <div className="slide-track track-2">
-              {[...Array(2)].map((_, loop) => (
-                [
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/6d8d1910-d7f4-013e-97a3-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/728486c0-d7f4-013e-97a6-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(4).png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/7cf28db0-d7f4-013e-97a8-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(5).png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/883e8b30-d7f4-013e-97a9-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.jpeg",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/916e7710-d7f4-013e-97ab-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.png",
-                ].map((src, i) => (
-                  <div className="logo-slide" key={`row2-${loop}-${i}`}><img src={src} alt="" /></div>
+              {[...Array(2)].map((_, loop) =>
+                LOGO_WALL_IMAGES_ROW2.map((src, i) => (
+                  <div className="logo-slide" key={`row2-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -680,16 +691,11 @@ export default function Home() {
         <div className="sin-logo-wall" data-testid="section-sin-logo-wall">
           <div className="sin-slider">
             <div className="sin-slide-track">
-              {[...Array(2)].map((_, loop) => (
-                [
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1c9b1920-d996-013e-3faf-0a58a9feac02/70617d441cf711e88062963aecd2c947.jpg",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/095c3f70-d994-013e-82c3-0a58a9feac02/m_logo.png",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/0f974c20-d994-013e-82c4-0a58a9feac02/nikko-logo.jpg",
-                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1412ad40-d994-013e-82c6-0a58a9feac02/tmp-75613e906c3e5ab6ea00c4f39150e44f-cff486a9ddccba3a97b5c4297fb3c057.jpg",
-                ].map((src, i) => (
-                  <div className="sin-slide" key={`sin-${loop}-${i}`}><img src={src} alt="" /></div>
+              {[...Array(2)].map((_, loop) =>
+                LOGO_WALL_IMAGES_BOTTOM.map((src, i) => (
+                  <div className="sin-slide" key={`sin-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
-              ))}
+              )}
             </div>
           </div>
         </div>
