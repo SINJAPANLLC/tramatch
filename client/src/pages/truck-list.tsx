@@ -38,14 +38,23 @@ const QUICK_FILTERS = [
   { label: "九州地場", value: "九州" },
 ];
 
-const VEHICLE_TYPES = ["軽車両", "2t車", "4t車", "10t車", "大型車", "トレーラー", "その他"];
+const VEHICLE_TYPES = [
+  "軽車両", "1t車", "1.5t車", "2t車", "3t車", "4t車", "5t車", "6t車", "7t車", "8t車",
+  "10t車", "11t車", "13t車", "15t車", "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他"
+];
+const BODY_TYPES = [
+  "平ボディ", "バン", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
+  "ダンプ", "タンクローリー", "車載車", "セルフローダー", "セーフティローダー",
+  "ユニック", "クレーン付き", "パワーゲート付き", "エアサス", "コンテナ車", "海上コンテナ",
+  "低床", "高床", "その他"
+];
 
 const PER_PAGE_OPTIONS = [10, 20, 50];
 
 type InputMode = "text" | "file" | "voice";
 
 const TRUCK_FIELDS = [
-  "title", "currentArea", "destinationArea", "vehicleType",
+  "title", "currentArea", "destinationArea", "vehicleType", "bodyType",
   "maxWeight", "availableDate", "price", "description",
   "companyName", "contactPhone", "contactEmail",
 ];
@@ -54,11 +63,12 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
   currentArea: PREFECTURES,
   destinationArea: PREFECTURES,
   vehicleType: VEHICLE_TYPES,
+  bodyType: BODY_TYPES,
 };
 
 const FIELD_LABELS: Record<string, string> = {
   title: "タイトル", currentArea: "空車地", destinationArea: "行先地",
-  vehicleType: "車種", maxWeight: "最大積載量", availableDate: "空車日",
+  vehicleType: "車種", bodyType: "車体タイプ", maxWeight: "最大積載量", availableDate: "空車日",
   price: "最低運賃", description: "備考",
   companyName: "会社名", contactPhone: "電話番号", contactEmail: "メール",
 };
@@ -177,6 +187,7 @@ function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; 
             <div className="font-bold">{listing.companyName}</div>
           </DetailRow>
           <DetailRow label="車種" value={listing.vehicleType} />
+          <DetailRow label="車体タイプ" value={listing.bodyType || "-"} />
           <DetailRow label="最大積載量" value={listing.maxWeight} />
           <DetailRow label="空車日" value={listing.availableDate} />
           <DetailRow label="連絡先">
@@ -268,7 +279,7 @@ function TruckRegisterTab() {
   const form = useForm<InsertTruckListing>({
     resolver: zodResolver(insertTruckListingSchema),
     defaultValues: {
-      title: "", currentArea: "", destinationArea: "", vehicleType: "",
+      title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
       maxWeight: "", availableDate: "", price: "", description: "",
       companyName: "", contactPhone: "", contactEmail: "",
     },
@@ -796,6 +807,18 @@ function TruckRegisterTab() {
                           <FormMessage />
                         </FormItem>
                       )} />
+                      <FormField control={form.control} name="bodyType" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">車体タイプ</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-truck-body-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                            <SelectContent>{BODY_TYPES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       <FormField control={form.control} name="maxWeight" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">最大積載量</FormLabel>
@@ -1303,6 +1326,7 @@ export default function TruckList() {
                 <th className="text-right px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
                 <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">重量</th>
                 <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車種</th>
+                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車体</th>
                 <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">備考</th>
               </tr>
             </thead>
@@ -1313,6 +1337,7 @@ export default function TruckList() {
                   <td className="px-2 py-3"><Skeleton className="h-10 w-48" /></td>
                   <td className="px-2 py-3"><Skeleton className="h-4 w-16" /></td>
                   <td className="px-1.5 py-3"><Skeleton className="h-4 w-10" /></td>
+                  <td className="px-1.5 py-3"><Skeleton className="h-4 w-12" /></td>
                   <td className="px-1.5 py-3"><Skeleton className="h-4 w-12" /></td>
                   <td className="px-2 py-3"><Skeleton className="h-4 w-20" /></td>
                 </tr>
@@ -1365,6 +1390,9 @@ export default function TruckList() {
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
                     <div className="text-[12px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                  </td>
+                  <td className="px-1.5 py-3 text-center align-top">
+                    <div className="text-[11px] whitespace-nowrap text-muted-foreground">{listing.bodyType || "-"}</div>
                   </td>
                   <td className="px-2 py-3 align-top">
                     <span className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">

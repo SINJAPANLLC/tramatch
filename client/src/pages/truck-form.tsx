@@ -15,7 +15,16 @@ import { Truck, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 
-const VEHICLE_TYPES = ["4t車", "10t車", "大型車", "トレーラー", "軽車両", "2t車", "その他"];
+const VEHICLE_TYPES = [
+  "軽車両", "1t車", "1.5t車", "2t車", "3t車", "4t車", "5t車", "6t車", "7t車", "8t車",
+  "10t車", "11t車", "13t車", "15t車", "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他"
+];
+const BODY_TYPES = [
+  "平ボディ", "バン", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
+  "ダンプ", "タンクローリー", "車載車", "セルフローダー", "セーフティローダー",
+  "ユニック", "クレーン付き", "パワーゲート付き", "エアサス", "コンテナ車", "海上コンテナ",
+  "低床", "高床", "その他"
+];
 const AREAS = [
   "北海道", "青森", "岩手", "宮城", "秋田", "山形", "福島",
   "茨城", "栃木", "群馬", "埼玉", "千葉", "東京", "神奈川",
@@ -38,6 +47,7 @@ export default function TruckForm() {
       currentArea: "",
       destinationArea: "",
       vehicleType: "",
+      bodyType: "",
       maxWeight: "",
       availableDate: "",
       price: "",
@@ -171,6 +181,31 @@ export default function TruckForm() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="bodyType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>車体タイプ</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-truck-body-type">
+                            <SelectValue placeholder="選択してください" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {BODY_TYPES.map((b) => (
+                            <SelectItem key={b} value={b}>{b}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="maxWeight"

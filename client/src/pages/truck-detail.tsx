@@ -95,6 +95,12 @@ export default function TruckDetail() {
                 <div className="text-xs text-muted-foreground mb-1">車種</div>
                 <div className="text-sm font-medium text-foreground">{listing.vehicleType}</div>
               </div>
+              {listing.bodyType && (
+                <div className="p-3 rounded-md bg-muted/50">
+                  <div className="text-xs text-muted-foreground mb-1">車体タイプ</div>
+                  <div className="text-sm font-medium text-foreground">{listing.bodyType}</div>
+                </div>
+              )}
               <div className="p-3 rounded-md bg-muted/50">
                 <div className="text-xs text-muted-foreground mb-1">最大積載量</div>
                 <div className="text-sm font-medium text-foreground">{listing.maxWeight}</div>
