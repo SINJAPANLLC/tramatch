@@ -324,7 +324,7 @@ export default function Partners() {
               <div className="flex items-end gap-2 flex-wrap">
                 <div className="min-w-[200px]">
                   <Input
-                    placeholder="キーワード 例：トラボックス 0876"
+                    placeholder="キーワード 例：トラマッチ 0876"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     className="text-sm"
