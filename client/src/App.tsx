@@ -37,6 +37,8 @@ import Contact from "@/pages/contact";
 import CompanyInfoPage from "@/pages/company-info";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
+import Columns from "@/pages/columns";
+import ColumnDetail from "@/pages/column-detail";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -100,6 +102,8 @@ function Router() {
       <Route path="/company-info" component={CompanyInfoPage} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/columns/:slug" component={ColumnDetail} />
+      <Route path="/columns" component={Columns} />
       <Route component={NotFound} />
     </Switch>
   );
