@@ -1,0 +1,28 @@
+ Type:   unauthorized
+  Detail: 84.32.84.32: Invalid response from http://www.tramatch-sinjapan.com/.well-known/acme-challenge/W-EeuJ6NXGHuv09CfBCKPCB86b3Y2zSVnwf-zHr8sHQ: 500
+
+Hint: The Certificate Authority failed to verify the temporary nginx configuration changes made by Certbot. Ensure the listed domains point to this nginx server and that it is accessible from the internet.
+
+Some challenges have failed.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+root@srv1087935:/var/www/tramatch# nginx -t
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/only-u.fun:53
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/only-u.fun:76
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/only-u.fun:77
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/sinjapan-logimatch:16
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/sinjapan-logimatch:17
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/sinjapan-poker.com:11
+2026/02/18 17:17:13 [warn] 769884#769884: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/sinjapan-poker.com:12
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "www.only-u.fun" on 0.0.0.0:443, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "only-u.fun" on 0.0.0.0:443, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "212.85.24.206" on 0.0.0.0:443, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "www.only-u.fun" on 0.0.0.0:80, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "only-u.fun" on 0.0.0.0:80, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "www.only-u.fun" on [::]:443, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "only-u.fun" on [::]:443, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "www.only-u.fun" on [::]:80, ignored
+2026/02/18 17:17:13 [warn] 769884#769884: conflicting server name "only-u.fun" on [::]:80, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+root@srv1087935:/var/www/tramatch# curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5050/
+200root@srv1087935:/var/www/tramatch# 
