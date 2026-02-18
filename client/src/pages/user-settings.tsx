@@ -80,9 +80,12 @@ function SquareCardPayment() {
         const card = await payments.card();
         if (cancelled) return;
 
-        if (containerRef.current) {
-          containerRef.current.innerHTML = "";
-          await card.attach(containerRef.current);
+        const container = containerRef.current;
+        if (container) {
+          while (container.firstChild) {
+            container.removeChild(container.firstChild);
+          }
+          await card.attach(container);
           cardRef.current = card;
           setCardReady(true);
         }
@@ -95,9 +98,17 @@ function SquareCardPayment() {
 
     return () => {
       cancelled = true;
-      if (cardRef.current) {
-        try { cardRef.current.destroy(); } catch (e) { /* ignore */ }
-        cardRef.current = null;
+      setCardReady(false);
+      const card = cardRef.current;
+      cardRef.current = null;
+      if (card) {
+        try { card.destroy(); } catch (_e) { /* Square may throw if DOM already cleaned */ }
+      }
+      const container = containerRef.current;
+      if (container) {
+        while (container.firstChild) {
+          try { container.removeChild(container.firstChild); } catch (_e) { break; }
+        }
       }
     };
   }, [sdkLoaded, appId, locationId]);
