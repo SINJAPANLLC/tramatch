@@ -99,6 +99,44 @@ const defaultEmailTemplates = [
   {
     category: "auto_notification",
     channel: "email",
+    name: "新着案件通知",
+    subject: "【トラマッチ】新しい荷物が登録されました",
+    body: `新しい荷物案件が登録されました。
+
+出発地: {{departureArea}}
+到着地: {{arrivalArea}}
+荷物種類: {{cargoType}}
+重量: {{weight}}
+登録会社: {{companyName}}
+
+トラマッチにログインして詳細をご確認ください。
+{{appBaseUrl}}
+
+トラマッチ運営事務局`,
+    triggerEvent: "cargo_new",
+  },
+  {
+    category: "auto_notification",
+    channel: "email",
+    name: "新着空車通知",
+    subject: "【トラマッチ】新しい空車が登録されました",
+    body: `新しい空車情報が登録されました。
+
+現在地: {{currentArea}}
+行先: {{destinationArea}}
+車両タイプ: {{vehicleType}}
+積載量: {{maxWeight}}
+登録会社: {{companyName}}
+
+トラマッチにログインして詳細をご確認ください。
+{{appBaseUrl}}
+
+トラマッチ運営事務局`,
+    triggerEvent: "truck_new",
+  },
+  {
+    category: "auto_notification",
+    channel: "email",
     name: "請求書送信",
     subject: "【トラマッチ】請求書 {{invoiceNumber}}（{{billingMonth}}）",
     body: `{{companyName}} 御中

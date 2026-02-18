@@ -892,6 +892,15 @@ export async function registerRoutes(
       const listing = await storage.createCargoListing(listingData, req.session.userId as string);
 
       const allUsers = await storage.getAllUsers();
+      const appBaseUrl = process.env.APP_BASE_URL || `https://${req.get("host")}`;
+      const cargoVars = {
+        departureArea: listing.departureArea || "",
+        arrivalArea: listing.arrivalArea || "",
+        cargoType: listing.cargoType || "",
+        weight: listing.weight || "",
+        companyName: currentUser?.companyName || "",
+        appBaseUrl,
+      };
       for (const u of allUsers) {
         if (u.id !== req.session.userId && u.approved) {
           await storage.createNotification({
@@ -901,6 +910,20 @@ export async function registerRoutes(
             message: `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType} ${listing.weight}`,
             relatedId: listing.id,
           });
+
+          if (u.notifyEmail && u.email && isEmailConfigured()) {
+            try {
+              const resolved = await resolveEmailTemplate(
+                "cargo_new",
+                cargoVars,
+                "【トラマッチ】新しい荷物が登録されました",
+                `新しい荷物案件が登録されました。\n\n出発地: ${listing.departureArea}\n到着地: ${listing.arrivalArea}\n荷物種類: ${listing.cargoType}\n重量: ${listing.weight}\n\nトラマッチにログインして詳細をご確認ください。`
+              );
+              await sendEmail(u.email, resolved.subject, resolved.body);
+            } catch (emailErr) {
+              console.error(`Cargo new email failed for ${u.email}:`, emailErr);
+            }
+          }
         }
       }
 
@@ -1224,6 +1247,15 @@ export async function registerRoutes(
       const listing = await storage.createTruckListing({ ...parsed.data }, req.session.userId as string);
 
       const allUsers = await storage.getAllUsers();
+      const appBaseUrl = process.env.APP_BASE_URL || `https://${req.get("host")}`;
+      const truckVars = {
+        currentArea: listing.currentArea || "",
+        destinationArea: listing.destinationArea || "",
+        vehicleType: listing.vehicleType || "",
+        maxWeight: listing.maxWeight || "",
+        companyName: user?.companyName || "",
+        appBaseUrl,
+      };
       for (const u of allUsers) {
         if (u.id !== req.session.userId && u.approved) {
           await storage.createNotification({
@@ -1233,6 +1265,20 @@ export async function registerRoutes(
             message: `${listing.currentArea}→${listing.destinationArea} ${listing.vehicleType} ${listing.maxWeight}`,
             relatedId: listing.id,
           });
+
+          if (u.notifyEmail && u.email && isEmailConfigured()) {
+            try {
+              const resolved = await resolveEmailTemplate(
+                "truck_new",
+                truckVars,
+                "【トラマッチ】新しい空車が登録されました",
+                `新しい空車情報が登録されました。\n\n現在地: ${listing.currentArea}\n行先: ${listing.destinationArea}\n車両タイプ: ${listing.vehicleType}\n積載量: ${listing.maxWeight}\n\nトラマッチにログインして詳細をご確認ください。`
+              );
+              await sendEmail(u.email, resolved.subject, resolved.body);
+            } catch (emailErr) {
+              console.error(`Truck new email failed for ${u.email}:`, emailErr);
+            }
+          }
         }
       }
 
@@ -2313,6 +2359,32 @@ statusの意味:
         description: "配車依頼書メール（件名と冒頭文が編集可能、詳細データは自動挿入）",
         variables: [
           { key: "senderName", label: "送信者名" },
+        ],
+      },
+      {
+        triggerEvent: "cargo_new",
+        name: "新着案件通知",
+        description: "新しい荷物が登録された際に全ユーザーへ送信されるメール",
+        variables: [
+          { key: "departureArea", label: "出発地" },
+          { key: "arrivalArea", label: "到着地" },
+          { key: "cargoType", label: "荷物種類" },
+          { key: "weight", label: "重量" },
+          { key: "companyName", label: "登録会社名" },
+          { key: "appBaseUrl", label: "サイトURL" },
+        ],
+      },
+      {
+        triggerEvent: "truck_new",
+        name: "新着空車通知",
+        description: "新しい空車が登録された際に全ユーザーへ送信されるメール",
+        variables: [
+          { key: "currentArea", label: "現在地" },
+          { key: "destinationArea", label: "行先" },
+          { key: "vehicleType", label: "車両タイプ" },
+          { key: "maxWeight", label: "積載量" },
+          { key: "companyName", label: "登録会社名" },
+          { key: "appBaseUrl", label: "サイトURL" },
         ],
       },
       {
