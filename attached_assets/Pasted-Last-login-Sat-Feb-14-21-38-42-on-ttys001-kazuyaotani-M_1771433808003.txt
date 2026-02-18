@@ -1,0 +1,93 @@
+Last login: Sat Feb 14 21:38:42 on ttys001
+kazuyaotani@Mac ~ % cd ~/Downloads
+unzip workspace.zip
+cd workspace
+git init
+git add .
+git commit -m "Initial commit - トラマッチ本番リリース"
+git remote add origin https://github.com/SINJAPANLLC/tramatch.git
+git branch -M main
+git push -u origin main
+unzip:  cannot find or open workspace.zip, workspace.zip.zip or workspace.zip.ZIP.
+cd: no such file or directory: workspace
+Initialized empty Git repository in /Users/kazuyaotani/Downloads/.git/
+^C
+kazuyaotani@Mac Downloads % cd ~/Downloads
+ls -la *.zip
+-rw-r--r--@ 1 kazuyaotani  staff        469  3 30  2025 [8274492]InvoiceInfo_25017022_20250330_190404.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1907923  3  8  2025 20242〜20251gmo.zip
+-rw-r--r--@ 1 kazuyaotani  staff    2557781  9 22 07:44 affiliates.5.3.0 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff   27731853  9 17 23:00 bei-jingni-fen-lisaretahokkusu-torakku.zip
+-rw-r--r--@ 1 kazuyaotani  staff    2010338  2 19  2025 CheatSheet_1-2-2 (2).zip
+-rw-r--r--@ 1 kazuyaotani  staff    4684302  9  6 21:53 CORPORATE BOOK.zip
+-rw-r--r--@ 1 kazuyaotani  staff   94137001  8 12  2025 CSW2401PPD01.zip
+-rw-r--r--@ 1 kazuyaotani  staff  259121402  8 12  2025 CSW2401WPD01.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1708659 11  2 23:43 download (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff    1708659 11  2 23:44 download (2).zip
+-rw-r--r--@ 1 kazuyaotani  staff    3064520 11  2 23:26 download.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1235837  2 18  2025 【GVA 法人登記】登記書類一式（社員変更（出資・資本金の額の増加））(1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  110680508 12 13 15:54 menzuesutetaun (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff   83875848 11 28 05:37 menzuesutetaun.zip
+-rw-r--r--@ 1 kazuyaotani  staff  140765908 10 22 12:11 Only-U-Ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff  328621940 10 28 14:33 Only-U-Ver2.zip
+-rw-r--r--@ 1 kazuyaotani  staff  285151648 11 13 21:53 only-u-ver3 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff   95745714 10 31 00:53 only-u-ver3-main.zip
+-rw-r--r--@ 1 kazuyaotani  staff  271034197 11  8 11:23 only-u-ver3.zip
+-rw-r--r--@ 1 kazuyaotani  staff  202396495 10 21 15:25 OnlyU1020.zip
+-rw-r--r--@ 1 kazuyaotani  staff  139042989 10 21 17:24 onlyu1021.zip
+-rw-r--r--@ 1 kazuyaotani  staff  250158914 10 27 18:28 onlyu1234 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  243200304 10 27 15:52 onlyu1234.zip
+-rw-r--r--@ 1 kazuyaotani  staff      14460 10 20 16:43 pages.zip
+-rw-r--r--@ 1 kazuyaotani  staff      50090  4 20  2025 project-bolt-sb1-zfxpjxxw.zip
+-rw-r--r--@ 1 kazuyaotani  staff     747909  9  2 14:10 secure_transfer_20250902051019.zip
+-rw-r--r--@ 1 kazuyaotani  staff     158241  9 18 18:18 secure_transfer_20250918091814.zip
+-rw-r--r--@ 1 kazuyaotani  staff     229110  9 25 23:02 secure_transfer_20250925140204.zip
+-rw-r--r--@ 1 kazuyaotani  staff     727653 10  2 06:11 secure_transfer_20251001211140.zip
+-rw-r--r--@ 1 kazuyaotani  staff    3565172  9  8 18:06 Setup_timekeeperAgent_mac.zip
+-rw-r--r--@ 1 kazuyaotani  staff    8096597  2  9 11:43 shota-uchino@internet_gmo_attach_file.zip
+-rw-r--r--@ 1 kazuyaotani  staff   78599028 10 28 14:38 SIN-JAPAN-LOGI-MATCH-Ver1 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff   78599299 10 22 17:25 SIN-JAPAN-LOGI-MATCH-Ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff   22604554 10 22 12:24 SIN-JAPAN-MANAGER-Ver1 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff   23233396 10 22 12:39 SIN-JAPAN-MANAGER-Ver1 (2).zip
+-rw-r--r--@ 1 kazuyaotani  staff   23374494 10 28 14:37 SIN-JAPAN-MANAGER-Ver1 (3).zip
+-rw-r--r--@ 1 kazuyaotani  staff   22617518 10 22 12:06 SIN-JAPAN-MANAGER-Ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff  149900524 10 22 17:50 SIN-JAPAN-ONLINE-SCHOOL-Ver1 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  152953756 10 28 14:37 SIN-JAPAN-ONLINE-SCHOOL-Ver1 (2).zip
+-rw-r--r--@ 1 kazuyaotani  staff  149169686 10 22 17:43 SIN-JAPAN-ONLINE-SCHOOL-Ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff  249968508 10 28 14:36 SIN-JAPAN-POKER-Ver1 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  222974592 10 24 03:52 SIN-JAPAN-POKER-Ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff   12277621 10 31 16:53 sinjapan-logimatch-ver2-main.zip
+-rw-r--r--@ 1 kazuyaotani  staff   43981875 11 13 21:56 sinjapan-logimatch-ver2.zip
+-rw-r--r--@ 1 kazuyaotani  staff  255331990 12  7 17:27 sinjapan-manager-ver2 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  264409623 12  7 19:15 sinjapan-manager-ver2 (2).zip
+-rw-r--r--@ 1 kazuyaotani  staff  216160385 11 13 21:58 sinjapan-manager-ver2.zip
+-rw-r--r--@ 1 kazuyaotani  staff  200378840 11 13 21:59 sinjapan-onlineschool-ver2.zip
+-rw-r--r--@ 1 kazuyaotani  staff   66497877 11 13 21:59 sinjapan-worknow-ver1.zip
+-rw-r--r--@ 1 kazuyaotani  staff  108429967 10 22 12:43 SINJAPANLOGI1020 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  108429949 10 21 15:27 SINJAPANLOGI1020.zip
+-rw-r--r--@ 1 kazuyaotani  staff  517927812 11 13 21:56 sinjapanpoker-ver3 (1).zip
+-rw-r--r--@ 1 kazuyaotani  staff  502365320 11  8 11:30 sinjapanpoker-ver3.zip
+-rw-r--r--@ 1 kazuyaotani  staff  125970648 10 21 15:28 SINJAPANPOKER1020.zip
+-rw-r--r--@ 1 kazuyaotani  staff    3071736  1 14 21:26 Steampunk_Vehicle_Dirigible_v1_L1.123c30779816-5516-4d6a-92da-3fb0074e49ae.zip
+-rw-r--r--@ 1 kazuyaotani  staff      34219 10 23 08:43 tmp097l86gb.zip
+-rw-r--r--@ 1 kazuyaotani  staff      95816 10 14 13:26 tmp1qud8vvk.zip
+-rw-r--r--@ 1 kazuyaotani  staff      18008 10 23 08:28 tmp7spe65ob.zip
+-rw-r--r--@ 1 kazuyaotani  staff     862944 10 14 14:03 tmpe_67pj13.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1342519 10 23 09:20 tmph2m76kt3.zip
+-rw-r--r--@ 1 kazuyaotani  staff     187632 10 14 14:11 tmpn3o62pt1.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1432022 10 14 14:09 tmpout7aoc_.zip
+-rw-r--r--@ 1 kazuyaotani  staff    1311449 10 14 13:24 tmpu70awl6z.zip
+-rw-r--r--@ 1 kazuyaotani  staff     520351 10 14 14:04 tmpwgatjnil.zip
+-rw-r--r--@ 1 kazuyaotani  staff     824193 10 14 13:55 tmpxslam8bu.zip
+-rw-r--r--@ 1 kazuyaotani  staff   65995694  2 19 01:55 toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu.zip
+-rw-r--r--@ 1 kazuyaotani  staff     734575  9 17 22:28 truck.zip
+-rw-r--r--@ 1 kazuyaotani  staff       1047  2 27  2025 UPSIDERカード利用明細2025年02月.zip
+-rw-r--r--@ 1 kazuyaotani  staff   25738000  9 17 12:39 vintage-poker-master.zip
+-rw-r--r--@ 1 kazuyaotani  staff  258753415  8 24 13:45 VSCode-darwin-universal.zip
+-rw-r--r--@ 1 kazuyaotani  staff   36149104  2 12 11:34 wordpress-6.9.1-ja.zip
+-rw-r--r--@ 1 kazuyaotani  staff    4156264  1 13 10:48 一般貨物.zip
+-rw-r--r--@ 1 kazuyaotani  staff     217570  3 27  2025 請求書_一括ダウンロード_202503.zip
+-rw-r--r--@ 1 kazuyaotani  staff    7369903  3  2  2025 法人限定のコピー.zip
+-rw-r--r--@ 1 kazuyaotani  staff     276639  3  3  2025 緑と青 財務 シームレス グラデーション LinkedInバナー.zip
+kazuyaotani@Mac Downloads % rm -rf ~/Downloads/.git
+kazuyaotani@Mac Downloads % 
