@@ -1,0 +1,66 @@
+Expanded Security Maintenance for Applications is not enabled.
+
+59 updates can be applied immediately.
+1 of these updates is a standard security update.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+1 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+*** System restart required ***
+Last login: Wed Feb 18 19:01:09 2026 from 59.132.68.220
+root@srv1087935:~# cd /var/www
+cp -r tramatch tramatch-backup
+mkdir tramatch-new
+cd tramatch-new
+unzip /var/www/tramatch-new.zip
+cp -r /var/www/tramatch/.git . 2>/dev/null
+cp /var/www/tramatch/.env . 2>/dev/null
+cd /var/www
+rm -rf tramatch
+mv tramatch-new tramatch
+cd tramatch
+npm install
+npm run build
+cp client/public/favicon.png dist/public/
+cp client/public/og-image.png dist/public/
+pm2 restart tramatch
+Command 'unzip' not found, but can be installed with:
+apt install unzip
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/tramatch/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/tramatch/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-18T19_11_21_380Z-debug-0.log
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/tramatch/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/tramatch/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-18T19_11_21_717Z-debug-0.log
+cp: cannot stat 'client/public/favicon.png': No such file or directory
+cp: cannot stat 'client/public/og-image.png': No such file or directory
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 9 ])
+[PM2] [tramatch](9) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 73.9mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 143.1mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 101.7mb  │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 326.0mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 92.8mb   │
+│ 9  │ tramatch           │ fork     │ 9    │ online    │ 0%       │ 19.9mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 
