@@ -18,8 +18,9 @@ import type { Agent } from "@shared/schema";
 const PREFECTURES = [
   { region: "北海道・東北", items: ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"] },
   { region: "関東", items: ["茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県"] },
-  { region: "中部", items: ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県"] },
-  { region: "近畿", items: ["三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"] },
+  { region: "甲信越・北陸", items: ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県"] },
+  { region: "東海", items: ["岐阜県", "静岡県", "愛知県", "三重県"] },
+  { region: "近畿", items: ["滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"] },
   { region: "中国", items: ["鳥取県", "島根県", "岡山県", "広島県", "山口県"] },
   { region: "四国", items: ["徳島県", "香川県", "愛媛県", "高知県"] },
   { region: "九州・沖縄", items: ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"] },
@@ -30,7 +31,8 @@ const ALL_PREFECTURES = PREFECTURES.flatMap(r => r.items);
 const REGION_COLORS: Record<string, { bg: string; text: string }> = {
   "北海道・東北": { bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-600 dark:text-blue-400" },
   "関東": { bg: "bg-emerald-50 dark:bg-emerald-950/30", text: "text-emerald-600 dark:text-emerald-400" },
-  "中部": { bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-600 dark:text-amber-400" },
+  "甲信越・北陸": { bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-600 dark:text-amber-400" },
+  "東海": { bg: "bg-teal-50 dark:bg-teal-950/30", text: "text-teal-600 dark:text-teal-400" },
   "近畿": { bg: "bg-rose-50 dark:bg-rose-950/30", text: "text-rose-600 dark:text-rose-400" },
   "中国": { bg: "bg-violet-50 dark:bg-violet-950/30", text: "text-violet-600 dark:text-violet-400" },
   "四国": { bg: "bg-cyan-50 dark:bg-cyan-950/30", text: "text-cyan-600 dark:text-cyan-400" },
