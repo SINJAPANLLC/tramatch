@@ -204,9 +204,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCargoListing(listing: InsertCargoListing, userId?: string): Promise<CargoListing> {
-    const [nextVal] = await db.execute(sql`SELECT nextval('cargo_number_seq') as next_num`);
-    const nextNumber = Number((nextVal as any).next_num);
-    const [created] = await db.insert(cargoListings).values({ ...listing, userId: userId || null, cargoNumber: nextNumber }).returning();
+    const result = await db.execute(sql`SELECT nextval('cargo_number_seq') as next_num`);
+    const nextNumber = Number((result as any).rows?.[0]?.next_num ?? (result as any)[0]?.next_num ?? 0);
+    const [created] = await db.insert(cargoListings).values({ ...listing, userId: userId || null, cargoNumber: nextNumber || null }).returning();
     return created;
   }
 
