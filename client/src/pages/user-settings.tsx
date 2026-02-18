@@ -723,29 +723,61 @@ export default function UserSettings() {
             )}
 
             {activeTab === "email" && (
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-base font-bold text-foreground mb-6">メール受信設定</h2>
-                  <p className="text-sm text-muted-foreground mb-4">通知メールの受信設定を管理します。</p>
-                  <div className="space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-cargo">
-                      <input type="checkbox" checked={emailCargo} onChange={(e) => setEmailCargo(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
-                      <span className="text-sm text-foreground">荷物情報の通知メール</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-truck">
-                      <input type="checkbox" checked={emailTruck} onChange={(e) => setEmailTruck(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
-                      <span className="text-sm text-foreground">空車情報の通知メール</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-announcement">
-                      <input type="checkbox" checked={emailAnnouncement} onChange={(e) => setEmailAnnouncement(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
-                      <span className="text-sm text-foreground">お知らせ・メンテナンス情報</span>
-                    </label>
-                  </div>
-                  <div className="mt-6">
-                    <Button onClick={() => toast({ title: "メール受信設定を保存しました" })} data-testid="button-save-email">保存</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-base font-bold text-foreground mb-4">荷物情報のメール受信設定</h2>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      保存している「よく使う検索条件」の中から、該当する荷物情報を定期的にメールでお知らせします。メールでお知らせできる「よく使う検索条件」は1件のみです。
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      なお、「よく使う検索条件」は<a href="/cargo" className="text-primary hover:underline">荷物検索</a>ページから追加できます。
+                    </p>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm" data-testid="table-email-cargo-conditions">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 pr-4 font-medium text-muted-foreground">よく使う検索条件</th>
+                            <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メール通知</th>
+                            <th className="py-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td colSpan={3} className="py-8 text-center text-sm text-muted-foreground">
+                              データがありません
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-base font-bold text-foreground mb-6">その他のメール受信設定</h2>
+                    <div className="space-y-4">
+                      <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-cargo">
+                        <input type="checkbox" checked={emailCargo} onChange={(e) => setEmailCargo(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                        <span className="text-sm text-foreground">荷物情報の通知メール</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-truck">
+                        <input type="checkbox" checked={emailTruck} onChange={(e) => setEmailTruck(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                        <span className="text-sm text-foreground">空車情報の通知メール</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer" data-testid="toggle-email-announcement">
+                        <input type="checkbox" checked={emailAnnouncement} onChange={(e) => setEmailAnnouncement(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                        <span className="text-sm text-foreground">お知らせ・メンテナンス情報</span>
+                      </label>
+                    </div>
+                    <div className="mt-6">
+                      <Button onClick={() => toast({ title: "メール受信設定を保存しました" })} data-testid="button-save-email">保存</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </div>
