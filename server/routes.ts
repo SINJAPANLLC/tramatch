@@ -2552,7 +2552,7 @@ JSON形式で以下を返してください（日本語で）:
           : SquareEnvironment.Sandbox,
       });
 
-      const idempotencyKey = `${req.session.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 
       const payment = await storage.createPayment({
         userId: req.session.userId!,
