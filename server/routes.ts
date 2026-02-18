@@ -314,7 +314,7 @@ export async function registerRoutes(
   app.patch("/api/user/plan", requireAuth, async (req, res) => {
     try {
       const { plan } = req.body;
-      if (!plan || !["free", "premium"].includes(plan)) {
+      if (!plan || !["free", "premium", "premium_full"].includes(plan)) {
         return res.status(400).json({ message: "無効なプランです" });
       }
       const user = await storage.updateUserProfile(req.session.userId as string, { plan });
@@ -378,7 +378,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
       const currentUser = await storage.getUser(req.session.userId as string);
-      if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
+      if (currentUser && currentUser.plan !== "premium" && currentUser.plan !== "premium_full" && currentUser.role !== "admin") {
         return res.status(403).json({ message: "AI荷物登録にはβ版プレミアムプランへの加入が必要です" });
       }
       const listingData = {
@@ -427,7 +427,7 @@ export async function registerRoutes(
       }
       if (status === "completed") {
         const currentUser = await storage.getUser(req.session.userId as string);
-        if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
+        if (currentUser && currentUser.plan !== "premium" && currentUser.plan !== "premium_full" && currentUser.role !== "admin") {
           return res.status(403).json({ message: "荷物の成約にはβ版プレミアムプランへの加入が必要です" });
         }
       }
@@ -634,7 +634,7 @@ export async function registerRoutes(
   app.patch("/api/admin/users/:id/plan", requireAdmin, async (req, res) => {
     try {
       const { plan } = req.body;
-      if (!plan || !["free", "premium"].includes(plan)) {
+      if (!plan || !["free", "premium", "premium_full"].includes(plan)) {
         return res.status(400).json({ message: "無効なプランです" });
       }
       const user = await storage.updateUserProfile(req.params.id as string, { plan });
@@ -1380,11 +1380,12 @@ statusの意味:
   // Square Payment - Process card payment
   const squarePaymentSchema = z.object({
     sourceId: z.string().min(1),
-    planType: z.enum(["premium"]),
+    planType: z.enum(["premium", "premium_full"]),
   });
 
   const PLAN_PRICES: Record<string, number> = {
     premium: 5500,
+    premium_full: 5500,
   };
 
   app.post("/api/payments/square", requireAuth, async (req, res) => {

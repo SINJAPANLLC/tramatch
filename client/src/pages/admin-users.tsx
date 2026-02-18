@@ -298,8 +298,8 @@ export default function AdminUsers() {
                               {isAdmin ? (
                                 <span className="text-[11px] text-muted-foreground font-bold">-</span>
                               ) : (
-                                <Badge variant={u.plan === "premium" ? "default" : "outline"} className="text-[10px]">
-                                  {u.plan === "premium" ? "β版プレミアム" : "フリー"}
+                                <Badge variant={u.plan === "premium" || u.plan === "premium_full" ? "default" : "outline"} className="text-[10px]">
+                                  {u.plan === "premium" ? "β版プレミアム" : u.plan === "premium_full" ? "プレミアム" : "フリー"}
                                 </Badge>
                               )}
                             </td>
@@ -417,9 +417,9 @@ function UserDetailPanel({
               <Badge variant={user.approved ? "default" : "destructive"} className="text-xs">
                 {user.approved ? "承認済" : "未承認"}
               </Badge>
-              <Badge variant={user.plan === "premium" ? "default" : "outline"} className="text-xs">
+              <Badge variant={user.plan === "premium" || user.plan === "premium_full" ? "default" : "outline"} className="text-xs">
                 <Crown className="w-3 h-3 mr-1" />
-                {user.plan === "premium" ? "β版プレミアム" : "フリー"}
+                {user.plan === "premium" ? "β版プレミアム" : user.plan === "premium_full" ? "プレミアム" : "フリー"}
               </Badge>
             </>
           )}
@@ -440,16 +440,39 @@ function UserDetailPanel({
                   {isApproving ? "承認中..." : "承認する"}
                 </Button>
               )}
-              <Button
-                variant={user.plan === "premium" ? "outline" : "default"}
-                className="flex-1"
-                onClick={() => onChangePlan(user.id, user.plan === "premium" ? "free" : "premium")}
-                disabled={isChangingPlan}
-                data-testid={`button-plan-toggle-${user.id}`}
-              >
-                <Crown className="w-4 h-4 mr-1.5" />
-                {user.plan === "premium" ? "フリーに変更" : "β版プレミアムに変更"}
-              </Button>
+              {user.plan === "free" && (
+                <Button
+                  className="flex-1"
+                  onClick={() => onChangePlan(user.id, "premium")}
+                  disabled={isChangingPlan}
+                  data-testid={`button-plan-beta-${user.id}`}
+                >
+                  <Crown className="w-4 h-4 mr-1.5" />
+                  β版プレミアムに変更
+                </Button>
+              )}
+              {user.plan === "free" && (
+                <Button
+                  className="flex-1"
+                  onClick={() => onChangePlan(user.id, "premium_full")}
+                  disabled={isChangingPlan}
+                  data-testid={`button-plan-full-${user.id}`}
+                >
+                  <Crown className="w-4 h-4 mr-1.5" />
+                  プレミアムに変更
+                </Button>
+              )}
+              {(user.plan === "premium" || user.plan === "premium_full") && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => onChangePlan(user.id, "free")}
+                  disabled={isChangingPlan}
+                  data-testid={`button-plan-free-${user.id}`}
+                >
+                  フリーに変更
+                </Button>
+              )}
             </div>
             <Button
               variant="outline"
