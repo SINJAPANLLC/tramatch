@@ -41,3 +41,10 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_openai_ai_integrations:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
+SMTP_HOST = "smtp.hostinger.com"
+SMTP_PORT = "465"
+SMTP_FROM = "info@tramatch-sinjapan.com"
