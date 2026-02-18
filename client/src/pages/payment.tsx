@@ -1,17 +1,53 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, X, Building2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Check, Crown, X, Building2, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState, useEffect } from "react";
 
 export default function Payment() {
   const { user } = useAuth();
   const { toast } = useToast();
   const currentPlan = user?.plan || "free";
+
+  const [acctContactName, setAcctContactName] = useState("");
+  const [acctContactEmail, setAcctContactEmail] = useState("");
+  const [acctContactPhone, setAcctContactPhone] = useState("");
+  const [acctContactFax, setAcctContactFax] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      setAcctContactName(user.accountingContactName || "");
+      setAcctContactEmail(user.accountingContactEmail || "");
+      setAcctContactPhone(user.accountingContactPhone || "");
+      setAcctContactFax(user.accountingContactFax || "");
+    }
+  }, [user]);
+
+  const saveAccountingContact = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PATCH", "/api/user/profile", {
+        accountingContactName: acctContactName,
+        accountingContactEmail: acctContactEmail,
+        accountingContactPhone: acctContactPhone,
+        accountingContactFax: acctContactFax,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({ title: "経理連絡先を保存しました" });
+    },
+    onError: () => {
+      toast({ title: "保存に失敗しました", variant: "destructive" });
+    },
+  });
 
   const planMutation = useMutation({
     mutationFn: async (plan: string) => {
@@ -265,6 +301,51 @@ export default function Payment() {
                   <span className="text-sm text-muted-foreground">FAX番号</span>
                   <p className="text-sm text-foreground" data-testid="text-issue-fax">{user?.fax || "未登録"}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-6 max-w-3xl">
+          <h2 className="text-lg font-bold text-foreground mb-4">経理連絡先設定</h2>
+
+          <Card data-testid="card-accounting-contact">
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground mb-6">
+                トラマッチから請求・お支払いに関する確認時、実務担当者様へスムーズにご連絡するために使用します。
+              </p>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">経理連絡先名</Label>
+                  <Input value={acctContactName} onChange={(e) => setAcctContactName(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-name" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">経理連絡先メールアドレス</Label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Input type="email" value={acctContactEmail} onChange={(e) => setAcctContactEmail(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-email" />
+                    {acctContactEmail && (
+                      <span className="flex items-center gap-1 text-xs text-primary">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        認証済み
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">電話番号</Label>
+                  <Input value={acctContactPhone} onChange={(e) => setAcctContactPhone(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-phone" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">FAX番号</Label>
+                  <Input value={acctContactFax} onChange={(e) => setAcctContactFax(e.target.value)} className="max-w-sm" data-testid="input-acct-contact-fax" />
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Button onClick={() => saveAccountingContact.mutate()} disabled={saveAccountingContact.isPending} data-testid="button-save-acct-contact">
+                  {saveAccountingContact.isPending ? "保存中..." : "保存"}
+                </Button>
               </div>
             </CardContent>
           </Card>

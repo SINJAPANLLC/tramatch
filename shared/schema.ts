@@ -55,6 +55,10 @@ export const users = pgTable("users", {
   accountType: text("account_type"),
   accountNumber: text("account_number"),
   accountHolderKana: text("account_holder_kana"),
+  accountingContactName: text("accounting_contact_name"),
+  accountingContactEmail: text("accounting_contact_email"),
+  accountingContactPhone: text("accounting_contact_phone"),
+  accountingContactFax: text("accounting_contact_fax"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
