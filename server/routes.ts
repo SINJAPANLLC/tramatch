@@ -2775,6 +2775,19 @@ JSON形式で以下を返してください（日本語で）:
       }
       const agent = await storage.updateAgent(req.params.id, parsed.data);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+
+      if (agent.userId) {
+        const userUpdate: Record<string, any> = {};
+        if (parsed.data.companyName !== undefined) userUpdate.companyName = parsed.data.companyName;
+        if (parsed.data.contactName !== undefined) userUpdate.contactName = parsed.data.contactName;
+        if (parsed.data.phone !== undefined) userUpdate.phone = parsed.data.phone;
+        if (parsed.data.address !== undefined) userUpdate.address = parsed.data.address;
+        if (parsed.data.fax !== undefined) userUpdate.fax = parsed.data.fax;
+        if (Object.keys(userUpdate).length > 0) {
+          await storage.updateUserProfile(agent.userId, userUpdate);
+        }
+      }
+
       await storage.createAuditLog({
         userId: (req as any).user?.id,
         userName: (req as any).user?.contactName || (req as any).user?.companyName,
