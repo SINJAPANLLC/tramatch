@@ -787,13 +787,13 @@ export default function UserSettings() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <Crown className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium text-foreground">
-                            {currentPlan === "premium" ? "β版プレミアムプラン" : "フリープラン"}
+                            {currentPlan === "premium" ? "β版プレミアムプラン" : currentPlan === "premium_full" ? "プレミアムプラン" : "フリープラン"}
                           </span>
-                          {currentPlan === "premium" && (
+                          {(currentPlan === "premium" || currentPlan === "premium_full") && (
                             <span className="text-sm text-muted-foreground">1ヶ月：5,500円</span>
                           )}
                         </div>
-                        {currentPlan === "premium" && (
+                        {(currentPlan === "premium" || currentPlan === "premium_full") && (
                           <>
                             <p className="text-sm text-muted-foreground">
                               契約期間：{(() => {

@@ -40,7 +40,7 @@ export default function Payment() {
           <p className="text-sm text-muted-foreground mt-1">料金プランの管理</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
           <Card className={`relative ${currentPlan === "free" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-free">
             {currentPlan === "free" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -91,7 +91,7 @@ export default function Payment() {
             </CardContent>
           </Card>
 
-          <Card className={`relative ${currentPlan === "premium" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-premium">
+          <Card className={`relative ${currentPlan === "premium" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-beta-premium">
             {currentPlan === "premium" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="text-xs">現在のプラン</Badge>
@@ -152,9 +152,69 @@ export default function Payment() {
                 className="w-full"
                 disabled={currentPlan === "premium" || planMutation.isPending}
                 onClick={() => handleChangePlan("premium")}
-                data-testid="button-select-premium"
+                data-testid="button-select-beta-premium"
               >
                 {currentPlan === "premium" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "β版プレミアムプランに変更"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className={`relative ${currentPlan === "premium_full" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-premium">
+            {currentPlan === "premium_full" && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="text-xs">現在のプラン</Badge>
+              </div>
+            )}
+            <CardContent className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="font-bold text-foreground text-lg flex items-center justify-center gap-1.5">
+                  <Crown className="w-5 h-5 text-primary" />
+                  プレミアムプラン
+                </h3>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold text-foreground">¥5,500</span>
+                  <span className="text-sm text-muted-foreground">/月（税込）</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground font-bold">荷物成約 無制限</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground font-bold">AI荷物登録 無制限</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">荷物・空車検索</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">企業検索</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">取引先管理</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">配車依頼書作成</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">優先サポート</span>
+                </div>
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={currentPlan === "premium_full" || planMutation.isPending}
+                onClick={() => handleChangePlan("premium_full")}
+                data-testid="button-select-premium"
+              >
+                {currentPlan === "premium_full" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "プレミアムプランに変更"}
               </Button>
             </CardContent>
           </Card>
