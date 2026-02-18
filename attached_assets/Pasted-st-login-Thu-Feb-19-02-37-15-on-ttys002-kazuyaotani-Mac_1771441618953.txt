@@ -1,0 +1,86 @@
+st login: Thu Feb 19 02:37:15 on ttys002
+kazuyaotani@Mac ~ % scp toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu.zip root@212.85.24.206:/var/www/
+scp: stat local "toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu.zip": No such file or directory
+kazuyaotani@Mac ~ % cd ~/Desktop
+scp toramatuti*.zip root@212.85.24.206:/var/www/
+zsh: no matches found: toramatuti*.zip
+kazuyaotani@Mac Desktop % ls ~/Desktop/*.zip
+/Users/kazuyaotani/Desktop/SIN JAPAN トラック手配.zip
+kazuyaotani@Mac Desktop % ls ~/Downloads/*.zip
+/Users/kazuyaotani/Downloads/[8274492]InvoiceInfo_25017022_20250330_190404.zip
+/Users/kazuyaotani/Downloads/20242〜20251gmo.zip
+/Users/kazuyaotani/Downloads/affiliates.5.3.0 (1).zip
+/Users/kazuyaotani/Downloads/bei-jingni-fen-lisaretahokkusu-torakku.zip
+/Users/kazuyaotani/Downloads/CheatSheet_1-2-2 (2).zip
+/Users/kazuyaotani/Downloads/CORPORATE BOOK.zip
+/Users/kazuyaotani/Downloads/CSW2401PPD01.zip
+/Users/kazuyaotani/Downloads/CSW2401WPD01.zip
+/Users/kazuyaotani/Downloads/download (1).zip
+/Users/kazuyaotani/Downloads/download (2).zip
+/Users/kazuyaotani/Downloads/download.zip
+/Users/kazuyaotani/Downloads/【GVA 法人登記】登記書類一式（社員変更（出資・資本金の額の増加））(1).zip
+/Users/kazuyaotani/Downloads/menzuesutetaun (1).zip
+/Users/kazuyaotani/Downloads/menzuesutetaun.zip
+/Users/kazuyaotani/Downloads/Only-U-Ver1.zip
+/Users/kazuyaotani/Downloads/Only-U-Ver2.zip
+/Users/kazuyaotani/Downloads/only-u-ver3 (1).zip
+/Users/kazuyaotani/Downloads/only-u-ver3-main.zip
+/Users/kazuyaotani/Downloads/only-u-ver3.zip
+/Users/kazuyaotani/Downloads/OnlyU1020.zip
+/Users/kazuyaotani/Downloads/onlyu1021.zip
+/Users/kazuyaotani/Downloads/onlyu1234 (1).zip
+/Users/kazuyaotani/Downloads/onlyu1234.zip
+/Users/kazuyaotani/Downloads/pages.zip
+/Users/kazuyaotani/Downloads/project-bolt-sb1-zfxpjxxw.zip
+/Users/kazuyaotani/Downloads/secure_transfer_20250902051019.zip
+/Users/kazuyaotani/Downloads/secure_transfer_20250918091814.zip
+/Users/kazuyaotani/Downloads/secure_transfer_20250925140204.zip
+/Users/kazuyaotani/Downloads/secure_transfer_20251001211140.zip
+/Users/kazuyaotani/Downloads/Setup_timekeeperAgent_mac.zip
+/Users/kazuyaotani/Downloads/shota-uchino@internet_gmo_attach_file.zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-LOGI-MATCH-Ver1 (1).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-LOGI-MATCH-Ver1.zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-MANAGER-Ver1 (1).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-MANAGER-Ver1 (2).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-MANAGER-Ver1 (3).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-MANAGER-Ver1.zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-ONLINE-SCHOOL-Ver1 (1).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-ONLINE-SCHOOL-Ver1 (2).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-ONLINE-SCHOOL-Ver1.zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-POKER-Ver1 (1).zip
+/Users/kazuyaotani/Downloads/SIN-JAPAN-POKER-Ver1.zip
+/Users/kazuyaotani/Downloads/sinjapan-logimatch-ver2-main.zip
+/Users/kazuyaotani/Downloads/sinjapan-logimatch-ver2.zip
+/Users/kazuyaotani/Downloads/sinjapan-manager-ver2 (1).zip
+/Users/kazuyaotani/Downloads/sinjapan-manager-ver2 (2).zip
+/Users/kazuyaotani/Downloads/sinjapan-manager-ver2.zip
+/Users/kazuyaotani/Downloads/sinjapan-onlineschool-ver2.zip
+/Users/kazuyaotani/Downloads/sinjapan-worknow-ver1.zip
+/Users/kazuyaotani/Downloads/SINJAPANLOGI1020 (1).zip
+/Users/kazuyaotani/Downloads/SINJAPANLOGI1020.zip
+/Users/kazuyaotani/Downloads/sinjapanpoker-ver3 (1).zip
+/Users/kazuyaotani/Downloads/sinjapanpoker-ver3.zip
+/Users/kazuyaotani/Downloads/SINJAPANPOKER1020.zip
+/Users/kazuyaotani/Downloads/Steampunk_Vehicle_Dirigible_v1_L1.123c30779816-5516-4d6a-92da-3fb0074e49ae.zip
+/Users/kazuyaotani/Downloads/tmp097l86gb.zip
+/Users/kazuyaotani/Downloads/tmp1qud8vvk.zip
+/Users/kazuyaotani/Downloads/tmp7spe65ob.zip
+/Users/kazuyaotani/Downloads/tmpe_67pj13.zip
+/Users/kazuyaotani/Downloads/tmph2m76kt3.zip
+/Users/kazuyaotani/Downloads/tmpn3o62pt1.zip
+/Users/kazuyaotani/Downloads/tmpout7aoc_.zip
+/Users/kazuyaotani/Downloads/tmpu70awl6z.zip
+/Users/kazuyaotani/Downloads/tmpwgatjnil.zip
+/Users/kazuyaotani/Downloads/tmpxslam8bu.zip
+/Users/kazuyaotani/Downloads/toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu (1).zip
+/Users/kazuyaotani/Downloads/toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu.zip
+/Users/kazuyaotani/Downloads/truck.zip
+/Users/kazuyaotani/Downloads/UPSIDERカード利用明細2025年02月.zip
+/Users/kazuyaotani/Downloads/vintage-poker-master.zip
+/Users/kazuyaotani/Downloads/VSCode-darwin-universal.zip
+/Users/kazuyaotani/Downloads/wordpress-6.9.1-ja.zip
+/Users/kazuyaotani/Downloads/一般貨物.zip
+/Users/kazuyaotani/Downloads/請求書_一括ダウンロード_202503.zip
+/Users/kazuyaotani/Downloads/法人限定のコピー.zip
+/Users/kazuyaotani/Downloads/緑と青 財務 シームレス グラデーション LinkedInバナー.zip
+kazuyaotani@Mac Desktop % 
