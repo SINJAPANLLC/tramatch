@@ -10,8 +10,9 @@ import {
   type SeoArticle, type InsertSeoArticle,
   type Payment, type InsertPayment,
   type AdminSetting,
+  type NotificationTemplate, type InsertNotificationTemplate,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
-  partners, transportRecords, seoArticles, payments, adminSettings
+  partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or } from "drizzle-orm";
@@ -87,6 +88,13 @@ export interface IStorage {
   getAdminSetting(key: string): Promise<string | undefined>;
   setAdminSetting(key: string, value: string): Promise<void>;
   getAllAdminSettings(): Promise<AdminSetting[]>;
+
+  getNotificationTemplates(): Promise<NotificationTemplate[]>;
+  getNotificationTemplatesByCategory(category: string): Promise<NotificationTemplate[]>;
+  getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined>;
+  createNotificationTemplate(data: InsertNotificationTemplate): Promise<NotificationTemplate>;
+  updateNotificationTemplate(id: string, data: Partial<InsertNotificationTemplate & { isActive: boolean }>): Promise<NotificationTemplate | undefined>;
+  deleteNotificationTemplate(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -433,6 +441,34 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdminSettings(): Promise<AdminSetting[]> {
     return db.select().from(adminSettings);
+  }
+
+  async getNotificationTemplates(): Promise<NotificationTemplate[]> {
+    return db.select().from(notificationTemplates).orderBy(desc(notificationTemplates.createdAt));
+  }
+
+  async getNotificationTemplatesByCategory(category: string): Promise<NotificationTemplate[]> {
+    return db.select().from(notificationTemplates).where(eq(notificationTemplates.category, category)).orderBy(desc(notificationTemplates.createdAt));
+  }
+
+  async getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined> {
+    const [template] = await db.select().from(notificationTemplates).where(eq(notificationTemplates.id, id));
+    return template;
+  }
+
+  async createNotificationTemplate(data: InsertNotificationTemplate): Promise<NotificationTemplate> {
+    const [template] = await db.insert(notificationTemplates).values(data).returning();
+    return template;
+  }
+
+  async updateNotificationTemplate(id: string, data: Partial<InsertNotificationTemplate & { isActive: boolean }>): Promise<NotificationTemplate | undefined> {
+    const [template] = await db.update(notificationTemplates).set({ ...data, updatedAt: new Date() }).where(eq(notificationTemplates.id, id)).returning();
+    return template;
+  }
+
+  async deleteNotificationTemplate(id: string): Promise<boolean> {
+    const result = await db.delete(notificationTemplates).where(eq(notificationTemplates.id, id)).returning();
+    return result.length > 0;
   }
 }
 

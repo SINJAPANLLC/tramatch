@@ -2,7 +2,7 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -1253,6 +1253,113 @@ statusの意味:
       res.json({ message: `${targetUsers.length}人に通知を送信しました`, count: targetUsers.length });
     } catch (error) {
       res.status(500).json({ message: "通知の送信に失敗しました" });
+    }
+  });
+
+  // Admin: Notification Templates CRUD
+  app.get("/api/admin/notification-templates", requireAdmin, async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const templates = category
+        ? await storage.getNotificationTemplatesByCategory(category)
+        : await storage.getNotificationTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "テンプレートの取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/notification-templates", requireAdmin, async (req, res) => {
+    try {
+      const parsed = insertNotificationTemplateSchema.parse(req.body);
+      const template = await storage.createNotificationTemplate(parsed);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromError(error).message });
+      }
+      res.status(500).json({ message: "テンプレートの作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/notification-templates/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const template = await storage.updateNotificationTemplate(id, req.body);
+      if (!template) return res.status(404).json({ message: "テンプレートが見つかりません" });
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "テンプレートの更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/notification-templates/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const deleted = await storage.deleteNotificationTemplate(id);
+      if (!deleted) return res.status(404).json({ message: "テンプレートが見つかりません" });
+      res.json({ message: "テンプレートを削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "テンプレートの削除に失敗しました" });
+    }
+  });
+
+  // Admin: AI generate notification template
+  app.post("/api/admin/notification-templates/generate", requireAdmin, async (req, res) => {
+    try {
+      const { category, purpose, tone } = req.body;
+      if (!category || !purpose) {
+        return res.status(400).json({ message: "カテゴリと目的は必須です" });
+      }
+      const categoryLabels: Record<string, string> = {
+        auto_reply: "自動返信通知メール",
+        auto_notification: "自動通知メール",
+        regular: "通常通知メール",
+      };
+      const categoryLabel = categoryLabels[category] || category;
+      const toneLabel = tone === "formal" ? "フォーマルなビジネス文体" : tone === "friendly" ? "親しみやすいカジュアル文体" : "標準的なビジネス文体";
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `あなたは物流マッチングプラットフォーム「トラマッチ」の通知メールテンプレート作成アシスタントです。
+以下の条件でメールテンプレートを作成してください：
+- カテゴリ: ${categoryLabel}
+- 文体: ${toneLabel}
+- プラットフォーム名: トラマッチ
+- 業界: 物流・運送業
+- テンプレート変数として {{会社名}}, {{ユーザー名}}, {{日付}}, {{荷物名}}, {{出発地}}, {{到着地}}, {{車両タイプ}} などが使えます
+
+JSON形式で以下を返してください（日本語で）:
+{
+  "name": "テンプレート名",
+  "subject": "メール件名",
+  "body": "メール本文（改行は\\nで表現）",
+  "triggerEvent": "トリガーイベント説明（自動系の場合）"
+}`
+          },
+          { role: "user", content: `目的: ${purpose}` }
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ message: "AI生成に失敗しました" });
+      }
+      const generated = JSON.parse(content);
+      res.json({
+        name: generated.name || "新規テンプレート",
+        subject: generated.subject || "",
+        body: generated.body || "",
+        triggerEvent: generated.triggerEvent || null,
+        category,
+      });
+    } catch (error) {
+      console.error("AI template generation error:", error);
+      res.status(500).json({ message: "AI生成に失敗しました" });
     }
   });
 
