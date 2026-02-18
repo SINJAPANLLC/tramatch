@@ -556,6 +556,7 @@ function TruckRegisterTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-trucks"] });
       if (pendingItems.length > 0) {
         toast({ title: "空車情報を掲載しました", description: "次の空車を読み込みます..." });
         loadNextPendingItem();
