@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone } from "lucide-react";
+import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -223,6 +223,153 @@ const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Build
   { key: "email-cargo", label: "荷物情報", group: "メール受信設定", icon: Mail },
   { key: "usage", label: "ご利用金額", group: "ご利用金額", icon: Receipt },
 ];
+
+function UserAddRequestSection() {
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("member");
+  const [note, setNote] = useState("");
+
+  const { data: requests = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/user-add-requests"],
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/user-add-requests", { name, email, role, note });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "ユーザー追加申請を送信しました", description: "管理者の承認をお待ちください" });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-add-requests"] });
+      setShowForm(false);
+      setName("");
+      setEmail("");
+      setRole("member");
+      setNote("");
+    },
+    onError: () => {
+      toast({ title: "申請に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const statusBadge = (status: string) => {
+    if (status === "pending") return <Badge variant="outline" className="text-xs"><Clock className="w-3 h-3 mr-1" />審査中</Badge>;
+    if (status === "approved") return <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><CheckCircle2 className="w-3 h-3 mr-1" />承認済</Badge>;
+    return <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><XCircle className="w-3 h-3 mr-1" />却下</Badge>;
+  };
+
+  return (
+    <div className="mt-6 border-t pt-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+        <h3 className="text-sm font-bold text-foreground">ユーザー追加申請</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowForm(!showForm)}
+          data-testid="button-toggle-user-add-form"
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          ユーザー追加を申請
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="border rounded-md p-4 mb-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs mb-1">担当者名 <span className="text-destructive">*</span></Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="例: 山田太郎"
+                data-testid="input-user-add-name"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1">メールアドレス <span className="text-destructive">*</span></Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="例: yamada@example.com"
+                data-testid="input-user-add-email"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs mb-1">役割</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger data-testid="select-user-add-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">メンバー</SelectItem>
+                  <SelectItem value="manager">マネージャー</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1">備考</Label>
+              <Input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="補足事項があれば入力"
+                data-testid="input-user-add-note"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowForm(false)} data-testid="button-cancel-user-add">キャンセル</Button>
+            <Button
+              size="sm"
+              onClick={() => submitMutation.mutate()}
+              disabled={!name || !email || submitMutation.isPending}
+              data-testid="button-submit-user-add"
+            >
+              {submitMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+              申請する
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+      ) : requests.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" data-testid="table-user-add-requests">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 pr-4 font-medium text-muted-foreground">担当者名</th>
+                <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メールアドレス</th>
+                <th className="text-left py-2 pr-4 font-medium text-muted-foreground">役割</th>
+                <th className="text-left py-2 pr-4 font-medium text-muted-foreground">ステータス</th>
+                <th className="text-left py-2 pr-4 font-medium text-muted-foreground">申請日</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((r: any) => (
+                <tr key={r.id} className="border-b" data-testid={`row-user-add-request-${r.id}`}>
+                  <td className="py-3 pr-4 text-foreground">{r.name}</td>
+                  <td className="py-3 pr-4 text-foreground">{r.email}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{r.role === "manager" ? "マネージャー" : "メンバー"}</td>
+                  <td className="py-3 pr-4">{statusBadge(r.status)}</td>
+                  <td className="py-3 pr-4 text-muted-foreground text-xs">{r.createdAt ? new Date(r.createdAt).toLocaleDateString("ja-JP") : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">ユーザー追加の申請履歴はありません</p>
+      )}
+    </div>
+  );
+}
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -1168,6 +1315,8 @@ export default function UserSettings() {
                       </tbody>
                     </table>
                   </div>
+
+                  <UserAddRequestSection />
                 </CardContent>
               </Card>
             )}
