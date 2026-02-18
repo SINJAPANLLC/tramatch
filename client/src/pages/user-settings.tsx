@@ -5,13 +5,196 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt } from "lucide-react";
+import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
+declare global {
+  interface Window {
+    Square?: {
+      payments: (appId: string, locationId: string) => Promise<any>;
+    };
+  }
+}
+
+function SquareCardPayment() {
+  const { toast } = useToast();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<any>(null);
+  const [sdkLoaded, setSdkLoaded] = useState(false);
+  const [cardReady, setCardReady] = useState(false);
+  const appId = import.meta.env.VITE_SQUARE_APP_ID;
+  const locationId = import.meta.env.VITE_SQUARE_LOCATION_ID;
+
+  const paymentMutation = useMutation({
+    mutationFn: async (sourceId: string) => {
+      const res = await apiRequest("POST", "/api/payments/square", {
+        sourceId,
+        planType: "premium",
+      });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.success) {
+        toast({ title: "決済完了", description: "カード決済が正常に完了しました。" });
+      } else {
+        toast({ title: "決済失敗", description: "カード決済が承認されませんでした。別のカードをお試しください。", variant: "destructive" });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "決済エラー", description: error.message || "カード決済に失敗しました。", variant: "destructive" });
+    },
+  });
+
+  useEffect(() => {
+    if (!appId || !locationId) return;
+
+    const existingScript = document.querySelector('script[src*="squarecdn.com"]');
+    if (existingScript) {
+      setSdkLoaded(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    const isProduction = import.meta.env.VITE_SQUARE_ENVIRONMENT === "production";
+    script.src = isProduction
+      ? "https://web.squarecdn.com/v1/square.js"
+      : "https://sandbox.web.squarecdn.com/v1/square.js";
+    script.async = true;
+    script.onload = () => setSdkLoaded(true);
+    document.head.appendChild(script);
+  }, [appId, locationId]);
+
+  useEffect(() => {
+    if (!sdkLoaded || !window.Square || !containerRef.current || !appId || !locationId) return;
+
+    let cancelled = false;
+
+    async function initCard() {
+      try {
+        const payments = await window.Square!.payments(appId, locationId);
+        const card = await payments.card();
+        if (cancelled) return;
+
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
+          await card.attach(containerRef.current);
+          cardRef.current = card;
+          setCardReady(true);
+        }
+      } catch (err) {
+        console.error("Square card init error:", err);
+      }
+    }
+
+    initCard();
+
+    return () => {
+      cancelled = true;
+      if (cardRef.current) {
+        try { cardRef.current.destroy(); } catch (e) { /* ignore */ }
+        cardRef.current = null;
+      }
+    };
+  }, [sdkLoaded, appId, locationId]);
+
+  const handlePayment = useCallback(async () => {
+    if (!cardRef.current) return;
+
+    try {
+      const result = await cardRef.current.tokenize();
+      if (result.status === "OK") {
+        paymentMutation.mutate(result.token);
+      } else {
+        toast({ title: "エラー", description: "カード情報の処理に失敗しました。", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "エラー", description: "決済処理中にエラーが発生しました。", variant: "destructive" });
+    }
+  }, [paymentMutation, toast]);
+
+  if (!appId || !locationId) {
+    return (
+      <div className="rounded-md bg-muted/50 p-4">
+        <p className="text-sm text-muted-foreground">
+          クレジットカード決済は現在設定中です。しばらくお待ちください。
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border p-4 space-y-4" data-testid="square-card-payment">
+      <div ref={containerRef} className="min-h-[40px]">
+        {!cardReady && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>カード入力フォームを読み込み中...</span>
+          </div>
+        )}
+      </div>
+      <Button
+        onClick={handlePayment}
+        disabled={!cardReady || paymentMutation.isPending}
+        className="w-full"
+        data-testid="button-square-pay"
+      >
+        {paymentMutation.isPending ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            処理中...
+          </span>
+        ) : (
+          "5,500円を支払う（税込）"
+        )}
+      </Button>
+    </div>
+  );
+}
+
+function PaymentHistory() {
+  const { data: payments, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/payments"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span>読み込み中...</span>
+      </div>
+    );
+  }
+
+  if (!payments || payments.length === 0) {
+    return <p className="text-sm text-muted-foreground">決済履歴はありません。</p>;
+  }
+
+  return (
+    <div className="space-y-2" data-testid="payment-history">
+      {payments.map((p: any) => (
+        <div key={p.id} className="flex items-center justify-between gap-4 flex-wrap rounded-md bg-muted/50 p-3">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">{p.description || "カード決済"}</p>
+            <p className="text-xs text-muted-foreground">
+              {new Date(p.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-foreground">{p.amount.toLocaleString()}円</span>
+            <Badge variant={p.status === "completed" ? "default" : "secondary"} className="text-xs">
+              {p.status === "completed" ? "完了" : p.status === "pending" ? "処理中" : p.status}
+            </Badge>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const PREFECTURES = [
   "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
@@ -731,30 +914,57 @@ export default function UserSettings() {
             )}
 
             {activeTab === "payment-method" && (
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
-                  <p className="text-sm text-muted-foreground mb-6">お支払いは請求書払いかクレジットカード払いとなります。</p>
-                  <div className="rounded-md bg-muted/50 p-4 space-y-3">
-                    <div className="flex items-start gap-4">
-                      <span className="text-sm text-muted-foreground shrink-0 w-24">銀行・支店</span>
-                      <span className="text-sm text-foreground">相愛信用組合 2318 本店003</span>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
+                    <p className="text-sm text-muted-foreground mb-6">お支払いは請求書払いかクレジットカード払いとなります。</p>
+
+                    <div className="space-y-6">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                          <h3 className="text-sm font-semibold text-foreground">クレジットカード決済</h3>
+                          <Badge variant="secondary" className="text-xs">Square</Badge>
+                        </div>
+                        <SquareCardPayment />
+                      </div>
+
+                      <div className="border-t pt-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Landmark className="w-5 h-5 text-primary" />
+                          <h3 className="text-sm font-semibold text-foreground">銀行振込</h3>
+                        </div>
+                        <div className="rounded-md bg-muted/50 p-4 space-y-3">
+                          <div className="flex items-start gap-4">
+                            <span className="text-sm text-muted-foreground shrink-0 w-24">銀行・支店</span>
+                            <span className="text-sm text-foreground">相愛信用組合 2318 本店003</span>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <span className="text-sm text-muted-foreground shrink-0 w-24">口座種別</span>
+                            <span className="text-sm text-foreground">普通預金</span>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <span className="text-sm text-muted-foreground shrink-0 w-24">口座番号</span>
+                            <span className="text-sm text-foreground">0170074</span>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <span className="text-sm text-muted-foreground shrink-0 w-24">口座名義</span>
+                            <span className="text-sm text-foreground">合同会社SIN JAPAN</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-4">
-                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座種別</span>
-                      <span className="text-sm text-foreground">普通預金</span>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座番号</span>
-                      <span className="text-sm text-foreground">0170074</span>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <span className="text-sm text-muted-foreground shrink-0 w-24">口座名義</span>
-                      <span className="text-sm text-foreground">合同会社SIN JAPAN</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-base font-bold text-foreground mb-4">決済履歴</h2>
+                    <PaymentHistory />
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {activeTab === "invoice-receive" && (

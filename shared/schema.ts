@@ -238,6 +238,17 @@ export const seoArticles = pgTable("seo_articles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("JPY"),
+  squarePaymentId: text("square_payment_id"),
+  status: text("status").notNull().default("pending"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const adminSettings = pgTable("admin_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   key: text("key").notNull().unique(),
@@ -254,6 +265,7 @@ export const insertDispatchRequestSchema = createInsertSchema(dispatchRequests).
 export const insertPartnerSchema = createInsertSchema(partners).omit({ id: true, createdAt: true });
 export const insertTransportRecordSchema = createInsertSchema(transportRecords).omit({ id: true, createdAt: true });
 export const insertSeoArticleSchema = createInsertSchema(seoArticles).omit({ id: true, createdAt: true });
+export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -273,4 +285,6 @@ export type InsertTransportRecord = z.infer<typeof insertTransportRecordSchema>;
 export type TransportRecord = typeof transportRecords.$inferSelect;
 export type InsertSeoArticle = z.infer<typeof insertSeoArticleSchema>;
 export type SeoArticle = typeof seoArticles.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
 export type AdminSetting = typeof adminSettings.$inferSelect;

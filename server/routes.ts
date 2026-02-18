@@ -11,6 +11,7 @@ import path from "path";
 import fs from "fs";
 import OpenAI from "openai";
 import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
+import { SquareClient, SquareEnvironment, SquareError } from "square";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -1373,6 +1374,95 @@ statusの意味:
       res.json({ message: "設定を保存しました" });
     } catch (error) {
       res.status(500).json({ message: "設定の保存に失敗しました" });
+    }
+  });
+
+  // Square Payment - Process card payment
+  const squarePaymentSchema = z.object({
+    sourceId: z.string().min(1),
+    planType: z.enum(["premium"]),
+  });
+
+  const PLAN_PRICES: Record<string, number> = {
+    premium: 5500,
+  };
+
+  app.post("/api/payments/square", requireAuth, async (req, res) => {
+    try {
+      const parsed = squarePaymentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "決済情報が不正です", errors: parsed.error.errors });
+      }
+
+      const { sourceId, planType } = parsed.data;
+      const amount = PLAN_PRICES[planType];
+      const description = "プレミアムプラン月額料金";
+
+      const accessToken = process.env.SQUARE_ACCESS_TOKEN;
+      const locationId = process.env.SQUARE_LOCATION_ID;
+
+      if (!accessToken || !locationId) {
+        return res.status(500).json({ message: "Square決済の設定が完了していません" });
+      }
+
+      const squareClient = new SquareClient({
+        token: accessToken,
+        environment: process.env.SQUARE_ENVIRONMENT === "production"
+          ? SquareEnvironment.Production
+          : SquareEnvironment.Sandbox,
+      });
+
+      const idempotencyKey = `${req.session.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+      const payment = await storage.createPayment({
+        userId: req.session.userId!,
+        amount,
+        currency: "JPY",
+        squarePaymentId: null,
+        status: "pending",
+        description,
+      });
+
+      const response = await squareClient.payments.create({
+        sourceId,
+        idempotencyKey,
+        amountMoney: {
+          amount: BigInt(amount),
+          currency: "JPY",
+        },
+        locationId,
+      });
+
+      const squarePaymentId = response.payment?.id || null;
+      const squareStatus = response.payment?.status;
+      const finalStatus = squareStatus === "COMPLETED" ? "completed" : "failed";
+
+      await storage.updatePaymentStatus(payment.id, finalStatus, squarePaymentId);
+
+      res.json({
+        success: finalStatus === "completed",
+        paymentId: payment.id,
+        status: finalStatus,
+      });
+    } catch (error: any) {
+      console.error("Square payment error:", error);
+      if (error instanceof SquareError) {
+        return res.status(400).json({
+          message: "カード決済に失敗しました",
+          detail: error.message,
+        });
+      }
+      res.status(500).json({ message: "決済処理中にエラーが発生しました" });
+    }
+  });
+
+  // Get payment history
+  app.get("/api/payments", requireAuth, async (req, res) => {
+    try {
+      const payments = await storage.getPaymentsByUser(req.session.userId!);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "決済履歴の取得に失敗しました" });
     }
   });
 
