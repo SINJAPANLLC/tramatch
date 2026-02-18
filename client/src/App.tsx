@@ -69,7 +69,7 @@ const DASHBOARD_PATHS = [
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
-  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/audit-logs",
+  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs",
 ];
 
 function Router() {

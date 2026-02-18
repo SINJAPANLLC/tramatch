@@ -37,6 +37,7 @@
   - `admin-notifications.tsx` - 通知管理 (admin)
   - `admin-announcements.tsx` - お知らせ管理 (admin)
   - `admin-seo.tsx` - SEO記事生成 (admin)
+  - `admin-contact-inquiries.tsx` - お問い合わせ管理 (admin)
   - `admin-settings.tsx` - 管理設定 (admin)
 - `client/src/components/` - Shared components (header, footer, dashboard-layout)
   - `dashboard-layout.tsx` - Shared sidebar + content layout for all authenticated pages
@@ -74,6 +75,7 @@
 - `/admin/announcements` - お知らせ管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
 - `/admin/listings` - 掲載管理 (requires admin role) - edit/delete cargo and truck listings
+- `/admin/contact-inquiries` - お問い合わせ管理 (requires admin role) - view/manage contact inquiries
 - `/admin/audit-logs` - 操作ログ (requires admin role) - view admin action audit trail
 - `/admin/settings` - 管理設定 (requires admin role)
 - `/columns` - コラム記事一覧 (public)
@@ -132,6 +134,11 @@
 - `DELETE /api/admin/cargo/:id` - Admin delete cargo listing (admin only, audit logged)
 - `PATCH /api/admin/trucks/:id` - Admin edit truck listing (admin only, audit logged)
 - `DELETE /api/admin/trucks/:id` - Admin delete truck listing (admin only, audit logged)
+- `POST /api/contact` - Submit contact inquiry (public)
+- `GET /api/admin/contact-inquiries` - Get all contact inquiries (admin only)
+- `GET /api/admin/contact-inquiries/unread-count` - Get unread count (admin only)
+- `PATCH /api/admin/contact-inquiries/:id` - Update inquiry status/note (admin only)
+- `DELETE /api/admin/contact-inquiries/:id` - Delete inquiry (admin only)
 - `GET /api/admin/audit-logs` - Get paginated audit logs (admin only)
 - `GET /api/notifications` - Get user notifications (auth required)
 - `GET /api/notifications/unread-count` - Get unread notification count (auth required)
