@@ -233,6 +233,42 @@ export default function Payment() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-6 max-w-3xl">
+          <h2 className="text-lg font-bold text-foreground mb-4">請求書発行設定</h2>
+
+          <Card data-testid="card-invoice-issue-settings">
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground mb-6">支払通知書にも反映されます。</p>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">会社名</span>
+                  <p className="text-sm text-foreground" data-testid="text-issue-company">{user?.companyName || "未登録"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">担当者名</span>
+                  <p className="text-sm text-foreground" data-testid="text-issue-contact">{user?.contactName || "ご担当者"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">住所</span>
+                  <p className="text-sm text-foreground" data-testid="text-issue-address">
+                    {user?.postalCode ? `〒${user.postalCode}` : "未登録"}
+                    {user?.address ? ` ${user.address}` : ""}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">電話番号</span>
+                  <p className="text-sm text-foreground" data-testid="text-issue-phone">{user?.phone || "未登録"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">FAX番号</span>
+                  <p className="text-sm text-foreground" data-testid="text-issue-fax">{user?.fax || "未登録"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
