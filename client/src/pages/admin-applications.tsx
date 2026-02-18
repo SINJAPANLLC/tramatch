@@ -146,6 +146,9 @@ export default function AdminApplications() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "プラン変更を承認しました" });
     },
+    onError: (error: any) => {
+      toast({ title: "承認に失敗しました", description: error?.message || "エラーが発生しました", variant: "destructive" });
+    },
   });
 
   const rejectPlan = useMutation({
@@ -155,6 +158,9 @@ export default function AdminApplications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/plan-change-requests"] });
       toast({ title: "プラン変更を却下しました" });
+    },
+    onError: (error: any) => {
+      toast({ title: "却下に失敗しました", description: error?.message || "エラーが発生しました", variant: "destructive" });
     },
   });
 
@@ -166,6 +172,9 @@ export default function AdminApplications() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-add-requests"] });
       toast({ title: "ユーザー追加を承認しました" });
     },
+    onError: (error: any) => {
+      toast({ title: "承認に失敗しました", description: error?.message || "エラーが発生しました", variant: "destructive" });
+    },
   });
 
   const rejectUserAdd = useMutation({
@@ -175,6 +184,9 @@ export default function AdminApplications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-add-requests"] });
       toast({ title: "ユーザー追加を却下しました" });
+    },
+    onError: (error: any) => {
+      toast({ title: "却下に失敗しました", description: error?.message || "エラーが発生しました", variant: "destructive" });
     },
   });
 
