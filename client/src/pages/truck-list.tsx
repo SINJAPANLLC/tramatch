@@ -324,17 +324,9 @@ ${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount}
             <DetailRow label="最大積載量" value={listing.maxWeight} />
             <DetailRow label="空車日" value={listing.availableDate} />
             <DetailRow label="連絡方法">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{listing.contactPhone}</span>
-                </div>
-                {listing.contactEmail && (
-                  <div className="flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>{listing.contactEmail}</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{listing.contactPhone}</span>
               </div>
             </DetailRow>
             <DetailRow label="備考" value={listing.description} />
