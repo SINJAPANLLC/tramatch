@@ -298,7 +298,7 @@ function CompanyMembersSection({ user }: { user: any }) {
       </div>
       {members.length > 0 && (
         <p className="text-xs text-muted-foreground mt-2" data-testid="text-added-user-count">
-          追加ユーザー: {members.length}名（月額 {(members.length * 2500).toLocaleString()}円 税別）
+          追加ユーザー: {members.length}名（月額 {(members.length * 2750).toLocaleString()}円 税込）
         </p>
       )}
     </div>
@@ -1431,7 +1431,7 @@ export default function UserSettings() {
                 <CardContent className="p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">ユーザー管理</h2>
                   <p className="text-sm text-muted-foreground mb-6">
-                    ユーザー追加には月額2,500円 税別 が発生いたします。
+                    ユーザー追加には月額2,750円（税込）が発生いたします。
                   </p>
 
                   <CompanyMembersSection user={user} />

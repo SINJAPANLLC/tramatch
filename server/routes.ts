@@ -2754,16 +2754,15 @@ JSON形式で以下を返してください（日本語で）:
 
       const generated: any[] = [];
       for (const user of targetUsers) {
-        const baseAmount = user.plan === "premium_full" ? 5500 : 0;
-        if (baseAmount === 0) continue;
+        const accountAmount = user.plan === "premium_full" ? 5500 : 0;
+        if (accountAmount === 0) continue;
 
         const addedUsers = allUsers.filter((u: any) => u.addedByUserId === user.id && u.approved);
         const addedUserCount = addedUsers.length;
-        const addedUserAmount = addedUserCount * 2500;
-        const totalBase = baseAmount + addedUserAmount;
-
-        const tax = Math.floor(totalBase * 0.1);
-        const totalAmount = totalBase + tax;
+        const addedUserAmount = addedUserCount * 2750;
+        const totalAmount = accountAmount + addedUserAmount;
+        const tax = totalAmount - Math.floor(totalAmount / 1.1);
+        const baseAmount = totalAmount - tax;
         const invoiceNumber = await storage.getNextInvoiceNumber();
 
         const [year, month] = billingMonth.split("-");
@@ -2772,9 +2771,9 @@ JSON形式で以下を返してください（日本語で）:
         const dueMonthStr = dueMonth > 12 ? 1 : dueMonth;
         const dueDate = `${dueYear}-${String(dueMonthStr).toString().padStart(2, "0")}-末日`;
 
-        let description = `トラマッチ プレミアムプラン月額利用料（${billingMonth}）`;
+        let description = `トラマッチ プレミアムプラン月額利用料（${billingMonth}）¥5,500（税込）`;
         if (addedUserCount > 0) {
-          description += `\n追加ユーザー ${addedUserCount}名 × ¥2,500 = ¥${addedUserAmount.toLocaleString()}`;
+          description += `\n追加ユーザー ${addedUserCount}名 × ¥2,750（税込） = ¥${addedUserAmount.toLocaleString()}`;
         }
 
         const invoice = await storage.createInvoice({
@@ -2783,7 +2782,7 @@ JSON形式で以下を返してください（日本語で）:
           companyName: user.companyName,
           email: user.email,
           planType: user.plan,
-          amount: totalBase,
+          amount: baseAmount,
           tax,
           totalAmount,
           billingMonth,
