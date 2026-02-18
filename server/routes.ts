@@ -171,12 +171,12 @@ export async function registerRoutes(
       }
 
       const token = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-      await storage.createPasswordResetToken(user.id, token, expiresAt);
+      await storage.createPasswordResetToken(user.id, tokenHash, expiresAt);
 
-      const protocol = req.headers["x-forwarded-proto"] || "https";
-      const host = req.headers.host || "tramatch.jp";
-      const resetUrl = `${protocol}://${host}/reset-password?token=${token}`;
+      const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+      const resetUrl = `${appBaseUrl}/reset-password?token=${token}`;
 
       const emailResult = await sendEmail(
         user.email,
@@ -206,7 +206,8 @@ export async function registerRoutes(
         return res.status(400).json({ message: "パスワードは6文字以上で入力してください" });
       }
 
-      const resetToken = await storage.getPasswordResetToken(token);
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const resetToken = await storage.getPasswordResetToken(tokenHash);
       if (!resetToken) {
         return res.status(400).json({ message: "無効なリセットリンクです" });
       }
@@ -221,7 +222,7 @@ export async function registerRoutes(
 
       const hashedPassword = await bcrypt.hash(password, 10);
       await storage.updateUserPassword(resetToken.userId, hashedPassword);
-      await storage.markPasswordResetTokenUsed(token);
+      await storage.markPasswordResetTokenUsed(tokenHash);
 
       res.json({ message: "パスワードが正常にリセットされました" });
     } catch (error) {
