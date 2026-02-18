@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import OpenAI from "openai";
 import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
 import { SquareClient, SquareEnvironment, SquareError } from "square";
@@ -155,6 +156,78 @@ export async function registerRoutes(
       }
       res.json({ message: "ログアウトしました" });
     });
+  });
+
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "メールアドレスを入力してください" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.json({ message: "パスワードリセットメールを送信しました" });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await storage.createPasswordResetToken(user.id, token, expiresAt);
+
+      const protocol = req.headers["x-forwarded-proto"] || "https";
+      const host = req.headers.host || "tramatch.jp";
+      const resetUrl = `${protocol}://${host}/reset-password?token=${token}`;
+
+      const emailResult = await sendEmail(
+        user.email,
+        "【トラマッチ】パスワードリセットのご案内",
+        `${user.companyName} 様\n\n以下のリンクからパスワードをリセットしてください。\nこのリンクは1時間有効です。\n\n${resetUrl}\n\n※このメールに心当たりがない場合は無視してください。\n\nトラマッチ運営事務局`
+      );
+
+      if (!emailResult.success) {
+        console.error("Password reset email failed:", emailResult.error);
+      }
+
+      res.json({ message: "パスワードリセットメールを送信しました" });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "エラーが発生しました" });
+    }
+  });
+
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      if (!token || !password) {
+        return res.status(400).json({ message: "トークンとパスワードが必要です" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "パスワードは6文字以上で入力してください" });
+      }
+
+      const resetToken = await storage.getPasswordResetToken(token);
+      if (!resetToken) {
+        return res.status(400).json({ message: "無効なリセットリンクです" });
+      }
+
+      if (resetToken.used) {
+        return res.status(400).json({ message: "このリセットリンクは既に使用されています" });
+      }
+
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "リセットリンクの有効期限が切れています。再度リクエストしてください。" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await storage.updateUserPassword(resetToken.userId, hashedPassword);
+      await storage.markPasswordResetTokenUsed(token);
+
+      res.json({ message: "パスワードが正常にリセットされました" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "パスワードリセットに失敗しました" });
+    }
   });
 
   app.get("/api/user", async (req, res) => {
