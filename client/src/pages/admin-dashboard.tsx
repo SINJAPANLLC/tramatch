@@ -326,10 +326,10 @@ export default function AdminDashboard() {
                       data-testid={`row-recent-truck-${item.id}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground truncate">{item.vehicleType} / {item.loadCapacity}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{item.vehicleType} / {item.maxWeight}</p>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                           <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
-                          <span className="truncate">{item.departureArea} → {item.arrivalArea}</span>
+                          <span className="truncate">{item.currentArea} → {item.destinationArea}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
