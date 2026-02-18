@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserCog, Trash2, Search, FileText, CheckCircle } from "lucide-react";
+import { UserCog, Trash2, Search, FileText, CheckCircle, Crown } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +19,7 @@ type SafeUser = {
   userType: string;
   role: string;
   approved: boolean;
+  plan: string;
   address?: string;
   contactName?: string;
   fax?: string;
@@ -54,6 +55,19 @@ export default function AdminUsers() {
     },
   });
 
+  const changePlan = useMutation({
+    mutationFn: async ({ id, plan }: { id: string; plan: string }) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/plan`, { plan });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "プランを変更しました" });
+    },
+    onError: () => {
+      toast({ title: "プラン変更に失敗しました", variant: "destructive" });
+    },
+  });
+
   const filteredUsers = users?.filter((u) =>
     !searchQuery ||
     u.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -67,7 +81,7 @@ export default function AdminUsers() {
         <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
           <div>
             <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">ユーザー管理</h1>
-            <p className="text-sm text-muted-foreground mt-1">全ユーザーの管理・編集</p>
+            <p className="text-sm text-muted-foreground mt-1">全ユーザーの管理・プラン切替</p>
           </div>
           <Badge variant="secondary" data-testid="badge-user-count">
             全{users?.length ?? 0}件
@@ -112,6 +126,15 @@ export default function AdminUsers() {
                             {u.approved ? "承認済" : "未承認"}
                           </Badge>
                         )}
+                        {u.role !== "admin" && (
+                          <Badge
+                            variant={u.plan === "premium" ? "default" : "outline"}
+                            className={`text-xs shrink-0 ${u.plan === "premium" ? "" : ""}`}
+                          >
+                            <Crown className="w-3 h-3 mr-1" />
+                            {u.plan === "premium" ? "プレミアム" : "フリー"}
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
                         {u.email} {u.contactName ? `/ ${u.contactName}` : ""} {u.phone ? `/ ${u.phone}` : ""}
@@ -137,6 +160,16 @@ export default function AdminUsers() {
                             承認
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant={u.plan === "premium" ? "outline" : "default"}
+                          onClick={() => changePlan.mutate({ id: u.id, plan: u.plan === "premium" ? "free" : "premium" })}
+                          disabled={changePlan.isPending}
+                          data-testid={`button-plan-toggle-${u.id}`}
+                        >
+                          <Crown className="w-4 h-4 mr-1" />
+                          {u.plan === "premium" ? "フリーに変更" : "プレミアムに変更"}
+                        </Button>
                         <Button
                           size="icon"
                           variant="ghost"

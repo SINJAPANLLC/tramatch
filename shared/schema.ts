@@ -47,7 +47,7 @@ export const users = pgTable("users", {
   iso14000: text("iso14000"),
   iso39001: text("iso39001"),
   cargoInsurance: text("cargo_insurance"),
-  plan: text("plan").notNull().default("free"),
+  plan: text("plan").notNull().default("premium"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
