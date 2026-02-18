@@ -614,8 +614,8 @@ export default function Home() {
             <style dangerouslySetInnerHTML={{ __html: `
               .listing-slider{overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);}
               .listing-track{display:flex;gap:16px;will-change:transform;}
-              .listing-track-cargo{animation:listingScrollCargo 40s linear infinite;}
-              .listing-track-truck{animation:listingScrollTruck 45s linear infinite;}
+              .listing-track-cargo{animation:listingScrollCargo 35s linear infinite;}
+              .listing-track-truck{animation:listingScrollTruck 35s linear infinite;}
               .listing-card-lp{flex:0 0 280px;width:280px;}
               @keyframes listingScrollCargo{0%{transform:translateX(0);}100%{transform:translateX(calc(-296px * ${Math.min(cargoListings.length, 20)}));}}
               @keyframes listingScrollTruck{0%{transform:translateX(0);}100%{transform:translateX(calc(-296px * ${Math.min((truckListings?.length || 0), 20)}));}}
@@ -626,19 +626,19 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   cargoListings.slice(0, 20).map((listing, i) => (
                     <div key={`cargo-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-md p-3 h-full border border-primary-foreground/10">
+                      <div className="bg-white rounded-md p-3 h-full border border-gray-200 shadow-sm">
                         <div className="flex items-start justify-between gap-2 flex-wrap mb-1.5">
-                          <h3 className="font-medium text-primary-foreground text-sm line-clamp-1 text-shadow">{listing.title}</h3>
-                          <span className="text-[10px] bg-primary-foreground/20 text-primary-foreground px-1.5 py-0.5 rounded shrink-0">{listing.vehicleType}</span>
+                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 font-medium">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-primary-foreground/80 mb-1">
-                          <MapPin className="w-3 h-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
                           <span>{listing.departureArea} → {listing.arrivalArea}</span>
                         </div>
                         {listing.price && (
-                          <div className="text-xs text-primary-foreground font-medium text-shadow">{formatPrice(listing.price)}円</div>
+                          <div className="text-xs text-foreground font-medium">{formatPrice(listing.price)}円</div>
                         )}
-                        <div className="mt-2 text-[10px] text-primary-foreground/40 flex items-center gap-1">
+                        <div className="mt-2 text-[10px] text-muted-foreground/50 flex items-center gap-1">
                           <Building2 className="w-3 h-3" />
                           <span>●●●●株式会社</span>
                         </div>
@@ -673,19 +673,19 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   truckListings.slice(0, 20).map((listing, i) => (
                     <div key={`truck-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-md p-3 h-full border border-primary-foreground/10">
+                      <div className="bg-white rounded-md p-3 h-full border border-gray-200 shadow-sm">
                         <div className="flex items-start justify-between gap-2 flex-wrap mb-1.5">
-                          <h3 className="font-medium text-primary-foreground text-sm line-clamp-1 text-shadow">{listing.title}</h3>
-                          <span className="text-[10px] bg-primary-foreground/20 text-primary-foreground px-1.5 py-0.5 rounded shrink-0">{listing.vehicleType}</span>
+                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 font-medium">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-primary-foreground/80 mb-1">
-                          <MapPin className="w-3 h-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
                           <span>{listing.currentArea} → {listing.destinationArea}</span>
                         </div>
                         {listing.price && (
-                          <div className="text-xs text-primary-foreground font-medium text-shadow">{formatPrice(listing.price)}円</div>
+                          <div className="text-xs text-foreground font-medium">{formatPrice(listing.price)}円</div>
                         )}
-                        <div className="mt-2 text-[10px] text-primary-foreground/40 flex items-center gap-1">
+                        <div className="mt-2 text-[10px] text-muted-foreground/50 flex items-center gap-1">
                           <Building2 className="w-3 h-3" />
                           <span>●●●●株式会社</span>
                         </div>
