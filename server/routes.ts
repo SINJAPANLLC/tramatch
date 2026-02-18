@@ -661,6 +661,7 @@ export async function registerRoutes(
 
       const cargo = await storage.getCargoListing(dispatchRequest.cargoId);
       const recipientEmail = cargo?.contactEmail;
+      const isContracted = cargo?.listingType === "contracted";
 
       if (recipientEmail && isEmailConfigured()) {
         const senderUser = await storage.getUser(req.session.userId as string);
@@ -675,7 +676,57 @@ export async function registerRoutes(
         const taxAmount = Math.floor(fareNum * 0.1);
         const totalAmount = fareNum + taxAmount;
 
-        const emailHtml = `
+        let emailSubject: string;
+        let emailHtml: string;
+
+        if (isContracted) {
+          emailSubject = `【トラマッチ】${senderName}より車番連絡が届きました`;
+          emailHtml = `
+          <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
+            <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
+              <h1 style="color:white;margin:0;font-size:20px">トラマッチ 車番連絡</h1>
+            </div>
+            <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
+              <p style="margin:0 0 16px">${senderName} 様より車番連絡が届きました。</p>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">車両・ドライバー情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("運送会社", dispatchRequest.transportCompany)}
+                ${fmtRow("実運送会社", dispatchRequest.actualTransportCompany)}
+                ${fmtRow("車両番号", dispatchRequest.vehicleNumber)}
+                ${fmtRow("ドライバー名", dispatchRequest.driverName)}
+                ${fmtRow("ドライバー連絡先", dispatchRequest.driverPhone)}
+                ${fmtRow("担当者", dispatchRequest.contactPerson)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運行情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("積込日", dispatchRequest.loadingDate)}
+                ${fmtRow("積込時間", dispatchRequest.loadingTime)}
+                ${fmtRow("積込場所", dispatchRequest.loadingPlace)}
+                ${fmtRow("卸し日", dispatchRequest.unloadingDate)}
+                ${fmtRow("卸し時間", dispatchRequest.unloadingTime)}
+                ${fmtRow("卸し場所", dispatchRequest.unloadingPlace)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">荷物情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("荷種", dispatchRequest.cargoType)}
+                ${fmtRow("重量/車種", dispatchRequest.weightVehicle)}
+                ${fmtRow("車両装備", dispatchRequest.vehicleEquipment)}
+                ${fmtRow("備考", dispatchRequest.notes)}
+              </table>
+
+              ${dispatchRequest.transportCompanyNotes ? `<h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">注意事項</h2><p style="white-space:pre-wrap">${dispatchRequest.transportCompanyNotes}</p>` : ""}
+
+              <div style="margin-top:24px;padding:12px;background:#f0fffe;border-radius:6px;font-size:12px;color:#666">
+                <p style="margin:0">このメールはトラマッチ（tramatch-sinjapan.com）から自動送信されています。</p>
+              </div>
+            </div>
+          </div>`;
+        } else {
+          emailSubject = `【トラマッチ】${senderName}より配車依頼書が届きました`;
+          emailHtml = `
           <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
             <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0;font-size:20px">トラマッチ 配車依頼書</h1>
@@ -735,14 +786,10 @@ export async function registerRoutes(
                 <p style="margin:0">このメールはトラマッチ（tramatch-sinjapan.com）から自動送信されています。</p>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
+        }
 
-        const emailResult = await sendEmail(
-          recipientEmail,
-          `【トラマッチ】${senderName}より配車依頼書が届きました`,
-          emailHtml
-        );
+        const emailResult = await sendEmail(recipientEmail, emailSubject, emailHtml);
 
         if (!emailResult.success) {
           console.error("Dispatch request email failed:", emailResult.error);
