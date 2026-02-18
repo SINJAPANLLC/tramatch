@@ -239,6 +239,8 @@ export default function UserSettings() {
   const [fax, setFax] = useState("");
   const [truckCount, setTruckCount] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [invoiceRegistrationNumber, setInvoiceRegistrationNumber] = useState("");
+  const [registrationDate, setRegistrationDate] = useState("");
 
   const [representative, setRepresentative] = useState("");
   const [establishedDate, setEstablishedDate] = useState("");
@@ -322,6 +324,8 @@ export default function UserSettings() {
       setFax(user.fax || "");
       setTruckCount(user.truckCount || "");
       setWebsiteUrl(user.websiteUrl || "");
+      setInvoiceRegistrationNumber(user.invoiceRegistrationNumber || "");
+      setRegistrationDate(user.registrationDate || "");
       setRepresentative(user.representative || "");
       setEstablishedDate(user.establishedDate || "");
       setCapital(user.capital || "");
@@ -392,7 +396,7 @@ export default function UserSettings() {
 
   const handleSaveBasic = () => {
     updateProfile.mutate({
-      companyName, postalCode, address: buildAddress(), phone, fax, truckCount, websiteUrl,
+      companyName, postalCode, address: buildAddress(), phone, fax, truckCount, websiteUrl, invoiceRegistrationNumber, registrationDate,
     });
   };
 
@@ -591,6 +595,16 @@ export default function UserSettings() {
                         </Select>
                         <Input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className="flex-1 min-w-[200px]" placeholder="example.com/" data-testid="input-website-url" />
                       </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4 mt-2">
+                    <div className="flex-1 min-w-[200px]">
+                      <Label className="text-xs text-muted-foreground mb-1">請求事業者登録番号</Label>
+                      <Input value={invoiceRegistrationNumber} onChange={(e) => setInvoiceRegistrationNumber(e.target.value)} placeholder="T1234567890123" data-testid="input-invoice-registration" />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <Label className="text-xs text-muted-foreground mb-1">登録年月</Label>
+                      <Input value={registrationDate} onChange={(e) => setRegistrationDate(e.target.value)} placeholder="2024年4月" data-testid="input-registration-date" />
                     </div>
                   </div>
                   <div className="mt-6">
