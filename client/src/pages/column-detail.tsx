@@ -14,7 +14,33 @@ function formatDate(dateVal: string | Date) {
 }
 
 function renderMarkdown(md: string): string {
-  return md
+  let text = md
+    .replace(/^### H3:\s*/gm, '### ')
+    .replace(/^## H2:\s*/gm, '## ')
+    .replace(/^# H1:\s*/gm, '# ')
+    .replace(/^### h3:\s*/gm, '### ')
+    .replace(/^## h2:\s*/gm, '## ')
+    .replace(/^# h1:\s*/gm, '# ');
+
+  text = text
+    .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, (_, content) => `## ${content}`)
+    .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1')
+    .replace(/<ul[^>]*>|<\/ul>/gi, '')
+    .replace(/<ol[^>]*>|<\/ol>/gi, '')
+    .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
+    .replace(/<[^>]+>/g, '');
+
+  text = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
