@@ -56,7 +56,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       label: "空車を登録する",
       description: "空車情報を登録して荷物を見つける",
       done: progress.truckCount > 0,
-      href: "/trucks/new",
+      href: "/trucks",
       action: "登録する",
     },
     {
