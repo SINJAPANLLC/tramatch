@@ -33,6 +33,7 @@ import AdminSettings from "@/pages/admin-settings";
 import AdminAnnouncements from "@/pages/admin-announcements";
 import AdminListings from "@/pages/admin-listings";
 import AdminAuditLogs from "@/pages/admin-audit-logs";
+import AdminContactInquiries from "@/pages/admin-contact-inquiries";
 import Guide from "@/pages/guide";
 import Faq from "@/pages/faq";
 import Contact from "@/pages/contact";
@@ -105,6 +106,7 @@ function Router() {
       <Route path="/admin/listings">{() => <AdminRoute component={AdminListings} />}</Route>
       <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
       <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
+      <Route path="/admin/contact-inquiries">{() => <AdminRoute component={AdminContactInquiries} />}</Route>
       <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
       <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
       <Route path="/guide" component={Guide} />
