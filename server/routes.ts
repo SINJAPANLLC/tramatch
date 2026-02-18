@@ -430,6 +430,32 @@ export async function registerRoutes(
       if (!plan || !["free", "premium", "premium_full"].includes(plan)) {
         return res.status(400).json({ message: "無効なプランです" });
       }
+      if (plan === "premium_full") {
+        const existing = await storage.getPendingPlanChangeRequest(req.session.userId as string);
+        if (existing) {
+          return res.status(400).json({ message: "既にプラン変更の申請中です" });
+        }
+        const currentUser = await storage.getUser(req.session.userId as string);
+        if (!currentUser) {
+          return res.status(404).json({ message: "ユーザーが見つかりません" });
+        }
+        await storage.createPlanChangeRequest({
+          userId: req.session.userId as string,
+          currentPlan: currentUser.plan,
+          requestedPlan: "premium_full",
+        });
+        const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
+        for (const admin of admins) {
+          await storage.createNotification({
+            userId: admin.id,
+            type: "plan_change",
+            title: "プラン変更申請",
+            message: `${currentUser.companyName}がプレミアムプラン（¥5,500/月）への変更を申請しました`,
+            relatedId: currentUser.id,
+          });
+        }
+        return res.json({ message: "プラン変更の申請を送信しました。管理者の承認をお待ちください。", pending: true });
+      }
       const user = await storage.updateUserProfile(req.session.userId as string, { plan });
       if (!user) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
@@ -438,6 +464,80 @@ export async function registerRoutes(
       res.json(safeUser);
     } catch (error) {
       res.status(500).json({ message: "プランの変更に失敗しました" });
+    }
+  });
+
+  app.get("/api/plan-change-requests/pending", requireAuth, async (req, res) => {
+    try {
+      const request = await storage.getPendingPlanChangeRequest(req.session.userId as string);
+      res.json({ pending: !!request, request: request || null });
+    } catch (error) {
+      res.status(500).json({ message: "申請状況の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/plan-change-requests", requireAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getPlanChangeRequests();
+      const allUsers = await storage.getAllUsers();
+      const enriched = requests.map(r => {
+        const user = allUsers.find(u => u.id === r.userId);
+        return { ...r, companyName: user?.companyName || "不明", email: user?.email || "" };
+      });
+      res.json(enriched);
+    } catch (error) {
+      res.status(500).json({ message: "プラン変更申請の取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/plan-change-requests/:id/approve", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNote } = req.body;
+      const requests = await storage.getPlanChangeRequests();
+      const request = requests.find(r => r.id === id);
+      if (!request) {
+        return res.status(404).json({ message: "申請が見つかりません" });
+      }
+      if (request.status !== "pending") {
+        return res.status(400).json({ message: "この申請は既に処理済みです" });
+      }
+      await storage.updateUserProfile(request.userId, { plan: request.requestedPlan });
+      const updated = await storage.updatePlanChangeRequestStatus(id, "approved", adminNote);
+      await storage.createNotification({
+        userId: request.userId,
+        type: "plan_change",
+        title: "プラン変更承認",
+        message: `プレミアムプラン（¥5,500/月）への変更が承認されました`,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "承認に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/plan-change-requests/:id/reject", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNote } = req.body;
+      const requests = await storage.getPlanChangeRequests();
+      const request = requests.find(r => r.id === id);
+      if (!request) {
+        return res.status(404).json({ message: "申請が見つかりません" });
+      }
+      if (request.status !== "pending") {
+        return res.status(400).json({ message: "この申請は既に処理済みです" });
+      }
+      const updated = await storage.updatePlanChangeRequestStatus(id, "rejected", adminNote);
+      await storage.createNotification({
+        userId: request.userId,
+        type: "plan_change",
+        title: "プラン変更却下",
+        message: `プレミアムプランへの変更申請が却下されました${adminNote ? `（理由: ${adminNote}）` : ""}`,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "却下に失敗しました" });
     }
   });
 
