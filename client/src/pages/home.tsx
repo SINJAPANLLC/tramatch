@@ -310,16 +310,12 @@ function ColumnsPreviewSection() {
 }
 
 export default function Home() {
-  const { data: cargoListings, isLoading: cargoLoading } = useQuery<CargoListing[]>({
-    queryKey: ["/api/cargo"],
+  const { data: publicCounts } = useQuery<{ cargoCount: number; truckCount: number }>({
+    queryKey: ["/api/public/counts"],
   });
 
-  const { data: truckListings, isLoading: truckLoading } = useQuery<TruckListing[]>({
-    queryKey: ["/api/trucks"],
-  });
-
-  const cargoCount = cargoListings?.length || 0;
-  const truckCount = truckListings?.length || 0;
+  const cargoCount = publicCounts?.cargoCount || 0;
+  const truckCount = publicCounts?.truckCount || 0;
 
   return (
     <div className="min-h-screen">
@@ -327,13 +323,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-center gap-6 sm:gap-12 py-3 text-primary-foreground text-shadow">
             <span className="text-sm sm:text-base font-medium tracking-wide">リアルタイム情報</span>
-            <Link href="/cargo" className="flex items-center gap-2 group">
+            <Link href="/login" className="flex items-center gap-2 group">
               <Package className="w-4 h-4" />
               <span className="text-base sm:text-lg font-bold">{cargoCount}件</span>
               <span className="text-sm hidden sm:inline">の荷物情報</span>
               <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
             </Link>
-            <Link href="/trucks" className="flex items-center gap-2 group">
+            <Link href="/login" className="flex items-center gap-2 group">
               <Truck className="w-4 h-4" />
               <span className="text-base sm:text-lg font-bold">{truckCount}件</span>
               <span className="text-sm hidden sm:inline">の空きトラック</span>
@@ -359,12 +355,12 @@ export default function Home() {
               空車情報・荷物情報をリアルタイムでAI登録・AI検索できます。
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/cargo">
+              <Link href="/login">
                 <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-cargo">
                   荷物を見てみる
                 </Button>
               </Link>
-              <Link href="/trucks">
+              <Link href="/login">
                 <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px] text-base" data-testid="button-hero-trucks">
                   空きトラックを見てみる
                 </Button>
@@ -599,62 +595,26 @@ export default function Home() {
       </section>
 
       <section className="py-16 bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg">最新の荷物情報</h2>
-              <p className="text-base text-primary-foreground mt-1 text-shadow">新着の荷物案件をご覧ください</p>
-            </div>
-            <Link href="/cargo">
-              <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-cargo">
-                すべて見る
-                <ArrowRight className="w-4 h-4 ml-1.5" />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">最新の荷物・車両情報</h2>
+          <p className="mt-3 text-primary-foreground text-lg text-shadow">
+            現在 <span className="font-bold text-xl">{cargoCount}件</span> の荷物情報と <span className="font-bold text-xl">{truckCount}件</span> の空車情報が登録されています
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px]" data-testid="link-all-cargo">
+                <Package className="w-4 h-4 mr-1.5" />
+                荷物情報を見る
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10 backdrop-blur-sm min-w-[220px]" data-testid="link-all-trucks">
+                <Truck className="w-4 h-4 mr-1.5" />
+                車両情報を見る
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cargoLoading
-              ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-              : cargoListings?.slice(0, 6).map((listing) => (
-                  <CargoCard key={listing.id} listing={listing} />
-                ))}
-            {!cargoLoading && (!cargoListings || cargoListings.length === 0) && (
-              <div className="col-span-full text-center py-12 text-primary-foreground">
-                <Package className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>荷物情報はまだありません</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg">最新の車両情報</h2>
-              <p className="text-base text-primary-foreground mt-1 text-shadow">新着の空車情報をご覧ください</p>
-            </div>
-            <Link href="/trucks">
-              <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-trucks">
-                すべて見る
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {truckLoading
-              ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-              : truckListings?.slice(0, 6).map((listing) => (
-                  <TruckCard key={listing.id} listing={listing} />
-                ))}
-            {!truckLoading && (!truckListings || truckListings.length === 0) && (
-              <div className="col-span-full text-center py-12 text-primary-foreground">
-                <Truck className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>車両情報はまだありません</p>
-              </div>
-            )}
-          </div>
+          <p className="mt-4 text-sm text-primary-foreground/70 text-shadow">ログインすると詳細な荷物・車両情報をご覧いただけます</p>
         </div>
       </section>
 
