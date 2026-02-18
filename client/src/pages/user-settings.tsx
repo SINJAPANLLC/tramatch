@@ -734,29 +734,23 @@ export default function UserSettings() {
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">お支払い方法</h2>
-                  <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">お支払い</span>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">銀行振込設定中</Badge>
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">お支払いは請求書払いかクレジットカード払いとなります。</p>
                   <div className="rounded-md bg-muted/50 p-4 space-y-3">
                     <div className="flex items-start gap-4">
                       <span className="text-sm text-muted-foreground shrink-0 w-24">銀行・支店</span>
-                      <span className="text-sm text-foreground">三井住友銀行 ドットコム支店(店番号 953)</span>
+                      <span className="text-sm text-foreground">相愛信用組合 2318 本店003</span>
                     </div>
                     <div className="flex items-start gap-4">
                       <span className="text-sm text-muted-foreground shrink-0 w-24">口座種別</span>
-                      <span className="text-sm text-foreground">当座預金</span>
+                      <span className="text-sm text-foreground">普通預金</span>
                     </div>
                     <div className="flex items-start gap-4">
                       <span className="text-sm text-muted-foreground shrink-0 w-24">口座番号</span>
-                      <span className="text-sm text-foreground">5534446</span>
+                      <span className="text-sm text-foreground">0170074</span>
                     </div>
                     <div className="flex items-start gap-4">
                       <span className="text-sm text-muted-foreground shrink-0 w-24">口座名義</span>
-                      <span className="text-sm text-foreground">トラマッチ株式会社</span>
+                      <span className="text-sm text-foreground">合同会社SIN JAPAN</span>
                     </div>
                   </div>
                 </CardContent>
