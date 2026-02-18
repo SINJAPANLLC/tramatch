@@ -41,13 +41,13 @@ function SidebarMenu({ items }: { items: MenuItem[] }) {
   const [location] = useLocation();
 
   return (
-    <nav className="space-y-0.5" data-testid="nav-sidebar">
+    <nav className="space-y-1" data-testid="nav-sidebar">
       {items.map((item) => {
         const isActive = location === item.href;
         return (
           <Link key={item.href} href={item.href}>
             <button
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-md transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground font-medium"
                   : "text-foreground hover:bg-muted"
