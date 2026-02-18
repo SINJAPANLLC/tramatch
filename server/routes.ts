@@ -638,6 +638,26 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/company-members", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId as string;
+      const allUsers = await storage.getAllUsers();
+      const members = allUsers.filter((u: any) => u.addedByUserId === userId && u.approved);
+      const safeMembers = members.map((u: any) => ({
+        id: u.id,
+        contactName: u.contactName,
+        email: u.email,
+        role: u.role,
+        approved: u.approved,
+        companyName: u.companyName,
+        addedByUserId: u.addedByUserId,
+      }));
+      res.json(safeMembers);
+    } catch (error) {
+      res.status(500).json({ message: "メンバー一覧の取得に失敗しました" });
+    }
+  });
+
   app.get("/api/user-add-requests", requireAuth, async (req, res) => {
     try {
       const requests = await storage.getUserAddRequestsByRequesterId(req.session.userId as string);
@@ -686,10 +706,10 @@ export async function registerRoutes(
         contactName: request.name,
         phone: requester?.phone || "未設定",
         userType: requester?.userType || "carrier",
-        role: "user",
-        approved: true,
         plan: requester?.plan || "free",
+        addedByUserId: request.requesterId,
       });
+      await storage.updateUserProfile(newUser.id, { approved: true });
       const updated = await storage.updateUserAddRequestStatus(id, "approved", adminNote);
       await storage.createNotification({
         userId: request.requesterId,
@@ -2737,8 +2757,13 @@ JSON形式で以下を返してください（日本語で）:
         const baseAmount = user.plan === "premium_full" ? 5500 : 0;
         if (baseAmount === 0) continue;
 
-        const tax = Math.floor(baseAmount * 0.1);
-        const totalAmount = baseAmount + tax;
+        const addedUsers = allUsers.filter((u: any) => u.addedByUserId === user.id && u.approved);
+        const addedUserCount = addedUsers.length;
+        const addedUserAmount = addedUserCount * 2500;
+        const totalBase = baseAmount + addedUserAmount;
+
+        const tax = Math.floor(totalBase * 0.1);
+        const totalAmount = totalBase + tax;
         const invoiceNumber = await storage.getNextInvoiceNumber();
 
         const [year, month] = billingMonth.split("-");
@@ -2747,18 +2772,23 @@ JSON形式で以下を返してください（日本語で）:
         const dueMonthStr = dueMonth > 12 ? 1 : dueMonth;
         const dueDate = `${dueYear}-${String(dueMonthStr).toString().padStart(2, "0")}-末日`;
 
+        let description = `トラマッチ プレミアムプラン月額利用料（${billingMonth}）`;
+        if (addedUserCount > 0) {
+          description += `\n追加ユーザー ${addedUserCount}名 × ¥2,500 = ¥${addedUserAmount.toLocaleString()}`;
+        }
+
         const invoice = await storage.createInvoice({
           invoiceNumber,
           userId: user.id,
           companyName: user.companyName,
           email: user.email,
           planType: user.plan,
-          amount: baseAmount,
+          amount: totalBase,
           tax,
           totalAmount,
           billingMonth,
           dueDate,
-          description: `トラマッチ プレミアムプラン月額利用料（${billingMonth}）`,
+          description,
         });
         generated.push(invoice);
       }

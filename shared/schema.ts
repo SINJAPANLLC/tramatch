@@ -63,6 +63,7 @@ export const users = pgTable("users", {
   accountingContactEmail: text("accounting_contact_email"),
   accountingContactPhone: text("accounting_contact_phone"),
   accountingContactFax: text("accounting_contact_fax"),
+  addedByUserId: varchar("added_by_user_id"),
 });
 
 export const cargoListings = pgTable("cargo_listings", {

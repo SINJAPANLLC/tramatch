@@ -336,6 +336,12 @@ export default function AdminInvoices() {
                         <span>{inv.billingMonth}</span>
                         <span>期限: {inv.dueDate}</span>
                       </div>
+                      {inv.description && inv.description.includes("追加ユーザー") && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1" data-testid={`text-added-users-${inv.id}`}>
+                          <Users className="w-3 h-3 inline mr-1" />
+                          {inv.description.split("\n").filter((l: string) => l.includes("追加ユーザー")).join("")}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold" data-testid={`text-amount-${inv.id}`}>

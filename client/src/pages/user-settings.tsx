@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
+import { Crown, Building2, CheckCircle, User, UserPlus, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -235,6 +235,75 @@ const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Build
   { key: "email-cargo", label: "荷物情報", group: "メール受信設定", icon: Mail },
   { key: "usage", label: "ご利用金額", group: "ご利用金額", icon: Receipt },
 ];
+
+function CompanyMembersSection({ user }: { user: any }) {
+  const { data: members = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/company-members"],
+  });
+
+  return (
+    <div className="mb-6">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm" data-testid="table-user-management">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">担当者</th>
+              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">種別</th>
+              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メールアドレス</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b" data-testid="row-user-self">
+              <td className="py-3 pr-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div>
+                    <span className="text-foreground">{user?.contactName || user?.companyName || "未設定"}</span>
+                    <span className="text-xs text-muted-foreground ml-1">（本人）</span>
+                  </div>
+                </div>
+              </td>
+              <td className="py-3 pr-4">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="secondary" className="text-xs">管理者</Badge>
+                  <span className="text-muted-foreground text-xs">{user?.representative ? "代表者" : ""}</span>
+                </div>
+              </td>
+              <td className="py-3 pr-4 text-foreground">{user?.email || "未設定"}</td>
+            </tr>
+            {isLoading ? (
+              <tr><td colSpan={3} className="py-3 text-center text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin inline mr-1" />読み込み中...</td></tr>
+            ) : members.map((member: any) => (
+              <tr key={member.id} className="border-b" data-testid={`row-member-${member.id}`}>
+                <td className="py-3 pr-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                      <UserPlus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <span className="text-foreground">{member.contactName || "未設定"}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 pr-4">
+                  <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">追加ユーザー</Badge>
+                </td>
+                <td className="py-3 pr-4 text-foreground">{member.email}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {members.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-2" data-testid="text-added-user-count">
+          追加ユーザー: {members.length}名（月額 {(members.length * 2500).toLocaleString()}円 税別）
+        </p>
+      )}
+    </div>
+  );
+}
 
 function UserAddRequestSection() {
   const { toast } = useToast();
@@ -1364,41 +1433,8 @@ export default function UserSettings() {
                   <p className="text-sm text-muted-foreground mb-6">
                     ユーザー追加には月額2,500円 税別 が発生いたします。
                   </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm" data-testid="table-user-management">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">担当者</th>
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">役職</th>
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メールアドレス</th>
-                          <th className="py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b" data-testid="row-user-self">
-                          <td className="py-3 pr-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <User className="w-3.5 h-3.5 text-primary" />
-                              </div>
-                              <div>
-                                <span className="text-foreground">{user?.contactName || user?.companyName || "未設定"}</span>
-                                <span className="text-xs text-muted-foreground ml-1">（本人）</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 pr-4">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge variant="secondary" className="text-xs">管理者</Badge>
-                              <span className="text-muted-foreground text-xs">{user?.representative ? "代表者" : ""}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 pr-4 text-foreground">{user?.email || "未設定"}</td>
-                          <td className="py-3"></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+
+                  <CompanyMembersSection user={user} />
 
                   <UserAddRequestSection />
                 </CardContent>
