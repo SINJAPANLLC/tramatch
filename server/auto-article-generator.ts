@@ -163,7 +163,7 @@ export async function runDailyArticleGeneration() {
 
 export async function pingGoogleSitemap() {
   try {
-    const baseUrl = process.env.SITE_URL || "https://tramatch.replit.app";
+    const baseUrl = process.env.SITE_URL || "https://tramatch-sinjapan.com";
     const sitemapUrl = encodeURIComponent(`${baseUrl}/sitemap.xml`);
     const pingUrl = `https://www.google.com/ping?sitemap=${sitemapUrl}`;
     const response = await fetch(pingUrl);
