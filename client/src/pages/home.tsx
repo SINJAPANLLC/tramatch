@@ -380,25 +380,26 @@ export default function Home() {
 
       <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
-          .logo-wall{width:100%;}
-          .logo-slider{height:120px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
-          .slide-track{display:flex;gap:0;will-change:transform;}
+          .logo-wall{width:100%;overflow:hidden;}
+          .logo-slider{height:100px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+          .slide-track{display:flex;gap:0;will-change:transform;width:max-content;}
           .track-1{animation:logoScroll1 30s linear infinite;}
           .track-2{animation:logoScroll2 38s linear infinite;}
-          .logo-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex:0 0 200px;}
-          .logo-slide img{max-width:160px;max-height:80px;object-fit:contain;}
-          @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
-          @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
+          .logo-slide{width:180px;height:100px;display:flex;align-items:center;justify-content:center;flex:0 0 180px;padding:0 10px;box-sizing:border-box;}
+          .logo-slide img{max-width:140px;max-height:70px;object-fit:contain;display:block;}
+          @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-180px * ${LOGO_WALL_IMAGES_ROW1.length}));}}
+          @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-180px * ${LOGO_WALL_IMAGES_ROW2.length}));}}
           @media(max-width:768px){
-            .logo-slide{width:170px;flex:0 0 170px;}
-            @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-170px * 5));}}
-            @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-170px * 5));}}
+            .logo-slide{width:150px;flex:0 0 150px;}
+            .logo-slide img{max-width:120px;max-height:60px;}
+            @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-150px * ${LOGO_WALL_IMAGES_ROW1.length}));}}
+            @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-150px * ${LOGO_WALL_IMAGES_ROW2.length}));}}
           }
         `}} />
         <div className="logo-wall" data-testid="section-logo-wall">
           <div className="logo-slider">
             <div className="slide-track track-1">
-              {[...Array(2)].map((_, loop) =>
+              {[...Array(3)].map((_, loop) =>
                 LOGO_WALL_IMAGES_ROW1.map((src, i) => (
                   <div className="logo-slide" key={`row1-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
@@ -407,7 +408,7 @@ export default function Home() {
           </div>
           <div className="logo-slider">
             <div className="slide-track track-2">
-              {[...Array(2)].map((_, loop) =>
+              {[...Array(3)].map((_, loop) =>
                 LOGO_WALL_IMAGES_ROW2.map((src, i) => (
                   <div className="logo-slide" key={`row2-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
@@ -613,7 +614,7 @@ export default function Home() {
           <div className="relative">
             <style dangerouslySetInnerHTML={{ __html: `
               .listing-slider{overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);}
-              .listing-track{display:flex;gap:16px;will-change:transform;}
+              .listing-track{display:flex;gap:16px;will-change:transform;width:max-content;}
               .listing-track-cargo{animation:listingScrollCargo ${Math.max(Math.min(cargoListings.length, 20) * 7, 30)}s linear infinite;}
               .listing-track-truck{animation:listingScrollTruck ${Math.max(Math.min((truckListings?.length || 0), 20) * 7, 30)}s linear infinite;}
               .listing-card-lp{flex:0 0 280px;width:280px;}
@@ -720,18 +721,18 @@ export default function Home() {
 
       <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
-          .sin-logo-wall{--slide-w:200px;--slide-h:120px;--speed:22s;width:100%;}
-          .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
-          .sin-slide-track{display:flex;width:calc(var(--slide-w) * 8);animation:sinScroll var(--speed) linear infinite;will-change:transform;}
-          .sin-slide{width:var(--slide-w);height:var(--slide-h);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-          .sin-slide img{max-width:160px;max-height:80px;object-fit:contain;display:block;}
-          @keyframes sinScroll{0%{transform:translateX(0);}100%{transform:translateX(calc(-1 * var(--slide-w) * 4));}}
-          @media(max-width:768px){.sin-logo-wall{--slide-w:170px;--slide-h:110px;--speed:18s;}.sin-slide-track{width:calc(var(--slide-w) * 8);}}
+          .sin-logo-wall{--slide-w:180px;--slide-h:100px;--speed:22s;width:100%;overflow:hidden;}
+          .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+          .sin-slide-track{display:flex;width:max-content;animation:sinScroll var(--speed) linear infinite;will-change:transform;}
+          .sin-slide{width:var(--slide-w);height:var(--slide-h);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 10px;box-sizing:border-box;}
+          .sin-slide img{max-width:140px;max-height:70px;object-fit:contain;display:block;}
+          @keyframes sinScroll{0%{transform:translateX(0);}100%{transform:translateX(calc(-1 * var(--slide-w) * ${LOGO_WALL_IMAGES_BOTTOM.length}));}}
+          @media(max-width:768px){.sin-logo-wall{--slide-w:150px;--slide-h:90px;--speed:18s;}}
         `}} />
         <div className="sin-logo-wall" data-testid="section-sin-logo-wall">
           <div className="sin-slider">
             <div className="sin-slide-track">
-              {[...Array(2)].map((_, loop) =>
+              {[...Array(3)].map((_, loop) =>
                 LOGO_WALL_IMAGES_BOTTOM.map((src, i) => (
                   <div className="sin-slide" key={`sin-${loop}-${i}`}><img src={src} alt="" loading="eager" /></div>
                 ))
