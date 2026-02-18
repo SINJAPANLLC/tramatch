@@ -2,7 +2,7 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema } from "@shared/schema";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -934,6 +934,65 @@ export async function registerRoutes(
       res.json({ logs, total, page, totalPages: Math.ceil(total / limit) });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const parsed = insertContactInquirySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "入力内容に誤りがあります", errors: fromError(parsed.error).toString() });
+      }
+      const inquiry = await storage.createContactInquiry(parsed.data);
+      res.status(201).json({ message: "お問い合わせを送信しました", inquiry });
+    } catch (error) {
+      res.status(500).json({ message: "送信に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/contact-inquiries", requireAdmin, async (req, res) => {
+    try {
+      const inquiries = await storage.getContactInquiries();
+      res.json(inquiries);
+    } catch (error) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/contact-inquiries/unread-count", requireAdmin, async (req, res) => {
+    try {
+      const count = await storage.getUnreadContactCount();
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/contact-inquiries/:id", requireAdmin, async (req, res) => {
+    try {
+      const { status, adminNote } = req.body;
+      if (!status || !["unread", "read", "replied", "closed"].includes(status)) {
+        return res.status(400).json({ message: "無効なステータスです" });
+      }
+      const updated = await storage.updateContactInquiryStatus(req.params.id, status, adminNote);
+      if (!updated) {
+        return res.status(404).json({ message: "お問い合わせが見つかりません" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/contact-inquiries/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteContactInquiry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "お問い合わせが見つかりません" });
+      }
+      res.json({ message: "削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "削除に失敗しました" });
     }
   });
 
