@@ -382,3 +382,28 @@ export const userAddRequests = pgTable("user_add_requests", {
 export const insertUserAddRequestSchema = createInsertSchema(userAddRequests).omit({ id: true, status: true, adminNote: true, createdAt: true, reviewedAt: true });
 export type InsertUserAddRequest = z.infer<typeof insertUserAddRequestSchema>;
 export type UserAddRequest = typeof userAddRequests.$inferSelect;
+
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  userId: varchar("user_id").notNull(),
+  companyName: text("company_name").notNull(),
+  email: text("email").notNull(),
+  planType: text("plan_type").notNull(),
+  amount: integer("amount").notNull(),
+  tax: integer("tax").notNull(),
+  totalAmount: integer("total_amount").notNull(),
+  billingMonth: text("billing_month").notNull(),
+  dueDate: text("due_date").notNull(),
+  status: text("status").notNull().default("unpaid"),
+  paymentMethod: text("payment_method"),
+  paidAt: timestamp("paid_at"),
+  sentAt: timestamp("sent_at"),
+  adminNote: text("admin_note"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, status: true, paidAt: true, sentAt: true, createdAt: true });
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
