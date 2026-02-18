@@ -1,0 +1,143 @@
+import OpenAI from "openai";
+import { storage } from "./storage";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
+
+const SEO_TOPICS = [
+  { topic: "求荷求車マッチングサービスの活用方法", keywords: "求荷求車, マッチング, 運送, 物流" },
+  { topic: "空車を活用して売上を伸ばす方法", keywords: "空車, 空車情報, 配車, 運送会社" },
+  { topic: "荷主が運送会社を選ぶときのポイント", keywords: "荷主, 運送会社, 選び方, 物流" },
+  { topic: "求荷求車システムで物流コストを削減する方法", keywords: "求荷求車, コスト削減, 物流効率化" },
+  { topic: "運送業界のDX化と求荷求車プラットフォーム", keywords: "物流DX, デジタル化, 求荷求車, テクノロジー" },
+  { topic: "2024年問題と運送業界の対策", keywords: "2024年問題, ドライバー不足, 働き方改革, 運送" },
+  { topic: "共同配送のメリットとデメリット", keywords: "共同配送, コスト削減, 物流効率, 混載" },
+  { topic: "チャーター便と混載便の使い分け", keywords: "チャーター, 混載, 貸切, 積合せ" },
+  { topic: "配車計画を効率化するAI技術の活用", keywords: "配車, AI, 効率化, 自動化" },
+  { topic: "トラック運送業の開業に必要な許認可", keywords: "運送業, 許認可, 一般貨物運送事業, 開業" },
+  { topic: "物流業界の最新トレンドと今後の展望", keywords: "物流, トレンド, 自動運転, ドローン配送" },
+  { topic: "燃料費高騰時代の運送コスト管理術", keywords: "燃料費, コスト管理, 運賃, 運送" },
+  { topic: "運送業の安全管理と事故防止対策", keywords: "安全管理, 事故防止, デジタコ, 運行管理" },
+  { topic: "帰り便を活用した物流コスト削減術", keywords: "帰り便, 空車, コスト削減, 求荷求車" },
+  { topic: "中小運送会社が生き残るための戦略", keywords: "中小企業, 運送会社, 経営戦略, 差別化" },
+  { topic: "物流倉庫の選び方と効率的な在庫管理", keywords: "倉庫, 在庫管理, 物流センター, EC物流" },
+  { topic: "求荷求車サイトの選び方と比較ポイント", keywords: "求荷求車, サイト比較, マッチング, 選び方" },
+  { topic: "運送契約の基礎知識と注意点", keywords: "運送契約, 契約書, 運賃, 保険" },
+  { topic: "グリーン物流の推進と環境対策", keywords: "グリーン物流, 環境, CO2削減, エコドライブ" },
+  { topic: "食品輸送における温度管理のポイント", keywords: "食品輸送, 温度管理, 冷蔵, 冷凍輸送" },
+  { topic: "引越し業界と運送業の違いと共通点", keywords: "引越し, 運送, 業界比較, 許認可" },
+  { topic: "長距離輸送の効率化テクニック", keywords: "長距離, 輸送, 中継輸送, 効率化" },
+  { topic: "荷物保険の種類と選び方ガイド", keywords: "荷物保険, 貨物保険, 運送保険, 補償" },
+  { topic: "物流業界での人材確保と定着率向上策", keywords: "人材確保, ドライバー, 採用, 定着率" },
+  { topic: "AIを活用した最適ルート検索の仕組み", keywords: "AI, ルート検索, 最適化, 配送計画" },
+  { topic: "軽貨物運送で独立開業するステップガイド", keywords: "軽貨物, 独立, 開業, フリーランス" },
+  { topic: "国際物流の基礎知識とフォワーダーの役割", keywords: "国際物流, フォワーダー, 輸出入, 通関" },
+  { topic: "物流コンプライアンスと法令遵守の重要性", keywords: "コンプライアンス, 法令遵守, 運送業法, 罰則" },
+  { topic: "ECサイト運営者のための物流パートナー選び", keywords: "EC, 物流パートナー, フルフィルメント, 配送" },
+  { topic: "災害時の物流対策と事業継続計画", keywords: "災害, BCP, 事業継続, 緊急輸送" },
+];
+
+function generateSlug(title: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .substring(0, 60);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `${dateStr}-${rand}-${base || "article"}`;
+}
+
+export async function runDailyArticleGeneration() {
+  try {
+    const todayCount = await storage.getTodayAutoArticleCount();
+    if (todayCount > 0) {
+      console.log("[Auto Article] Today's article already exists, skipping generation.");
+      return;
+    }
+
+    const existingArticles = await storage.getSeoArticles();
+    const usedTopics = new Set(existingArticles.map(a => a.topic));
+
+    let selectedTopic = SEO_TOPICS.find(t => !usedTopics.has(t.topic));
+    if (!selectedTopic) {
+      const idx = Math.floor(Math.random() * SEO_TOPICS.length);
+      selectedTopic = SEO_TOPICS[idx];
+    }
+
+    console.log(`[Auto Article] Generating article for topic: ${selectedTopic.topic}`);
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `あなたはSEOに強い物流業界専門のコラムライターです。「トラマッチ」という求荷求車マッチングプラットフォームのコラム記事を作成してください。
+
+記事の要件：
+1. SEOに最適化されたタイトル（H1）- キーワードを含む
+2. 読者を引き込む導入文（200文字程度）
+3. 本文（H2/H3の見出しで構造化、合計2000〜3000文字）
+  - 具体的なデータや事例を含める
+  - 読者にとって実用的な情報を提供
+  - 自然にキーワードを含める（キーワード密度2-3%）
+4. まとめ・結論
+
+最後にJSON形式でメタ情報を出力してください：
+---META---
+{"metaDescription": "160文字以内のSEO用ディスクリプション"}
+
+マークダウン形式で出力してください。`
+        },
+        {
+          role: "user",
+          content: `テーマ: ${selectedTopic.topic}\nキーワード: ${selectedTopic.keywords}\n備考: トラマッチのサービスを自然に紹介してください`
+        }
+      ],
+      max_tokens: 4000,
+    });
+
+    const rawContent = completion.choices[0]?.message?.content || "";
+    let content = rawContent;
+    let metaDescription = "";
+    const metaMatch = rawContent.match(/---META---\s*(\{[\s\S]*?\})/);
+    if (metaMatch) {
+      content = rawContent.replace(/---META---[\s\S]*$/, "").trim();
+      try {
+        const meta = JSON.parse(metaMatch[1]);
+        metaDescription = meta.metaDescription || "";
+      } catch {}
+    }
+    const titleMatch = content.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1] : selectedTopic.topic;
+    const slug = generateSlug(title);
+
+    await storage.createSeoArticle({
+      topic: selectedTopic.topic,
+      keywords: selectedTopic.keywords,
+      title,
+      slug,
+      metaDescription: metaDescription || null,
+      content,
+      status: "published",
+      autoGenerated: true,
+    });
+
+    console.log(`[Auto Article] Successfully generated and published: ${title}`);
+  } catch (error) {
+    console.error("[Auto Article] Failed to generate article:", error);
+  }
+}
+
+export function scheduleAutoArticleGeneration() {
+  runDailyArticleGeneration();
+
+  setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === 6 && now.getMinutes() === 0) {
+      runDailyArticleGeneration();
+    }
+  }, 60 * 1000);
+}

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Truck, Search, ArrowRight, Shield, Handshake, Clock, MapPin, Users, FileText, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { CargoListing, TruckListing, Announcement } from "@shared/schema";
+import type { CargoListing, TruckListing, Announcement, SeoArticle } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
@@ -231,6 +231,55 @@ function AnnouncementsSection() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </section>
+  );
+}
+
+function ColumnsPreviewSection() {
+  const { data: columns, isLoading } = useQuery<SeoArticle[]>({
+    queryKey: ["/api/columns"],
+  });
+
+  if (isLoading) return null;
+  if (!columns || columns.length === 0) return null;
+
+  const latestColumns = columns.slice(0, 3);
+
+  return (
+    <section className="py-16 sm:py-20 bg-primary">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-columns-heading">コラム記事</h2>
+            <p className="text-base text-primary-foreground mt-1 text-shadow">物流・運送業界のお役立ち情報</p>
+          </div>
+          <Link href="/columns">
+            <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-columns">
+              すべて見る
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {latestColumns.map((col) => (
+            <Link key={col.id} href={`/columns/${col.slug}`}>
+              <Card className="h-full hover-elevate cursor-pointer" data-testid={`card-lp-column-${col.id}`}>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {col.keywords?.split(",").slice(0, 2).map((kw, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{kw.trim()}</Badge>
+                    ))}
+                  </div>
+                  <h3 className="text-sm font-bold text-foreground line-clamp-2 mb-2">{col.title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(col.createdAt).toLocaleDateString("ja-JP")}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -547,6 +596,8 @@ export default function Home() {
       </section>
 
       <AnnouncementsSection />
+
+      <ColumnsPreviewSection />
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
