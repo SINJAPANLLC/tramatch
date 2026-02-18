@@ -699,7 +699,7 @@ export default function CargoList() {
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
                     <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
-                      高速代: {listing.highwayFee ? "有" : "無"}
+                      高速代: {listing.highwayFee || "未設定"}
                     </div>
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
@@ -909,7 +909,7 @@ table{border-collapse:collapse;width:100%;margin-bottom:16px}
 <div class="route-arrow">→</div>
 <div class="route-side" style="text-align:right"><div style="font-weight:bold;font-size:14px">${fmtDate(listing.arrivalDate)} ${listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}</div><div style="font-weight:bold;font-size:14px;margin-top:4px">${listing.arrivalArea} ${listing.arrivalAddress || ""}</div></div>
 </div>
-<div class="price">${listing.price ? `¥${Number(listing.price).toLocaleString()}` : "要相談"} ${listing.taxType ? `(${listing.taxType})` : ""} ${listing.highwayFee ? "高速代：有" : "高速代：無"}</div>
+<div class="price">${listing.price ? `¥${Number(listing.price).toLocaleString()}` : "要相談"} ${listing.taxType ? `(${listing.taxType})` : ""} ${listing.highwayFee || "未設定"}</div>
 <table>
 ${row("荷物番号", listing.cargoNumber ? String(listing.cargoNumber) : "-")}
 ${row("企業名", listing.companyName)}
@@ -1052,7 +1052,7 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
             {listing.taxType && <span className="text-xs text-muted-foreground font-bold">({listing.taxType})</span>}
-            <span className="text-xs text-muted-foreground font-bold">{listing.highwayFee ? "高速代：有" : "高速代：無"}</span>
+            <span className="text-xs text-muted-foreground font-bold">高速代: {listing.highwayFee || "未設定"}</span>
           </div>
 
           {listing.status === "active" && listing.userId !== user?.id && (
