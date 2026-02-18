@@ -285,7 +285,6 @@ export default function AdminApplications() {
                           </div>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             <Badge variant="destructive" className="text-xs">未承認</Badge>
-                            <Badge variant="outline" className="text-xs">{userTypeLabel(u.userType)}</Badge>
                             <span className="text-xs text-muted-foreground">{formatDate(u)}</span>
                           </div>
                         </div>

@@ -261,7 +261,7 @@ export default function AdminUsers() {
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
-                              {isAdmin ? "管理者" : userTypeLabel(u.userType)}
+                              {isAdmin ? "管理者" : "一般"}
                             </Badge>
                             {!isAdmin && (
                               <Badge variant={u.approved ? "default" : "destructive"} className="text-xs">
