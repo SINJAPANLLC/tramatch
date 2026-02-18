@@ -4,6 +4,7 @@ import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { dbPool } from "./db";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -37,7 +38,7 @@ const PgStore = connectPgSimple(session);
 app.use(
   session({
     store: new PgStore({
-      conString: process.env.DATABASE_URL,
+      pool: dbPool,
       createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "tramatch-secret-key",
