@@ -91,6 +91,7 @@ export interface IStorage {
 
   getNotificationTemplates(): Promise<NotificationTemplate[]>;
   getNotificationTemplatesByCategory(category: string): Promise<NotificationTemplate[]>;
+  getNotificationTemplatesByChannel(channel: string): Promise<NotificationTemplate[]>;
   getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined>;
   createNotificationTemplate(data: InsertNotificationTemplate): Promise<NotificationTemplate>;
   updateNotificationTemplate(id: string, data: Partial<InsertNotificationTemplate & { isActive: boolean }>): Promise<NotificationTemplate | undefined>;
@@ -145,9 +146,10 @@ export class DatabaseStorage implements IStorage {
       "safetyExcellenceCert", "greenManagementCert", "iso9000", "iso14000", "iso39001",
       "cargoInsurance", "bankName", "bankBranch", "accountType", "accountNumber",
       "accountHolderKana", "plan",
-      "accountingContactName", "accountingContactEmail", "accountingContactPhone", "accountingContactFax"
+      "accountingContactName", "accountingContactEmail", "accountingContactPhone", "accountingContactFax",
+      "lineUserId", "notifySystem", "notifyEmail", "notifyLine"
     ] as const;
-    const updateData: Record<string, string | null> = {};
+    const updateData: Record<string, string | boolean | null> = {};
     for (const field of allowedFields) {
       if ((data as any)[field] !== undefined) {
         updateData[field] = (data as any)[field];
@@ -449,6 +451,10 @@ export class DatabaseStorage implements IStorage {
 
   async getNotificationTemplatesByCategory(category: string): Promise<NotificationTemplate[]> {
     return db.select().from(notificationTemplates).where(eq(notificationTemplates.category, category)).orderBy(desc(notificationTemplates.createdAt));
+  }
+
+  async getNotificationTemplatesByChannel(channel: string): Promise<NotificationTemplate[]> {
+    return db.select().from(notificationTemplates).where(eq(notificationTemplates.channel, channel)).orderBy(desc(notificationTemplates.createdAt));
   }
 
   async getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined> {

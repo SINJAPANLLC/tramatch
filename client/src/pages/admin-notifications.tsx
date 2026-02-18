@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Bell, Send, Mail, Loader2, Sparkles, Plus, Pencil, Trash2,
-  Reply, BellRing, MailCheck, ChevronLeft, Eye, Power
+  ChevronLeft, Eye, Power, CheckCircle, XCircle, MessageSquare, Smartphone
 } from "lucide-react";
+import { SiLine } from "react-icons/si";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,8 +22,9 @@ import DashboardLayout from "@/components/dashboard-layout";
 type NotificationTemplate = {
   id: string;
   category: string;
+  channel: string;
   name: string;
-  subject: string;
+  subject: string | null;
   body: string;
   triggerEvent: string | null;
   isActive: boolean;
@@ -30,20 +32,24 @@ type NotificationTemplate = {
   updatedAt: string;
 };
 
-type SentNotification = {
-  title: string;
-  target: string;
-  count: number;
-  sentAt: string;
+type ChannelStatus = {
+  configured: boolean;
+  label: string;
 };
 
-const categoryConfig = {
-  auto_reply: { label: "自動返信通知メール", icon: Reply, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
-  auto_notification: { label: "自動通知メール", icon: BellRing, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
-  regular: { label: "通常通知メール", icon: MailCheck, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+const channelConfig = {
+  system: { label: "システム通知", icon: Bell, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+  email: { label: "メール通知", icon: Mail, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  line: { label: "LINE通知", icon: Smartphone, color: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-950/30" },
 } as const;
 
-type CategoryKey = keyof typeof categoryConfig;
+type ChannelKey = keyof typeof channelConfig;
+
+const categoryOptions = [
+  { value: "auto_reply", label: "自動返信" },
+  { value: "auto_notification", label: "自動通知" },
+  { value: "regular", label: "通常通知" },
+];
 
 const targetLabels: Record<string, string> = {
   all: "全ユーザー",
@@ -53,15 +59,17 @@ const targetLabels: Record<string, string> = {
 
 export default function AdminNotifications() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<CategoryKey | "send">("auto_reply");
+  const [activeTab, setActiveTab] = useState<ChannelKey | "send">("system");
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<NotificationTemplate | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
   const [formTrigger, setFormTrigger] = useState("");
+  const [formCategory, setFormCategory] = useState("regular");
 
   const [aiPurpose, setAiPurpose] = useState("");
   const [aiTone, setAiTone] = useState("standard");
@@ -69,23 +77,40 @@ export default function AdminNotifications() {
   const [sendTarget, setSendTarget] = useState("all");
   const [sendTitle, setSendTitle] = useState("");
   const [sendMessage, setSendMessage] = useState("");
-  const [sentHistory, setSentHistory] = useState<SentNotification[]>([]);
+  const [sendChannels, setSendChannels] = useState<string[]>(["system"]);
 
-  const currentCategory = activeTab !== "send" ? activeTab : "auto_reply";
+  const currentChannel = activeTab !== "send" ? activeTab : "system";
+
+  const { data: channelStatus } = useQuery<Record<string, ChannelStatus>>({
+    queryKey: ["/api/admin/notification-channels/status"],
+  });
+
+  const buildTemplateQueryKey = () => {
+    const params = new URLSearchParams();
+    params.set("channel", currentChannel);
+    if (filterCategory && filterCategory !== "all") {
+      params.set("category", filterCategory);
+    }
+    return `/api/admin/notification-templates?${params.toString()}`;
+  };
 
   const { data: templates, isLoading: templatesLoading } = useQuery<NotificationTemplate[]>({
-    queryKey: [`/api/admin/notification-templates?category=${currentCategory}`],
+    queryKey: [buildTemplateQueryKey()],
     enabled: activeTab !== "send",
   });
 
+  const invalidateTemplates = () => {
+    queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as string)?.startsWith("/api/admin/notification-templates") });
+  };
+
   const createMutation = useMutation({
-    mutationFn: async (data: { category: string; name: string; subject: string; body: string; triggerEvent?: string }) => {
+    mutationFn: async (data: { category: string; channel: string; name: string; subject?: string; body: string; triggerEvent?: string }) => {
       const res = await apiRequest("POST", "/api/admin/notification-templates", data);
       return res.json();
     },
     onSuccess: () => {
       toast({ title: "テンプレートを作成しました" });
-      queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as string)?.startsWith("/api/admin/notification-templates") });
+      invalidateTemplates();
       resetForm();
     },
     onError: () => toast({ title: "作成に失敗しました", variant: "destructive" }),
@@ -98,7 +123,7 @@ export default function AdminNotifications() {
     },
     onSuccess: () => {
       toast({ title: "テンプレートを更新しました" });
-      queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as string)?.startsWith("/api/admin/notification-templates") });
+      invalidateTemplates();
       resetForm();
     },
     onError: () => toast({ title: "更新に失敗しました", variant: "destructive" }),
@@ -111,7 +136,7 @@ export default function AdminNotifications() {
     },
     onSuccess: () => {
       toast({ title: "テンプレートを削除しました" });
-      queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as string)?.startsWith("/api/admin/notification-templates") });
+      invalidateTemplates();
     },
     onError: () => toast({ title: "削除に失敗しました", variant: "destructive" }),
   });
@@ -119,7 +144,8 @@ export default function AdminNotifications() {
   const generateMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/admin/notification-templates/generate", {
-        category: currentCategory,
+        category: formCategory,
+        channel: currentChannel,
         purpose: aiPurpose,
         tone: aiTone,
       });
@@ -130,6 +156,7 @@ export default function AdminNotifications() {
       setFormSubject(data.subject || "");
       setFormBody(data.body || "");
       setFormTrigger(data.triggerEvent || "");
+      setFormCategory(data.category || "regular");
       setIsCreating(true);
       setAiPurpose("");
       toast({ title: "AIがテンプレートを生成しました" });
@@ -140,18 +167,37 @@ export default function AdminNotifications() {
   const sendMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/admin/notifications/send", {
-        title: sendTitle, message: sendMessage, target: sendTarget,
+        title: sendTitle, message: sendMessage, target: sendTarget, channels: sendChannels,
       });
       return res.json();
     },
     onSuccess: (data) => {
-      toast({ title: `${data.count}人に通知を送信しました` });
-      setSentHistory(prev => [{ title: sendTitle, target: sendTarget, count: data.count, sentAt: new Date().toLocaleString("ja-JP") }, ...prev]);
+      const r = data.results || {};
+      const parts = [];
+      if (r.system) parts.push(`システム${r.system}件`);
+      if (r.email) parts.push(`メール${r.email}件`);
+      if (r.line) parts.push(`LINE${r.line}件`);
+      toast({ title: `通知を送信しました`, description: parts.join("、") || `${data.count}人対象` });
       setSendTitle("");
       setSendMessage("");
       setSendTarget("all");
     },
     onError: () => toast({ title: "通知の送信に失敗しました", variant: "destructive" }),
+  });
+
+  const testMutation = useMutation({
+    mutationFn: async (data: { channel: string; to: string }) => {
+      const res = await apiRequest("POST", "/api/admin/notification-channels/test", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({ title: "テスト送信に成功しました" });
+      } else {
+        toast({ title: "テスト送信に失敗しました", description: data.error, variant: "destructive" });
+      }
+    },
+    onError: () => toast({ title: "テスト送信に失敗しました", variant: "destructive" }),
   });
 
   function resetForm() {
@@ -161,6 +207,7 @@ export default function AdminNotifications() {
     setFormSubject("");
     setFormBody("");
     setFormTrigger("");
+    setFormCategory("regular");
     setPreviewTemplate(null);
   }
 
@@ -169,9 +216,10 @@ export default function AdminNotifications() {
     setIsCreating(false);
     setPreviewTemplate(null);
     setFormName(t.name);
-    setFormSubject(t.subject);
+    setFormSubject(t.subject || "");
     setFormBody(t.body);
     setFormTrigger(t.triggerEvent || "");
+    setFormCategory(t.category);
   }
 
   function startCreate() {
@@ -182,36 +230,54 @@ export default function AdminNotifications() {
     setFormSubject("");
     setFormBody("");
     setFormTrigger("");
+    setFormCategory("regular");
   }
 
   function handleSaveTemplate() {
-    if (!formName.trim() || !formSubject.trim() || !formBody.trim()) {
-      toast({ title: "名前、件名、本文は必須です", variant: "destructive" });
+    if (!formName.trim() || !formBody.trim()) {
+      toast({ title: "名前と本文は必須です", variant: "destructive" });
+      return;
+    }
+    if (currentChannel === "email" && !formSubject.trim()) {
+      toast({ title: "メール通知には件名が必要です", variant: "destructive" });
       return;
     }
     if (editingTemplate) {
       updateMutation.mutate({
         id: editingTemplate.id,
-        data: { name: formName, subject: formSubject, body: formBody, triggerEvent: formTrigger || null },
+        data: {
+          name: formName,
+          subject: currentChannel === "email" ? formSubject : null,
+          body: formBody,
+          triggerEvent: formTrigger || null,
+          category: formCategory,
+        },
       });
     } else {
       createMutation.mutate({
-        category: currentCategory,
+        category: formCategory,
+        channel: currentChannel,
         name: formName,
-        subject: formSubject,
+        subject: currentChannel === "email" ? formSubject : undefined,
         body: formBody,
         triggerEvent: formTrigger || undefined,
       });
     }
   }
 
-  const isEditing = isCreating || editingTemplate !== null;
-  const canSave = formName.trim() && formSubject.trim() && formBody.trim();
+  function toggleSendChannel(ch: string) {
+    setSendChannels(prev =>
+      prev.includes(ch) ? prev.filter(c => c !== ch) : [...prev, ch]
+    );
+  }
 
-  const tabs: { key: CategoryKey | "send"; label: string; icon: typeof Bell }[] = [
-    { key: "auto_reply", label: "自動返信", icon: Reply },
-    { key: "auto_notification", label: "自動通知", icon: BellRing },
-    { key: "regular", label: "通常通知", icon: MailCheck },
+  const isEditing = isCreating || editingTemplate !== null;
+  const canSave = formName.trim() && formBody.trim() && (currentChannel !== "email" || formSubject.trim());
+
+  const tabs: { key: ChannelKey | "send"; label: string; icon: typeof Bell }[] = [
+    { key: "system", label: "システム通知", icon: Bell },
+    { key: "email", label: "メール通知", icon: Mail },
+    { key: "line", label: "LINE通知", icon: Smartphone },
     { key: "send", label: "一括送信", icon: Send },
   ];
 
@@ -220,7 +286,29 @@ export default function AdminNotifications() {
       <div className="px-4 sm:px-6 py-4 space-y-5">
         <div className="bg-primary rounded-md p-5">
           <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">通知管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">通知テンプレートの管理・AIによるメール文面生成</p>
+          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">システム通知・メール通知・LINE通知のテンプレート管理</p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {channelStatus && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {(Object.entries(channelStatus) as [string, ChannelStatus][]).map(([key, status]) => (
+                <Badge
+                  key={key}
+                  variant={status.configured ? "default" : "secondary"}
+                  className="text-xs"
+                  data-testid={`badge-channel-status-${key}`}
+                >
+                  {status.configured ? (
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                  ) : (
+                    <XCircle className="w-3 h-3 mr-1" />
+                  )}
+                  {status.label}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -228,7 +316,7 @@ export default function AdminNotifications() {
             <Button
               key={tab.key}
               variant={activeTab === tab.key ? "default" : "outline"}
-              onClick={() => { setActiveTab(tab.key); resetForm(); }}
+              onClick={() => { setActiveTab(tab.key); resetForm(); setFilterCategory("all"); }}
               data-testid={`tab-${tab.key}`}
             >
               <tab.icon className="w-4 h-4 mr-1.5" />
@@ -245,15 +333,29 @@ export default function AdminNotifications() {
                   <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
                     <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                       {(() => {
-                        const cfg = categoryConfig[activeTab];
+                        const cfg = channelConfig[activeTab as ChannelKey];
                         const Icon = cfg.icon;
-                        return <><div className={`w-7 h-7 rounded-md ${cfg.bg} flex items-center justify-center`}><Icon className={`w-4 h-4 ${cfg.color}`} /></div>{cfg.label}</>;
+                        return <><div className={`w-7 h-7 rounded-md ${cfg.bg} flex items-center justify-center`}><Icon className={`w-4 h-4 ${cfg.color}`} /></div>{cfg.label}テンプレート</>;
                       })()}
                     </h2>
                     <Button size="sm" onClick={startCreate} data-testid="button-new-template">
                       <Plus className="w-3.5 h-3.5 mr-1" />
                       新規作成
                     </Button>
+                  </div>
+
+                  <div className="mb-3">
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger data-testid="select-filter-category">
+                        <SelectValue placeholder="カテゴリで絞り込み" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">すべてのカテゴリ</SelectItem>
+                        {categoryOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {templatesLoading ? (
@@ -272,9 +374,14 @@ export default function AdminNotifications() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-bold text-foreground truncate">{t.name}</p>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">{t.subject}</p>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                {t.subject || t.body.substring(0, 50)}
+                              </p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
+                              <Badge variant="outline" className="text-[10px]">
+                                {categoryOptions.find(c => c.value === t.category)?.label || t.category}
+                              </Badge>
                               <Badge variant={t.isActive ? "default" : "secondary"} className="text-[10px]">
                                 {t.isActive ? "有効" : "無効"}
                               </Badge>
@@ -290,7 +397,7 @@ export default function AdminNotifications() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Mail className="w-10 h-10 text-muted-foreground/20 mx-auto mb-2" />
+                      <MessageSquare className="w-10 h-10 text-muted-foreground/20 mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">テンプレートがありません</p>
                       <p className="text-xs text-muted-foreground mt-1">「新規作成」またはAIで生成できます</p>
                     </div>
@@ -308,7 +415,7 @@ export default function AdminNotifications() {
                     <div>
                       <Label className="text-xs">目的・用途</Label>
                       <Input
-                        placeholder="例: 新規ユーザー登録時の確認メール"
+                        placeholder={activeTab === "line" ? "例: 新着荷物のLINE通知" : "例: 新規ユーザー登録時の確認メール"}
                         className="mt-1"
                         value={aiPurpose}
                         onChange={e => setAiPurpose(e.target.value)}
@@ -355,34 +462,60 @@ export default function AdminNotifications() {
                         <Pencil className="w-4 h-4 text-primary" />
                         {editingTemplate ? "テンプレート編集" : "新規テンプレート作成"}
                       </h2>
-                      <Button variant="ghost" size="sm" onClick={resetForm}>
+                      <Button variant="ghost" size="sm" onClick={resetForm} data-testid="button-cancel-edit">
                         <ChevronLeft className="w-4 h-4 mr-1" />
                         戻る
                       </Button>
                     </div>
                     <div className="space-y-4">
                       <div>
+                        <Label className="text-xs">カテゴリ</Label>
+                        <Select value={formCategory} onValueChange={setFormCategory}>
+                          <SelectTrigger className="mt-1" data-testid="select-form-category">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoryOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
                         <Label className="text-xs">テンプレート名</Label>
-                        <Input className="mt-1" value={formName} onChange={e => setFormName(e.target.value)} placeholder="例: 新規登録確認メール" data-testid="input-template-name" />
+                        <Input className="mt-1" value={formName} onChange={e => setFormName(e.target.value)} placeholder="例: 新規登録確認通知" data-testid="input-template-name" />
                       </div>
+                      {currentChannel === "email" && (
+                        <div>
+                          <Label className="text-xs">メール件名</Label>
+                          <Input className="mt-1" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="例: 【トラマッチ】ご登録ありがとうございます" data-testid="input-template-subject" />
+                        </div>
+                      )}
                       <div>
-                        <Label className="text-xs">メール件名</Label>
-                        <Input className="mt-1" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="例: 【トラマッチ】ご登録ありがとうございます" data-testid="input-template-subject" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">メール本文</Label>
+                        <Label className="text-xs">
+                          {currentChannel === "line" ? "LINE メッセージ本文" : currentChannel === "email" ? "メール本文" : "通知メッセージ"}
+                        </Label>
                         <Textarea
                           className="mt-1 min-h-[200px] font-mono text-sm"
                           value={formBody}
                           onChange={e => setFormBody(e.target.value)}
-                          placeholder={"{{会社名}} 様\n\nいつもトラマッチをご利用いただき..."}
+                          placeholder={
+                            currentChannel === "line"
+                              ? "{{会社名}} 様\n新着荷物: {{荷物名}}\n{{出発地}}→{{到着地}}"
+                              : "{{会社名}} 様\n\nいつもトラマッチをご利用いただき..."
+                          }
                           data-testid="input-template-body"
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          使用可能な変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
+                          変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
                         </p>
+                        {currentChannel === "line" && (
+                          <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+                            LINE通知は簡潔に（200文字程度推奨）
+                          </p>
+                        )}
                       </div>
-                      {activeTab !== "regular" && (
+                      {formCategory !== "regular" && (
                         <div>
                           <Label className="text-xs">トリガーイベント</Label>
                           <Input className="mt-1" value={formTrigger} onChange={e => setFormTrigger(e.target.value)} placeholder="例: ユーザー新規登録時" data-testid="input-template-trigger" />
@@ -399,7 +532,7 @@ export default function AdminNotifications() {
                           ) : null}
                           {editingTemplate ? "更新" : "保存"}
                         </Button>
-                        <Button variant="outline" onClick={resetForm}>キャンセル</Button>
+                        <Button variant="outline" onClick={resetForm} data-testid="button-cancel-save">キャンセル</Button>
                       </div>
                     </div>
                   </CardContent>
@@ -412,7 +545,7 @@ export default function AdminNotifications() {
                         <Eye className="w-4 h-4 text-primary" />
                         テンプレートプレビュー
                       </h2>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button variant="outline" size="sm" onClick={() => startEdit(previewTemplate)} data-testid="button-edit-template">
                           <Pencil className="w-3.5 h-3.5 mr-1" />
                           編集
@@ -454,7 +587,12 @@ export default function AdminNotifications() {
                         <Badge variant={previewTemplate.isActive ? "default" : "secondary"}>
                           {previewTemplate.isActive ? "有効" : "無効"}
                         </Badge>
-                        <Badge variant="outline">{categoryConfig[previewTemplate.category as CategoryKey]?.label || previewTemplate.category}</Badge>
+                        <Badge variant="outline">
+                          {channelConfig[previewTemplate.channel as ChannelKey]?.label || previewTemplate.channel}
+                        </Badge>
+                        <Badge variant="outline">
+                          {categoryOptions.find(c => c.value === previewTemplate.category)?.label || previewTemplate.category}
+                        </Badge>
                       </div>
 
                       <div>
@@ -470,12 +608,16 @@ export default function AdminNotifications() {
                       )}
 
                       <div className="border border-border rounded-md overflow-hidden">
-                        <div className="bg-muted/40 px-3 py-2 border-b border-border">
-                          <p className="text-xs text-muted-foreground">件名</p>
-                          <p className="text-sm font-bold text-foreground">{previewTemplate.subject}</p>
-                        </div>
+                        {previewTemplate.subject && (
+                          <div className="bg-muted/40 px-3 py-2 border-b border-border">
+                            <p className="text-xs text-muted-foreground">件名</p>
+                            <p className="text-sm font-bold text-foreground">{previewTemplate.subject}</p>
+                          </div>
+                        )}
                         <div className="p-3">
-                          <p className="text-xs text-muted-foreground mb-2">本文</p>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {previewTemplate.channel === "line" ? "LINEメッセージ" : previewTemplate.channel === "email" ? "メール本文" : "通知メッセージ"}
+                          </p>
                           <div className="text-sm text-foreground whitespace-pre-wrap font-mono bg-muted/20 p-3 rounded-md min-h-[150px]" data-testid="text-preview-body">
                             {previewTemplate.body}
                           </div>
@@ -495,9 +637,9 @@ export default function AdminNotifications() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="text-center py-16">
-                      <Mail className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+                      <MessageSquare className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
                       <p className="text-sm text-muted-foreground">テンプレートを選択するか、新規作成してください</p>
-                      <p className="text-xs text-muted-foreground mt-1">AIを使って自動的にメール文面を生成することもできます</p>
+                      <p className="text-xs text-muted-foreground mt-1">AIを使って自動的に文面を生成することもできます</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -505,18 +647,44 @@ export default function AdminNotifications() {
             </div>
           </div>
         ) : (
-          <div className="max-w-2xl space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-5">
                 <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                   <Send className="w-4 h-4 text-primary" />
-                  通知を一括送信
+                  一括通知送信
                 </h2>
                 <div className="space-y-4">
                   <div>
+                    <Label className="text-xs">送信チャネル</Label>
+                    <div className="flex gap-2 mt-1.5 flex-wrap">
+                      {(["system", "email", "line"] as const).map(ch => {
+                        const cfg = channelConfig[ch];
+                        const Icon = cfg.icon;
+                        const isSelected = sendChannels.includes(ch);
+                        const status = channelStatus?.[ch];
+                        const isConfigured = ch === "system" || status?.configured;
+                        return (
+                          <Button
+                            key={ch}
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleSendChannel(ch)}
+                            disabled={!isConfigured}
+                            data-testid={`button-channel-${ch}`}
+                          >
+                            <Icon className="w-3.5 h-3.5 mr-1" />
+                            {cfg.label}
+                            {!isConfigured && <XCircle className="w-3 h-3 ml-1 text-muted-foreground" />}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
                     <Label className="text-xs">送信先</Label>
                     <Select value={sendTarget} onValueChange={setSendTarget}>
-                      <SelectTrigger className="mt-1" data-testid="select-notification-target">
+                      <SelectTrigger className="mt-1" data-testid="select-send-target">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -528,28 +696,16 @@ export default function AdminNotifications() {
                   </div>
                   <div>
                     <Label className="text-xs">タイトル</Label>
-                    <Input
-                      placeholder="通知タイトル"
-                      className="mt-1"
-                      value={sendTitle}
-                      onChange={e => setSendTitle(e.target.value)}
-                      data-testid="input-notification-title"
-                    />
+                    <Input className="mt-1" value={sendTitle} onChange={e => setSendTitle(e.target.value)} placeholder="通知タイトル" data-testid="input-send-title" />
                   </div>
                   <div>
                     <Label className="text-xs">本文</Label>
-                    <Textarea
-                      placeholder="通知の内容を入力..."
-                      className="mt-1 min-h-[120px]"
-                      value={sendMessage}
-                      onChange={e => setSendMessage(e.target.value)}
-                      data-testid="input-notification-body"
-                    />
+                    <Textarea className="mt-1 min-h-[120px]" value={sendMessage} onChange={e => setSendMessage(e.target.value)} placeholder="通知メッセージ" data-testid="input-send-message" />
                   </div>
                   <Button
                     className="w-full"
                     onClick={() => sendMutation.mutate()}
-                    disabled={!sendTitle.trim() || !sendMessage.trim() || sendMutation.isPending}
+                    disabled={!sendTitle.trim() || !sendMessage.trim() || sendChannels.length === 0 || sendMutation.isPending}
                     data-testid="button-send-notification"
                   >
                     {sendMutation.isPending ? (
@@ -557,39 +713,77 @@ export default function AdminNotifications() {
                     ) : (
                       <Send className="w-4 h-4 mr-1.5" />
                     )}
-                    {sendMutation.isPending ? "送信中..." : "通知を送信"}
+                    {sendMutation.isPending ? "送信中..." : `選択チャネルで一括送信`}
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-5">
                 <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-primary" />
-                  送信履歴
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                  チャネル設定状態
                 </h2>
-                {sentHistory.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Mail className="w-10 h-10 text-muted-foreground/20 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground" data-testid="text-empty-state">送信した通知はありません</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {sentHistory.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 flex-wrap p-2 rounded-md bg-muted/30" data-testid={`row-sent-notification-${idx}`}>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.sentAt}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant="secondary" className="text-xs">{targetLabels[item.target]}</Badge>
-                          <span className="text-xs text-muted-foreground">{item.count}人</span>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-4 flex-wrap p-3 rounded-md border border-border">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">システム通知</p>
+                          <p className="text-xs text-muted-foreground">アプリ内のベルアイコン通知</p>
                         </div>
                       </div>
-                    ))}
+                      <Badge variant="default" className="text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        常に有効
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 flex-wrap p-3 rounded-md border border-border">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">メール通知</p>
+                          <p className="text-xs text-muted-foreground">SMTP設定が必要です</p>
+                        </div>
+                      </div>
+                      <Badge variant={channelStatus?.email?.configured ? "default" : "secondary"} className="text-xs">
+                        {channelStatus?.email?.configured ? (
+                          <><CheckCircle className="w-3 h-3 mr-1" />設定済み</>
+                        ) : (
+                          <><XCircle className="w-3 h-3 mr-1" />未設定</>
+                        )}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 flex-wrap p-3 rounded-md border border-border">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">LINE通知</p>
+                          <p className="text-xs text-muted-foreground">LINE Channel Access Tokenが必要です</p>
+                        </div>
+                      </div>
+                      <Badge variant={channelStatus?.line?.configured ? "default" : "secondary"} className="text-xs">
+                        {channelStatus?.line?.configured ? (
+                          <><CheckCircle className="w-3 h-3 mr-1" />設定済み</>
+                        ) : (
+                          <><XCircle className="w-3 h-3 mr-1" />未設定</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
-                )}
+
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-2">必要な環境変数:</p>
+                    <div className="space-y-1 text-xs font-mono text-muted-foreground">
+                      <p>SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM</p>
+                      <p>LINE_CHANNEL_ACCESS_TOKEN</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -12,6 +12,7 @@ import fs from "fs";
 import OpenAI from "openai";
 import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
 import { SquareClient, SquareEnvironment, SquareError } from "square";
+import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -260,6 +261,10 @@ export async function registerRoutes(
     accountingContactEmail: z.string().max(200).optional(),
     accountingContactPhone: z.string().max(20).optional(),
     accountingContactFax: z.string().max(20).optional(),
+    lineUserId: z.string().max(100).optional(),
+    notifySystem: z.boolean().optional(),
+    notifyEmail: z.boolean().optional(),
+    notifyLine: z.boolean().optional(),
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
@@ -1228,13 +1233,14 @@ statusの意味:
     }
   });
 
-  // Admin: Send notification to users
+  // Admin: Send notification to users (multi-channel)
   app.post("/api/admin/notifications/send", requireAdmin, async (req, res) => {
     try {
-      const { title, message, target } = req.body;
+      const { title, message, target, channels } = req.body;
       if (!title || !message) {
         return res.status(400).json({ message: "タイトルと本文は必須です" });
       }
+      const selectedChannels: string[] = channels || ["system"];
       const allUsers = await storage.getAllUsers();
       let targetUsers = allUsers.filter(u => u.role !== "admin" && u.approved);
       if (target === "shippers") {
@@ -1242,17 +1248,73 @@ statusの意味:
       } else if (target === "carriers") {
         targetUsers = targetUsers.filter(u => u.userType === "carrier");
       }
+
+      const results = { system: 0, email: 0, line: 0, emailErrors: 0, lineErrors: 0 };
+
       for (const user of targetUsers) {
-        await storage.createNotification({
-          userId: user.id,
-          type: "admin_notification",
-          title,
-          message,
-        });
+        if (selectedChannels.includes("system") && user.notifySystem) {
+          await storage.createNotification({
+            userId: user.id,
+            type: "admin_notification",
+            title,
+            message,
+          });
+          results.system++;
+        }
+
+        if (selectedChannels.includes("email") && user.notifyEmail && user.email) {
+          const emailResult = await sendEmail(user.email, `【トラマッチ】${title}`, message);
+          if (emailResult.success) results.email++;
+          else results.emailErrors++;
+        }
+
+        if (selectedChannels.includes("line") && user.notifyLine && user.lineUserId) {
+          const lineResult = await sendLineMessage(user.lineUserId, `${title}\n\n${message}`);
+          if (lineResult.success) results.line++;
+          else results.lineErrors++;
+        }
       }
-      res.json({ message: `${targetUsers.length}人に通知を送信しました`, count: targetUsers.length });
+
+      res.json({
+        message: `通知を送信しました`,
+        count: targetUsers.length,
+        results,
+      });
     } catch (error) {
       res.status(500).json({ message: "通知の送信に失敗しました" });
+    }
+  });
+
+  // Admin: Get notification channel configuration status
+  app.get("/api/admin/notification-channels/status", requireAdmin, async (_req, res) => {
+    res.json({
+      system: { configured: true, label: "システム通知" },
+      email: { configured: isEmailConfigured(), label: "メール通知" },
+      line: { configured: isLineConfigured(), label: "LINE通知" },
+    });
+  });
+
+  // Admin: Send test notification
+  app.post("/api/admin/notification-channels/test", requireAdmin, async (req, res) => {
+    try {
+      const { channel, to } = req.body;
+      if (!channel) return res.status(400).json({ message: "チャネルは必須です" });
+
+      if (channel === "email") {
+        if (!to) return res.status(400).json({ message: "送信先メールアドレスは必須です" });
+        const result = await sendEmail(to, "【トラマッチ】テスト通知", "これはトラマッチからのテストメールです。正常に受信できています。");
+        return res.json({ success: result.success, error: result.error });
+      }
+
+      if (channel === "line") {
+        if (!to) return res.status(400).json({ message: "LINE User IDは必須です" });
+        const result = await sendLineMessage(to, "【トラマッチ】テスト通知\n\nこれはトラマッチからのテスト通知です。正常に受信できています。");
+        return res.json({ success: result.success, error: result.error });
+      }
+
+      return res.status(400).json({ message: "不明なチャネルです" });
+    } catch (error) {
+      res.status(500).json({ message: "テスト送信に失敗しました" });
     }
   });
 
@@ -1260,9 +1322,18 @@ statusの意味:
   app.get("/api/admin/notification-templates", requireAdmin, async (req, res) => {
     try {
       const category = req.query.category as string | undefined;
-      const templates = category
-        ? await storage.getNotificationTemplatesByCategory(category)
-        : await storage.getNotificationTemplates();
+      const channel = req.query.channel as string | undefined;
+      let templates;
+      if (channel) {
+        templates = await storage.getNotificationTemplatesByChannel(channel);
+        if (category) {
+          templates = templates.filter((t: any) => t.category === category);
+        }
+      } else if (category) {
+        templates = await storage.getNotificationTemplatesByCategory(category);
+      } else {
+        templates = await storage.getNotificationTemplates();
+      }
       res.json(templates);
     } catch (error) {
       res.status(500).json({ message: "テンプレートの取得に失敗しました" });
@@ -1307,36 +1378,51 @@ statusの意味:
   // Admin: AI generate notification template
   app.post("/api/admin/notification-templates/generate", requireAdmin, async (req, res) => {
     try {
-      const { category, purpose, tone } = req.body;
-      if (!category || !purpose) {
-        return res.status(400).json({ message: "カテゴリと目的は必須です" });
+      const { category, channel, purpose, tone } = req.body;
+      if (!purpose) {
+        return res.status(400).json({ message: "目的は必須です" });
       }
       const categoryLabels: Record<string, string> = {
-        auto_reply: "自動返信通知メール",
-        auto_notification: "自動通知メール",
-        regular: "通常通知メール",
+        auto_reply: "自動返信",
+        auto_notification: "自動通知",
+        regular: "通常通知",
       };
-      const categoryLabel = categoryLabels[category] || category;
+      const channelLabels: Record<string, string> = {
+        system: "システム通知（アプリ内通知）",
+        email: "メール通知",
+        line: "LINE通知",
+      };
+      const ch = channel || "system";
+      const cat = category || "regular";
+      const categoryLabel = categoryLabels[cat] || cat;
+      const channelLabel = channelLabels[ch] || ch;
       const toneLabel = tone === "formal" ? "フォーマルなビジネス文体" : tone === "friendly" ? "親しみやすいカジュアル文体" : "標準的なビジネス文体";
+
+      const isEmail = ch === "email";
+      const isLine = ch === "line";
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: `あなたは物流マッチングプラットフォーム「トラマッチ」の通知メールテンプレート作成アシスタントです。
-以下の条件でメールテンプレートを作成してください：
+            content: `あなたは物流マッチングプラットフォーム「トラマッチ」の通知テンプレート作成アシスタントです。
+以下の条件でテンプレートを作成してください：
+- 通知チャネル: ${channelLabel}
 - カテゴリ: ${categoryLabel}
 - 文体: ${toneLabel}
 - プラットフォーム名: トラマッチ
 - 業界: 物流・運送業
 - テンプレート変数として {{会社名}}, {{ユーザー名}}, {{日付}}, {{荷物名}}, {{出発地}}, {{到着地}}, {{車両タイプ}} などが使えます
+${isLine ? "- LINE通知は短く簡潔に（200文字程度）。件名は不要です。" : ""}
+${isEmail ? "- メール通知にはメール件名（subject）を含めてください。" : ""}
+${!isEmail ? "- subjectフィールドは空文字列にしてください。" : ""}
 
 JSON形式で以下を返してください（日本語で）:
 {
   "name": "テンプレート名",
-  "subject": "メール件名",
-  "body": "メール本文（改行は\\nで表現）",
+  "subject": "${isEmail ? "メール件名" : ""}",
+  "body": "本文（改行は\\nで表現）",
   "triggerEvent": "トリガーイベント説明（自動系の場合）"
 }`
           },
@@ -1355,7 +1441,8 @@ JSON形式で以下を返してください（日本語で）:
         subject: generated.subject || "",
         body: generated.body || "",
         triggerEvent: generated.triggerEvent || null,
-        category,
+        category: cat,
+        channel: ch,
       });
     } catch (error) {
       console.error("AI template generation error:", error);

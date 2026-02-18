@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2 } from "lucide-react";
+import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -206,7 +206,7 @@ const PREFECTURES = [
   "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
 ];
 
-type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "email-cargo" | "usage";
+type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "notification-prefs" | "email-cargo" | "usage";
 
 const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Building }[] = [
   { key: "basic", label: "基本情報", group: "企業情報管理", icon: Building },
@@ -219,6 +219,7 @@ const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Build
   { key: "invoice-issue", label: "請求書発行", group: "企業情報管理", icon: FileOutput },
   { key: "accounting-contact", label: "経理連絡先", group: "企業情報管理", icon: Calculator },
   { key: "user-mgmt", label: "ユーザー管理", group: "ユーザー管理", icon: Users },
+  { key: "notification-prefs", label: "通知設定", group: "通知設定", icon: Bell },
   { key: "email-cargo", label: "荷物情報", group: "メール受信設定", icon: Mail },
   { key: "usage", label: "ご利用金額", group: "ご利用金額", icon: Receipt },
 ];
@@ -281,6 +282,11 @@ export default function UserSettings() {
   const [emailCargo, setEmailCargo] = useState(true);
   const [emailTruck, setEmailTruck] = useState(true);
   const [emailAnnouncement, setEmailAnnouncement] = useState(true);
+
+  const [notifySystem, setNotifySystem] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(true);
+  const [notifyLine, setNotifyLine] = useState(false);
+  const [lineUserId, setLineUserId] = useState("");
 
   const [acctContactName, setAcctContactName] = useState("");
   const [acctContactEmail, setAcctContactEmail] = useState("");
@@ -351,11 +357,15 @@ export default function UserSettings() {
       setAcctContactEmail(user.accountingContactEmail || "");
       setAcctContactPhone(user.accountingContactPhone || "");
       setAcctContactFax(user.accountingContactFax || "");
+      setNotifySystem(user.notifySystem ?? true);
+      setNotifyEmail(user.notifyEmail ?? true);
+      setNotifyLine(user.notifyLine ?? false);
+      setLineUserId(user.lineUserId || "");
     }
   }, [user]);
 
   const updateProfile = useMutation({
-    mutationFn: (data: Record<string, string>) => apiRequest("PATCH", "/api/user/profile", data),
+    mutationFn: (data: Record<string, string | boolean>) => apiRequest("PATCH", "/api/user/profile", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({ title: "保存しました" });
@@ -407,6 +417,15 @@ export default function UserSettings() {
 
   const handleSaveContact = () => {
     updateProfile.mutate({ contactName, email });
+  };
+
+  const handleSaveNotificationPrefs = () => {
+    updateProfile.mutate({
+      notifySystem,
+      notifyEmail,
+      notifyLine,
+      lineUserId,
+    });
   };
 
   const handleSavePassword = () => {
@@ -1134,6 +1153,90 @@ export default function UserSettings() {
                         </tr>
                       </tbody>
                     </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "notification-prefs" && (
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-base font-bold text-foreground mb-6">通知設定</h2>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    通知の受信方法を選択できます。各チャネルのオン/オフを切り替えてください。
+                  </p>
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between gap-4 flex-wrap p-4 rounded-md border border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
+                          <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">システム通知</p>
+                          <p className="text-xs text-muted-foreground">アプリ内のベルアイコンに通知が届きます</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer" data-testid="toggle-notify-system">
+                        <input type="checkbox" checked={notifySystem} onChange={e => setNotifySystem(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 flex-wrap p-4 rounded-md border border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center">
+                          <Mail className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">メール通知</p>
+                          <p className="text-xs text-muted-foreground">登録メールアドレスに通知が届きます</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer" data-testid="toggle-notify-email">
+                        <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                      </label>
+                    </div>
+
+                    <div className="p-4 rounded-md border border-border space-y-3">
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-md bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
+                            <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">LINE通知</p>
+                            <p className="text-xs text-muted-foreground">LINEで通知を受け取ります</p>
+                          </div>
+                        </div>
+                        <label className="cursor-pointer" data-testid="toggle-notify-line">
+                          <input type="checkbox" checked={notifyLine} onChange={e => setNotifyLine(e.target.checked)} className="w-4 h-4 rounded border-border accent-primary" />
+                        </label>
+                      </div>
+                      {notifyLine && (
+                        <div className="pl-11">
+                          <Label className="text-xs">LINE User ID</Label>
+                          <Input
+                            className="mt-1"
+                            value={lineUserId}
+                            onChange={e => setLineUserId(e.target.value)}
+                            placeholder="U1234567890abcdef..."
+                            data-testid="input-line-user-id"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            トラマッチのLINE公式アカウントを友だち追加後、LINEアプリでUser IDを確認できます
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button
+                      onClick={handleSaveNotificationPrefs}
+                      disabled={updateProfile.isPending}
+                      data-testid="button-save-notification-prefs"
+                    >
+                      {updateProfile.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+                      保存
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
