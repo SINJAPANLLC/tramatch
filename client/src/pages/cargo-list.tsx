@@ -211,8 +211,10 @@ export default function CargoList() {
           item.price, item.companyName, item.description,
           item.desiredDate, item.arrivalDate,
           item.driverWork, item.loadingMethod, item.transportType,
+          item.cargoNumber ? String(item.cargoNumber) : "",
+          item.highwayFee, item.consolidation, item.urgency,
         ].filter(Boolean).join(" ").toLowerCase();
-        return activeSearch.some((keyword) => searchable.includes(keyword.toLowerCase()));
+        return activeSearch.every((keyword) => searchable.includes(keyword.toLowerCase()));
       });
     }
 
