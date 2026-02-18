@@ -15,6 +15,7 @@ import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audi
 import { SquareClient, SquareEnvironment, SquareError } from "square";
 import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 import { pingGoogleSitemap } from "./auto-article-generator";
+import * as XLSX from "xlsx";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -1736,8 +1737,6 @@ statusの意味:
       if (shipperName) {
         records = records.filter(r => (r.shipperName || "").includes(shipperName));
       }
-      const XLSX = require("xlsx");
-
       const data = records.map(r => ({
         "運送日": r.transportDate || "",
         "荷主名": r.shipperName || "",
