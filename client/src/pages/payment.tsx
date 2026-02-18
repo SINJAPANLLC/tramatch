@@ -1,26 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, X, CreditCard, Plus } from "lucide-react";
+import { Check, Crown, X, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
 
 export default function Payment() {
   const { user } = useAuth();
   const { toast } = useToast();
   const currentPlan = user?.plan || "free";
-  const [showCardForm, setShowCardForm] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
 
   const planMutation = useMutation({
     mutationFn: async (plan: string) => {
@@ -176,119 +167,29 @@ export default function Payment() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">登録済みカード</span>
+                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">お支払い</span>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {currentPlan === "premium" ? "ベータ期間中は無料" : "未登録"}
-                </Badge>
+                <Badge variant="secondary" className="text-xs">銀行振込設定中</Badge>
               </div>
 
-              <p className="text-sm text-muted-foreground mb-4">
-                現在ベータ期間中のため、プレミアムプランを無料でご利用いただけます。正式リリース後に課金が開始されますので、事前にお支払い方法をご登録ください。
-              </p>
-
-              {!showCardForm ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCardForm(true)}
-                  data-testid="button-add-card"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  カードを登録する
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="card-name" className="text-sm">カード名義</Label>
-                    <Input
-                      id="card-name"
-                      placeholder="TARO YAMADA"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                      data-testid="input-card-name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="card-number" className="text-sm">カード番号</Label>
-                    <Input
-                      id="card-number"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, "").slice(0, 16);
-                        setCardNumber(v.replace(/(\d{4})(?=\d)/g, "$1 "));
-                      }}
-                      data-testid="input-card-number"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="card-expiry" className="text-sm">有効期限</Label>
-                      <Input
-                        id="card-expiry"
-                        placeholder="MM/YY"
-                        value={cardExpiry}
-                        onChange={(e) => {
-                          const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                          setCardExpiry(v.length > 2 ? v.slice(0, 2) + "/" + v.slice(2) : v);
-                        }}
-                        data-testid="input-card-expiry"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="card-cvc" className="text-sm">セキュリティコード</Label>
-                      <Input
-                        id="card-cvc"
-                        placeholder="123"
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        data-testid="input-card-cvc"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => {
-                        toast({ title: "ベータ期間中のため、カード登録は正式リリース時に有効になります", description: "登録情報は保存されませんでした。正式リリース後に再度ご登録ください。" });
-                        setShowCardForm(false);
-                        setCardNumber("");
-                        setCardExpiry("");
-                        setCardCvc("");
-                        setCardName("");
-                      }}
-                      data-testid="button-save-card"
-                    >
-                      <CreditCard className="w-4 h-4 mr-1" />
-                      登録する
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowCardForm(false);
-                        setCardNumber("");
-                        setCardExpiry("");
-                        setCardCvc("");
-                        setCardName("");
-                      }}
-                      data-testid="button-cancel-card"
-                    >
-                      キャンセル
-                    </Button>
-                  </div>
+              <div className="rounded-md bg-muted/50 p-4 space-y-3">
+                <div className="flex items-start gap-4">
+                  <span className="text-sm text-muted-foreground shrink-0 w-24">銀行・支店</span>
+                  <span className="text-sm text-foreground" data-testid="text-bank-info">三井住友銀行 ドットコム支店(店番号 953)</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-6 max-w-3xl">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-foreground mb-3">お支払い履歴</h3>
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground">お支払い履歴はありません</p>
-                <p className="text-xs text-muted-foreground mt-1">ベータ期間中は課金されません</p>
+                <div className="flex items-start gap-4">
+                  <span className="text-sm text-muted-foreground shrink-0 w-24">口座種別</span>
+                  <span className="text-sm text-foreground" data-testid="text-account-type">当座預金</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <span className="text-sm text-muted-foreground shrink-0 w-24">口座番号</span>
+                  <span className="text-sm text-foreground" data-testid="text-account-number">5534446</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <span className="text-sm text-muted-foreground shrink-0 w-24">口座名義</span>
+                  <span className="text-sm text-foreground" data-testid="text-account-holder">トラマッチ株式会社</span>
+                </div>
               </div>
             </CardContent>
           </Card>
