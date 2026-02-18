@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2, Package, Printer } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2, Package, Printer, MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
@@ -248,7 +248,7 @@ ${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount}
 
   if (!listing) {
     return (
-      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+      <div className="w-full lg:w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">読み込み中...</p>
@@ -258,7 +258,7 @@ ${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount}
   }
 
   return (
-    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-detail">
+    <div className="w-full lg:w-[420px] shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-detail">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
           <div className="flex items-center gap-0.5">
@@ -757,19 +757,42 @@ function TruckRegisterTab() {
   });
 
   const filledFieldCount = Object.values(extractedFields).filter(v => v).length;
+  const [mobileTab, setMobileTab] = useState<"chat" | "form">("chat");
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
+      <div className="bg-primary px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
         <Truck className="w-5 h-5 text-primary-foreground" />
-        <div>
-          <h1 className="text-lg font-bold text-primary-foreground text-shadow-lg" data-testid="text-truck-register-title">AI空車登録</h1>
-          <p className="text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-base sm:text-lg font-bold text-primary-foreground text-shadow-lg truncate" data-testid="text-truck-register-title">AI空車登録</h1>
+          <p className="text-[10px] sm:text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
+        </div>
+        <div className="flex lg:hidden gap-1">
+          <Button
+            size="sm"
+            variant={mobileTab === "chat" ? "secondary" : "ghost"}
+            className="text-xs text-primary-foreground"
+            onClick={() => setMobileTab("chat")}
+            data-testid="button-truck-mobile-tab-chat"
+          >
+            <MessageSquare className="w-3 h-3 mr-1" />
+            チャット
+          </Button>
+          <Button
+            size="sm"
+            variant={mobileTab === "form" ? "secondary" : "ghost"}
+            className="text-xs text-primary-foreground"
+            onClick={() => setMobileTab("form")}
+            data-testid="button-truck-mobile-tab-form"
+          >
+            <FileText className="w-3 h-3 mr-1" />
+            フォーム{filledFieldCount > 0 && ` (${filledFieldCount})`}
+          </Button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`flex-1 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" data-testid="truck-chat-messages">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -941,7 +964,7 @@ function TruckRegisterTab() {
           </div>
         </div>
 
-        <div className="border-l border-border bg-background overflow-y-auto w-[420px]">
+        <div className={`border-l border-border bg-background overflow-y-auto w-full lg:w-[420px] ${mobileTab !== "form" ? "hidden lg:block" : ""}`}>
           <div
             className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2"
             data-testid="truck-form-panel-header"
@@ -1186,7 +1209,7 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
   };
 
   return (
-    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-edit">
+    <div className="w-full lg:w-[420px] shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-edit">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
           <span className="text-sm font-bold text-foreground">空車情報を編集</span>
@@ -1993,10 +2016,10 @@ export default function TruckList() {
   if (isAuthenticated) {
     return (
       <DashboardLayout>
-        <div className="flex h-full">
+        <div className="flex h-full relative">
           {activeTab === "search" ? (
             <>
-              <div className="flex-1 overflow-y-auto transition-all duration-300">
+              <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
                 <div className="px-4 sm:px-6 py-4">
                   {tabBar(true)}
                   {searchContent}
@@ -2020,7 +2043,7 @@ export default function TruckList() {
             </div>
           ) : (
             <>
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className={`flex-1 flex flex-col overflow-hidden ${editTruckId ? "hidden lg:flex" : ""}`}>
                 <div className="px-4 sm:px-6 pt-4 shrink-0">
                   {tabBar(false)}
                 </div>
