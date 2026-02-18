@@ -2659,6 +2659,16 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.get("/api/admin/agents/stats", requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAgentStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Agent stats error:", error);
+      res.status(500).json({ message: "エージェント統計の取得に失敗しました" });
+    }
+  });
+
   app.get("/api/admin/agents", requireAdmin, async (req, res) => {
     try {
       const allAgents = await storage.getAgents();

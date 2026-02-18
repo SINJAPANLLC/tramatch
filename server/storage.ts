@@ -152,6 +152,22 @@ export interface IStorage {
   createAgent(data: InsertAgent): Promise<Agent>;
   updateAgent(id: string, data: Partial<InsertAgent>): Promise<Agent | undefined>;
   deleteAgent(id: string): Promise<boolean>;
+  getAgentStats(): Promise<Array<{
+    agentId: string;
+    userId: string;
+    cargoCount: number;
+    truckCount: number;
+    completedCargoCount: number;
+    completedTruckCount: number;
+    activeCargoCount: number;
+    activeTruckCount: number;
+    totalCargoAmount: number;
+    totalTruckAmount: number;
+    completedCargoAmount: number;
+    completedTruckAmount: number;
+    recentCargo: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
+    recentTrucks: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -738,6 +754,129 @@ export class DatabaseStorage implements IStorage {
   async deleteAgent(id: string): Promise<boolean> {
     const result = await db.delete(agents).where(eq(agents.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async getAgentStats(): Promise<Array<{
+    agentId: string;
+    userId: string;
+    cargoCount: number;
+    truckCount: number;
+    completedCargoCount: number;
+    completedTruckCount: number;
+    activeCargoCount: number;
+    activeTruckCount: number;
+    totalCargoAmount: number;
+    totalTruckAmount: number;
+    completedCargoAmount: number;
+    completedTruckAmount: number;
+    recentCargo: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
+    recentTrucks: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
+  }>> {
+    const allAgents = await this.getAgents();
+    const agentsWithAccounts = allAgents.filter(a => a.userId);
+    if (agentsWithAccounts.length === 0) return [];
+
+    const agentUserIds = agentsWithAccounts.map(a => a.userId!);
+
+    const userIdCondition = sql.join(agentUserIds.map(id => sql`${id}`), sql`,`);
+
+    const cargoStats = await db.execute(sql`
+      SELECT user_id,
+        COUNT(*) as total_count,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
+        COUNT(*) FILTER (WHERE status = 'active') as active_count,
+        COALESCE(SUM(CASE WHEN price IS NOT NULL AND regexp_replace(price, '[^0-9]', '', 'g') != '' THEN regexp_replace(price, '[^0-9]', '', 'g')::bigint ELSE 0 END), 0) as total_amount,
+        COALESCE(SUM(CASE WHEN status = 'completed' AND price IS NOT NULL AND regexp_replace(price, '[^0-9]', '', 'g') != '' THEN regexp_replace(price, '[^0-9]', '', 'g')::bigint ELSE 0 END), 0) as completed_amount
+      FROM cargo_listings
+      WHERE user_id IN (${userIdCondition})
+      GROUP BY user_id
+    `);
+
+    const truckStats = await db.execute(sql`
+      SELECT user_id,
+        COUNT(*) as total_count,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
+        COUNT(*) FILTER (WHERE status = 'active') as active_count,
+        COALESCE(SUM(CASE WHEN price IS NOT NULL AND regexp_replace(price, '[^0-9]', '', 'g') != '' THEN regexp_replace(price, '[^0-9]', '', 'g')::bigint ELSE 0 END), 0) as total_amount,
+        COALESCE(SUM(CASE WHEN status = 'completed' AND price IS NOT NULL AND regexp_replace(price, '[^0-9]', '', 'g') != '' THEN regexp_replace(price, '[^0-9]', '', 'g')::bigint ELSE 0 END), 0) as completed_amount
+      FROM truck_listings
+      WHERE user_id IN (${userIdCondition})
+      GROUP BY user_id
+    `);
+
+    const recentCargoRows = await db.execute(sql`
+      SELECT id, title, status, price, created_at, user_id
+      FROM (
+        SELECT id, title, status, price, created_at, user_id,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn
+        FROM cargo_listings
+        WHERE user_id IN (${userIdCondition})
+      ) sub
+      WHERE rn <= 5
+    `);
+
+    const recentTruckRows = await db.execute(sql`
+      SELECT id, title, status, price, created_at, user_id
+      FROM (
+        SELECT id, title, status, price, created_at, user_id,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn
+        FROM truck_listings
+        WHERE user_id IN (${userIdCondition})
+      ) sub
+      WHERE rn <= 5
+    `);
+
+    const cargoStatsMap: Record<string, any> = {};
+    (cargoStats.rows as any[]).forEach(r => { cargoStatsMap[r.user_id] = r; });
+
+    const truckStatsMap: Record<string, any> = {};
+    (truckStats.rows as any[]).forEach(r => { truckStatsMap[r.user_id] = r; });
+
+    const recentCargoMap: Record<string, any[]> = {};
+    (recentCargoRows.rows as any[]).forEach(r => {
+      if (!recentCargoMap[r.user_id]) recentCargoMap[r.user_id] = [];
+      recentCargoMap[r.user_id].push(r);
+    });
+
+    const recentTruckMap: Record<string, any[]> = {};
+    (recentTruckRows.rows as any[]).forEach(r => {
+      if (!recentTruckMap[r.user_id]) recentTruckMap[r.user_id] = [];
+      recentTruckMap[r.user_id].push(r);
+    });
+
+    return agentsWithAccounts.map(agent => {
+      const cs = cargoStatsMap[agent.userId!];
+      const ts = truckStatsMap[agent.userId!];
+
+      return {
+        agentId: agent.id,
+        userId: agent.userId!,
+        cargoCount: Number(cs?.total_count ?? 0),
+        truckCount: Number(ts?.total_count ?? 0),
+        completedCargoCount: Number(cs?.completed_count ?? 0),
+        completedTruckCount: Number(ts?.completed_count ?? 0),
+        activeCargoCount: Number(cs?.active_count ?? 0),
+        activeTruckCount: Number(ts?.active_count ?? 0),
+        totalCargoAmount: Number(cs?.total_amount ?? 0),
+        totalTruckAmount: Number(ts?.total_amount ?? 0),
+        completedCargoAmount: Number(cs?.completed_amount ?? 0),
+        completedTruckAmount: Number(ts?.completed_amount ?? 0),
+        recentCargo: (recentCargoMap[agent.userId!] ?? []).map(c => ({
+          id: c.id,
+          title: c.title,
+          status: c.status,
+          price: c.price,
+          createdAt: c.created_at,
+        })),
+        recentTrucks: (recentTruckMap[agent.userId!] ?? []).map(t => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          price: t.price,
+          createdAt: t.created_at,
+        })),
+      };
+    });
   }
 }
 
