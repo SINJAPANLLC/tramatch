@@ -17,7 +17,7 @@ const userMenuItems: MenuItem[] = [
   { href: "/companies", label: "企業検索", icon: Building },
   { href: "/partners", label: "取引先管理", icon: Users },
   { href: "/transport-ledger", label: "実運送体制管理簿", icon: BookOpen },
-  { href: "/payment", label: "お支払い", icon: CreditCard },
+  { href: "/payment", label: "プラン", icon: CreditCard },
   { href: "/services", label: "便利サービス", icon: Star },
   { href: "/settings", label: "設定", icon: Settings },
 ];
