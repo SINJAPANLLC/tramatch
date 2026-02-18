@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { MapPin, Plus, Pencil, Trash2, Search, Building2, Phone, Mail, Globe, Users, ChevronDown, ChevronRight } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Search, Building2, Phone, Mail, Globe, Users, ChevronDown, ChevronRight, UserPlus, KeyRound, Copy, CheckCircle2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +82,7 @@ export default function AdminAgents() {
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set(PREFECTURES.map(r => r.region)));
+  const [credentialDialog, setCredentialDialog] = useState<{ open: boolean; loginEmail: string; password: string }>({ open: false, loginEmail: "", password: "" });
 
   const { data: agents, isLoading } = useQuery<Agent[]>({
     queryKey: ["/api/admin/agents"],
@@ -89,13 +90,18 @@ export default function AdminAgents() {
 
   const createAgent = useMutation({
     mutationFn: async (data: FormData) => {
-      await apiRequest("POST", "/api/admin/agents", data);
+      const res = await apiRequest("POST", "/api/admin/agents", data);
+      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
-      toast({ title: "代理店を登録しました" });
       setDialogOpen(false);
       resetForm();
+      if (data.generatedPassword) {
+        setCredentialDialog({ open: true, loginEmail: data.loginEmail || data.email || "", password: data.generatedPassword });
+      } else {
+        toast({ title: "代理店を登録しました" });
+      }
     },
     onError: () => {
       toast({ title: "代理店の登録に失敗しました", variant: "destructive" });
@@ -127,6 +133,51 @@ export default function AdminAgents() {
     },
     onError: () => {
       toast({ title: "代理店の削除に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const createAccount = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/admin/agents/${id}/create-account`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
+      if (data.generatedPassword) {
+        setCredentialDialog({ open: true, loginEmail: data.loginEmail, password: data.generatedPassword });
+      } else {
+        toast({ title: "既存ユーザーを紐付けました" });
+      }
+    },
+    onError: () => {
+      toast({ title: "アカウント作成に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/admin/agents/${id}/reset-password`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      setCredentialDialog({ open: true, loginEmail: data.loginEmail || "（既存メール）", password: data.newPassword });
+    },
+    onError: () => {
+      toast({ title: "パスワードリセットに失敗しました", variant: "destructive" });
+    },
+  });
+
+  const bulkCreateAccounts = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/agents/bulk-create-accounts");
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
+      toast({ title: `${data.created}件のアカウントを作成しました` });
+    },
+    onError: () => {
+      toast({ title: "一括アカウント作成に失敗しました", variant: "destructive" });
     },
   });
 
@@ -302,6 +353,14 @@ export default function AdminAgents() {
               ))}
             </SelectContent>
           </Select>
+          {agents && agents.some(a => !a.userId) && (
+            <Button variant="outline" onClick={() => {
+              if (confirm("アカウント未作成の代理店全てにログインアカウントを一括作成しますか？")) bulkCreateAccounts.mutate();
+            }} disabled={bulkCreateAccounts.isPending} data-testid="button-bulk-create-accounts">
+              <UserPlus className="w-4 h-4 mr-1.5" />
+              {bulkCreateAccounts.isPending ? "作成中..." : "一括アカウント作成"}
+            </Button>
+          )}
           <Button onClick={() => openCreateDialog()} data-testid="button-add-agent">
             <Plus className="w-4 h-4 mr-1.5" />
             代理店を追加
@@ -329,6 +388,8 @@ export default function AdminAgents() {
                 {filtered.map(agent => (
                   <AgentCard key={agent.id} agent={agent} onEdit={openEditDialog} onDelete={(id) => {
                     if (confirm("この代理店を削除しますか？")) deleteAgent.mutate(id);
+                  }} onCreateAccount={(id) => createAccount.mutate(id)} onResetPassword={(id) => {
+                    if (confirm("パスワードをリセットしますか？")) resetPassword.mutate(id);
                   }} />
                 ))}
               </div>
@@ -389,6 +450,8 @@ export default function AdminAgents() {
                                   {prefAgents.map(agent => (
                                     <AgentCard key={agent.id} agent={agent} compact onEdit={openEditDialog} onDelete={(id) => {
                                       if (confirm("この代理店を削除しますか？")) deleteAgent.mutate(id);
+                                    }} onCreateAccount={(id) => createAccount.mutate(id)} onResetPassword={(id) => {
+                                      if (confirm("パスワードをリセットしますか？")) resetPassword.mutate(id);
                                     }} />
                                   ))}
                                 </div>
@@ -501,16 +564,57 @@ export default function AdminAgents() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Dialog open={credentialDialog.open} onOpenChange={(open) => { if (!open) setCredentialDialog({ open: false, loginEmail: "", password: "" }); }}>
+          <DialogContent className="max-w-sm" data-testid="dialog-credentials">
+            <DialogHeader>
+              <DialogTitle>ログイン情報</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">以下の情報でログインできます。この画面を閉じるとパスワードは再表示できません。</p>
+              <div>
+                <Label className="text-xs text-muted-foreground">ログインメール</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input value={credentialDialog.loginEmail} readOnly className="text-sm" data-testid="input-credential-email" />
+                  <Button variant="outline" size="icon" onClick={() => {
+                    navigator.clipboard.writeText(credentialDialog.loginEmail);
+                    toast({ title: "コピーしました" });
+                  }} data-testid="button-copy-email">
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">パスワード</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input value={credentialDialog.password} readOnly className="text-sm font-mono" data-testid="input-credential-password" />
+                  <Button variant="outline" size="icon" onClick={() => {
+                    navigator.clipboard.writeText(credentialDialog.password);
+                    toast({ title: "コピーしました" });
+                  }} data-testid="button-copy-password">
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setCredentialDialog({ open: false, loginEmail: "", password: "" })} data-testid="button-close-credentials">
+                閉じる
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
 }
 
-function AgentCard({ agent, compact, onEdit, onDelete }: {
+function AgentCard({ agent, compact, onEdit, onDelete, onCreateAccount, onResetPassword }: {
   agent: Agent;
   compact?: boolean;
   onEdit: (agent: Agent) => void;
   onDelete: (id: string) => void;
+  onCreateAccount: (id: string) => void;
+  onResetPassword: (id: string) => void;
 }) {
   const region = getRegionForPrefecture(agent.prefecture);
   const colors = REGION_COLORS[region] ?? { bg: "bg-muted", text: "text-muted-foreground" };
@@ -528,6 +632,15 @@ function AgentCard({ agent, compact, onEdit, onDelete }: {
               {!compact && (
                 <Badge variant="outline" className={`text-[10px] shrink-0 ${colors.text}`}>
                   {agent.prefecture}
+                </Badge>
+              )}
+              {agent.userId ? (
+                <Badge variant="outline" className="text-[10px] shrink-0 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3 mr-0.5" />アカウント有
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] shrink-0 text-muted-foreground">
+                  アカウント無
                 </Badge>
               )}
             </div>
@@ -555,12 +668,27 @@ function AgentCard({ agent, compact, onEdit, onDelete }: {
                   </a>
                 )}
               </div>
+              {agent.loginEmail && (
+                <span className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <KeyRound className="w-3 h-3" />ログイン: {agent.loginEmail}
+                </span>
+              )}
               {agent.businessArea && (
                 <span className="text-xs text-muted-foreground mt-0.5">エリア: {agent.businessArea}</span>
               )}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {!agent.userId && (
+              <Button variant="ghost" size="icon" onClick={() => onCreateAccount(agent.id)} data-testid={`button-create-account-${agent.id}`} title="アカウント作成">
+                <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              </Button>
+            )}
+            {agent.userId && (
+              <Button variant="ghost" size="icon" onClick={() => onResetPassword(agent.id)} data-testid={`button-reset-password-${agent.id}`} title="パスワードリセット">
+                <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => onEdit(agent)} data-testid={`button-edit-agent-${agent.id}`}>
               <Pencil className="w-3.5 h-3.5" />
             </Button>

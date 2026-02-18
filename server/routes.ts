@@ -2684,18 +2684,52 @@ JSON形式で以下を返してください（日本語で）:
       if (!parsed.success) {
         return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
       }
-      const agent = await storage.createAgent(parsed.data);
+
+      const prefectureShort = parsed.data.prefecture.replace(/[都府県]$/, "");
+      const loginEmail = parsed.data.email || `agent-${prefectureShort}-${Date.now().toString(36)}@tramatch.jp`;
+      const defaultPassword = `agent${Date.now().toString(36)}`;
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      const username = `agent_${prefectureShort}_${Date.now()}`;
+
+      const existingUser = await storage.getUserByEmail(loginEmail);
+      let userId: string | undefined;
+      let passwordToReturn: string | undefined;
+
+      if (!existingUser) {
+        const newUser = await storage.createUser({
+          username,
+          password: hashedPassword,
+          companyName: parsed.data.companyName,
+          contactName: parsed.data.contactName || "",
+          phone: parsed.data.phone || "",
+          email: loginEmail,
+          userType: "carrier",
+          role: "user",
+          address: parsed.data.address || "",
+        } as any);
+        await storage.approveUser(newUser.id);
+        userId = newUser.id;
+        passwordToReturn = defaultPassword;
+      }
+
+      const agent = await storage.createAgent({
+        ...parsed.data,
+        userId: userId || null,
+        loginEmail: userId ? loginEmail : null,
+      });
+
       await storage.createAuditLog({
         userId: (req as any).user?.id,
         userName: (req as any).user?.contactName || (req as any).user?.companyName,
         action: "create",
         targetType: "agent",
         targetId: agent.id,
-        details: `代理店「${agent.companyName}」(${agent.prefecture})を登録`,
+        details: `代理店「${agent.companyName}」(${agent.prefecture})を登録${userId ? ` / アカウント作成 (${loginEmail})` : ""}`,
         ipAddress: req.ip,
       });
-      res.status(201).json(agent);
-    } catch (error) {
+      res.status(201).json({ ...agent, generatedPassword: passwordToReturn });
+    } catch (error: any) {
+      console.error("Agent creation error:", error);
       res.status(500).json({ message: "代理店の登録に失敗しました" });
     }
   });
@@ -2741,6 +2775,129 @@ JSON形式で以下を返してください（日本語で）:
       res.json({ message: "代理店を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "代理店の削除に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/agents/:id/create-account", requireAdmin, async (req, res) => {
+    try {
+      const agent = await storage.getAgent(req.params.id);
+      if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+      if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
+
+      const prefectureShort = agent.prefecture.replace(/[都府県]$/, "");
+      const loginEmail = agent.email || `agent-${prefectureShort}-${Date.now().toString(36)}@tramatch.jp`;
+      const defaultPassword = `agent${Date.now().toString(36)}`;
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      const username = `agent_${prefectureShort}_${Date.now()}`;
+
+      const existingUser = await storage.getUserByEmail(loginEmail);
+      if (existingUser) {
+        return res.status(400).json({ message: `メールアドレス「${loginEmail}」は既に使用されています。別のメールアドレスを設定してください。` });
+      }
+
+      const newUser = await storage.createUser({
+        username,
+        password: hashedPassword,
+        companyName: agent.companyName,
+        contactName: agent.contactName || "",
+        phone: agent.phone || "",
+        email: loginEmail,
+        userType: "carrier",
+        role: "user",
+        address: agent.address || "",
+      } as any);
+      await storage.approveUser(newUser.id);
+      await storage.updateAgent(agent.id, { userId: newUser.id, loginEmail });
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "create",
+        targetType: "agent_account",
+        targetId: agent.id,
+        details: `代理店「${agent.companyName}」のログインアカウントを作成 (${loginEmail})`,
+        ipAddress: req.ip,
+      });
+      res.json({ loginEmail, generatedPassword: defaultPassword });
+    } catch (error: any) {
+      console.error("Agent account creation error:", error);
+      res.status(500).json({ message: "アカウント作成に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/agents/:id/reset-password", requireAdmin, async (req, res) => {
+    try {
+      const agent = await storage.getAgent(req.params.id);
+      if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+      if (!agent.userId) return res.status(400).json({ message: "この代理店にはアカウントがありません" });
+
+      const newPassword = `agent${Date.now().toString(36)}`;
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(agent.userId, hashedPassword);
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "update",
+        targetType: "agent_account",
+        targetId: agent.id,
+        details: `代理店「${agent.companyName}」のパスワードをリセット`,
+        ipAddress: req.ip,
+      });
+      res.json({ newPassword, loginEmail: agent.loginEmail });
+    } catch (error) {
+      res.status(500).json({ message: "パスワードリセットに失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/agents/bulk-create-accounts", requireAdmin, async (req, res) => {
+    try {
+      const allAgents = await storage.getAgents();
+      const agentsWithoutAccount = allAgents.filter(a => !a.userId);
+      const results: Array<{ prefecture: string; loginEmail: string; password: string }> = [];
+      const skipped: string[] = [];
+
+      for (const agent of agentsWithoutAccount) {
+        const prefectureShort = agent.prefecture.replace(/[都府県]$/, "");
+        const loginEmail = agent.email || `agent-${prefectureShort}@tramatch.jp`;
+        const defaultPassword = `agent${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        const username = `agent_${prefectureShort}_${Date.now()}`;
+
+        const existingUser = await storage.getUserByEmail(loginEmail);
+        if (existingUser) {
+          skipped.push(`${agent.prefecture}: メール「${loginEmail}」が既に使用中`);
+          continue;
+        }
+
+        const newUser = await storage.createUser({
+          username,
+          password: hashedPassword,
+          companyName: agent.companyName,
+          contactName: agent.contactName || "",
+          phone: agent.phone || "",
+          email: loginEmail,
+          userType: "carrier",
+          role: "user",
+          address: agent.address || "",
+        } as any);
+        await storage.approveUser(newUser.id);
+        await storage.updateAgent(agent.id, { userId: newUser.id, loginEmail });
+        results.push({ prefecture: agent.prefecture, loginEmail, password: defaultPassword });
+      }
+
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "create",
+        targetType: "agent_account",
+        targetId: "bulk",
+        details: `代理店アカウント一括作成: ${results.length}件作成, ${skipped.length}件スキップ`,
+        ipAddress: req.ip,
+      });
+
+      res.json({ created: results.length, skipped: skipped.length, results, skippedDetails: skipped });
+    } catch (error: any) {
+      console.error("Bulk account creation error:", error);
+      res.status(500).json({ message: "一括アカウント作成に失敗しました" });
     }
   });
 
