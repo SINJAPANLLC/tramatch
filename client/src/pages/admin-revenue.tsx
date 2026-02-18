@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Users, UserCheck, Package, CheckCircle, Truck, Crown,
+  Users, UserCheck, UserPlus, Package, CheckCircle, Truck, Crown,
   BarChart3, TrendingUp, ArrowUpDown, Banknote, CircleDollarSign,
   MapPin
 } from "lucide-react";
@@ -48,6 +48,8 @@ type RevenueStats = {
   freePlanUsers: number;
   betaPremiumUsers: number;
   premiumUsers: number;
+  addedUsers: number;
+  expectedMonthlyRevenue: number;
   totalRevenue: number;
   monthlyRevenue: number;
   totalTradeVolume: number;
@@ -141,16 +143,20 @@ export default function AdminRevenue() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">総収益</p>
+                    <p className="text-xs text-muted-foreground mb-1">総収益（決済実績）</p>
                     <p className="text-3xl font-bold text-foreground" data-testid="text-total-revenue">{formatYen(stats?.totalRevenue ?? 0)}</p>
                   </div>
                   <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-1">今月の収益</p>
+                    <p className="text-xs text-muted-foreground mb-1">今月の決済収益</p>
                     <p className="text-xl font-bold text-foreground" data-testid="text-monthly-revenue">{formatYen(stats?.monthlyRevenue ?? 0)}</p>
                   </div>
-                  {stats && stats.totalRevenue === 0 && (
-                    <p className="text-xs text-muted-foreground">有料プランの決済が完了すると収益データが反映されます</p>
-                  )}
+                  <div className="border-t border-border pt-3">
+                    <p className="text-xs text-muted-foreground mb-1">予想月額収益（税込）</p>
+                    <p className="text-xl font-bold text-foreground" data-testid="text-expected-revenue">{formatYen(stats?.expectedMonthlyRevenue ?? 0)}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      プレミアム {stats?.premiumUsers ?? 0}社 × ¥5,500 + 追加ユーザー {stats?.addedUsers ?? 0}名 × ¥2,750
+                    </p>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -214,6 +220,14 @@ export default function AdminRevenue() {
                       <Badge variant="default" className="text-xs">プレミアム</Badge>
                     </div>
                     <span className="text-lg font-bold text-foreground">{stats?.premiumUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">人</span></span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                        <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
+                      </Badge>
+                    </div>
+                    <span className="text-lg font-bold text-foreground">{stats?.addedUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">名</span></span>
                   </div>
                   {stats && stats.totalUsers > 0 && (
                     <div className="border-t border-border pt-3">

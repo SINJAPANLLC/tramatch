@@ -2361,6 +2361,13 @@ JSON形式で以下を返してください（日本語で）:
       const freePlanUsers = nonAdminUsers.filter(u => u.plan === "free").length;
       const betaPremiumUsers = nonAdminUsers.filter(u => u.plan === "premium").length;
       const premiumUsers = nonAdminUsers.filter(u => u.plan === "premium_full").length;
+      const addedUsers = nonAdminUsers.filter(u => u.addedByUserId && u.approved).length;
+
+      const premiumParentUsers = nonAdminUsers.filter(u => u.plan === "premium_full" && !u.addedByUserId && u.approved);
+      const expectedMonthlyRevenue = premiumParentUsers.reduce((sum, parent) => {
+        const childCount = nonAdminUsers.filter(u => u.addedByUserId === parent.id && u.approved).length;
+        return sum + 5500 + (childCount * 2750);
+      }, 0);
 
       const completedPayments = allPayments.filter(p => p.status === "completed");
       const totalRevenue = completedPayments.reduce((sum, p) => sum + p.amount, 0);
@@ -2436,6 +2443,8 @@ JSON形式で以下を返してください（日本語で）:
         freePlanUsers,
         betaPremiumUsers,
         premiumUsers,
+        addedUsers,
+        expectedMonthlyRevenue,
         totalRevenue,
         monthlyRevenue,
         totalTradeVolume,
