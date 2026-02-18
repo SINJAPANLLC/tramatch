@@ -194,6 +194,45 @@ export default function Payment() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-6 max-w-3xl">
+          <h2 className="text-lg font-bold text-foreground mb-4">請求書受領設定</h2>
+
+          <Card data-testid="card-invoice-settings">
+            <CardContent className="p-6">
+              <div className="space-y-1 mb-6">
+                <p className="text-sm text-muted-foreground">過去の請求書には反映されません。必要な場合はお問い合わせください。</p>
+                <p className="text-sm text-muted-foreground">法人名の変更が必要な場合は、お問い合わせください。</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">法人名</span>
+                  <p className="text-sm text-foreground" data-testid="text-invoice-company">{user?.companyName || "未登録"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">宛名</span>
+                  <p className="text-sm text-foreground" data-testid="text-invoice-addressee">{user?.contactName || "ご担当者"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">住所</span>
+                  <p className="text-sm text-foreground" data-testid="text-invoice-address">
+                    {user?.postalCode ? `〒${user.postalCode}` : "未登録"}
+                    {user?.address ? ` ${user.address}` : ""}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">電話番号</span>
+                  <p className="text-sm text-foreground" data-testid="text-invoice-phone">{user?.phone || "未登録"}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-sm text-muted-foreground">FAX番号</span>
+                  <p className="text-sm text-foreground" data-testid="text-invoice-fax">{user?.fax || "未登録"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
