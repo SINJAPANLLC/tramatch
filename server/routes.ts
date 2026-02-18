@@ -63,7 +63,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
 function generateInvoiceEmailHtml(invoice: any, adminInfo?: any): string {
   const statusLabel = invoice.status === "paid" ? "入金済み" : invoice.status === "overdue" ? "支払い期限超過" : "未入金";
-  const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+  const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
   const paymentUrl = `${appBaseUrl}/payment`;
 
   const bankName = adminInfo?.bankName || "";
@@ -261,7 +261,7 @@ export async function registerRoutes(
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await storage.createPasswordResetToken(user.id, tokenHash, expiresAt);
 
-      const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+      const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
       const resetUrl = `${appBaseUrl}/reset-password?token=${token}`;
 
       const emailResult = await sendEmail(
@@ -1518,7 +1518,7 @@ export async function registerRoutes(
         return res.status(401).json({ message: "ユーザーが見つかりません" });
       }
 
-      const appBaseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN || "tramatch.jp"}`;
+      const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
       const emailResult = await sendEmail(
         email,
         "【トラマッチ】取引先招待のご案内",
