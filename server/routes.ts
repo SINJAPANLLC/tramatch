@@ -549,7 +549,7 @@ export async function registerRoutes(
   app.patch("/api/admin/plan-change-requests/:id/approve", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { adminNote } = req.body;
+      const adminNote = req.body?.adminNote;
       const requests = await storage.getPlanChangeRequests();
       const request = requests.find(r => r.id === id);
       if (!request) {
@@ -568,6 +568,7 @@ export async function registerRoutes(
       });
       res.json(updated);
     } catch (error) {
+      console.error("Plan change approve error:", error);
       res.status(500).json({ message: "承認に失敗しました" });
     }
   });
@@ -575,7 +576,7 @@ export async function registerRoutes(
   app.patch("/api/admin/plan-change-requests/:id/reject", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { adminNote } = req.body;
+      const adminNote = req.body?.adminNote;
       const requests = await storage.getPlanChangeRequests();
       const request = requests.find(r => r.id === id);
       if (!request) {
@@ -593,6 +594,7 @@ export async function registerRoutes(
       });
       res.json(updated);
     } catch (error) {
+      console.error("Plan change reject error:", error);
       res.status(500).json({ message: "却下に失敗しました" });
     }
   });
@@ -653,7 +655,7 @@ export async function registerRoutes(
   app.patch("/api/admin/user-add-requests/:id/approve", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { adminNote } = req.body;
+      const adminNote = req.body?.adminNote;
       const requests = await storage.getUserAddRequests();
       const request = requests.find(r => r.id === id);
       if (!request) {
@@ -678,7 +680,7 @@ export async function registerRoutes(
   app.patch("/api/admin/user-add-requests/:id/reject", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { adminNote } = req.body;
+      const adminNote = req.body?.adminNote;
       const requests = await storage.getUserAddRequests();
       const request = requests.find(r => r.id === id);
       if (!request) {
