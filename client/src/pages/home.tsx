@@ -350,6 +350,58 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-primary py-8 sm:py-12">
+        <style dangerouslySetInnerHTML={{ __html: `
+          .logo-wall{width:100%;}
+          .logo-slider{height:120px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
+          .slide-track{display:flex;width:calc(200px * 10);}
+          .track-1{animation:logoScroll1 30s linear infinite;}
+          .track-2{animation:logoScroll2 38s linear infinite;}
+          .logo-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+          .logo-slide img{max-width:160px;max-height:80px;object-fit:contain;}
+          @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
+          @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
+          @media(max-width:768px){
+            .logo-slide{width:170px;}
+            .slide-track{width:calc(170px * 10);}
+            @keyframes logoScroll1{100%{transform:translateX(calc(-170px * 5));}}
+            @keyframes logoScroll2{100%{transform:translateX(calc(-170px * 5));}}
+          }
+        `}} />
+        <div className="logo-wall" data-testid="section-logo-wall">
+          <div className="logo-slider">
+            <div className="slide-track track-1">
+              {[...Array(2)].map((_, loop) => (
+                [
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/47db33b0-d7f4-013e-9799-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).jpeg",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/517bff70-d7f4-013e-979c-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/5938c4f0-d7f4-013e-979f-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).jpeg",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/60df44a0-d7f4-013e-97a0-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(2).png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/66db27b0-d7f4-013e-97a2-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).jpeg",
+                ].map((src, i) => (
+                  <div className="logo-slide" key={`row1-${loop}-${i}`}><img src={src} alt="" /></div>
+                ))
+              ))}
+            </div>
+          </div>
+          <div className="logo-slider">
+            <div className="slide-track track-2">
+              {[...Array(2)].map((_, loop) => (
+                [
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/6d8d1910-d7f4-013e-97a3-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(3).png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/728486c0-d7f4-013e-97a6-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(4).png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/7cf28db0-d7f4-013e-97a8-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(5).png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/883e8b30-d7f4-013e-97a9-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.jpeg",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/916e7710-d7f4-013e-97ab-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99.png",
+                ].map((src, i) => (
+                  <div className="logo-slide" key={`row2-${loop}-${i}`}><img src={src} alt="" /></div>
+                ))
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-12 text-shadow-lg" data-testid="text-reason-title">
