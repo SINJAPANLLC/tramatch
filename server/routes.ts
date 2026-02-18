@@ -285,6 +285,23 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/user/plan", requireAuth, async (req, res) => {
+    try {
+      const { plan } = req.body;
+      if (!plan || !["free", "premium"].includes(plan)) {
+        return res.status(400).json({ message: "無効なプランです" });
+      }
+      const user = await storage.updateUserProfile(req.session.userId as string, { plan });
+      if (!user) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "プランの変更に失敗しました" });
+    }
+  });
+
   app.get("/api/cargo", async (_req, res) => {
     try {
       const listings = await storage.getCargoListings();
@@ -335,6 +352,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
       const currentUser = await storage.getUser(req.session.userId as string);
+      if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
+        return res.status(403).json({ message: "AI荷物登録にはプレミアムプランへの加入が必要です" });
+      }
       const listingData = {
         ...parsed.data,
         companyName: parsed.data.companyName || currentUser?.companyName || "",
@@ -378,6 +398,12 @@ export async function registerRoutes(
       }
       if (status !== "completed" && listing.userId !== req.session.userId) {
         return res.status(403).json({ message: "Not authorized" });
+      }
+      if (status === "completed") {
+        const currentUser = await storage.getUser(req.session.userId as string);
+        if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
+          return res.status(403).json({ message: "荷物の成約にはプレミアムプランへの加入が必要です" });
+        }
       }
       const updated = await storage.updateCargoStatus(cargoId, status);
       res.json(updated);
