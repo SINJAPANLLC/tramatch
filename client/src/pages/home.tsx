@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Truck, Search, ArrowRight, Shield, Handshake, Clock, MapPin, Users, FileText, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { CargoListing, TruckListing } from "@shared/schema";
+import type { CargoListing, TruckListing, Announcement } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
@@ -165,6 +165,74 @@ function ListingSkeleton() {
         <Skeleton className="h-3 w-28" />
       </CardContent>
     </Card>
+  );
+}
+
+const CATEGORY_BADGE: Record<string, { label: string; variant: "default" | "secondary" }> = {
+  important: { label: "重要", variant: "default" },
+  update: { label: "更新", variant: "secondary" },
+  maintenance: { label: "メンテナンス", variant: "secondary" },
+  campaign: { label: "キャンペーン", variant: "secondary" },
+  general: { label: "お知らせ", variant: "secondary" },
+};
+
+function AnnouncementsSection() {
+  const { data: announcements, isLoading } = useQuery<Announcement[]>({
+    queryKey: ["/api/announcements"],
+  });
+
+  const formatDate = (dateVal: string | Date) => {
+    const d = new Date(dateVal);
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const isNew = (dateVal: string | Date) => {
+    const d = new Date(dateVal);
+    const now = new Date();
+    const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 7;
+  };
+
+  return (
+    <section className="py-16 sm:py-20 bg-primary">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg mb-8">お知らせ</h2>
+        <Card>
+          <CardContent className="p-0 divide-y divide-border">
+            {isLoading ? (
+              <div className="p-4 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : announcements && announcements.length > 0 ? (
+              announcements.map((item) => {
+                const badge = CATEGORY_BADGE[item.category] || CATEGORY_BADGE.general;
+                const newItem = isNew(item.createdAt);
+                return (
+                  <div key={item.id} className="flex items-start gap-4 p-4" data-testid={`announcement-lp-${item.id}`}>
+                    <Badge variant={newItem ? "default" : badge.variant} className="shrink-0 mt-0.5">
+                      {newItem ? "新着" : badge.label}
+                    </Badge>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{formatDate(item.createdAt)}</p>
+                      <p className="text-base font-semibold text-foreground">{item.title}</p>
+                      {item.content && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.content}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-6 text-center">
+                <p className="text-sm text-muted-foreground">現在お知らせはありません</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   );
 }
 
@@ -478,43 +546,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg mb-8">お知らせ</h2>
-          <Card>
-            <CardContent className="p-0 divide-y divide-border">
-              <div className="flex items-start gap-4 p-4">
-                <Badge variant="default" className="shrink-0 mt-0.5">新着</Badge>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">2026/02/16</p>
-                  <p className="text-base font-semibold text-foreground">TRA MATCH AIβ版をリリースしました。月額費用0円でご利用いただけます。</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4">
-                <Badge variant="secondary" className="shrink-0 mt-0.5">更新</Badge>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">2026/02/10</p>
-                  <p className="text-base font-semibold text-foreground">AI検索機能を強化しました。より精度の高いマッチングが可能になりました。</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4">
-                <Badge variant="secondary" className="shrink-0 mt-0.5">お知らせ</Badge>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">2026/02/01</p>
-                  <p className="text-base font-semibold text-foreground">会員登録数が100社を突破しました。ご利用ありがとうございます。</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4 p-4">
-                <Badge variant="secondary" className="shrink-0 mt-0.5">お知らせ</Badge>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">2026/01/20</p>
-                  <p className="text-base font-semibold text-foreground">AI掲載機能をリリースしました。テキストを入力するだけで荷物・車両情報を自動登録できます。</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      <AnnouncementsSection />
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
