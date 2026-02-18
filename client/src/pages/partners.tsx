@@ -375,7 +375,7 @@ export default function Partners() {
               </div>
               <Button variant="outline" onClick={openAddForm} data-testid="button-add-partner">
                 <UserPlus className="w-4 h-4 mr-1.5" />
-                取引先招待
+                取引先を追加
               </Button>
             </div>
 
@@ -490,7 +490,7 @@ export default function Partners() {
                               ? "検索結果が見つかりませんでした"
                               : "登録された取引先はありません"}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">取引先招待から追加できます</p>
+                          <p className="text-xs text-muted-foreground mt-1">「取引先を追加」から追加できます</p>
                         </td>
                       </tr>
                     )}
