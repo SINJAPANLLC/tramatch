@@ -104,6 +104,7 @@ export interface IStorage {
   getNotificationTemplatesByCategory(category: string): Promise<NotificationTemplate[]>;
   getNotificationTemplatesByChannel(channel: string): Promise<NotificationTemplate[]>;
   getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined>;
+  getNotificationTemplateByTrigger(channel: string, triggerEvent: string): Promise<NotificationTemplate | undefined>;
   createNotificationTemplate(data: InsertNotificationTemplate): Promise<NotificationTemplate>;
   updateNotificationTemplate(id: string, data: Partial<InsertNotificationTemplate & { isActive: boolean }>): Promise<NotificationTemplate | undefined>;
   deleteNotificationTemplate(id: string): Promise<boolean>;
@@ -555,6 +556,16 @@ export class DatabaseStorage implements IStorage {
 
   async getNotificationTemplate(id: string): Promise<NotificationTemplate | undefined> {
     const [template] = await db.select().from(notificationTemplates).where(eq(notificationTemplates.id, id));
+    return template;
+  }
+
+  async getNotificationTemplateByTrigger(channel: string, triggerEvent: string): Promise<NotificationTemplate | undefined> {
+    const [template] = await db.select().from(notificationTemplates)
+      .where(and(
+        eq(notificationTemplates.channel, channel),
+        eq(notificationTemplates.triggerEvent, triggerEvent),
+        eq(notificationTemplates.isActive, true)
+      ));
     return template;
   }
 
