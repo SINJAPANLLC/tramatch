@@ -70,10 +70,19 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
   urgency: URGENCY_OPTIONS,
 };
 
-function findBestMatch(value: string, options: string[]): string {
+const FIELD_ALIASES: Record<string, Record<string, string>> = {
+  highwayFee: { "あり": "込み", "なし": "高速代なし", "高速代あり": "込み", "高速代込み": "込み", "高速代別途": "別途" },
+  driverWork: { "作業なし（車上渡し）": "作業なし", "車上渡し": "作業なし" },
+};
+
+function findBestMatch(value: string, options: string[], fieldName?: string): string {
   if (!value) return "";
   const exact = options.find((o) => o === value);
   if (exact) return exact;
+  if (fieldName && FIELD_ALIASES[fieldName]) {
+    const alias = FIELD_ALIASES[fieldName][value];
+    if (alias && options.includes(alias)) return alias;
+  }
   const includes = options.find((o) => o.includes(value) || value.includes(o));
   if (includes) return includes;
   return "";
@@ -115,7 +124,7 @@ function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
       const options = SELECT_FIELD_OPTIONS[key];
       if (options) {
         const parts = str.split(/[,、]/).map(s => s.trim()).filter(Boolean);
-        const matched = parts.map(p => findBestMatch(p, options)).filter(Boolean);
+        const matched = parts.map(p => findBestMatch(p, options, key)).filter(Boolean);
         result[key] = matched.join(", ");
       } else {
         result[key] = str;
@@ -123,7 +132,7 @@ function normalizeAiItem(raw: Record<string, unknown>): Record<string, string> {
     } else {
       const options = SELECT_FIELD_OPTIONS[key];
       if (options) {
-        result[key] = findBestMatch(str, options);
+        result[key] = findBestMatch(str, options, key);
       } else {
         result[key] = str;
       }
