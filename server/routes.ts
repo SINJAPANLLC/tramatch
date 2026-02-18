@@ -166,6 +166,19 @@ export async function registerRoutes(
     res.json(safeUser);
   });
 
+  app.get("/api/companies/search", requireAuth, async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      if (!query.trim()) {
+        return res.json([]);
+      }
+      const results = await storage.searchCompanies(query);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "企業検索に失敗しました" });
+    }
+  });
+
   app.get("/api/companies/:userId", async (req, res) => {
     try {
       const user = await storage.getUser(req.params.userId);
@@ -1045,20 +1058,6 @@ statusの意味:
       res.json({ message: "お知らせを削除しました" });
     } catch (error) {
       res.status(500).json({ message: "お知らせの削除に失敗しました" });
-    }
-  });
-
-  // Company search
-  app.get("/api/companies/search", requireAuth, async (req, res) => {
-    try {
-      const query = (req.query.q as string) || "";
-      if (!query.trim()) {
-        return res.json([]);
-      }
-      const results = await storage.searchCompanies(query);
-      res.json(results);
-    } catch (error) {
-      res.status(500).json({ message: "企業検索に失敗しました" });
     }
   });
 
