@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +38,7 @@ type SafeUser = {
   businessArea?: string;
   businessDescription?: string;
   invoiceRegistrationNumber?: string;
+  addedByUserId?: string | null;
 };
 
 function isImageFile(path: string): boolean {
@@ -275,8 +276,23 @@ export default function AdminUsers() {
                             data-testid={`row-user-${u.id}`}
                           >
                             <td className="px-3 py-3 align-top">
-                              <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[140px]">{u.companyName}</div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[140px]">{u.companyName}</div>
+                                {u.addedByUserId && (
+                                  <Badge variant="outline" className="text-[9px] shrink-0 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                                    <UserPlus className="w-2.5 h-2.5 mr-0.5" />追加
+                                  </Badge>
+                                )}
+                              </div>
                               {u.companyNameKana && <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[140px]">{u.companyNameKana}</div>}
+                              {u.addedByUserId && (() => {
+                                const parent = users?.find(p => p.id === u.addedByUserId);
+                                return parent ? (
+                                  <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5 truncate max-w-[180px]">
+                                    親: {parent.contactName || parent.companyName}
+                                  </div>
+                                ) : null;
+                              })()}
                             </td>
                             <td className="px-3 py-3 align-top">
                               <span className="text-[12px] font-bold text-foreground">{u.contactName || "-"}</span>
@@ -320,6 +336,7 @@ export default function AdminUsers() {
         {selectedUserId && (
           <UserDetailPanel
             user={selectedUser}
+            allUsers={users ?? []}
             onClose={() => setSelectedUserId(null)}
             onApprove={(id) => approveUser.mutate(id)}
             onDelete={(id) => {
@@ -340,6 +357,7 @@ export default function AdminUsers() {
 
 function UserDetailPanel({
   user,
+  allUsers,
   onClose,
   onApprove,
   onDelete,
@@ -349,6 +367,7 @@ function UserDetailPanel({
   isChangingPlan,
 }: {
   user: SafeUser | null;
+  allUsers: SafeUser[];
   onClose: () => void;
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
@@ -421,10 +440,48 @@ function UserDetailPanel({
                 <Crown className="w-3 h-3 mr-1" />
                 {user.plan === "premium" ? "β版プレミアム" : user.plan === "premium_full" ? "プレミアム" : "フリー"}
               </Badge>
+              {user.addedByUserId && (
+                <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                  <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
+                </Badge>
+              )}
             </>
           )}
           <span className="text-xs text-muted-foreground">{formatDate()}</span>
         </div>
+
+        {user.addedByUserId && (() => {
+          const parent = allUsers.find(p => p.id === user.addedByUserId);
+          return parent ? (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-by">
+              <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">
+                <UserPlus className="w-3 h-3 inline mr-1" />追加元ユーザー
+              </p>
+              <p className="text-sm text-foreground">{parent.companyName}</p>
+              <p className="text-xs text-muted-foreground">{parent.contactName} ({parent.email})</p>
+            </div>
+          ) : null;
+        })()}
+
+        {!user.addedByUserId && (() => {
+          const children = allUsers.filter(u => u.addedByUserId === user.id);
+          return children.length > 0 ? (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-users">
+              <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
+                <Users className="w-3 h-3 inline mr-1" />追加ユーザー ({children.length}名)
+              </p>
+              <div className="space-y-1.5">
+                {children.map(c => (
+                  <div key={c.id} className="flex items-center gap-2 text-sm">
+                    <UserPlus className="w-3 h-3 text-blue-500 shrink-0" />
+                    <span className="text-foreground">{c.contactName || c.email}</span>
+                    <span className="text-xs text-muted-foreground">({c.email})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
 
         {!isAdmin && (
           <div className="space-y-2">
