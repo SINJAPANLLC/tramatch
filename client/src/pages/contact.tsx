@@ -7,22 +7,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [category, setCategory] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    if (!category) {
+      toast({ title: "エラー", description: "お問い合わせ種別を選択してください", variant: "destructive" });
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      await apiRequest("POST", "/api/contact", {
+        companyName: formData.get("company") as string,
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: (formData.get("phone") as string) || undefined,
+        category,
+        message: formData.get("message") as string,
+      });
       toast({
         title: "送信完了",
         description: "お問い合わせを受け付けました。2営業日以内にご返信いたします。",
       });
+      form.reset();
+      setCategory("");
+    } catch (error: any) {
+      toast({
+        title: "送信エラー",
+        description: error?.message || "送信に失敗しました。時間をおいて再度お試しください。",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-      (e.target as HTMLFormElement).reset();
-    }, 1000);
+    }
   };
 
   return (
@@ -43,26 +69,26 @@ export default function Contact() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="company">会社名</Label>
-                    <Input id="company" placeholder="例: 株式会社トラマッチ" required data-testid="input-company" />
+                    <Input id="company" name="company" placeholder="例: 株式会社トラマッチ" required data-testid="input-company" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="name">お名前</Label>
-                    <Input id="name" placeholder="例: 山田 太郎" required data-testid="input-name" />
+                    <Input id="name" name="name" placeholder="例: 山田 太郎" required data-testid="input-name" />
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">メールアドレス</Label>
-                    <Input id="email" type="email" placeholder="例: info@example.com" required data-testid="input-email" />
+                    <Input id="email" name="email" type="email" placeholder="例: info@example.com" required data-testid="input-email" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">電話番号</Label>
-                    <Input id="phone" type="tel" placeholder="例: 03-1234-5678" data-testid="input-phone" />
+                    <Input id="phone" name="phone" type="tel" placeholder="例: 03-1234-5678" data-testid="input-phone" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">お問い合わせ種別</Label>
-                  <Select required>
+                  <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger data-testid="select-category">
                       <SelectValue placeholder="選択してください" />
                     </SelectTrigger>
@@ -80,6 +106,7 @@ export default function Contact() {
                   <Label htmlFor="message">お問い合わせ内容</Label>
                   <Textarea
                     id="message"
+                    name="message"
                     placeholder="お問い合わせ内容をご記入ください"
                     rows={6}
                     required
