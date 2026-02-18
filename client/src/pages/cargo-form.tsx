@@ -268,7 +268,7 @@ export default function CargoForm() {
       applyFieldsToForm(normalized);
       toast({
         title: `次の荷物を入力しました（${currentItemIndex + 2}/${totalItems}件目）`,
-        description: `残り${remaining.length}件`,
+        description: remaining.length > 0 ? `残り${remaining.length}件` : "これが最後の荷物です",
       });
     } else {
       setPendingItems([]);
