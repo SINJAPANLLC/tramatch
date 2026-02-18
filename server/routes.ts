@@ -17,6 +17,29 @@ import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replac
 import { pingGoogleSitemap } from "./auto-article-generator";
 import * as XLSX from "xlsx";
 
+async function resolveEmailTemplate(
+  triggerEvent: string,
+  variables: Record<string, string>,
+  defaultSubject: string,
+  defaultBody: string
+): Promise<{ subject: string; body: string }> {
+  try {
+    const template = await storage.getNotificationTemplateByTrigger("email", triggerEvent);
+    if (template) {
+      return {
+        subject: replaceTemplateVariables(template.subject || defaultSubject, variables),
+        body: replaceTemplateVariables(template.body, variables),
+      };
+    }
+  } catch (err) {
+    console.error(`Template lookup failed for ${triggerEvent}:`, err);
+  }
+  return {
+    subject: replaceTemplateVariables(defaultSubject, variables),
+    body: replaceTemplateVariables(defaultBody, variables),
+  };
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
@@ -264,11 +287,13 @@ export async function registerRoutes(
       const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
       const resetUrl = `${appBaseUrl}/reset-password?token=${token}`;
 
-      const emailResult = await sendEmail(
-        user.email,
+      const resolved = await resolveEmailTemplate(
+        "password_reset",
+        { companyName: user.companyName, resetUrl },
         "【トラマッチ】パスワードリセットのご案内",
-        `${user.companyName} 様\n\n以下のリンクからパスワードをリセットしてください。\nこのリンクは1時間有効です。\n\n${resetUrl}\n\n※このメールに心当たりがない場合は無視してください。\n\nトラマッチ運営事務局`
+        `{{companyName}} 様\n\n以下のリンクからパスワードをリセットしてください。\nこのリンクは1時間有効です。\n\n{{resetUrl}}\n\n※このメールに心当たりがない場合は無視してください。\n\nトラマッチ運営事務局`
       );
+      const emailResult = await sendEmail(user.email, resolved.subject, resolved.body);
 
       if (!emailResult.success) {
         console.error("Password reset email failed:", emailResult.error);
@@ -1018,14 +1043,20 @@ export async function registerRoutes(
         let emailHtml: string;
 
         if (isContracted) {
-          emailSubject = `【トラマッチ】${senderName}より車番連絡が届きました`;
+          const shipperResolved = await resolveEmailTemplate(
+            "dispatch_request_shipper",
+            { senderName },
+            `【トラマッチ】{{senderName}}より車番連絡が届きました`,
+            `{{senderName}} 様より車番連絡が届きました。`
+          );
+          emailSubject = shipperResolved.subject;
           emailHtml = `
           <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
             <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0;font-size:20px">トラマッチ 車番連絡</h1>
             </div>
             <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
-              <p style="margin:0 0 16px">${senderName} 様より車番連絡が届きました。</p>
+              <p style="margin:0 0 16px">${shipperResolved.body}</p>
 
               <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">車両・ドライバー情報</h2>
               <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
@@ -1063,14 +1094,20 @@ export async function registerRoutes(
             </div>
           </div>`;
         } else {
-          emailSubject = `【トラマッチ】${senderName}より配車依頼書が届きました`;
+          const transportResolved = await resolveEmailTemplate(
+            "dispatch_request_transport",
+            { senderName },
+            `【トラマッチ】{{senderName}}より配車依頼書が届きました`,
+            `{{senderName}} 様より配車依頼書が届きました。`
+          );
+          emailSubject = transportResolved.subject;
           emailHtml = `
           <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
             <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0;font-size:20px">トラマッチ 配車依頼書</h1>
             </div>
             <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
-              <p style="margin:0 0 16px">${senderName} 様より配車依頼書が届きました。</p>
+              <p style="margin:0 0 16px">${transportResolved.body}</p>
 
               <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運行情報</h2>
               <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
@@ -1519,11 +1556,13 @@ export async function registerRoutes(
       }
 
       const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
-      const emailResult = await sendEmail(
-        email,
+      const resolved = await resolveEmailTemplate(
+        "partner_invite",
+        { companyName: user.companyName, registerUrl: `${appBaseUrl}/register`, appBaseUrl },
         "【トラマッチ】取引先招待のご案内",
-        `${user.companyName}様よりトラマッチへの招待が届いています。\n\n${user.companyName}様があなたを取引先として招待しました。\n以下のリンクからトラマッチに登録して、取引を開始しましょう。\n\n${appBaseUrl}/register\n\nトラマッチ - 求荷求車マッチングプラットフォーム\n${appBaseUrl}`
+        `{{companyName}}様よりトラマッチへの招待が届いています。\n\n{{companyName}}様があなたを取引先として招待しました。\n以下のリンクからトラマッチに登録して、取引を開始しましょう。\n\n{{registerUrl}}\n\nトラマッチ - 求荷求車マッチングプラットフォーム\n{{appBaseUrl}}`
       );
+      const emailResult = await sendEmail(email, resolved.subject, resolved.body);
 
       if (!emailResult.success) {
         return res.status(500).json({ message: "招待メールの送信に失敗しました: " + (emailResult.error || "") });
@@ -2237,6 +2276,58 @@ statusの意味:
     } catch (error) {
       res.status(500).json({ message: "テスト送信に失敗しました" });
     }
+  });
+
+  app.get("/api/admin/email-template-info", requireAdmin, async (_req, res) => {
+    res.json([
+      {
+        triggerEvent: "password_reset",
+        name: "パスワードリセット",
+        description: "パスワードリセット時に送信されるメール",
+        variables: [
+          { key: "companyName", label: "会社名" },
+          { key: "resetUrl", label: "リセットURL" },
+        ],
+      },
+      {
+        triggerEvent: "partner_invite",
+        name: "取引先招待",
+        description: "取引先を招待する際に送信されるメール",
+        variables: [
+          { key: "companyName", label: "招待元会社名" },
+          { key: "registerUrl", label: "登録URL" },
+          { key: "appBaseUrl", label: "サイトURL" },
+        ],
+      },
+      {
+        triggerEvent: "dispatch_request_shipper",
+        name: "配車依頼書（荷主向け）",
+        description: "成約時の車番連絡メール（件名と冒頭文が編集可能、詳細データは自動挿入）",
+        variables: [
+          { key: "senderName", label: "送信者名" },
+        ],
+      },
+      {
+        triggerEvent: "dispatch_request_transport",
+        name: "配車依頼書（運送会社向け）",
+        description: "配車依頼書メール（件名と冒頭文が編集可能、詳細データは自動挿入）",
+        variables: [
+          { key: "senderName", label: "送信者名" },
+        ],
+      },
+      {
+        triggerEvent: "invoice_send",
+        name: "請求書送信",
+        description: "請求書メール（件名が編集可能、請求書HTMLは自動生成）",
+        variables: [
+          { key: "companyName", label: "請求先会社名" },
+          { key: "invoiceNumber", label: "請求書番号" },
+          { key: "billingMonth", label: "請求月" },
+          { key: "totalAmount", label: "合計金額" },
+          { key: "dueDate", label: "支払期限" },
+        ],
+      },
+    ]);
   });
 
   // Admin: Notification Templates CRUD
@@ -3132,9 +3223,15 @@ JSON形式で以下を返してください（日本語で）:
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
       const adminInfo = admins.find(a => a.email === "info@sinjapan.jp") || admins.find(a => a.address && a.bankName) || admins[0] || null;
       const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
+      const invoiceResolved = await resolveEmailTemplate(
+        "invoice_send",
+        { companyName: invoice.companyName || "", invoiceNumber: invoice.invoiceNumber || "", billingMonth: invoice.billingMonth || "", totalAmount: invoice.totalAmount?.toLocaleString() || "0", dueDate: invoice.dueDate || "" },
+        `【トラマッチ】請求書 {{invoiceNumber}}（{{billingMonth}}）`,
+        ""
+      );
       const result = await sendEmail(
         invoice.email,
-        `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
+        invoiceResolved.subject,
         invoiceHtml
       );
 
@@ -3164,9 +3261,15 @@ JSON形式で以下を返してください（日本語で）:
         if (!invoice) continue;
 
         const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
+        const bulkInvoiceResolved = await resolveEmailTemplate(
+          "invoice_send",
+          { companyName: invoice.companyName || "", invoiceNumber: invoice.invoiceNumber || "", billingMonth: invoice.billingMonth || "", totalAmount: invoice.totalAmount?.toLocaleString() || "0", dueDate: invoice.dueDate || "" },
+          `【トラマッチ】請求書 {{invoiceNumber}}（{{billingMonth}}）`,
+          ""
+        );
         const result = await sendEmail(
           invoice.email,
-          `【トラマッチ】請求書 ${invoice.invoiceNumber}（${invoice.billingMonth}）`,
+          bulkInvoiceResolved.subject,
           invoiceHtml
         );
 

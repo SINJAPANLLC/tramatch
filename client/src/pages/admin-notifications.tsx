@@ -57,6 +57,13 @@ const targetLabels: Record<string, string> = {
   carriers: "運送会社のみ",
 };
 
+type EmailTemplateInfo = {
+  triggerEvent: string;
+  name: string;
+  description: string;
+  variables: { key: string; label: string }[];
+};
+
 export default function AdminNotifications() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<ChannelKey | "send">("system");
@@ -83,6 +90,11 @@ export default function AdminNotifications() {
 
   const { data: channelStatus } = useQuery<Record<string, ChannelStatus>>({
     queryKey: ["/api/admin/notification-channels/status"],
+  });
+
+  const { data: emailTemplateInfo } = useQuery<EmailTemplateInfo[]>({
+    queryKey: ["/api/admin/email-template-info"],
+    enabled: activeTab === "email",
   });
 
   const buildTemplateQueryKey = () => {
@@ -506,9 +518,27 @@ export default function AdminNotifications() {
                           }
                           data-testid="input-template-body"
                         />
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
-                        </p>
+                        {currentChannel === "email" && formTrigger && emailTemplateInfo ? (
+                          (() => {
+                            const info = emailTemplateInfo.find(i => i.triggerEvent === formTrigger);
+                            return info ? (
+                              <div className="mt-1.5 p-2 bg-muted/40 rounded-md">
+                                <p className="text-[11px] text-muted-foreground mb-1">{info.description}</p>
+                                <p className="text-[11px] text-foreground">
+                                  使用可能な変数: {info.variables.map(v => `{{${v.key}}}（${v.label}）`).join("、")}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"} など自由に使用可能
+                              </p>
+                            );
+                          })()
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
+                          </p>
+                        )}
                         {currentChannel === "line" && (
                           <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
                             LINE通知は簡潔に（200文字程度推奨）
@@ -518,7 +548,23 @@ export default function AdminNotifications() {
                       {formCategory !== "regular" && (
                         <div>
                           <Label className="text-xs">トリガーイベント</Label>
-                          <Input className="mt-1" value={formTrigger} onChange={e => setFormTrigger(e.target.value)} placeholder="例: ユーザー新規登録時" data-testid="input-template-trigger" />
+                          {currentChannel === "email" && emailTemplateInfo ? (
+                            <Select value={formTrigger || "__custom__"} onValueChange={v => setFormTrigger(v === "__custom__" ? "" : v)}>
+                              <SelectTrigger className="mt-1" data-testid="select-template-trigger">
+                                <SelectValue placeholder="トリガーイベントを選択" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__custom__">カスタム（自由入力）</SelectItem>
+                                {emailTemplateInfo.map(info => (
+                                  <SelectItem key={info.triggerEvent} value={info.triggerEvent}>
+                                    {info.name}（{info.triggerEvent}）
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input className="mt-1" value={formTrigger} onChange={e => setFormTrigger(e.target.value)} placeholder="例: ユーザー新規登録時" data-testid="input-template-trigger" />
+                          )}
                         </div>
                       )}
                       <div className="flex gap-2 flex-wrap">
@@ -623,6 +669,22 @@ export default function AdminNotifications() {
                           </div>
                         </div>
                       </div>
+
+                      {previewTemplate.channel === "email" && previewTemplate.triggerEvent && emailTemplateInfo && (() => {
+                        const info = emailTemplateInfo.find(i => i.triggerEvent === previewTemplate.triggerEvent);
+                        return info ? (
+                          <div className="p-2.5 bg-muted/40 rounded-md">
+                            <p className="text-[11px] font-medium text-foreground mb-1">{info.description}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {info.variables.map(v => (
+                                <Badge key={v.key} variant="outline" className="text-[10px] font-mono">
+                                  {`{{${v.key}}}`} = {v.label}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
 
                       <div className="text-[11px] text-muted-foreground">
                         作成: {new Date(previewTemplate.createdAt).toLocaleString("ja-JP")}
