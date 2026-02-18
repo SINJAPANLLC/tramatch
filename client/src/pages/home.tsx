@@ -626,22 +626,18 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   cargoListings.slice(0, 20).map((listing, i) => (
                     <div key={`cargo-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white rounded-md p-3 h-full border border-gray-200 shadow-sm">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-1.5">
-                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
-                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 font-medium">{listing.vehicleType}</span>
+                      <div className="bg-white rounded-md p-4 h-full border border-gray-200 shadow-sm">
+                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+                          <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
                           <span>{listing.departureArea} → {listing.arrivalArea}</span>
                         </div>
                         {listing.price && (
-                          <div className="text-xs text-foreground font-medium">{formatPrice(listing.price)}円</div>
+                          <div className="text-sm text-foreground font-bold">{formatPrice(listing.price)}円</div>
                         )}
-                        <div className="mt-2 text-[10px] text-muted-foreground/50 flex items-center gap-1">
-                          <Building2 className="w-3 h-3" />
-                          <span>●●●●株式会社</span>
-                        </div>
                       </div>
                     </div>
                   ))
@@ -673,22 +669,18 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   truckListings.slice(0, 20).map((listing, i) => (
                     <div key={`truck-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white rounded-md p-3 h-full border border-gray-200 shadow-sm">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-1.5">
-                          <h3 className="font-medium text-foreground text-sm line-clamp-1">{listing.title}</h3>
-                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0 font-medium">{listing.vehicleType}</span>
+                      <div className="bg-white rounded-md p-4 h-full border border-gray-200 shadow-sm">
+                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
+                          <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
                           <span>{listing.currentArea} → {listing.destinationArea}</span>
                         </div>
                         {listing.price && (
-                          <div className="text-xs text-foreground font-medium">{formatPrice(listing.price)}円</div>
+                          <div className="text-sm text-foreground font-bold">{formatPrice(listing.price)}円</div>
                         )}
-                        <div className="mt-2 text-[10px] text-muted-foreground/50 flex items-center gap-1">
-                          <Building2 className="w-3 h-3" />
-                          <span>●●●●株式会社</span>
-                        </div>
                       </div>
                     </div>
                   ))
