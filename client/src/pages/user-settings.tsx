@@ -1204,7 +1204,6 @@ export default function UserSettings() {
                   <div className="space-y-1 mb-6">
                     <p className="text-sm text-muted-foreground">※ご利用金額は月末締めで翌月1日に更新されます。</p>
                     <p className="text-sm text-muted-foreground">※特記がない限り税込金額で表示しております。</p>
-                    <p className="text-sm text-muted-foreground">※おまかせ請求書は <a href="/payment" className="text-primary hover:underline">支払通知書・請求書ページ</a>からダウンロードしてください。</p>
                   </div>
 
                   <div className="overflow-x-auto">
