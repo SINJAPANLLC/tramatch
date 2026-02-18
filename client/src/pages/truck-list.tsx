@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2 } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2, Package, Printer } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
@@ -130,7 +130,58 @@ function DetailRow({ label, value, children }: { label: string; value?: string |
   );
 }
 
+type CompanyInfo = {
+  companyName: string;
+  address: string | null;
+  phone: string;
+  fax: string | null;
+  email: string;
+  contactName: string | null;
+  userType: string;
+  truckCount: string | null;
+  paymentTerms: string | null;
+  businessDescription: string | null;
+  companyNameKana: string | null;
+  postalCode: string | null;
+  websiteUrl: string | null;
+  invoiceRegistrationNumber: string | null;
+  registrationDate: string | null;
+  representative: string | null;
+  establishedDate: string | null;
+  capital: string | null;
+  employeeCount: string | null;
+  officeLocations: string | null;
+  annualRevenue: string | null;
+  bankInfo: string | null;
+  majorClients: string | null;
+  closingDay: string | null;
+  paymentMonth: string | null;
+  businessArea: string | null;
+  autoInvoiceAcceptance: string | null;
+  memberOrganization: string | null;
+  transportLicenseNumber: string | null;
+  digitalTachographCount: string | null;
+  gpsCount: string | null;
+  safetyExcellenceCert: string | null;
+  greenManagementCert: string | null;
+  iso9000: string | null;
+  iso14000: string | null;
+  iso39001: string | null;
+  cargoInsurance: string | null;
+  cargoCount1m: number;
+  cargoCount3m: number;
+  truckCount1m: number;
+  truckCount3m: number;
+};
+
 function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; onClose: () => void }) {
+  const [panelTab, setPanelTab] = useState<"truck" | "company">("truck");
+
+  const { data: companyInfo } = useQuery<CompanyInfo>({
+    queryKey: ["/api/companies", listing?.userId],
+    enabled: !!listing?.userId,
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -138,6 +189,62 @@ function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    setPanelTab("truck");
+  }, [listing?.id]);
+
+  const handlePrint = () => {
+    if (!listing) return;
+    const row = (label: string, value: string | null | undefined) =>
+      `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap;border:1px solid #ddd;background:#f9f9f9;font-size:13px;width:140px">${label}</td><td style="padding:6px 10px;border:1px solid #ddd;font-size:13px">${value || "-"}</td></tr>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>空車情報 - ${listing.companyName}</title>
+<style>body{font-family:'Hiragino Sans','Meiryo',sans-serif;margin:20px;color:#333}
+h2{font-size:18px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px}
+table{border-collapse:collapse;width:100%;margin-bottom:16px}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:22px;color:#40E0D0;margin:0}
+.route{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px}
+.route-side{flex:1}.route-arrow{padding:0 16px;font-size:20px;color:#999}
+.price{font-size:22px;font-weight:bold;margin-bottom:16px}
+@media print{body{margin:10px}}</style></head><body>
+<div class="header"><h1>トラマッチ 空車情報</h1><p style="font-size:12px;color:#888">印刷日: ${new Date().toLocaleString("ja-JP")}</p></div>
+<h2>空車情報</h2>
+<div class="route">
+<div class="route-side"><div style="font-weight:bold;font-size:14px">${listing.currentArea}</div><div style="font-size:12px;color:#888;margin-top:4px">現在地</div></div>
+<div class="route-arrow">→</div>
+<div class="route-side" style="text-align:right"><div style="font-weight:bold;font-size:14px">${listing.destinationArea}</div><div style="font-size:12px;color:#888;margin-top:4px">行き先</div></div>
+</div>
+<div class="price">${listing.price ? `¥${Number(listing.price).toLocaleString()}` : "要相談"}</div>
+<table>
+${row("タイトル", listing.title)}
+${row("企業名", listing.companyName)}
+${row("車種", listing.vehicleType)}
+${row("車体タイプ", listing.bodyType)}
+${row("最大積載量", listing.maxWeight)}
+${row("空車日", listing.availableDate)}
+${row("連絡先", listing.contactPhone)}
+${row("メール", listing.contactEmail)}
+${row("備考", listing.description)}
+</table>
+<h2>企業情報</h2>
+<table>
+${row("法人名・事業者名", companyInfo?.companyName || listing.companyName)}
+${row("住所", companyInfo?.postalCode ? `〒${companyInfo.postalCode} ${companyInfo.address || "-"}` : companyInfo?.address || "-")}
+${row("電話番号", listing.contactPhone)}
+${row("FAX番号", companyInfo?.fax)}
+${row("請求事業者登録番号", companyInfo?.invoiceRegistrationNumber)}
+${row("業務内容・会社PR", companyInfo?.businessDescription)}
+${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-")}
+</table>
+</body></html>`;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    }
+  };
 
   if (!listing) {
     return (
@@ -150,91 +257,169 @@ function TruckDetailPanel({ listing, onClose }: { listing: TruckListing | null; 
     );
   }
 
-  const isExpired = new Date(listing.availableDate) < new Date(new Date().toDateString());
-
   return (
     <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-truck-detail">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
-          <span className="text-sm font-bold text-foreground">空車詳細</span>
-          <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-truck-panel">
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => setPanelTab("truck")}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${panelTab === "truck" ? "text-primary border border-primary bg-primary/5" : "text-muted-foreground"}`}
+              data-testid="tab-truck-info"
+            >
+              空車情報
+            </button>
+            <button
+              onClick={() => setPanelTab("company")}
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${panelTab === "company" ? "text-primary border border-primary bg-primary/5" : "text-muted-foreground"}`}
+              data-testid="tab-truck-company-info"
+            >
+              企業情報
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={handlePrint} data-testid="button-truck-print">
+              印刷
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-truck-panel">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        <div>
-          <h2 className="text-base font-bold text-foreground mb-1" data-testid="text-truck-panel-title">{listing.title}</h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            {isExpired ? (
-              <Badge variant="outline" className="text-[10px]">期限切れ</Badge>
-            ) : (
-              <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">掲載中</Badge>
-            )}
-            <span className="text-[10px] text-muted-foreground">
-              登録: {listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"}
-            </span>
-          </div>
-        </div>
-
-        <div className="border border-border rounded-md p-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <div className="text-sm font-bold text-foreground">{listing.currentArea}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">現在地</div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
-            <div className="flex-1 text-right">
-              <div className="text-sm font-bold text-foreground">{listing.destinationArea}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">行き先</div>
+      {panelTab === "truck" ? (
+        <div className="p-4 space-y-4">
+          <div className="border border-border rounded-md p-3">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex-1">
+                <div className="text-sm font-bold text-foreground">{listing.currentArea}</div>
+                <div className="text-xs text-muted-foreground font-bold mt-0.5">現在地</div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+              <div className="flex-1 text-right">
+                <div className="text-sm font-bold text-foreground">{listing.destinationArea}</div>
+                <div className="text-xs text-muted-foreground font-bold mt-0.5">行き先</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
-          <span className="text-xs text-muted-foreground">最低運賃</span>
-        </div>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-2xl font-bold text-foreground">{listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}</span>
+            <span className="text-xs text-muted-foreground font-bold">最低運賃</span>
+          </div>
 
-        <div>
-          <h3 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Truck className="w-3.5 h-3.5" />
-            空車情報
-          </h3>
           <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="タイトル" value={listing.title} />
+            <DetailRow label="企業名">
+              <div>
+                <div className="font-bold">{listing.companyName}</div>
+                <div className="flex items-center gap-3 mt-1">
+                  <button onClick={() => setPanelTab("company")} className="text-xs text-primary font-bold">企業情報をみる &gt;</button>
+                </div>
+              </div>
+            </DetailRow>
             <DetailRow label="車種" value={listing.vehicleType} />
             <DetailRow label="車体タイプ" value={listing.bodyType || "-"} />
             <DetailRow label="最大積載量" value={listing.maxWeight} />
             <DetailRow label="空車日" value={listing.availableDate} />
-            {listing.description && <DetailRow label="備考" value={listing.description} />}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5" />
-            企業情報
-          </h3>
-          <div className="border border-border rounded-md overflow-hidden">
-            <DetailRow label="企業名" value={listing.companyName} />
-            <DetailRow label="電話番号">
-              <a href={`tel:${listing.contactPhone}`} className="flex items-center gap-1.5 text-primary hover:underline">
-                <Phone className="w-3.5 h-3.5" />
-                <span>{listing.contactPhone}</span>
-              </a>
+            <DetailRow label="連絡方法">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{listing.contactPhone}</span>
+                </div>
+                {listing.contactEmail && (
+                  <div className="flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{listing.contactEmail}</span>
+                  </div>
+                )}
+              </div>
             </DetailRow>
-            {listing.contactEmail && (
-              <DetailRow label="メール">
-                <a href={`mailto:${listing.contactEmail}`} className="flex items-center gap-1.5 text-primary hover:underline">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>{listing.contactEmail}</span>
-                </a>
-              </DetailRow>
-            )}
+            <DetailRow label="備考" value={listing.description} />
+            <DetailRow label="登録日時" value={listing.createdAt ? new Date(listing.createdAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) : "-"} />
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-4 space-y-4">
+          <h3 className="text-base font-bold text-foreground">{companyInfo?.companyName || listing.companyName}</h3>
+
+          <Card className="p-3">
+            <div className="text-xs font-bold text-muted-foreground mb-3">トラマッチでの実績</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Package className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-bold">委託</span>
+                </div>
+                <div className="text-xs text-muted-foreground font-bold">成約 <span className="text-lg text-foreground">{companyInfo?.cargoCount1m ?? 0}</span></div>
+                <div className="text-xs text-muted-foreground font-bold">登録 <span className="text-lg text-foreground">{companyInfo?.cargoCount3m ?? 0}</span></div>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Truck className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-bold">受託</span>
+                </div>
+                <div className="text-xs text-muted-foreground font-bold">成約 <span className="text-lg text-foreground">{companyInfo?.truckCount1m ?? 0}</span></div>
+                <div className="text-xs text-muted-foreground font-bold">登録 <span className="text-lg text-foreground">{companyInfo?.truckCount3m ?? 0}</span></div>
+              </div>
+            </div>
+            <div className="text-[10px] text-muted-foreground font-bold text-right mt-2">
+              トラマッチ登録年月 {companyInfo?.registrationDate || "-"}
+            </div>
+          </Card>
+
+          <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="法人名・事業者名">
+              <div>
+                {companyInfo?.companyNameKana && (
+                  <div className="text-[10px] text-muted-foreground mb-0.5">{companyInfo.companyNameKana}</div>
+                )}
+                <div className="text-primary font-bold">{companyInfo?.companyName || listing.companyName}</div>
+              </div>
+            </DetailRow>
+            <DetailRow label="住所" value={companyInfo?.postalCode ? `〒${companyInfo.postalCode}\n${companyInfo.address || "-"}` : companyInfo?.address} />
+            <DetailRow label="電話番号" value={listing.contactPhone} />
+            <DetailRow label="FAX番号" value={companyInfo?.fax} />
+            <DetailRow label="請求事業者登録番号" value={companyInfo?.invoiceRegistrationNumber} />
+            <DetailRow label="業務内容・会社PR" value={companyInfo?.businessDescription} />
+            <DetailRow label="保有車両台数" value={companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-"} />
+            <DetailRow label="ウェブサイトURL" value={companyInfo?.websiteUrl} />
+            <DetailRow label="登録年月" value={companyInfo?.registrationDate} />
+          </div>
+
+          <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="代表者" value={companyInfo?.representative} />
+            <DetailRow label="設立" value={companyInfo?.establishedDate} />
+            <DetailRow label="資本金" value={companyInfo?.capital ? `${companyInfo.capital} 万円` : null} />
+            <DetailRow label="従業員数" value={companyInfo?.employeeCount} />
+            <DetailRow label="事業所所在地" value={companyInfo?.officeLocations} />
+            <DetailRow label="年間売上" value={companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null} />
+            <DetailRow label="取引先銀行" value={companyInfo?.bankInfo} />
+            <DetailRow label="主要取引先" value={companyInfo?.majorClients} />
+            <DetailRow label="締め日" value={companyInfo?.closingDay} />
+            <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
+            <DetailRow label="営業地域" value={companyInfo?.businessArea} />
+          </div>
+
+          <h4 className="text-sm font-bold text-foreground">信用情報</h4>
+          <div className="border border-border rounded-md overflow-hidden">
+            <DetailRow label="加入組織" value={companyInfo?.memberOrganization} />
+            <DetailRow label="国交省認可番号" value={companyInfo?.transportLicenseNumber} />
+            <DetailRow label="デジタコ搭載数" value={companyInfo?.digitalTachographCount} />
+            <DetailRow label="GPS搭載数" value={companyInfo?.gpsCount} />
+            <DetailRow label="安全性優良事業所" value={companyInfo?.safetyExcellenceCert || "無"} />
+            <DetailRow label="グリーン経営認証" value={companyInfo?.greenManagementCert || "無"} />
+            <DetailRow label="ISO9000" value={companyInfo?.iso9000 || "無"} />
+            <DetailRow label="ISO14000" value={companyInfo?.iso14000 || "無"} />
+            <DetailRow label="ISO39001" value={companyInfo?.iso39001 || "無"} />
+            <DetailRow label="荷物保険" value={companyInfo?.cargoInsurance} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
