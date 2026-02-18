@@ -2843,7 +2843,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
 
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
-      const adminInfo = admins[0] || null;
+      const adminInfo = admins.find(a => a.email === "info@sinjapan.jp") || admins.find(a => a.address && a.bankName) || admins[0] || null;
       const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
       const result = await sendEmail(
         invoice.email,
@@ -2869,7 +2869,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!invoiceIds || invoiceIds.length === 0) return res.status(400).json({ message: "請求書を選択してください" });
 
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
-      const adminInfo = admins[0] || null;
+      const adminInfo = admins.find(a => a.email === "info@sinjapan.jp") || admins.find(a => a.address && a.bankName) || admins[0] || null;
       let sentCount = 0;
       let failCount = 0;
       for (const id of invoiceIds) {
