@@ -8,9 +8,10 @@ import {
   type Partner, type InsertPartner,
   type TransportRecord, type InsertTransportRecord,
   type SeoArticle, type InsertSeoArticle,
+  type Payment, type InsertPayment,
   type AdminSetting,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
-  partners, transportRecords, seoArticles, adminSettings
+  partners, transportRecords, seoArticles, payments, adminSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or } from "drizzle-orm";
@@ -77,6 +78,10 @@ export interface IStorage {
   createSeoArticle(data: InsertSeoArticle): Promise<SeoArticle>;
   updateSeoArticle(id: string, data: Partial<InsertSeoArticle>): Promise<SeoArticle | undefined>;
   deleteSeoArticle(id: string): Promise<boolean>;
+
+  createPayment(data: InsertPayment): Promise<Payment>;
+  updatePaymentStatus(id: string, status: string, squarePaymentId: string | null): Promise<void>;
+  getPaymentsByUser(userId: string): Promise<Payment[]>;
 
   getAdminSetting(key: string): Promise<string | undefined>;
   setAdminSetting(key: string, value: string): Promise<void>;
@@ -406,6 +411,19 @@ export class DatabaseStorage implements IStorage {
     } else {
       await db.insert(adminSettings).values({ key, value });
     }
+  }
+
+  async createPayment(data: InsertPayment): Promise<Payment> {
+    const [payment] = await db.insert(payments).values(data).returning();
+    return payment;
+  }
+
+  async updatePaymentStatus(id: string, status: string, squarePaymentId: string | null): Promise<void> {
+    await db.update(payments).set({ status, squarePaymentId }).where(eq(payments.id, id));
+  }
+
+  async getPaymentsByUser(userId: string): Promise<Payment[]> {
+    return db.select().from(payments).where(eq(payments.userId, userId)).orderBy(desc(payments.createdAt));
   }
 
   async getAllAdminSettings(): Promise<AdminSetting[]> {

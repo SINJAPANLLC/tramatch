@@ -146,6 +146,14 @@
 - Header dropdown with turquoise unread dot, mark read, mark all read, delete
 - Auto-refresh: notifications every 30s, unread count every 15s
 
+## Square Payment Integration
+- Square Web Payments SDK for card payments (sandbox/production)
+- Backend: POST /api/payments/square (validates planType, server-side price lookup, creates pending payment, processes via Square API, updates status)
+- GET /api/payments - Get payment history (auth required)
+- Frontend env vars: VITE_SQUARE_APP_ID, VITE_SQUARE_LOCATION_ID, VITE_SQUARE_ENVIRONMENT
+- Backend env vars: SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_ENVIRONMENT
+- payments table: id, userId, amount, currency, squarePaymentId, status, description, createdAt
+
 ## Running
 - `npm run dev` starts Express server (backend + Vite frontend) on port 5000
 - `npm run db:push` pushes schema to database
