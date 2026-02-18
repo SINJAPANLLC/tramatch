@@ -255,6 +255,10 @@ export async function registerRoutes(
     accountNumber: z.string().max(50).optional(),
     accountHolderKana: z.string().max(200).optional(),
     plan: z.string().max(20).optional(),
+    accountingContactName: z.string().max(100).optional(),
+    accountingContactEmail: z.string().max(200).optional(),
+    accountingContactPhone: z.string().max(20).optional(),
+    accountingContactFax: z.string().max(20).optional(),
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
