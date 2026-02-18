@@ -392,7 +392,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/cargo/:id", async (req, res) => {
+  app.get("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
       const listing = await storage.getCargoListing(req.params.id);
       if (!listing) {
@@ -562,7 +562,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/trucks/:id", async (req, res) => {
+  app.get("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
       const listing = await storage.getTruckListing(req.params.id);
       if (!listing) {
