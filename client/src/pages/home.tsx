@@ -377,18 +377,17 @@ export default function Home() {
         <style dangerouslySetInnerHTML={{ __html: `
           .logo-wall{width:100%;}
           .logo-slider{height:120px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
-          .slide-track{display:flex;width:calc(200px * 10);}
+          .slide-track{display:flex;gap:0;will-change:transform;}
           .track-1{animation:logoScroll1 30s linear infinite;}
           .track-2{animation:logoScroll2 38s linear infinite;}
-          .logo-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+          .logo-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex:0 0 200px;}
           .logo-slide img{max-width:160px;max-height:80px;object-fit:contain;}
           @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
           @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
           @media(max-width:768px){
-            .logo-slide{width:170px;}
-            .slide-track{width:calc(170px * 10);}
-            @keyframes logoScroll1{100%{transform:translateX(calc(-170px * 5));}}
-            @keyframes logoScroll2{100%{transform:translateX(calc(-170px * 5));}}
+            .logo-slide{width:170px;flex:0 0 170px;}
+            @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-170px * 5));}}
+            @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-170px * 5));}}
           }
         `}} />
         <div className="logo-wall" data-testid="section-logo-wall">
