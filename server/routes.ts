@@ -304,7 +304,7 @@ export async function registerRoutes(
       const truckCompleted = userTrucks.filter(t => t.status === "completed").length;
       const truckRegistered = userTrucks.length;
 
-      const registrationDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long" }) : null;
+      const registrationDate = user.registrationDate || (user.createdAt ? new Date(user.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long" }) : null);
 
       const { password, id, role, approved, permitFile, username, ...companyData } = user;
       res.json({
@@ -339,6 +339,7 @@ export async function registerRoutes(
     transportLicenseNumber: z.string().max(100).optional(),
     websiteUrl: z.string().max(500).optional(),
     invoiceRegistrationNumber: z.string().max(100).optional(),
+    registrationDate: z.string().max(50).optional(),
     truckCount: z.string().max(50).optional(),
     officeLocations: z.string().max(500).optional(),
     majorClients: z.string().max(500).optional(),
