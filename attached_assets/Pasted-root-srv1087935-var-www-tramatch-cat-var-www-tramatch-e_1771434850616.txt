@@ -1,0 +1,55 @@
+root@srv1087935:/var/www/tramatch# cat > /var/www/tramatch/ecosystem.config.cjs << 'ENDOFFILE'
+const fs = require('fs');
+const envFile = fs.readFileSync('/var/www/tramatch/.env', 'utf8');
+const env = {};
+envFile.split('\n').forEach(line => {
+  const [key, ...val] = line.split('=');
+  if (key && val.length) env[key.trim()] = val.join('=').trim();
+});
+env.PORT = '5050';
+module.exports = {
+  apps: [{
+    name: 'tramatch',
+    script: '/var/www/tramatch/dist/index.cjs',
+    cwd: '/var/www/tramatch',
+    env: env
+  }]
+};
+ENDOFFILE
+pm2 start /var/www/tramatch/ecosystem.config.cjs
+pm2 save
+pm2 logs tramatch --lines 5
+[PM2][WARN] Applications tramatch not running, starting...
+[PM2] App [tramatch] launched (1 instances)
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 70.8mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 140.4mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 96.7mb   │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 224.5mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 88.2mb   │
+│ 9  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+[TAILING] Tailing last 5 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-out.log last 5 lines:
+9|tramatch | Database already has users, skipping seed.
+9|tramatch | Database already has users, skipping seed.
+9|tramatch | Database already has users, skipping seed.
+9|tramatch | Database already has users, skipping seed.
+9|tramatch | Database already has users, skipping seed.
+
+/root/.pm2/logs/tramatch-error.log last 5 lines:
+9|tramatch |   errno: -98,
+9|tramatch |   syscall: 'listen',
+9|tramatch |   address: '0.0.0.0',
+9|tramatch |   port: 5000
+9|tramatch | }
+
+9|tramatch  | Database already has users, skipping seed.
+9|tramatch  | 5:13:59 PM [express] serving on port 5050
+9|tramatch  | [Auto Article] Today's 10 articles already generated, skipping.
+
