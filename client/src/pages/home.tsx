@@ -381,7 +381,7 @@ export default function Home() {
       <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
           .logo-wall{width:100%;overflow:hidden;}
-          .logo-slider{height:100px;overflow:hidden;position:relative;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+          .logo-slider{height:100px;overflow:hidden;position:relative;width:100%;}
           .slide-track{display:flex;gap:0;will-change:transform;width:max-content;}
           .track-1{animation:logoScroll1 30s linear infinite;}
           .track-2{animation:logoScroll2 38s linear infinite;}
@@ -721,13 +721,13 @@ export default function Home() {
 
       <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
-          .sin-logo-wall{--slide-w:180px;--slide-h:100px;--speed:22s;width:100%;overflow:hidden;}
-          .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 8%,#000 92%,transparent 100%);}
+          .sin-logo-wall{--slide-w:200px;--slide-h:100px;--speed:22s;width:100%;overflow:hidden;}
+          .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;}
           .sin-slide-track{display:flex;width:max-content;animation:sinScroll var(--speed) linear infinite;will-change:transform;}
-          .sin-slide{width:var(--slide-w);height:var(--slide-h);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 10px;box-sizing:border-box;}
-          .sin-slide img{max-width:140px;max-height:70px;object-fit:contain;display:block;}
+          .sin-slide{width:var(--slide-w);height:var(--slide-h);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 16px;box-sizing:border-box;}
+          .sin-slide img{max-width:160px;max-height:70px;object-fit:contain;display:block;}
           @keyframes sinScroll{0%{transform:translateX(0);}100%{transform:translateX(calc(-1 * var(--slide-w) * ${LOGO_WALL_IMAGES_BOTTOM.length}));}}
-          @media(max-width:768px){.sin-logo-wall{--slide-w:150px;--slide-h:90px;--speed:18s;}}
+          @media(max-width:768px){.sin-logo-wall{--slide-w:170px;--slide-h:90px;--speed:18s;}}
         `}} />
         <div className="sin-logo-wall" data-testid="section-sin-logo-wall">
           <div className="sin-slider">
