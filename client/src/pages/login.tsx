@@ -93,9 +93,9 @@ export default function Login() {
               </Link>
             </div>
             <div>
-              <span className="text-primary font-medium cursor-pointer" data-testid="link-forgot-password">
+              <Link href="/forgot-password" className="text-primary font-medium" data-testid="link-forgot-password">
                 パスワードを忘れた場合
-              </span>
+              </Link>
             </div>
           </div>
         </CardContent>

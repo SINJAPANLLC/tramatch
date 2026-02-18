@@ -39,6 +39,8 @@ import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import Columns from "@/pages/columns";
 import ColumnDetail from "@/pages/column-detail";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -72,6 +74,8 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
       <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
       <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
