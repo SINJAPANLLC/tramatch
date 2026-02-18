@@ -358,7 +358,7 @@ export default function Home() {
           .track-1{animation:logoScroll1 30s linear infinite;}
           .track-2{animation:logoScroll2 38s linear infinite;}
           .logo-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
-          .logo-slide img{max-width:160px;max-height:80px;object-fit:contain;}
+          .logo-slide img{max-width:160px;max-height:80px;object-fit:contain;background:hsl(174 72% 46%);border-radius:8px;padding:8px;}
           @keyframes logoScroll1{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
           @keyframes logoScroll2{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 5));}}
           @media(max-width:768px){
