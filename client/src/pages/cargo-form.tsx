@@ -34,7 +34,7 @@ const BODY_TYPES = [
   "コンテナ車", "海上コンテナ", "低床", "高床", "その他"
 ];
 const TEMP_CONTROLS = ["指定なし", "常温", "冷蔵（0〜10℃）", "冷凍（-18℃以下）", "定温"];
-const HIGHWAY_FEE_OPTIONS = ["あり", "なし"];
+const HIGHWAY_FEE_OPTIONS = ["込み", "別途", "高速代なし"];
 const TRANSPORT_TYPE_OPTIONS = ["スポット", "定期"];
 const CONSOLIDATION_OPTIONS = ["不可", "可能"];
 const DRIVER_WORK_OPTIONS = ["手積み手降ろし", "フォークリフト", "クレーン", "ゲート車", "パレット", "作業なし", "その他"];
