@@ -24,8 +24,9 @@ const userMenuItems: MenuItem[] = [
   { href: "/settings", label: "設定", icon: Settings },
 ];
 
+const agentMenuItem: MenuItem = { href: "/admin/agents", label: "エージェント", icon: Building };
+
 const adminMenuItems: MenuItem[] = [
-  { href: "/admin/agents", label: "エージェント", icon: Building },
   { href: "/admin", label: "管理画面", icon: Shield },
   { href: "/admin/applications", label: "申請管理", icon: ClipboardList },
   { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
@@ -79,6 +80,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <SidebarMenu items={userMenuItems} onNavigate={onNavigate} />
       {isAdmin && (
         <>
+          <div className="my-3 mx-2 border-t border-border" />
+          <SidebarMenu items={[agentMenuItem]} onNavigate={onNavigate} />
           <div className="my-3 mx-2 border-t border-border" />
           <button
             onClick={() => setAdminMenuOpen(!adminMenuOpen)}
