@@ -151,7 +151,7 @@ export default function Contact() {
                   <Clock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">営業時間</p>
-                    <p className="text-muted-foreground">平日 9:00〜18:00</p>
+                    <p className="text-muted-foreground">24時間受付</p>
                   </div>
                 </div>
               </div>
