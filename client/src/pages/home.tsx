@@ -329,19 +329,19 @@ export default function Home() {
     <div className="min-h-screen">
       <div className="bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-center gap-6 sm:gap-12 py-3 text-primary-foreground text-shadow">
-            <span className="text-sm sm:text-base font-medium tracking-wide">リアルタイム情報</span>
-            <Link href="/login" className="flex items-center gap-2 group">
-              <Package className="w-4 h-4" />
-              <span className="text-base sm:text-lg font-bold">{cargoCount}件</span>
-              <span className="text-sm hidden sm:inline">の荷物情報</span>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-center gap-3 sm:gap-12 py-3 text-primary-foreground text-shadow flex-wrap">
+            <span className="text-xs sm:text-base font-medium tracking-wide hidden sm:inline">リアルタイム情報</span>
+            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-sm sm:text-lg font-bold">{cargoCount}件</span>
+              <span className="text-xs sm:text-sm">の荷物</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
             </Link>
-            <Link href="/login" className="flex items-center gap-2 group">
-              <Truck className="w-4 h-4" />
-              <span className="text-base sm:text-lg font-bold">{truckCount}件</span>
-              <span className="text-sm hidden sm:inline">の空きトラック</span>
-              <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
+              <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-sm sm:text-lg font-bold">{truckCount}件</span>
+              <span className="text-xs sm:text-sm">の空車</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
             </Link>
           </div>
         </div>
@@ -754,7 +754,7 @@ function PromoBanner() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4 duration-500"
+      className="fixed bottom-4 left-4 right-4 sm:right-auto z-50 animate-in slide-in-from-bottom-4 duration-500"
       data-testid="promo-banner"
       style={{ maxWidth: "340px" }}
     >

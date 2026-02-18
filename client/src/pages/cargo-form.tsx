@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
-import { Package, Sparkles, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon, Send, ChevronDown, ChevronUp, CheckCircle2, CircleDot, Bot, User, Banknote } from "lucide-react";
+import { Package, Sparkles, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon, Send, ChevronDown, ChevronUp, CheckCircle2, CircleDot, Bot, User, Banknote, MessageSquare } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -499,20 +499,43 @@ export default function CargoForm() {
   };
 
   const filledFieldCount = Object.values(extractedFields).filter(v => v).length;
+  const [mobileTab, setMobileTab] = useState<"chat" | "form">("chat");
 
   return (
     <DashboardLayout>
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
+        <div className="bg-primary px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
           <Package className="w-5 h-5 text-primary-foreground" />
-          <div>
-            <h1 className="text-lg font-bold text-primary-foreground text-shadow-lg" data-testid="text-cargo-form-title">{isEditMode ? "荷物情報の編集" : "AI荷物登録"}</h1>
-            <p className="text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-primary-foreground text-shadow-lg truncate" data-testid="text-cargo-form-title">{isEditMode ? "荷物情報の編集" : "AI荷物登録"}</h1>
+            <p className="text-[10px] sm:text-xs text-primary-foreground/80 text-shadow">AIアシスタントが登録をサポートします</p>
+          </div>
+          <div className="flex lg:hidden gap-1">
+            <Button
+              size="sm"
+              variant={mobileTab === "chat" ? "secondary" : "ghost"}
+              className="text-xs text-primary-foreground"
+              onClick={() => setMobileTab("chat")}
+              data-testid="button-mobile-tab-chat"
+            >
+              <MessageSquare className="w-3 h-3 mr-1" />
+              チャット
+            </Button>
+            <Button
+              size="sm"
+              variant={mobileTab === "form" ? "secondary" : "ghost"}
+              className="text-xs text-primary-foreground"
+              onClick={() => setMobileTab("form")}
+              data-testid="button-mobile-tab-form"
+            >
+              <FileText className="w-3 h-3 mr-1" />
+              フォーム{filledFieldCount > 0 && ` (${filledFieldCount})`}
+            </Button>
           </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={`flex-1 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" data-testid="chat-messages">
               {chatMessages.map((msg) => (
                 <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -684,7 +707,7 @@ export default function CargoForm() {
             </div>
           </div>
 
-          <div className="border-l border-border bg-background overflow-y-auto w-[420px]">
+          <div className={`border-l border-border bg-background overflow-y-auto w-full lg:w-[420px] ${mobileTab !== "form" ? "hidden lg:block" : ""}`}>
             <div
               className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2"
               data-testid="form-panel-header"

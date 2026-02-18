@@ -774,8 +774,8 @@ export default function CargoList() {
   if (isAuthenticated) {
     return (
       <DashboardLayout>
-        <div className="flex h-full">
-          <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedCargoId ? "mr-0" : ""}`}>
+        <div className="flex h-full relative">
+          <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedCargoId ? "hidden lg:block" : ""}`}>
             {content}
           </div>
           {selectedCargoId && (
@@ -976,7 +976,7 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
 
   if (!listing) {
     return (
-      <div className="w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
+      <div className="w-full lg:w-[420px] shrink-0 border-l border-border bg-background h-full flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">読み込み中...</p>
@@ -995,7 +995,7 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
   };
 
   return (
-    <div className="w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-cargo-detail">
+    <div className="w-full lg:w-[420px] shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-background h-full overflow-y-auto" data-testid="panel-cargo-detail">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
           <div className="flex items-center gap-0.5">
