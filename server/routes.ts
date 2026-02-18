@@ -1133,6 +1133,8 @@ export async function registerRoutes(
             role: "system",
             content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
 
+重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。過去の年を設定しないでください。
+
 入力に複数の案件（荷物）が含まれている場合は、それぞれ個別のオブジェクトとして配列で返してください。
 1件だけの場合も配列で返してください。
 
@@ -1212,6 +1214,8 @@ JSONのみを返してください。説明文は不要です。`,
 }`;
 
       const systemPrompt = `あなたは「トラマッチ」の荷物登録AIアシスタントです。日本の運送・物流に精通しています。
+
+重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。過去の年を設定しないでください。
 
 あなたの役割:
 1. ユーザーが入力した雑多なテキスト・データから荷物情報を抽出・整理する
