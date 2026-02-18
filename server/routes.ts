@@ -2,7 +2,7 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -2656,6 +2656,86 @@ JSON形式で以下を返してください（日本語で）:
       res.json({ message: "設定を保存しました" });
     } catch (error) {
       res.status(500).json({ message: "設定の保存に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/agents", requireAdmin, async (req, res) => {
+    try {
+      const allAgents = await storage.getAgents();
+      res.json(allAgents);
+    } catch (error) {
+      res.status(500).json({ message: "代理店一覧の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/agents/:id", requireAdmin, async (req, res) => {
+    try {
+      const agent = await storage.getAgent(req.params.id);
+      if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+      res.json(agent);
+    } catch (error) {
+      res.status(500).json({ message: "代理店の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/agents", requireAdmin, async (req, res) => {
+    try {
+      const parsed = insertAgentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
+      }
+      const agent = await storage.createAgent(parsed.data);
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "create",
+        targetType: "agent",
+        targetId: agent.id,
+        details: `代理店「${agent.companyName}」(${agent.prefecture})を登録`,
+        ipAddress: req.ip,
+      });
+      res.status(201).json(agent);
+    } catch (error) {
+      res.status(500).json({ message: "代理店の登録に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/agents/:id", requireAdmin, async (req, res) => {
+    try {
+      const agent = await storage.updateAgent(req.params.id, req.body);
+      if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "update",
+        targetType: "agent",
+        targetId: agent.id,
+        details: `代理店「${agent.companyName}」(${agent.prefecture})を更新`,
+        ipAddress: req.ip,
+      });
+      res.json(agent);
+    } catch (error) {
+      res.status(500).json({ message: "代理店の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/agents/:id", requireAdmin, async (req, res) => {
+    try {
+      const agent = await storage.getAgent(req.params.id);
+      if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
+      await storage.deleteAgent(req.params.id);
+      await storage.createAuditLog({
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.contactName || (req as any).user?.companyName,
+        action: "delete",
+        targetType: "agent",
+        targetId: req.params.id,
+        details: `代理店「${agent.companyName}」(${agent.prefecture})を削除`,
+        ipAddress: req.ip,
+      });
+      res.json({ message: "代理店を削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "代理店の削除に失敗しました" });
     }
   });
 
