@@ -13,9 +13,10 @@ import {
   type NotificationTemplate, type InsertNotificationTemplate,
   type ContactInquiry, type InsertContactInquiry,
   type PlanChangeRequest, type InsertPlanChangeRequest,
+  type UserAddRequest, type InsertUserAddRequest,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
-  passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests
+  passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -126,6 +127,11 @@ export interface IStorage {
   getPlanChangeRequestsByUserId(userId: string): Promise<PlanChangeRequest[]>;
   getPendingPlanChangeRequest(userId: string): Promise<PlanChangeRequest | undefined>;
   updatePlanChangeRequestStatus(id: string, status: string, adminNote?: string): Promise<PlanChangeRequest | undefined>;
+
+  createUserAddRequest(data: InsertUserAddRequest): Promise<UserAddRequest>;
+  getUserAddRequests(): Promise<UserAddRequest[]>;
+  getUserAddRequestsByRequesterId(requesterId: string): Promise<UserAddRequest[]>;
+  updateUserAddRequestStatus(id: string, status: string, adminNote?: string): Promise<UserAddRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -617,6 +623,24 @@ export class DatabaseStorage implements IStorage {
 
   async updatePlanChangeRequestStatus(id: string, status: string, adminNote?: string): Promise<PlanChangeRequest | undefined> {
     const [request] = await db.update(planChangeRequests).set({ status, adminNote, reviewedAt: new Date() }).where(eq(planChangeRequests.id, id)).returning();
+    return request;
+  }
+
+  async createUserAddRequest(data: InsertUserAddRequest): Promise<UserAddRequest> {
+    const [request] = await db.insert(userAddRequests).values(data).returning();
+    return request;
+  }
+
+  async getUserAddRequests(): Promise<UserAddRequest[]> {
+    return db.select().from(userAddRequests).orderBy(desc(userAddRequests.createdAt));
+  }
+
+  async getUserAddRequestsByRequesterId(requesterId: string): Promise<UserAddRequest[]> {
+    return db.select().from(userAddRequests).where(eq(userAddRequests.requesterId, requesterId)).orderBy(desc(userAddRequests.createdAt));
+  }
+
+  async updateUserAddRequestStatus(id: string, status: string, adminNote?: string): Promise<UserAddRequest | undefined> {
+    const [request] = await db.update(userAddRequests).set({ status, adminNote, reviewedAt: new Date() }).where(eq(userAddRequests.id, id)).returning();
     return request;
   }
 }

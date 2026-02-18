@@ -541,6 +541,109 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/user-add-requests", requireAuth, async (req, res) => {
+    try {
+      const { name, email, role, note } = req.body;
+      if (!name || !email) {
+        return res.status(400).json({ message: "担当者名とメールアドレスは必須です" });
+      }
+      const request = await storage.createUserAddRequest({
+        requesterId: req.session.userId as string,
+        name,
+        email,
+        role: role || "member",
+        note: note || null,
+      });
+      const requester = await storage.getUser(req.session.userId as string);
+      const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
+      for (const admin of admins) {
+        await storage.createNotification({
+          userId: admin.id,
+          type: "user_add_request",
+          title: "ユーザー追加申請",
+          message: `${requester?.companyName || "不明"}から「${name}」のユーザー追加申請がありました`,
+          relatedId: request.id,
+        });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "ユーザー追加申請に失敗しました" });
+    }
+  });
+
+  app.get("/api/user-add-requests", requireAuth, async (req, res) => {
+    try {
+      const requests = await storage.getUserAddRequestsByRequesterId(req.session.userId as string);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "申請一覧の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/user-add-requests", requireAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getUserAddRequests();
+      const allUsers = await storage.getAllUsers();
+      const enriched = requests.map(r => {
+        const requester = allUsers.find(u => u.id === r.requesterId);
+        return { ...r, requesterCompanyName: requester?.companyName || "不明", requesterEmail: requester?.email || "" };
+      });
+      res.json(enriched);
+    } catch (error) {
+      res.status(500).json({ message: "ユーザー追加申請の取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/user-add-requests/:id/approve", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNote } = req.body;
+      const requests = await storage.getUserAddRequests();
+      const request = requests.find(r => r.id === id);
+      if (!request) {
+        return res.status(404).json({ message: "申請が見つかりません" });
+      }
+      if (request.status !== "pending") {
+        return res.status(400).json({ message: "この申請は既に処理済みです" });
+      }
+      const updated = await storage.updateUserAddRequestStatus(id, "approved", adminNote);
+      await storage.createNotification({
+        userId: request.requesterId,
+        type: "user_add_request",
+        title: "ユーザー追加承認",
+        message: `「${request.name}」のユーザー追加申請が承認されました`,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "承認に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/user-add-requests/:id/reject", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminNote } = req.body;
+      const requests = await storage.getUserAddRequests();
+      const request = requests.find(r => r.id === id);
+      if (!request) {
+        return res.status(404).json({ message: "申請が見つかりません" });
+      }
+      if (request.status !== "pending") {
+        return res.status(400).json({ message: "この申請は既に処理済みです" });
+      }
+      const updated = await storage.updateUserAddRequestStatus(id, "rejected", adminNote);
+      await storage.createNotification({
+        userId: request.requesterId,
+        type: "user_add_request",
+        title: "ユーザー追加却下",
+        message: `「${request.name}」のユーザー追加申請が却下されました${adminNote ? `（理由: ${adminNote}）` : ""}`,
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "却下に失敗しました" });
+    }
+  });
+
   app.get("/api/public/counts", async (_req, res) => {
     try {
       const cargo = await storage.getCargoListings();
