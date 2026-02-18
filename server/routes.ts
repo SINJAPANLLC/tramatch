@@ -374,7 +374,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/cargo", requireAuth, async (_req, res) => {
+  app.get("/api/cargo", async (_req, res) => {
     try {
       const listings = await storage.getCargoListings();
 
@@ -565,7 +565,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/trucks", requireAuth, async (_req, res) => {
+  app.get("/api/trucks", async (_req, res) => {
     try {
       const listings = await storage.getTruckListings();
       res.json(listings);
