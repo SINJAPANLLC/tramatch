@@ -299,7 +299,7 @@ export default function AdminUsers() {
                                 <span className="text-[11px] text-muted-foreground font-bold">-</span>
                               ) : (
                                 <Badge variant={u.plan === "premium" ? "default" : "outline"} className="text-[10px]">
-                                  {u.plan === "premium" ? "プレミアム" : "フリー"}
+                                  {u.plan === "premium" ? "β版プレミアム" : "フリー"}
                                 </Badge>
                               )}
                             </td>
@@ -419,7 +419,7 @@ function UserDetailPanel({
               </Badge>
               <Badge variant={user.plan === "premium" ? "default" : "outline"} className="text-xs">
                 <Crown className="w-3 h-3 mr-1" />
-                {user.plan === "premium" ? "プレミアム" : "フリー"}
+                {user.plan === "premium" ? "β版プレミアム" : "フリー"}
               </Badge>
             </>
           )}
@@ -448,7 +448,7 @@ function UserDetailPanel({
                 data-testid={`button-plan-toggle-${user.id}`}
               >
                 <Crown className="w-4 h-4 mr-1.5" />
-                {user.plan === "premium" ? "フリーに変更" : "プレミアムに変更"}
+                {user.plan === "premium" ? "フリーに変更" : "β版プレミアムに変更"}
               </Button>
             </div>
             <Button

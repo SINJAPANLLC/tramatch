@@ -109,7 +109,7 @@ export default function Payment() {
               <div className="text-center mb-6">
                 <h3 className="font-bold text-foreground text-lg flex items-center justify-center gap-1.5">
                   <Crown className="w-5 h-5 text-primary" />
-                  プレミアムプラン
+                  β版プレミアムプラン
                 </h3>
                 <div className="mt-2">
                   <span className="text-3xl font-bold text-foreground">¥5,500</span>
@@ -154,7 +154,7 @@ export default function Payment() {
                 onClick={() => handleChangePlan("premium")}
                 data-testid="button-select-premium"
               >
-                {currentPlan === "premium" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "プレミアムプランに変更"}
+                {currentPlan === "premium" ? "現在のプラン" : planMutation.isPending ? "変更中..." : "β版プレミアムプランに変更"}
               </Button>
             </CardContent>
           </Card>
