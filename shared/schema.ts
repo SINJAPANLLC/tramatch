@@ -350,3 +350,18 @@ export const contactInquiries = pgTable("contact_inquiries", {
 export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({ id: true, status: true, adminNote: true, createdAt: true });
 export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
 export type ContactInquiry = typeof contactInquiries.$inferSelect;
+
+export const planChangeRequests = pgTable("plan_change_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  currentPlan: text("current_plan").notNull(),
+  requestedPlan: text("requested_plan").notNull(),
+  status: text("status").notNull().default("pending"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertPlanChangeRequestSchema = createInsertSchema(planChangeRequests).omit({ id: true, status: true, adminNote: true, createdAt: true, reviewedAt: true });
+export type InsertPlanChangeRequest = z.infer<typeof insertPlanChangeRequestSchema>;
+export type PlanChangeRequest = typeof planChangeRequests.$inferSelect;
