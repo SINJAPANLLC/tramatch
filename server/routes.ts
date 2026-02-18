@@ -802,6 +802,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/my-trucks", requireAuth, async (req, res) => {
+    try {
+      const listings = await storage.getTruckListings();
+      const userListings = listings.filter(l => l.userId === req.session.userId);
+      res.json(userListings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user truck listings" });
+    }
+  });
+
   app.get("/api/trucks", async (_req, res) => {
     try {
       const listings = await storage.getTruckListings();
@@ -2453,6 +2463,7 @@ JSON形式で以下を返してください（日本語で）:
       "Disallow: /admin/*",
       "Disallow: /home",
       "Disallow: /my-cargo",
+      "Disallow: /my-trucks",
       "Disallow: /completed-cargo",
       "Disallow: /cancelled-cargo",
       "Disallow: /partners",

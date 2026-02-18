@@ -237,7 +237,7 @@ export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const dashboardPaths = [
-    "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
+    "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new", "/my-trucks",
     "/my-cargo", "/completed-cargo", "/companies", "/partners",
     "/transport-ledger", "/payment", "/services", "/settings",
     "/admin", "/admin/applications", "/admin/users", "/admin/revenue",

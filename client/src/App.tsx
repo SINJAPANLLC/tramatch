@@ -45,6 +45,7 @@ import ColumnDetail from "@/pages/column-detail";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import TruckForm from "@/pages/truck-form";
+import MyTrucks from "@/pages/my-trucks";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -65,7 +66,7 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
 }
 
 const DASHBOARD_PATHS = [
-  "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new",
+  "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new", "/my-trucks",
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
@@ -94,6 +95,7 @@ function Router() {
       <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
       <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
       <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
+      <Route path="/my-trucks">{() => <ProtectedRoute component={MyTrucks} />}</Route>
       <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/edit/:id">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
