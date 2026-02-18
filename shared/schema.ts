@@ -424,6 +424,8 @@ export const agents = pgTable("agents", {
   businessArea: text("business_area"),
   note: text("note"),
   status: text("status").notNull().default("active"),
+  userId: varchar("user_id"),
+  loginEmail: text("login_email"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
