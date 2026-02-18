@@ -458,11 +458,9 @@ export async function registerRoutes(
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const expirePromises: Promise<any>[] = [];
       for (const listing of listings) {
         if (listing.status !== "active") continue;
-        if (listing.createdAt && new Date(listing.createdAt) > oneDayAgo) continue;
         const dateStr = listing.arrivalDate || listing.desiredDate;
         if (!dateStr) continue;
         const cleaned = dateStr.replace(/\//g, "-");
