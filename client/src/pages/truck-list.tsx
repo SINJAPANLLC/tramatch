@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
@@ -44,7 +44,7 @@ const VEHICLE_TYPES = [
   "10t車", "11t車", "13t車", "15t車", "増トン車", "大型車", "トレーラー", "フルトレーラー", "その他"
 ];
 const BODY_TYPES = [
-  "平ボディ", "バン", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
+  "平ボディ", "箱車", "バン", "ウイング", "幌ウイング", "冷蔵車", "冷凍車", "冷凍冷蔵車",
   "ダンプ", "タンクローリー", "車載車", "セルフローダー", "セーフティローダー",
   "ユニック", "クレーン付き", "パワーゲート付き", "エアサス", "コンテナ車", "海上コンテナ",
   "低床", "高床", "その他"
@@ -919,10 +919,158 @@ function TruckRegisterTab() {
   );
 }
 
+function MyTrucksTab() {
+  const { toast } = useToast();
+  const [myPage, setMyPage] = useState(1);
+  const myPerPage = 10;
+
+  const { data: myTrucks, isLoading: myLoading } = useQuery<TruckListing[]>({
+    queryKey: ["/api/my-trucks"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/trucks/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-trucks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({ title: "空車情報を削除しました" });
+    },
+    onError: () => {
+      toast({ title: "削除に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const sorted = useMemo(() => {
+    if (!myTrucks) return [];
+    return [...myTrucks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [myTrucks]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / myPerPage));
+  const paginated = sorted.slice((myPage - 1) * myPerPage, myPage * myPerPage);
+
+  const formatDate = (d: string) => {
+    const dt = new Date(d);
+    return `${dt.getFullYear()}/${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="p-4 space-y-4 overflow-y-auto h-full" data-testid="tab-my-trucks-content">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Badge variant="secondary" data-testid="text-my-trucks-count">
+          {myTrucks ? `${myTrucks.length}件登録中` : "..."}
+        </Badge>
+      </div>
+
+      {myLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-md" />)}
+        </div>
+      )}
+
+      {!myLoading && sorted.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Truck className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground text-sm">登録した空車情報はありません</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!myLoading && paginated.length > 0 && (
+        <div className="space-y-3">
+          {paginated.map((truck) => {
+            const isExpired = new Date(truck.availableDate) < new Date(new Date().toDateString());
+            return (
+              <Card key={truck.id} className={isExpired ? "opacity-60" : ""} data-testid={`card-my-truck-${truck.id}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a href={`/trucks/${truck.id}`} className="font-bold text-sm hover:underline cursor-pointer" data-testid={`link-my-truck-title-${truck.id}`}>
+                          {truck.title}
+                        </a>
+                        {isExpired ? (
+                          <Badge variant="outline" className="text-[10px]">期限切れ</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">掲載中</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {truck.currentArea}
+                          <ArrowRight className="w-3 h-3" />
+                          {truck.destinationArea}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Truck className="w-3 h-3" />
+                          {truck.vehicleType}
+                        </span>
+                        {truck.bodyType && <span>{truck.bodyType}</span>}
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          空車日: {truck.availableDate}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        登録日: {formatDate(truck.createdAt.toString())}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <a href={`/trucks/edit/${truck.id}`}>
+                        <Button variant="ghost" size="icon" data-testid={`button-edit-my-truck-${truck.id}`}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (confirm("この空車情報を削除しますか？")) {
+                            deleteMutation.mutate(truck.id);
+                          }
+                        }}
+                        disabled={deleteMutation.isPending}
+                        data-testid={`button-delete-my-truck-${truck.id}`}
+                      >
+                        {deleteMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center pt-2">
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" disabled={myPage <= 1} onClick={() => setMyPage(myPage - 1)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground px-2">{myPage} / {totalPages}</span>
+            <Button variant="ghost" size="icon" disabled={myPage >= totalPages} onClick={() => setMyPage(myPage + 1)}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TruckList() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"search" | "register">("search");
+  const [activeTab, setActiveTab] = useState<"search" | "register" | "my">("search");
   const [aiSearchText, setAiSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
@@ -1452,6 +1600,14 @@ export default function TruckList() {
         <Plus className="w-3.5 h-3.5 inline mr-1.5" />
         AI空車登録
       </button>
+      <button
+        onClick={() => setActiveTab("my")}
+        className={`px-4 py-2.5 text-sm font-bold border-b-2 transition-colors ${activeTab === "my" ? "text-primary border-primary" : "text-muted-foreground border-transparent"}`}
+        data-testid="tab-truck-my"
+      >
+        <FileText className="w-3.5 h-3.5 inline mr-1.5" />
+        登録した空車
+      </button>
     </div>
   );
 
@@ -1474,13 +1630,22 @@ export default function TruckList() {
                 />
               )}
             </>
-          ) : (
+          ) : activeTab === "register" ? (
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="px-4 sm:px-6 pt-4 shrink-0">
                 {tabBar(false)}
               </div>
               <div className="flex-1 overflow-hidden">
                 <TruckRegisterTab />
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-4 sm:px-6 pt-4 shrink-0">
+                {tabBar(false)}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <MyTrucksTab />
               </div>
             </div>
           )}
