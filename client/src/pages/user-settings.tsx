@@ -787,7 +787,7 @@ export default function UserSettings() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <Crown className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium text-foreground">
-                            {currentPlan === "premium" ? "プレミアムプラン" : "フリープラン"}
+                            {currentPlan === "premium" ? "β版プレミアムプラン" : "フリープラン"}
                           </span>
                           {currentPlan === "premium" && (
                             <span className="text-sm text-muted-foreground">1ヶ月：5,500円</span>

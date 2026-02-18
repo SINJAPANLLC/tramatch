@@ -379,7 +379,7 @@ export async function registerRoutes(
       }
       const currentUser = await storage.getUser(req.session.userId as string);
       if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
-        return res.status(403).json({ message: "AI荷物登録にはプレミアムプランへの加入が必要です" });
+        return res.status(403).json({ message: "AI荷物登録にはβ版プレミアムプランへの加入が必要です" });
       }
       const listingData = {
         ...parsed.data,
@@ -428,7 +428,7 @@ export async function registerRoutes(
       if (status === "completed") {
         const currentUser = await storage.getUser(req.session.userId as string);
         if (currentUser && currentUser.plan !== "premium" && currentUser.role !== "admin") {
-          return res.status(403).json({ message: "荷物の成約にはプレミアムプランへの加入が必要です" });
+          return res.status(403).json({ message: "荷物の成約にはβ版プレミアムプランへの加入が必要です" });
         }
       }
       const updated = await storage.updateCargoStatus(cargoId, status);
@@ -1396,7 +1396,7 @@ statusの意味:
 
       const { sourceId, planType } = parsed.data;
       const amount = PLAN_PRICES[planType];
-      const description = "プレミアムプラン月額料金";
+      const description = "β版プレミアムプラン月額料金";
 
       const accessToken = process.env.SQUARE_ACCESS_TOKEN;
       const locationId = process.env.SQUARE_LOCATION_ID;
