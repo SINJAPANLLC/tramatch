@@ -11,9 +11,10 @@ import {
   type Payment, type InsertPayment,
   type AdminSetting,
   type NotificationTemplate, type InsertNotificationTemplate,
+  type ContactInquiry, type InsertContactInquiry,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
-  passwordResetTokens, auditLogs, type AuditLog
+  passwordResetTokens, auditLogs, type AuditLog, contactInquiries
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -110,6 +111,13 @@ export interface IStorage {
   createAuditLog(log: { userId?: string; userName?: string; action: string; targetType: string; targetId?: string; details?: string; ipAddress?: string }): Promise<void>;
   getAuditLogs(limit?: number, offset?: number): Promise<AuditLog[]>;
   getAuditLogCount(): Promise<number>;
+
+  createContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry>;
+  getContactInquiries(): Promise<ContactInquiry[]>;
+  getContactInquiry(id: string): Promise<ContactInquiry | undefined>;
+  updateContactInquiryStatus(id: string, status: string, adminNote?: string): Promise<ContactInquiry | undefined>;
+  deleteContactInquiry(id: string): Promise<boolean>;
+  getUnreadContactCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -540,6 +548,37 @@ export class DatabaseStorage implements IStorage {
 
   async getAuditLogCount(): Promise<number> {
     const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(auditLogs);
+    return row?.count || 0;
+  }
+
+  async createContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry> {
+    const [result] = await db.insert(contactInquiries).values(inquiry).returning();
+    return result;
+  }
+
+  async getContactInquiries(): Promise<ContactInquiry[]> {
+    return db.select().from(contactInquiries).orderBy(desc(contactInquiries.createdAt));
+  }
+
+  async getContactInquiry(id: string): Promise<ContactInquiry | undefined> {
+    const [result] = await db.select().from(contactInquiries).where(eq(contactInquiries.id, id));
+    return result;
+  }
+
+  async updateContactInquiryStatus(id: string, status: string, adminNote?: string): Promise<ContactInquiry | undefined> {
+    const values: Partial<ContactInquiry> = { status };
+    if (adminNote !== undefined) values.adminNote = adminNote;
+    const [result] = await db.update(contactInquiries).set(values).where(eq(contactInquiries.id, id)).returning();
+    return result;
+  }
+
+  async deleteContactInquiry(id: string): Promise<boolean> {
+    const result = await db.delete(contactInquiries).where(eq(contactInquiries.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getUnreadContactCount(): Promise<number> {
+    const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(contactInquiries).where(eq(contactInquiries.status, "unread"));
     return row?.count || 0;
   }
 }
