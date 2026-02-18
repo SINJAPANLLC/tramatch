@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   FileText, Send, Mail, CheckCircle, Clock, AlertTriangle,
-  XCircle, Loader2, Trash2, RefreshCw, Users
+  XCircle, Loader2, Trash2, RefreshCw, Users, Building2
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -308,48 +308,59 @@ export default function AdminInvoices() {
                 {filtered.map((inv) => (
                   <div
                     key={inv.id}
-                    className="flex items-center gap-3 p-4 border rounded-md"
+                    className="p-4 border rounded-md"
                     data-testid={`invoice-row-${inv.id}`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(inv.id)}
-                      onChange={() => toggleSelect(inv.id)}
-                      className="w-4 h-4"
-                      data-testid={`checkbox-invoice-${inv.id}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-sm font-medium" data-testid={`text-invoice-number-${inv.id}`}>
-                          {inv.invoiceNumber}
-                        </span>
-                        {statusBadge(inv.status)}
-                        {inv.sentAt && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Send className="w-3 h-3 mr-1" />
-                            送信済み
-                          </Badge>
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(inv.id)}
+                        onChange={() => toggleSelect(inv.id)}
+                        className="w-4 h-4 mt-1"
+                        data-testid={`checkbox-invoice-${inv.id}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <Building2 className="w-4 h-4 text-primary shrink-0" />
+                          <span className="font-bold text-base text-foreground" data-testid={`text-company-${inv.id}`}>
+                            {inv.companyName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="font-mono text-xs text-muted-foreground" data-testid={`text-invoice-number-${inv.id}`}>
+                            {inv.invoiceNumber}
+                          </span>
+                          {statusBadge(inv.status)}
+                          {inv.sentAt && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Send className="w-3 h-3 mr-1" />
+                              送信済み
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          <span>
+                            <Mail className="w-3 h-3 inline mr-1" />
+                            {inv.email}
+                          </span>
+                          <span>{inv.billingMonth}</span>
+                          <span>期限: {inv.dueDate}</span>
+                        </div>
+                        {inv.description && inv.description.includes("追加ユーザー") && (
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1.5" data-testid={`text-added-users-${inv.id}`}>
+                            <Users className="w-3 h-3 inline mr-1" />
+                            {inv.description.split("\n").filter((l: string) => l.includes("追加ユーザー")).join("")}
+                          </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
-                        <span data-testid={`text-company-${inv.id}`}>{inv.companyName}</span>
-                        <span>{inv.billingMonth}</span>
-                        <span>期限: {inv.dueDate}</span>
-                      </div>
-                      {inv.description && inv.description.includes("追加ユーザー") && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1" data-testid={`text-added-users-${inv.id}`}>
-                          <Users className="w-3 h-3 inline mr-1" />
-                          {inv.description.split("\n").filter((l: string) => l.includes("追加ユーザー")).join("")}
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-bold" data-testid={`text-amount-${inv.id}`}>
+                          ¥{inv.totalAmount.toLocaleString()}
                         </p>
-                      )}
+                        <p className="text-xs text-muted-foreground">（税込）</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold" data-testid={`text-amount-${inv.id}`}>
-                        ¥{inv.totalAmount.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">（税込）</p>
-                    </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border flex-wrap">
                       <Select
                         value={inv.status}
                         onValueChange={(v) => statusMutation.mutate({ id: inv.id, status: v })}
@@ -365,14 +376,13 @@ export default function AdminInvoices() {
                         </SelectContent>
                       </Select>
                       <Button
-                        size="icon"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => sendMutation.mutate(inv.id)}
                         disabled={sendMutation.isPending}
-                        title="メール送信"
                         data-testid={`button-send-${inv.id}`}
                       >
-                        <Mail className="w-4 h-4" />
+                        <Mail className="w-4 h-4 mr-1.5" />
+                        メール送信
                       </Button>
                       <Button
                         size="icon"
