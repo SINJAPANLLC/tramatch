@@ -404,6 +404,50 @@ export default function Payment() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-6 max-w-3xl">
+          <h2 className="text-lg font-bold text-foreground mb-4">ご利用金額</h2>
+
+          <Card data-testid="card-usage-amount">
+            <CardContent className="p-6">
+              <div className="space-y-1 mb-6">
+                <p className="text-sm text-muted-foreground">※ご利用金額は月末締めで翌月1日に更新されます。</p>
+                <p className="text-sm text-muted-foreground">※特記がない限り税込金額で表示しております。</p>
+                <p className="text-sm text-muted-foreground">※おまかせ請求書は <a href="/payment" className="text-primary hover:underline">支払通知書・請求書ページ</a>からダウンロードしてください。</p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="table-usage-amount">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 pr-4 font-medium text-muted-foreground">ご利用年月</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">ご利用金額</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const now = new Date();
+                      const months = [];
+                      for (let i = 0; i < 12; i++) {
+                        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const isPremium = currentPlan === "premium";
+                        months.push(
+                          <tr key={`${year}-${month}`} className="border-b last:border-b-0" data-testid={`row-usage-${year}${month}`}>
+                            <td className="py-3 pr-4 text-foreground">{year}年{month}月</td>
+                            <td className="py-3 text-right text-foreground">{isPremium ? "9,900円" : "0円"}</td>
+                          </tr>
+                        );
+                      }
+                      return months;
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
