@@ -477,7 +477,14 @@ export async function registerRoutes(
 
   app.post("/api/trucks", requireAuth, async (req, res) => {
     try {
-      const parsed = insertTruckListingSchema.safeParse(req.body);
+      const user = await storage.getUser(req.session.userId as string);
+      const dataWithCompany = {
+        ...req.body,
+        companyName: req.body.companyName || user?.companyName || "",
+        contactPhone: req.body.contactPhone || user?.phone || "",
+        contactEmail: req.body.contactEmail || user?.email || "",
+      };
+      const parsed = insertTruckListingSchema.safeParse(dataWithCompany);
       if (!parsed.success) {
         return res.status(400).json({ message: fromError(parsed.error).toString() });
       }
