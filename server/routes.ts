@@ -472,7 +472,8 @@ export async function registerRoutes(
         await Promise.all(expirePromises);
       }
 
-      res.json(listings);
+      const activeListings = listings.filter(l => l.status === "active");
+      res.json(activeListings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch cargo listings" });
     }
