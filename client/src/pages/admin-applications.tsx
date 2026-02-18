@@ -79,7 +79,7 @@ export default function AdminApplications() {
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState<"user" | "plan">("user");
+  const [tab, setTab] = useState<"user" | "plan" | "user-add">("user");
 
   const { data: users, isLoading } = useQuery<SafeUser[]>({
     queryKey: ["/api/admin/users"],
@@ -89,7 +89,12 @@ export default function AdminApplications() {
     queryKey: ["/api/admin/plan-change-requests"],
   });
 
+  const { data: userAddRequests, isLoading: userAddLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/user-add-requests"],
+  });
+
   const pendingPlanRequests = planRequests?.filter(r => r.status === "pending") ?? [];
+  const pendingUserAddRequests = userAddRequests?.filter((r: any) => r.status === "pending") ?? [];
 
   const pendingUsers = users?.filter((u) => !u.approved && u.role !== "admin") ?? [];
   const approvedCount = users?.filter((u) => u.approved && u.role !== "admin")?.length ?? 0;
@@ -150,6 +155,26 @@ export default function AdminApplications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/plan-change-requests"] });
       toast({ title: "プラン変更を却下しました" });
+    },
+  });
+
+  const approveUserAdd = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("PATCH", `/api/admin/user-add-requests/${id}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/user-add-requests"] });
+      toast({ title: "ユーザー追加を承認しました" });
+    },
+  });
+
+  const rejectUserAdd = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("PATCH", `/api/admin/user-add-requests/${id}/reject`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/user-add-requests"] });
+      toast({ title: "ユーザー追加を却下しました" });
     },
   });
 
@@ -233,6 +258,17 @@ export default function AdminApplications() {
                   <Badge className="ml-1.5 text-[10px] px-1.5 py-0">{pendingPlanRequests.length}</Badge>
                 )}
                 {tab === "plan" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+              </button>
+              <button
+                className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${tab === "user-add" ? "text-primary" : "text-muted-foreground"}`}
+                onClick={() => setTab("user-add")}
+                data-testid="tab-user-add-applications"
+              >
+                ユーザー追加申請
+                {pendingUserAddRequests.length > 0 && (
+                  <Badge className="ml-1.5 text-[10px] px-1.5 py-0">{pendingUserAddRequests.length}</Badge>
+                )}
+                {tab === "user-add" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
               </button>
             </div>
 
@@ -401,6 +437,86 @@ export default function AdminApplications() {
                                 }}
                                 disabled={approvePlan.isPending || rejectPlan.isPending}
                                 data-testid={`button-reject-plan-${r.id}`}
+                              >
+                                <X className="w-3.5 h-3.5 mr-1" />
+                                却下
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {tab === "user-add" && (
+              <>
+                {userAddLoading ? (
+                  <Card>
+                    <div className="divide-y divide-border">
+                      {Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="px-4 py-3">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ) : pendingUserAddRequests.length === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                      <User className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                      <p className="text-sm font-medium text-foreground mb-1" data-testid="text-user-add-empty">ユーザー追加の申請はありません</p>
+                      <p className="text-xs text-muted-foreground">ユーザーが追加申請を行うとここに表示されます</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingUserAddRequests.map((r: any) => (
+                      <Card key={r.id} data-testid={`card-user-add-request-${r.id}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-4 flex-wrap">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="font-bold text-foreground text-sm">{r.name}</span>
+                                <Badge variant="outline" className="text-[10px]">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  承認待ち
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{r.email}</p>
+                              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                                <span>役割: {r.role === "manager" ? "マネージャー" : "メンバー"}</span>
+                                {r.note && <span>| 備考: {r.note}</span>}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                申請者: {r.requesterCompanyName} ({r.requesterEmail})
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                申請日: {r.createdAt ? new Date(r.createdAt).toLocaleDateString("ja-JP") : "-"}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Button
+                                size="sm"
+                                onClick={() => approveUserAdd.mutate(r.id)}
+                                disabled={approveUserAdd.isPending || rejectUserAdd.isPending}
+                                data-testid={`button-approve-user-add-${r.id}`}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                                承認
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`「${r.name}」のユーザー追加申請を却下しますか？`)) {
+                                    rejectUserAdd.mutate(r.id);
+                                  }
+                                }}
+                                disabled={approveUserAdd.isPending || rejectUserAdd.isPending}
+                                data-testid={`button-reject-user-add-${r.id}`}
                               >
                                 <X className="w-3.5 h-3.5 mr-1" />
                                 却下
