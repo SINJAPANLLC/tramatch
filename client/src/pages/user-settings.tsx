@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
+import { Crown, Building2, CheckCircle, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -368,6 +368,70 @@ function UserAddRequestSection() {
         <p className="text-xs text-muted-foreground">ユーザー追加の申請履歴はありません</p>
       )}
     </div>
+  );
+}
+
+function UsageAmountSection() {
+  const { data: payments = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/payments"],
+  });
+
+  const monthlyTotals: Record<string, number> = {};
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthlyTotals[key] = 0;
+  }
+
+  for (const p of payments) {
+    if (p.status === "completed" && p.createdAt) {
+      const d = new Date(p.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (key in monthlyTotals) {
+        monthlyTotals[key] += p.amount || 0;
+      }
+    }
+  }
+
+  const sortedMonths = Object.entries(monthlyTotals).sort((a, b) => b[0].localeCompare(a[0]));
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h2 className="text-base font-bold text-foreground mb-4">ご利用金額</h2>
+        <div className="space-y-1 mb-6">
+          <p className="text-sm text-muted-foreground">※ご利用金額は月末締めで翌月1日に更新されます。</p>
+          <p className="text-sm text-muted-foreground">※特記がない限り税込金額で表示しております。</p>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" data-testid="table-usage-amount">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground">ご利用年月</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">ご利用金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedMonths.map(([key, total]) => {
+                  const [year, month] = key.split("-");
+                  return (
+                    <tr key={key} className="border-b last:border-b-0" data-testid={`row-usage-${year}${month}`}>
+                      <td className="py-3 pr-4 text-foreground">{year}年{month}月</td>
+                      <td className="py-3 text-right text-foreground">{total.toLocaleString()}円</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1271,15 +1335,9 @@ export default function UserSettings() {
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-base font-bold text-foreground mb-4">ユーザー管理</h2>
-                  <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
-                    <p className="text-sm text-muted-foreground">
-                      ユーザー追加には月額2,500円税別が発生する場合があります。詳しくはヘルプをご覧ください。
-                    </p>
-                    <Button variant="outline" size="sm" data-testid="button-help-user-mgmt">
-                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                      ヘルプを見る
-                    </Button>
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    ユーザー追加には月額2,500円 税別 が発生いたします。
+                  </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm" data-testid="table-user-management">
                       <thead>
@@ -1464,45 +1522,7 @@ export default function UserSettings() {
             )}
 
             {activeTab === "usage" && (
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-base font-bold text-foreground mb-4">ご利用金額</h2>
-                  <div className="space-y-1 mb-6">
-                    <p className="text-sm text-muted-foreground">※ご利用金額は月末締めで翌月1日に更新されます。</p>
-                    <p className="text-sm text-muted-foreground">※特記がない限り税込金額で表示しております。</p>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm" data-testid="table-usage-amount">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">ご利用年月</th>
-                          <th className="text-right py-2 font-medium text-muted-foreground">ご利用金額</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const now = new Date();
-                          const months = [];
-                          const isPremium = currentPlan === "premium";
-                          for (let i = 0; i < 12; i++) {
-                            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                            const year = d.getFullYear();
-                            const month = String(d.getMonth() + 1).padStart(2, "0");
-                            months.push(
-                              <tr key={`${year}-${month}`} className="border-b last:border-b-0" data-testid={`row-usage-${year}${month}`}>
-                                <td className="py-3 pr-4 text-foreground">{year}年{month}月</td>
-                                <td className="py-3 text-right text-foreground">{isPremium ? "5,500円" : "0円"}</td>
-                              </tr>
-                            );
-                          }
-                          return months;
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
+              <UsageAmountSection />
             )}
           </div>
         </div>
