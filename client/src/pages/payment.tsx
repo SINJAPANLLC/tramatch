@@ -40,23 +40,23 @@ export default function Payment() {
           <p className="text-sm text-muted-foreground mt-1">料金プランの管理</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
-          <Card className={`relative ${currentPlan === "free" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-free">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl items-stretch">
+          <Card className={`relative flex flex-col ${currentPlan === "free" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-free">
             {currentPlan === "free" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="text-xs">現在のプラン</Badge>
               </div>
             )}
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col flex-1">
               <div className="text-center mb-6">
-                <h3 className="font-bold text-foreground text-lg">フリープラン</h3>
-                <div className="mt-2">
+                <h3 className="font-bold text-foreground text-lg h-7 flex items-center justify-center">フリープラン</h3>
+                <div className="mt-2 flex flex-col items-center h-[72px] justify-center">
                   <span className="text-3xl font-bold text-foreground">¥0</span>
                   <span className="text-sm text-muted-foreground">/月</span>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 flex-1">
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                   <span className="text-sm text-muted-foreground">荷物成約 不可</span>
@@ -75,13 +75,13 @@ export default function Payment() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">取引先管理</span>
+                  <span className="text-sm text-foreground">取引先招待</span>
                 </div>
               </div>
 
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full mt-6"
                 disabled={currentPlan === "free" || planMutation.isPending}
                 onClick={() => handleChangePlan("free")}
                 data-testid="button-select-free"
@@ -91,7 +91,7 @@ export default function Payment() {
             </CardContent>
           </Card>
 
-          <Card className={`relative ${currentPlan === "premium" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-beta-premium">
+          <Card className={`relative flex flex-col ${currentPlan === "premium" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-beta-premium">
             {currentPlan === "premium" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="text-xs">現在のプラン</Badge>
@@ -105,20 +105,20 @@ export default function Payment() {
                 </Badge>
               </div>
             )}
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col flex-1">
               <div className="text-center mb-6">
-                <h3 className="font-bold text-foreground text-lg flex items-center justify-center gap-1.5">
+                <h3 className="font-bold text-foreground text-lg h-7 flex items-center justify-center gap-1.5">
                   <Crown className="w-5 h-5 text-primary" />
                   β版プレミアムプラン
                 </h3>
-                <div className="mt-2 flex flex-col items-center">
+                <div className="mt-2 flex flex-col items-center h-[72px] justify-center">
                   <span className="text-lg text-muted-foreground line-through">¥5,500</span>
                   <span className="text-3xl font-bold text-foreground">¥0</span>
                   <span className="text-sm text-muted-foreground">/月（税込）</span>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 flex-1">
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground font-bold">荷物成約 無制限</span>
@@ -137,7 +137,7 @@ export default function Payment() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">取引先管理</span>
+                  <span className="text-sm text-foreground">取引先招待</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -150,7 +150,7 @@ export default function Payment() {
               </div>
 
               <Button
-                className="w-full"
+                className="w-full mt-6"
                 disabled={currentPlan === "premium" || planMutation.isPending}
                 onClick={() => handleChangePlan("premium")}
                 data-testid="button-select-beta-premium"
@@ -160,25 +160,25 @@ export default function Payment() {
             </CardContent>
           </Card>
 
-          <Card className={`relative ${currentPlan === "premium_full" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-premium">
+          <Card className={`relative flex flex-col ${currentPlan === "premium_full" ? "ring-2 ring-primary" : ""}`} data-testid="card-plan-premium">
             {currentPlan === "premium_full" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="text-xs">現在のプラン</Badge>
               </div>
             )}
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col flex-1">
               <div className="text-center mb-6">
-                <h3 className="font-bold text-foreground text-lg flex items-center justify-center gap-1.5">
+                <h3 className="font-bold text-foreground text-lg h-7 flex items-center justify-center gap-1.5">
                   <Crown className="w-5 h-5 text-primary" />
                   プレミアムプラン
                 </h3>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-col items-center h-[72px] justify-center">
                   <span className="text-3xl font-bold text-foreground">¥5,500</span>
                   <span className="text-sm text-muted-foreground">/月（税込）</span>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 flex-1">
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground font-bold">荷物成約 無制限</span>
@@ -197,7 +197,7 @@ export default function Payment() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">取引先管理</span>
+                  <span className="text-sm text-foreground">取引先招待</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -210,7 +210,7 @@ export default function Payment() {
               </div>
 
               <Button
-                className="w-full"
+                className="w-full mt-6"
                 disabled={currentPlan === "premium_full" || planMutation.isPending}
                 onClick={() => handleChangePlan("premium_full")}
                 data-testid="button-select-premium"
