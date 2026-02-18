@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronUp, ChevronDown } from "lucide-react";
+import { Crown, Building2, CheckCircle, ExternalLink, User, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -25,19 +25,19 @@ const PREFECTURES = [
 
 type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "email-cargo" | "usage";
 
-const TABS: { key: SettingsTab; label: string; group: string }[] = [
-  { key: "basic", label: "基本情報", group: "企業情報管理" },
-  { key: "detail", label: "詳細情報", group: "企業情報管理" },
-  { key: "credit", label: "信用情報", group: "企業情報管理" },
-  { key: "contract", label: "契約内容", group: "企業情報管理" },
-  { key: "bank", label: "口座情報", group: "企業情報管理" },
-  { key: "payment-method", label: "お支払い方法", group: "企業情報管理" },
-  { key: "invoice-receive", label: "請求書受領設定", group: "企業情報管理" },
-  { key: "invoice-issue", label: "請求書発行設定", group: "企業情報管理" },
-  { key: "accounting-contact", label: "経理連絡先", group: "企業情報管理" },
-  { key: "user-mgmt", label: "ユーザー管理", group: "ユーザー管理" },
-  { key: "email-cargo", label: "荷物情報", group: "メール受信設定" },
-  { key: "usage", label: "ご利用金額", group: "ご利用金額" },
+const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Building }[] = [
+  { key: "basic", label: "基本情報", group: "企業情報管理", icon: Building },
+  { key: "detail", label: "詳細情報", group: "企業情報管理", icon: FileText },
+  { key: "credit", label: "信用情報", group: "企業情報管理", icon: ShieldCheck },
+  { key: "contract", label: "契約内容", group: "企業情報管理", icon: ScrollText },
+  { key: "bank", label: "口座情報", group: "企業情報管理", icon: Landmark },
+  { key: "payment-method", label: "お支払い方法", group: "企業情報管理", icon: CreditCard },
+  { key: "invoice-receive", label: "請求書受領", group: "企業情報管理", icon: FileInput },
+  { key: "invoice-issue", label: "請求書発行", group: "企業情報管理", icon: FileOutput },
+  { key: "accounting-contact", label: "経理連絡先", group: "企業情報管理", icon: Calculator },
+  { key: "user-mgmt", label: "ユーザー管理", group: "ユーザー管理", icon: Users },
+  { key: "email-cargo", label: "荷物情報", group: "メール受信設定", icon: Mail },
+  { key: "usage", label: "ご利用金額", group: "ご利用金額", icon: Receipt },
 ];
 
 export default function UserSettings() {
@@ -255,59 +255,67 @@ export default function UserSettings() {
         </div>
 
         <div className="flex gap-6">
-          <div className="w-48 shrink-0 hidden md:block">
+          <div className="w-56 shrink-0 hidden md:block">
             <nav className="space-y-1" data-testid="settings-nav">
-              {Object.entries(groups).map(([group, tabs]) => {
+              {Object.entries(groups).map(([group, tabs], groupIdx) => {
                 const isCollapsible = tabs.length > 1;
                 const isCollapsed = collapsedGroups[group];
-                const hasActiveTab = tabs.some(t => t.key === activeTab);
                 return (
-                  <div key={group}>
+                  <div key={group} className={groupIdx > 0 ? "pt-2 mt-2 border-t border-border" : ""}>
                     {isCollapsible ? (
-                      <button
-                        onClick={() => setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }))}
-                        className="w-full flex items-center justify-between text-xs font-bold text-primary px-2 py-1.5"
-                        data-testid={`button-group-${group}`}
-                      >
-                        <span>{group}</span>
-                        {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }))}
+                          className="w-full flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2 hover-elevate rounded-md"
+                          data-testid={`button-group-${group}`}
+                        >
+                          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+                          <span>{group}</span>
+                        </button>
+                        {!isCollapsed && (
+                          <div className="mt-0.5 space-y-0.5">
+                            {tabs.map((tab) => {
+                              const Icon = tab.icon;
+                              const isActive = activeTab === tab.key;
+                              return (
+                                <button
+                                  key={tab.key}
+                                  onClick={() => setActiveTab(tab.key)}
+                                  className={`w-full flex items-center gap-2.5 text-sm px-3 py-2 rounded-md transition-colors ${
+                                    isActive
+                                      ? "bg-primary/10 text-primary font-medium"
+                                      : "text-muted-foreground hover-elevate"
+                                  }`}
+                                  data-testid={`button-tab-${tab.key}`}
+                                >
+                                  <Icon className="w-4 h-4 shrink-0" />
+                                  <span>{tab.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <div className="px-2 py-1">
-                        {tabs.map((tab) => (
+                      tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.key;
+                        return (
                           <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
-                              activeTab === tab.key
-                                ? "border-l-2 border-primary font-medium text-foreground"
-                                : "text-foreground hover-elevate"
+                            className={`w-full flex items-center gap-2.5 text-sm px-3 py-2 rounded-md transition-colors ${
+                              isActive
+                                ? "bg-primary/10 text-primary font-medium"
+                                : "text-muted-foreground hover-elevate"
                             }`}
                             data-testid={`button-tab-${tab.key}`}
                           >
-                            {tab.label}
+                            <Icon className="w-4 h-4 shrink-0" />
+                            <span>{tab.label}</span>
                           </button>
-                        ))}
-                      </div>
-                    )}
-                    {isCollapsible && !isCollapsed && (
-                      <ul className="space-y-0.5 ml-1">
-                        {tabs.map((tab) => (
-                          <li key={tab.key}>
-                            <button
-                              onClick={() => setActiveTab(tab.key)}
-                              className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
-                                activeTab === tab.key
-                                  ? "border-l-2 border-primary font-medium text-foreground"
-                                  : "text-foreground hover-elevate"
-                              }`}
-                              data-testid={`button-tab-${tab.key}`}
-                            >
-                              {tab.label}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+                        );
+                      })
                     )}
                   </div>
                 );
@@ -322,7 +330,9 @@ export default function UserSettings() {
               </SelectTrigger>
               <SelectContent>
                 {TABS.map((tab) => (
-                  <SelectItem key={tab.key} value={tab.key}>{tab.label}</SelectItem>
+                  <SelectItem key={tab.key} value={tab.key}>
+                    {tab.group !== tab.label ? `${tab.group} - ${tab.label}` : tab.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
