@@ -12,9 +12,10 @@ import {
   type AdminSetting,
   type NotificationTemplate, type InsertNotificationTemplate,
   type ContactInquiry, type InsertContactInquiry,
+  type PlanChangeRequest, type InsertPlanChangeRequest,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
-  passwordResetTokens, auditLogs, type AuditLog, contactInquiries
+  passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -119,6 +120,12 @@ export interface IStorage {
   updateContactInquiryStatus(id: string, status: string, adminNote?: string): Promise<ContactInquiry | undefined>;
   deleteContactInquiry(id: string): Promise<boolean>;
   getUnreadContactCount(): Promise<number>;
+
+  createPlanChangeRequest(data: InsertPlanChangeRequest): Promise<PlanChangeRequest>;
+  getPlanChangeRequests(): Promise<PlanChangeRequest[]>;
+  getPlanChangeRequestsByUserId(userId: string): Promise<PlanChangeRequest[]>;
+  getPendingPlanChangeRequest(userId: string): Promise<PlanChangeRequest | undefined>;
+  updatePlanChangeRequestStatus(id: string, status: string, adminNote?: string): Promise<PlanChangeRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -588,6 +595,29 @@ export class DatabaseStorage implements IStorage {
   async getUnreadContactCount(): Promise<number> {
     const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(contactInquiries).where(eq(contactInquiries.status, "unread"));
     return row?.count || 0;
+  }
+
+  async createPlanChangeRequest(data: InsertPlanChangeRequest): Promise<PlanChangeRequest> {
+    const [request] = await db.insert(planChangeRequests).values(data).returning();
+    return request;
+  }
+
+  async getPlanChangeRequests(): Promise<PlanChangeRequest[]> {
+    return db.select().from(planChangeRequests).orderBy(desc(planChangeRequests.createdAt));
+  }
+
+  async getPlanChangeRequestsByUserId(userId: string): Promise<PlanChangeRequest[]> {
+    return db.select().from(planChangeRequests).where(eq(planChangeRequests.userId, userId)).orderBy(desc(planChangeRequests.createdAt));
+  }
+
+  async getPendingPlanChangeRequest(userId: string): Promise<PlanChangeRequest | undefined> {
+    const [request] = await db.select().from(planChangeRequests).where(and(eq(planChangeRequests.userId, userId), eq(planChangeRequests.status, "pending")));
+    return request;
+  }
+
+  async updatePlanChangeRequestStatus(id: string, status: string, adminNote?: string): Promise<PlanChangeRequest | undefined> {
+    const [request] = await db.update(planChangeRequests).set({ status, adminNote, reviewedAt: new Date() }).where(eq(planChangeRequests.id, id)).returning();
+    return request;
   }
 }
 
