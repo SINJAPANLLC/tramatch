@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Crown, X, Building2, CheckCircle } from "lucide-react";
+import { Check, Crown, X, Building2, CheckCircle, ExternalLink, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -346,6 +346,60 @@ export default function Payment() {
                 <Button onClick={() => saveAccountingContact.mutate()} disabled={saveAccountingContact.isPending} data-testid="button-save-acct-contact">
                   {saveAccountingContact.isPending ? "保存中..." : "保存"}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-6 max-w-3xl">
+          <h2 className="text-lg font-bold text-foreground mb-4">ユーザー管理</h2>
+
+          <Card data-testid="card-user-management">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+                <p className="text-sm text-muted-foreground">
+                  ユーザー追加には月額4,500円が発生する場合があります。詳しくはヘルプをご覧ください。
+                </p>
+                <Button variant="outline" size="sm" data-testid="button-help-user-mgmt">
+                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                  ヘルプを見る
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="table-user-management">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 pr-4 font-medium text-muted-foreground">担当者</th>
+                      <th className="text-left py-2 pr-4 font-medium text-muted-foreground">役職</th>
+                      <th className="text-left py-2 pr-4 font-medium text-muted-foreground">メールアドレス</th>
+                      <th className="py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b" data-testid="row-user-self">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <User className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <div>
+                            <span className="text-foreground">{user?.contactName || user?.companyName || "未設定"}</span>
+                            <span className="text-xs text-muted-foreground ml-1">（本人）</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge variant="secondary" className="text-xs">管理者</Badge>
+                          <span className="text-muted-foreground text-xs">{user?.representative ? "代表者" : ""}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-foreground">{user?.email || "未設定"}</td>
+                      <td className="py-3"></td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
