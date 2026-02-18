@@ -499,20 +499,21 @@ export async function registerRoutes(
 
   app.post("/api/cargo", requireAuth, async (req, res) => {
     try {
-      const parsed = insertCargoListingSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ message: fromError(parsed.error).toString() });
-      }
       const currentUser = await storage.getUser(req.session.userId as string);
       if (currentUser && currentUser.plan !== "premium" && currentUser.plan !== "premium_full" && currentUser.role !== "admin") {
         return res.status(403).json({ message: "AI荷物登録にはβ版プレミアムプランへの加入が必要です" });
       }
-      const listingData = {
-        ...parsed.data,
-        companyName: parsed.data.companyName || currentUser?.companyName || "",
-        contactPhone: parsed.data.contactPhone || currentUser?.phone || "",
-        contactEmail: parsed.data.contactEmail || currentUser?.email || "",
+      const bodyWithDefaults = {
+        ...req.body,
+        companyName: req.body.companyName || currentUser?.companyName || "",
+        contactPhone: req.body.contactPhone || currentUser?.phone || "",
+        contactEmail: req.body.contactEmail || currentUser?.email || "",
       };
+      const parsed = insertCargoListingSchema.safeParse(bodyWithDefaults);
+      if (!parsed.success) {
+        return res.status(400).json({ message: fromError(parsed.error).toString() });
+      }
+      const listingData = parsed.data;
       const listing = await storage.createCargoListing(listingData, req.session.userId as string);
 
       const allUsers = await storage.getAllUsers();
@@ -530,6 +531,7 @@ export async function registerRoutes(
 
       res.status(201).json(listing);
     } catch (error) {
+      console.error("Failed to create cargo listing:", error);
       res.status(500).json({ message: "Failed to create cargo listing" });
     }
   });
