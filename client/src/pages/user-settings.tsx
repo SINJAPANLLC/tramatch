@@ -1093,7 +1093,7 @@ export default function UserSettings() {
                   <h2 className="text-base font-bold text-foreground mb-4">ユーザー管理</h2>
                   <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
                     <p className="text-sm text-muted-foreground">
-                      ユーザー追加には月額4,500円が発生する場合があります。詳しくはヘルプをご覧ください。
+                      ユーザー追加には月額2,500円税別が発生する場合があります。詳しくはヘルプをご覧ください。
                     </p>
                     <Button variant="outline" size="sm" data-testid="button-help-user-mgmt">
                       <ExternalLink className="w-3.5 h-3.5 mr-1" />
