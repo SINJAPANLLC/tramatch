@@ -111,8 +111,9 @@ export default function Payment() {
                   <Crown className="w-5 h-5 text-primary" />
                   β版プレミアムプラン
                 </h3>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold text-foreground">¥5,500</span>
+                <div className="mt-2 flex flex-col items-center">
+                  <span className="text-lg text-muted-foreground line-through">¥5,500</span>
+                  <span className="text-3xl font-bold text-foreground">¥0</span>
                   <span className="text-sm text-muted-foreground">/月（税込）</span>
                 </div>
               </div>
