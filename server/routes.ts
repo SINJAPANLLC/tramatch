@@ -169,6 +169,34 @@ export async function registerRoutes(
     res.json(safeUser);
   });
 
+  app.get("/api/onboarding-progress", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const allCargo = await storage.getCargoListings();
+      const myCargo = allCargo.filter(c => c.userId === userId);
+
+      const allTrucks = await storage.getTruckListings();
+      const myTrucks = allTrucks.filter(t => t.userId === userId);
+
+      const partners = await storage.getPartnersByUserId(userId);
+
+      const profileComplete = !!(user.companyName && user.phone && user.address && user.representative);
+
+      res.json({
+        profileComplete,
+        cargoCount: myCargo.length,
+        truckCount: myTrucks.length,
+        partnerCount: partners.length,
+        notificationSettingDone: !!(user.notifyEmail || user.notifyLine),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch onboarding progress" });
+    }
+  });
+
   app.get("/api/companies/search", requireAuth, async (req, res) => {
     try {
       const query = (req.query.q as string) || "";

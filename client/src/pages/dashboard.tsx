@@ -1,7 +1,8 @@
 import { Link } from "wouter";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, ArrowRight, MapPin } from "lucide-react";
+import { Package, Truck, ArrowRight, MapPin, CheckCircle2, Circle, UserCog, Search, Handshake, Bell, ChevronDown, ChevronUp, ListChecks } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CargoListing, TruckListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
+
+interface OnboardingProgress {
+  profileComplete: boolean;
+  cargoCount: number;
+  truckCount: number;
+  partnerCount: number;
+  notificationSettingDone: boolean;
+}
 
 function ListingSkeleton() {
   return (
@@ -22,8 +31,132 @@ function ListingSkeleton() {
   );
 }
 
+function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const steps = [
+    {
+      id: "profile",
+      label: "プロフィールを完成させる",
+      description: "会社名・住所・代表者名・電話番号を設定",
+      done: progress.profileComplete,
+      href: "/settings",
+      action: "設定へ",
+    },
+    {
+      id: "cargo",
+      label: "荷物を登録する",
+      description: "最初の荷物情報を登録してマッチングを開始",
+      done: progress.cargoCount > 0,
+      href: "/cargo/new",
+      action: "登録する",
+    },
+    {
+      id: "truck",
+      label: "空車を登録する",
+      description: "空車情報を登録して荷物を見つける",
+      done: progress.truckCount > 0,
+      href: "/trucks/new",
+      action: "登録する",
+    },
+    {
+      id: "search",
+      label: "企業を検索する",
+      description: "取引先候補の企業を検索してみる",
+      done: false,
+      href: "/companies",
+      action: "検索する",
+    },
+    {
+      id: "partner",
+      label: "取引先を登録する",
+      description: "取引先を登録して管理する",
+      done: progress.partnerCount > 0,
+      href: "/partners",
+      action: "登録する",
+    },
+    {
+      id: "notification",
+      label: "通知設定を確認する",
+      description: "メール・LINE通知の設定を確認",
+      done: progress.notificationSettingDone,
+      href: "/settings",
+      action: "設定へ",
+    },
+  ];
+
+  const completedCount = steps.filter(s => s.done).length;
+  const totalCount = steps.length;
+  const progressPercent = Math.round((completedCount / totalCount) * 100);
+
+  return (
+    <Card className="mb-6" data-testid="card-onboarding-checklist">
+      <CardContent className="p-4 sm:p-5">
+        <div
+          className="flex items-center justify-between gap-4 flex-wrap cursor-pointer select-none"
+          onClick={() => setCollapsed(!collapsed)}
+          data-testid="button-toggle-checklist"
+        >
+          <div className="flex items-center gap-2">
+            <ListChecks className="w-5 h-5 text-primary" />
+            <h2 className="text-base font-bold text-foreground">はじめにやること</h2>
+            <Badge variant="secondary" className="text-xs">{completedCount}/{totalCount}</Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">{progressPercent}%</span>
+            </div>
+            {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        </div>
+
+        {!collapsed && (
+          <div className="mt-4 space-y-1" data-testid="list-onboarding-steps">
+            {steps.map((step) => (
+              <div
+                key={step.id}
+                className={`flex items-center gap-3 p-2.5 rounded-md transition-colors ${step.done ? "opacity-60" : "hover-elevate"}`}
+                data-testid={`step-${step.id}`}
+              >
+                {step.done ? (
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                ) : (
+                  <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
+                </div>
+                {!step.done && (
+                  <Link href={step.href}>
+                    <Button variant="outline" size="sm" data-testid={`button-step-${step.id}`}>
+                      {step.action}
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
+
+  const { data: onboardingProgress } = useQuery<OnboardingProgress>({
+    queryKey: ["/api/onboarding-progress"],
+  });
 
   const { data: cargoListings, isLoading: cargoLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
@@ -42,6 +175,10 @@ export default function Dashboard() {
           </h1>
           <p className="text-sm text-primary-foreground mt-1 text-shadow">マッチング情報の概要をご確認ください</p>
         </div>
+
+        {onboardingProgress && (
+          <OnboardingChecklist progress={onboardingProgress} />
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div>
