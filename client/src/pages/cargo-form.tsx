@@ -523,7 +523,7 @@ export default function CargoForm() {
                       <div className="whitespace-pre-wrap">{msg.content}</div>
                     </div>
 
-                    {msg.priceSuggestion && (
+                    {msg.priceSuggestion && msg.priceSuggestion.min != null && msg.priceSuggestion.max != null && (
                       <div className="mt-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-3.5 py-2.5" data-testid="price-suggestion">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <Banknote className="w-4 h-4 text-amber-600" />
