@@ -126,8 +126,26 @@ export async function runDailyArticleGeneration() {
     });
 
     console.log(`[Auto Article] Successfully generated and published: ${title}`);
+
+    pingGoogleSitemap();
   } catch (error) {
     console.error("[Auto Article] Failed to generate article:", error);
+  }
+}
+
+export async function pingGoogleSitemap() {
+  try {
+    const baseUrl = process.env.SITE_URL || "https://tramatch.replit.app";
+    const sitemapUrl = encodeURIComponent(`${baseUrl}/sitemap.xml`);
+    const pingUrl = `https://www.google.com/ping?sitemap=${sitemapUrl}`;
+    const response = await fetch(pingUrl);
+    if (response.ok) {
+      console.log("[Sitemap Ping] Successfully pinged Google with sitemap update");
+    } else {
+      console.log(`[Sitemap Ping] Google responded with status ${response.status}`);
+    }
+  } catch (error) {
+    console.log("[Sitemap Ping] Failed to ping Google (non-critical):", error);
   }
 }
 

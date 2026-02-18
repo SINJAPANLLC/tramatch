@@ -180,6 +180,9 @@
 - API: GET /api/columns, GET /api/columns/:slug (public), POST /api/admin/seo-articles/generate (admin)
 - LP shows latest 3 column articles preview; footer links to /columns
 - server/auto-article-generator.ts handles automated daily generation
+- Sitemap: GET /sitemap.xml - dynamic sitemap with all public pages + published articles
+- Robots: GET /robots.txt - allows public pages, blocks admin/authenticated pages, references sitemap
+- Google Ping: auto-pings Google (google.com/ping?sitemap=...) when articles are published (auto or manual)
 
 ## Running
 - `npm run dev` starts Express server (backend + Vite frontend) on port 5000
