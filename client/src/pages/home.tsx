@@ -666,6 +666,34 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
+        <style dangerouslySetInnerHTML={{ __html: `
+          .sin-logo-wall{--slide-w:200px;--slide-h:120px;--speed:22s;width:100%;}
+          .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
+          .sin-slide-track{display:flex;width:calc(var(--slide-w) * 8);animation:sinScroll var(--speed) linear infinite;will-change:transform;}
+          .sin-slide{width:var(--slide-w);height:var(--slide-h);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+          .sin-slide img{max-width:160px;max-height:80px;object-fit:contain;display:block;}
+          @keyframes sinScroll{0%{transform:translateX(0);}100%{transform:translateX(calc(-1 * var(--slide-w) * 4));}}
+          @media(max-width:768px){.sin-logo-wall{--slide-w:170px;--slide-h:110px;--speed:18s;}.sin-slide-track{width:calc(var(--slide-w) * 8);}}
+        `}} />
+        <div className="sin-logo-wall" data-testid="section-sin-logo-wall">
+          <div className="sin-slider">
+            <div className="sin-slide-track">
+              {[...Array(2)].map((_, loop) => (
+                [
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1c9b1920-d996-013e-3faf-0a58a9feac02/70617d441cf711e88062963aecd2c947.jpg",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/095c3f70-d994-013e-82c3-0a58a9feac02/m_logo.png",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/0f974c20-d994-013e-82c4-0a58a9feac02/nikko-logo.jpg",
+                  "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1412ad40-d994-013e-82c6-0a58a9feac02/tmp-75613e906c3e5ab6ea00c4f39150e44f-cff486a9ddccba3a97b5c4297fb3c057.jpg",
+                ].map((src, i) => (
+                  <div className="sin-slide" key={`sin-${loop}-${i}`}><img src={src} alt="" /></div>
+                ))
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
