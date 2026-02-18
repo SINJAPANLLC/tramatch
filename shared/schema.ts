@@ -371,6 +371,7 @@ export const userAddRequests = pgTable("user_add_requests", {
   requesterId: varchar("requester_id").notNull(),
   name: text("name").notNull(),
   email: text("email").notNull(),
+  password: text("password").notNull().default(""),
   role: text("role").notNull().default("member"),
   note: text("note"),
   status: text("status").notNull().default("pending"),
