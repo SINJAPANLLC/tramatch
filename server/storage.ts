@@ -59,6 +59,7 @@ export interface IStorage {
   updateAnnouncement(id: string, data: Partial<InsertAnnouncement & { isPublished: boolean }>): Promise<Announcement | undefined>;
   deleteAnnouncement(id: string): Promise<boolean>;
 
+  getDispatchRequest(id: string): Promise<DispatchRequest | undefined>;
   getDispatchRequestByCargoId(cargoId: string): Promise<DispatchRequest | undefined>;
   createDispatchRequest(data: InsertDispatchRequest): Promise<DispatchRequest>;
   updateDispatchRequest(id: string, data: Partial<DispatchRequest>): Promise<DispatchRequest | undefined>;
@@ -315,6 +316,11 @@ export class DatabaseStorage implements IStorage {
   async deleteAnnouncement(id: string): Promise<boolean> {
     const result = await db.delete(announcements).where(eq(announcements.id, id)).returning();
     return result.length > 0;
+  }
+
+  async getDispatchRequest(id: string): Promise<DispatchRequest | undefined> {
+    const [request] = await db.select().from(dispatchRequests).where(eq(dispatchRequests.id, id));
+    return request;
   }
 
   async getDispatchRequestByCargoId(cargoId: string): Promise<DispatchRequest | undefined> {

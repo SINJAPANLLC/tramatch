@@ -646,6 +646,11 @@ export async function registerRoutes(
 
   app.patch("/api/dispatch-requests/:id/send", requireAuth, async (req, res) => {
     try {
+      const dispatchRequest = await storage.getDispatchRequest(req.params.id as string);
+      if (!dispatchRequest) {
+        return res.status(404).json({ message: "Dispatch request not found" });
+      }
+
       const updated = await storage.updateDispatchRequest(req.params.id as string, {
         status: "sent",
         sentAt: new Date(),
@@ -653,6 +658,97 @@ export async function registerRoutes(
       if (!updated) {
         return res.status(404).json({ message: "Dispatch request not found" });
       }
+
+      const cargo = await storage.getCargoListing(dispatchRequest.cargoId);
+      const recipientEmail = cargo?.contactEmail;
+
+      if (recipientEmail && isEmailConfigured()) {
+        const senderUser = await storage.getUser(req.session.userId as string);
+        const senderName = senderUser?.companyName || dispatchRequest.transportCompany || "トラマッチユーザー";
+
+        const fmtRow = (label: string, value: string | null | undefined) => {
+          if (!value) return "";
+          return `<tr><td style="padding:6px 12px;background:#f8f9fa;font-weight:bold;white-space:nowrap;border:1px solid #dee2e6;width:140px">${label}</td><td style="padding:6px 12px;border:1px solid #dee2e6">${value}</td></tr>`;
+        };
+
+        const fareNum = dispatchRequest.fare ? parseInt(dispatchRequest.fare.replace(/[^0-9]/g, ""), 10) : 0;
+        const taxAmount = Math.floor(fareNum * 0.1);
+        const totalAmount = fareNum + taxAmount;
+
+        const emailHtml = `
+          <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
+            <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
+              <h1 style="color:white;margin:0;font-size:20px">トラマッチ 配車依頼書</h1>
+            </div>
+            <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
+              <p style="margin:0 0 16px">${senderName} 様より配車依頼書が届きました。</p>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運行情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("運送会社", dispatchRequest.transportCompany)}
+                ${fmtRow("荷主会社", dispatchRequest.shipperCompany)}
+                ${fmtRow("担当者", dispatchRequest.contactPerson)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">積込・卸し</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("積込日", dispatchRequest.loadingDate)}
+                ${fmtRow("積込時間", dispatchRequest.loadingTime)}
+                ${fmtRow("積込場所", dispatchRequest.loadingPlace)}
+                ${fmtRow("卸し日", dispatchRequest.unloadingDate)}
+                ${fmtRow("卸し時間", dispatchRequest.unloadingTime)}
+                ${fmtRow("卸し場所", dispatchRequest.unloadingPlace)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">荷物情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("荷種", dispatchRequest.cargoType)}
+                ${fmtRow("総重量", dispatchRequest.totalWeight)}
+                ${fmtRow("重量/車種", dispatchRequest.weightVehicle)}
+                ${fmtRow("車両装備", dispatchRequest.vehicleEquipment)}
+                ${fmtRow("備考", dispatchRequest.notes)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運賃情報</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("運賃", fareNum > 0 ? `¥${fareNum.toLocaleString()}` : dispatchRequest.fare)}
+                ${fmtRow("高速代", dispatchRequest.highwayFee)}
+                ${fmtRow("待機料", dispatchRequest.waitingFee)}
+                ${fmtRow("附帯作業料", dispatchRequest.additionalWorkFee)}
+                ${fmtRow("燃料サーチャージ", dispatchRequest.fuelSurcharge)}
+                ${fareNum > 0 ? fmtRow("消費税", `¥${taxAmount.toLocaleString()}`) : ""}
+                ${fareNum > 0 ? fmtRow("合計（税込）", `¥${totalAmount.toLocaleString()}`) : ""}
+                ${fmtRow("支払方法", dispatchRequest.paymentMethod)}
+                ${fmtRow("入金予定日", dispatchRequest.paymentDueDate)}
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">車両・ドライバー</h2>
+              <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+                ${fmtRow("車両番号", dispatchRequest.vehicleNumber)}
+                ${fmtRow("ドライバー名", dispatchRequest.driverName)}
+                ${fmtRow("ドライバー連絡先", dispatchRequest.driverPhone)}
+              </table>
+
+              ${dispatchRequest.transportCompanyNotes ? `<h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運送会社備考</h2><p style="white-space:pre-wrap">${dispatchRequest.transportCompanyNotes}</p>` : ""}
+
+              <div style="margin-top:24px;padding:12px;background:#f0fffe;border-radius:6px;font-size:12px;color:#666">
+                <p style="margin:0">このメールはトラマッチ（tramatch-sinjapan.com）から自動送信されています。</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const emailResult = await sendEmail(
+          recipientEmail,
+          `【トラマッチ】${senderName}より配車依頼書が届きました`,
+          emailHtml
+        );
+
+        if (!emailResult.success) {
+          console.error("Dispatch request email failed:", emailResult.error);
+        }
+      }
+
       res.json(updated);
     } catch (error) {
       res.status(500).json({ message: "Failed to send dispatch request" });
