@@ -68,7 +68,7 @@
 - `/admin/applications` - 申請管理 (requires admin role)
 - `/admin/users` - ユーザー管理 (requires admin role)
 - `/admin/revenue` - 収益管理 (requires admin role)
-- `/admin/notifications` - 通知管理 (requires admin role)
+- `/admin/notifications` - 通知管理 (requires admin role) - 3 category tabs (auto_reply, auto_notification, regular) + bulk send tab
 - `/admin/announcements` - お知らせ管理 (requires admin role)
 - `/admin/seo` - SEO記事生成 (requires admin role)
 - `/admin/settings` - 管理設定 (requires admin role)
