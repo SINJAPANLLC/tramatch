@@ -1,0 +1,78 @@
+d/models/
+  inflating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/shared/models/chat.ts  
+  inflating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/shared/schema.ts  
+  inflating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/tailwind.config.ts  
+  inflating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/tsconfig.json  
+   creating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/uploads/
+  inflating: toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/vite.config.ts  
+toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+root@srv1087935:/var/www/tramatch-new# cd /var/www/tramatch-new
+mv toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/* .
+mv toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/.* . 2>/dev/null
+rmdir toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+cp -r /var/www/tramatch/.git . 2>/dev/null
+cp /var/www/tramatch/.env . 2>/dev/null
+cd /var/www
+rm -rf tramatch
+mv tramatch-new tramatch
+cd tramatch
+npm install
+npm run build
+cp client/public/favicon.png dist/public/
+cp client/public/og-image.png dist/public/
+pm2 restart tramatch
+
+added 573 packages, and audited 574 packages in 9s
+
+92 packages are looking for funding
+  run `npm fund` for details
+
+3 vulnerabilities (1 low, 1 moderate, 1 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2718 modules transformed.
+../dist/public/index.html                                      3.53 kB │ gzip:   1.15 kB
+../dist/public/assets/tra_match_logo_white-ZjAReWwH.jpg       28.88 kB
+../dist/public/assets/IMG_0046_1771206816410-ClwqCtPN.jpg     29.02 kB
+../dist/public/assets/index-C0RpovFy.css                     113.47 kB │ gzip:  17.75 kB
+../dist/public/assets/index-Ba0P-tFb.js                    1,250.02 kB │ gzip: 312.63 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.04s
+building server...
+
+  dist/index.cjs  2.9mb ⚠️
+
+⚡ Done in 261ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 9 ])
+[PM2] [tramatch](9) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 74.3mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 143.2mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 101.2mb  │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 325.9mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 93.7mb   │
+│ 9  │ tramatch           │ fork     │ 25   │ online    │ 0%       │ 19.0mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 
