@@ -2659,6 +2659,28 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  const prefectureToRomaji: Record<string, string> = {
+    "北海道": "hokkaido", "青森": "aomori", "岩手": "iwate", "宮城": "miyagi",
+    "秋田": "akita", "山形": "yamagata", "福島": "fukushima",
+    "茨城": "ibaraki", "栃木": "tochigi", "群馬": "gunma", "埼玉": "saitama",
+    "千葉": "chiba", "東京": "tokyo", "神奈川": "kanagawa",
+    "新潟": "niigata", "富山": "toyama", "石川": "ishikawa", "福井": "fukui",
+    "山梨": "yamanashi", "長野": "nagano", "岐阜": "gifu", "静岡": "shizuoka",
+    "愛知": "aichi", "三重": "mie",
+    "滋賀": "shiga", "京都": "kyoto", "大阪": "osaka", "兵庫": "hyogo",
+    "奈良": "nara", "和歌山": "wakayama",
+    "鳥取": "tottori", "島根": "shimane", "岡山": "okayama", "広島": "hiroshima",
+    "山口": "yamaguchi",
+    "徳島": "tokushima", "香川": "kagawa", "愛媛": "ehime", "高知": "kochi",
+    "福岡": "fukuoka", "佐賀": "saga", "長崎": "nagasaki", "熊本": "kumamoto",
+    "大分": "oita", "宮崎": "miyazaki", "鹿児島": "kagoshima", "沖縄": "okinawa",
+  };
+
+  function getPrefectureRomaji(prefecture: string): string {
+    const short = prefecture.replace(/[都府県]$/, "");
+    return prefectureToRomaji[short] || short;
+  }
+
   app.get("/api/admin/agents/stats", requireAdmin, async (req, res) => {
     try {
       const stats = await storage.getAgentStats();
@@ -2695,11 +2717,11 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
       }
 
-      const prefectureShort = parsed.data.prefecture.replace(/[都府県]$/, "");
-      const loginEmail = parsed.data.email || `agent-${prefectureShort}-${Date.now().toString(36)}@tramatch.jp`;
+      const prefectureRomaji = getPrefectureRomaji(parsed.data.prefecture);
+      const loginEmail = parsed.data.email || `agent-${prefectureRomaji}@tramatch.jp`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      const username = `agent_${prefectureShort}_${Date.now()}`;
+      const username = `agent_${prefectureRomaji}_${Date.now()}`;
 
       const existingUser = await storage.getUserByEmail(loginEmail);
       let userId: string | undefined;
@@ -2794,11 +2816,11 @@ JSON形式で以下を返してください（日本語で）:
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
 
-      const prefectureShort = agent.prefecture.replace(/[都府県]$/, "");
-      const loginEmail = agent.email || `agent-${prefectureShort}-${Date.now().toString(36)}@tramatch.jp`;
+      const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
+      const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch.jp`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      const username = `agent_${prefectureShort}_${Date.now()}`;
+      const username = `agent_${prefectureRomaji}_${Date.now()}`;
 
       const existingUser = await storage.getUserByEmail(loginEmail);
       if (existingUser) {
@@ -2866,11 +2888,11 @@ JSON形式で以下を返してください（日本語で）:
       const skipped: string[] = [];
 
       for (const agent of agentsWithoutAccount) {
-        const prefectureShort = agent.prefecture.replace(/[都府県]$/, "");
-        const loginEmail = agent.email || `agent-${prefectureShort}@tramatch.jp`;
+        const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
+        const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch.jp`;
         const defaultPassword = `agent${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-        const username = `agent_${prefectureShort}_${Date.now()}`;
+        const username = `agent_${prefectureRomaji}_${Date.now()}`;
 
         const existingUser = await storage.getUserByEmail(loginEmail);
         if (existingUser) {
