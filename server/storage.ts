@@ -15,10 +15,11 @@ import {
   type PlanChangeRequest, type InsertPlanChangeRequest,
   type UserAddRequest, type InsertUserAddRequest,
   type Invoice, type InsertInvoice,
+  type Agent, type InsertAgent,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
-  invoices
+  invoices, agents
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -144,6 +145,13 @@ export interface IStorage {
   updateInvoice(id: string, data: Partial<Invoice>): Promise<Invoice | undefined>;
   deleteInvoice(id: string): Promise<boolean>;
   getNextInvoiceNumber(): Promise<string>;
+
+  getAgents(): Promise<Agent[]>;
+  getAgent(id: string): Promise<Agent | undefined>;
+  getAgentsByPrefecture(prefecture: string): Promise<Agent[]>;
+  createAgent(data: InsertAgent): Promise<Agent>;
+  updateAgent(id: string, data: Partial<InsertAgent>): Promise<Agent | undefined>;
+  deleteAgent(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -702,6 +710,34 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ count: sql<number>`count(*)` }).from(invoices).where(sql`invoice_number LIKE ${yearMonth + "%"}`);
     const seq = (Number(result?.count || 0) + 1).toString().padStart(4, "0");
     return `INV-${yearMonth}-${seq}`;
+  }
+
+  async getAgents(): Promise<Agent[]> {
+    return db.select().from(agents).orderBy(agents.prefecture, agents.companyName);
+  }
+
+  async getAgent(id: string): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    return agent;
+  }
+
+  async getAgentsByPrefecture(prefecture: string): Promise<Agent[]> {
+    return db.select().from(agents).where(eq(agents.prefecture, prefecture)).orderBy(agents.companyName);
+  }
+
+  async createAgent(data: InsertAgent): Promise<Agent> {
+    const [agent] = await db.insert(agents).values(data).returning();
+    return agent;
+  }
+
+  async updateAgent(id: string, data: Partial<InsertAgent>): Promise<Agent | undefined> {
+    const [agent] = await db.update(agents).set(data).where(eq(agents.id, id)).returning();
+    return agent;
+  }
+
+  async deleteAgent(id: string): Promise<boolean> {
+    const result = await db.delete(agents).where(eq(agents.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
