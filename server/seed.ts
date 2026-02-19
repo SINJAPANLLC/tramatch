@@ -14,7 +14,7 @@ export async function seedDatabase() {
         password: adminPassword,
         companyName: "トラマッチ運営",
         phone: "03-0000-0000",
-        email: "admin@tramatch.jp",
+        email: "admin@tramatch-sinjapan.com",
         userType: "admin",
         role: "admin",
         approved: true,

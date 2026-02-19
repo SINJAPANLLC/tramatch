@@ -34,7 +34,7 @@ export async function sendEmail(
     return { success: false, error: "メール設定が未構成です" };
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@tramatch.jp";
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@tramatch-sinjapan.com";
 
   try {
     await transport.sendMail({
