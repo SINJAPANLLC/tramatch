@@ -756,7 +756,7 @@ function PromoBanner() {
     <div
       className="fixed bottom-3 left-3 z-50 animate-in slide-in-from-bottom-4 duration-500"
       data-testid="promo-banner"
-      style={{ width: "220px" }}
+      style={{ width: "190px" }}
     >
       <div className="relative bg-white rounded-md shadow-lg border border-border overflow-visible">
         <button
