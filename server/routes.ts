@@ -2881,7 +2881,7 @@ JSON形式で以下を返してください（日本語で）:
       }
 
       const prefectureRomaji = getPrefectureRomaji(parsed.data.prefecture);
-      const loginEmail = parsed.data.email || `agent-${prefectureRomaji}@tramatch.jp`;
+      const loginEmail = parsed.data.email || `agent-${prefectureRomaji}@tramatch-sinjapan.com`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       const username = `agent_${prefectureRomaji}_${Date.now()}`;
@@ -2993,7 +2993,7 @@ JSON形式で以下を返してください（日本語で）:
       if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
 
       const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
-      const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch.jp`;
+      const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch-sinjapan.com`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       const username = `agent_${prefectureRomaji}_${Date.now()}`;
@@ -3065,7 +3065,7 @@ JSON形式で以下を返してください（日本語で）:
 
       for (const agent of agentsWithoutAccount) {
         const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
-        const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch.jp`;
+        const loginEmail = agent.email || `agent-${prefectureRomaji}@tramatch-sinjapan.com`;
         const defaultPassword = `agent${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         const username = `agent_${prefectureRomaji}_${Date.now()}`;
