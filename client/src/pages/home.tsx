@@ -754,8 +754,9 @@ function PromoBanner() {
 
   return (
     <div
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-4 sm:translate-x-0 z-50 animate-in slide-in-from-bottom-4 duration-500 w-[280px] sm:w-[340px]"
+      className="fixed bottom-3 left-3 z-50 animate-in slide-in-from-bottom-4 duration-500"
       data-testid="promo-banner"
+      style={{ width: "260px" }}
     >
       <div className="relative bg-white rounded-md shadow-lg border border-border overflow-visible">
         <button
