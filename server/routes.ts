@@ -2,7 +2,9 @@ import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema } from "@shared/schema";
+import { db } from "./db";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -22,13 +24,19 @@ async function resolveEmailTemplate(
   variables: Record<string, string>,
   defaultSubject: string,
   defaultBody: string
-): Promise<{ subject: string; body: string }> {
+): Promise<{ subject: string; body: string } | null> {
   try {
-    const template = await storage.getNotificationTemplateByTrigger("email", triggerEvent);
-    if (template) {
+    const allTemplates = await db.select().from(notificationTemplates)
+      .where(and(
+        eq(notificationTemplates.channel, "email"),
+        eq(notificationTemplates.triggerEvent, triggerEvent),
+      ));
+    if (allTemplates.length > 0) {
+      const active = allTemplates.find(t => t.isActive);
+      if (!active) return null;
       return {
-        subject: replaceTemplateVariables(template.subject || defaultSubject, variables),
-        body: replaceTemplateVariables(template.body, variables),
+        subject: replaceTemplateVariables(active.subject || defaultSubject, variables),
+        body: replaceTemplateVariables(active.body, variables),
       };
     }
   } catch (err) {
@@ -38,6 +46,10 @@ async function resolveEmailTemplate(
     subject: replaceTemplateVariables(defaultSubject, variables),
     body: replaceTemplateVariables(defaultBody, variables),
   };
+}
+
+function isAgentAutoEmail(email: string): boolean {
+  return /^agent-[a-z]+@tramatch/.test(email);
 }
 
 const openai = new OpenAI({
@@ -293,6 +305,9 @@ export async function registerRoutes(
         "【トラマッチ】パスワードリセットのご案内",
         `{{companyName}} 様\n\n以下のリンクからパスワードをリセットしてください。\nこのリンクは1時間有効です。\n\n{{resetUrl}}\n\n※このメールに心当たりがない場合は無視してください。\n\nトラマッチ運営事務局`
       );
+      if (!resolved) {
+        return res.status(500).json({ message: "メールテンプレートが無効です" });
+      }
       const emailResult = await sendEmail(user.email, resolved.subject, resolved.body);
 
       if (!emailResult.success) {
@@ -911,7 +926,7 @@ export async function registerRoutes(
             relatedId: listing.id,
           });
 
-          if (u.notifyEmail && u.email && isEmailConfigured()) {
+          if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
             try {
               const resolved = await resolveEmailTemplate(
                 "cargo_new",
@@ -919,7 +934,7 @@ export async function registerRoutes(
                 "【トラマッチ】新しい荷物が登録されました",
                 `新しい荷物案件が登録されました。\n\n出発地: ${listing.departureArea}\n到着地: ${listing.arrivalArea}\n荷物種類: ${listing.cargoType}\n重量: ${listing.weight}\n\nトラマッチにログインして詳細をご確認ください。`
               );
-              await sendEmail(u.email, resolved.subject, resolved.body);
+              if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
             } catch (emailErr) {
               console.error(`Cargo new email failed for ${u.email}:`, emailErr);
             }
@@ -1072,14 +1087,14 @@ export async function registerRoutes(
             `【トラマッチ】{{senderName}}より車番連絡が届きました`,
             `{{senderName}} 様より車番連絡が届きました。`
           );
-          emailSubject = shipperResolved.subject;
+          emailSubject = shipperResolved?.subject || `【トラマッチ】${senderName}より車番連絡が届きました`;
           emailHtml = `
           <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
             <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0;font-size:20px">トラマッチ 車番連絡</h1>
             </div>
             <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
-              <p style="margin:0 0 16px">${shipperResolved.body}</p>
+              <p style="margin:0 0 16px">${shipperResolved?.body || ""}</p>
 
               <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">車両・ドライバー情報</h2>
               <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
@@ -1123,14 +1138,14 @@ export async function registerRoutes(
             `【トラマッチ】{{senderName}}より配車依頼書が届きました`,
             `{{senderName}} 様より配車依頼書が届きました。`
           );
-          emailSubject = transportResolved.subject;
+          emailSubject = transportResolved?.subject || `【トラマッチ】${senderName}より配車依頼書が届きました`;
           emailHtml = `
           <div style="font-family:'Hiragino Sans','Meiryo',sans-serif;max-width:700px;margin:0 auto;color:#333">
             <div style="background:#40E0D0;padding:16px 24px;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0;font-size:20px">トラマッチ 配車依頼書</h1>
             </div>
             <div style="padding:24px;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px">
-              <p style="margin:0 0 16px">${transportResolved.body}</p>
+              <p style="margin:0 0 16px">${transportResolved?.body || ""}</p>
 
               <h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">運行情報</h2>
               <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
@@ -1266,7 +1281,7 @@ export async function registerRoutes(
             relatedId: listing.id,
           });
 
-          if (u.notifyEmail && u.email && isEmailConfigured()) {
+          if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
             try {
               const resolved = await resolveEmailTemplate(
                 "truck_new",
@@ -1274,7 +1289,7 @@ export async function registerRoutes(
                 "【トラマッチ】新しい空車が登録されました",
                 `新しい空車情報が登録されました。\n\n現在地: ${listing.currentArea}\n行先: ${listing.destinationArea}\n車両タイプ: ${listing.vehicleType}\n積載量: ${listing.maxWeight}\n\nトラマッチにログインして詳細をご確認ください。`
               );
-              await sendEmail(u.email, resolved.subject, resolved.body);
+              if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
             } catch (emailErr) {
               console.error(`Truck new email failed for ${u.email}:`, emailErr);
             }
@@ -1608,6 +1623,9 @@ export async function registerRoutes(
         "【トラマッチ】取引先招待のご案内",
         `{{companyName}}様よりトラマッチへの招待が届いています。\n\n{{companyName}}様があなたを取引先として招待しました。\n以下のリンクからトラマッチに登録して、取引を開始しましょう。\n\n{{registerUrl}}\n\nトラマッチ - 求荷求車マッチングプラットフォーム\n{{appBaseUrl}}`
       );
+      if (!resolved) {
+        return res.status(500).json({ message: "メールテンプレートが無効です" });
+      }
       const emailResult = await sendEmail(email, resolved.subject, resolved.body);
 
       if (!emailResult.success) {
@@ -3303,7 +3321,7 @@ JSON形式で以下を返してください（日本語で）:
       );
       const result = await sendEmail(
         invoice.email,
-        invoiceResolved.subject,
+        invoiceResolved?.subject || `【トラマッチ】請求書（${invoice.billingMonth}）`,
         invoiceHtml
       );
 
@@ -3341,7 +3359,7 @@ JSON形式で以下を返してください（日本語で）:
         );
         const result = await sendEmail(
           invoice.email,
-          bulkInvoiceResolved.subject,
+          bulkInvoiceResolved?.subject || `【トラマッチ】請求書（${invoice.billingMonth}）`,
           invoiceHtml
         );
 
