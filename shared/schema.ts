@@ -104,6 +104,7 @@ export const cargoListings = pgTable("cargo_listings", {
   companyName: text("company_name").notNull(),
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email"),
+  privateNote: text("private_note"),
   status: text("status").notNull().default("active"),
   listingType: text("listing_type").notNull().default("own"),
   userId: varchar("user_id"),
