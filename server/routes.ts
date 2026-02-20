@@ -1393,6 +1393,22 @@ export async function registerRoutes(
         message: "アカウントが承認されました。ログインしてサービスをご利用ください。",
       });
 
+      const appBaseUrl = `${req.protocol}://${req.get("host")}`;
+      const resolved = await resolveEmailTemplate(
+        "user_approved",
+        {
+          companyName: user.companyName || "",
+          contactName: user.contactName || "",
+          email: user.email || "",
+          appBaseUrl,
+        },
+        "【トラマッチ】アカウントが承認されました",
+        `${user.companyName} 様\n\nご登録ありがとうございます。\n\nアカウントが承認されましたので、以下のリンクからログインしてサービスをご利用いただけます。\n\n${appBaseUrl}/login\n\nトラマッチ運営事務局\n合同会社SIN JAPAN`
+      );
+      if (resolved && user.email) {
+        await sendEmail(user.email, resolved.subject, resolved.body);
+      }
+
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,

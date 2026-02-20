@@ -137,6 +137,27 @@ const defaultEmailTemplates = [
   {
     category: "auto_notification",
     channel: "email",
+    name: "アカウント承認通知",
+    subject: "【トラマッチ】アカウントが承認されました",
+    body: `{{companyName}} 様
+
+ご登録ありがとうございます。
+
+アカウントが承認されましたので、以下のリンクからログインしてサービスをご利用いただけます。
+
+{{appBaseUrl}}/login
+
+トラマッチでは、荷物の登録・検索、空車情報の登録・検索など、物流マッチングに必要な機能をすべてご利用いただけます。
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+トラマッチ運営事務局
+合同会社SIN JAPAN`,
+    triggerEvent: "user_approved",
+  },
+  {
+    category: "auto_notification",
+    channel: "email",
     name: "請求書送信",
     subject: "【トラマッチ】請求書 {{invoiceNumber}}（{{billingMonth}}）",
     body: `{{companyName}} 御中
