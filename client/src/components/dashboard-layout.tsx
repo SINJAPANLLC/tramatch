@@ -191,7 +191,7 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
         )}
       </div>
 
-      <div className={`flex-1 min-w-0 ${noScroll ? "overflow-hidden" : "overflow-y-auto"}`}>
+      <div className={`flex-1 min-w-0 h-full ${noScroll ? "overflow-hidden" : "overflow-y-auto"}`}>
         {children}
       </div>
     </div>
