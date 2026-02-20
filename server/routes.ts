@@ -1812,7 +1812,7 @@ ${cargoFieldSchema}
 - 引越し・家具運搬: bodyType: "箱車", movingJob: "引っ越し案件"
 - 「手伝いあり」→ descriptionに記載
 
-情報が不明な場合はそのフィールドを空文字にしてください。
+情報が不明な場合はそのフィールドを空文字にしてください。入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は明確な記載がある場合のみ設定。
 vehicleTypeとbodyTypeは複数選択の場合カンマ区切りで返してください（例: "4t車, 10t車"）。
 JSONのみを返してください。説明文は不要です。`,
           },
@@ -1976,7 +1976,8 @@ statusの意味:
 - messageは必ず日本語で、丁寧だが堅すぎない口調で
 - 運賃の相談には積極的に応じて、具体的な金額を提案してください
 - 大量のデータが来た場合は、整理して要約してから確認してください
-- 入力データからできるだけ多くの情報を漏れなく抽出してください`;
+- 入力データからできるだけ多くの情報を漏れなく抽出してください
+- ユーザーの入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は、テキストに明確に記載がある場合のみ設定すること。記載がなければ空文字にすること`;
 
       const apiMessages = [
         { role: "system" as const, content: systemPrompt },
