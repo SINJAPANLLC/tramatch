@@ -458,7 +458,7 @@ function Pagination({ page, totalPages, onPageChange }: { page: number; totalPag
   );
 }
 
-function TruckRegisterTab() {
+function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => React.ReactNode }) {
   const { toast } = useToast();
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -761,6 +761,9 @@ function TruckRegisterTab() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      <div className="px-4 sm:px-6 pt-4 shrink-0">
+        {tabBar(false)}
+      </div>
       <div className="bg-primary px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
         <Truck className="w-5 h-5 text-primary-foreground" />
         <div className="flex-1 min-w-0">
@@ -2006,7 +2009,7 @@ export default function TruckList() {
 
   if (isAuthenticated) {
     return (
-      <DashboardLayout noScroll>
+      <DashboardLayout noScroll={activeTab !== "register"}>
         <div className="flex h-full relative overflow-hidden">
           {activeTab === "search" ? (
             <>
@@ -2024,14 +2027,7 @@ export default function TruckList() {
               )}
             </>
           ) : activeTab === "register" ? (
-            <div className="absolute inset-0 flex flex-col">
-              <div className="px-4 sm:px-6 pt-4 shrink-0">
-                {tabBar(false)}
-              </div>
-              <div className="flex-1 min-h-0">
-                <TruckRegisterTab />
-              </div>
-            </div>
+            <TruckRegisterTab tabBar={tabBar} />
           ) : (
             <>
               <div className={`flex-1 flex flex-col overflow-hidden ${editTruckId ? "hidden lg:flex" : ""}`}>
