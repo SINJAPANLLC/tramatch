@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2, Package, Printer, MessageSquare } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Search, Plus, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, X, Mic, MicOff, Upload, FileText, Loader2, Phone, Mail, Navigation, CalendarDays, Send, Bot, User, Banknote, CheckCircle2, Check, Trash2, Pencil, Clock, Eye, Building2, Package, Printer, MessageSquare, RotateCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TruckListing } from "@shared/schema";
 import { insertTruckListingSchema, type InsertTruckListing } from "@shared/schema";
@@ -1475,6 +1475,16 @@ export default function TruckList() {
   const [prefectureFilter, setPrefectureFilter] = useState("all");
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+  const [filterCurrentArea, setFilterCurrentArea] = useState("");
+  const [filterDestArea, setFilterDestArea] = useState("");
+  const [filterAvailDateFrom, setFilterAvailDateFrom] = useState("");
+  const [filterAvailDateTo, setFilterAvailDateTo] = useState("");
+  const [filterArriveDateFrom, setFilterArriveDateFrom] = useState("");
+  const [filterArriveDateTo, setFilterArriveDateTo] = useState("");
+  const [filterMinFare, setFilterMinFare] = useState("");
+  const [filterWeight, setFilterWeight] = useState("");
+  const [filterVehicleType, setFilterVehicleType] = useState("");
+  const [filterExcludeNegotiable, setFilterExcludeNegotiable] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -1588,40 +1598,78 @@ export default function TruckList() {
     });
   }, [toast]);
 
+  const handleTruckSearch = useCallback(() => {
+    setPage(1);
+  }, []);
+
+  const handleTruckClear = useCallback(() => {
+    setFilterCurrentArea("");
+    setFilterDestArea("");
+    setFilterAvailDateFrom("");
+    setFilterAvailDateTo("");
+    setFilterArriveDateFrom("");
+    setFilterArriveDateTo("");
+    setFilterMinFare("");
+    setFilterWeight("");
+    setFilterVehicleType("");
+    setFilterExcludeNegotiable(false);
+    setPage(1);
+  }, []);
+
   const filtered = useMemo(() => {
     if (!listings) return [];
     let result = [...listings];
 
-    if (activeSearch.length > 0) {
+    if (filterCurrentArea) {
+      result = result.filter((item) =>
+        (item.currentArea || "").includes(filterCurrentArea)
+      );
+    }
+    if (filterDestArea) {
+      result = result.filter((item) =>
+        (item.destinationArea || "").includes(filterDestArea)
+      );
+    }
+    if (filterAvailDateFrom) {
+      const from = filterAvailDateFrom.replace(/-/g, "/");
+      result = result.filter((item) => (item.availableDate || "") >= from);
+    }
+    if (filterAvailDateTo) {
+      const to = filterAvailDateTo.replace(/-/g, "/");
+      result = result.filter((item) => (item.availableDate || "") <= to);
+    }
+    if (filterArriveDateFrom) {
+      const from = filterArriveDateFrom.replace(/-/g, "/");
+      result = result.filter((item) => (item.availableDate || "") >= from);
+    }
+    if (filterArriveDateTo) {
+      const to = filterArriveDateTo.replace(/-/g, "/");
+      result = result.filter((item) => (item.availableDate || "") <= to);
+    }
+    if (filterMinFare) {
+      const minVal = parseInt(filterMinFare);
+      if (!isNaN(minVal)) {
+        result = result.filter((item) => {
+          const p = parseInt(item.price?.replace(/[^0-9]/g, "") || "0");
+          return p <= minVal;
+        });
+      }
+    }
+    if (filterExcludeNegotiable) {
       result = result.filter((item) => {
-        const searchable = [
-          item.title, item.currentArea, item.destinationArea,
-          item.vehicleType, item.maxWeight, item.companyName,
-          item.description, item.availableDate, item.price,
-        ].filter(Boolean).join(" ").toLowerCase();
-        return activeSearch.some((keyword) => searchable.includes(keyword.toLowerCase()));
+        const p = item.price || "";
+        return !p.includes("相談") && !p.includes("応相談") && p !== "";
       });
     }
-
-    if (quickFilter !== "all") {
-      result = result.filter(
-        (item) => item.currentArea.includes(quickFilter) || item.destinationArea.includes(quickFilter)
+    if (filterWeight) {
+      result = result.filter((item) =>
+        (item.maxWeight || "").includes(filterWeight)
       );
     }
-
-    if (prefectureFilter !== "all") {
-      result = result.filter(
-        (item) => item.currentArea.includes(prefectureFilter) || item.destinationArea.includes(prefectureFilter)
+    if (filterVehicleType) {
+      result = result.filter((item) =>
+        (item.vehicleType || "").includes(filterVehicleType)
       );
-    }
-
-    if (vehicleFilter !== "all") {
-      result = result.filter((item) => item.vehicleType?.includes(vehicleFilter));
-    }
-
-    if (dateFilter) {
-      const formatted = dateFilter.replace(/-/g, "/");
-      result = result.filter((item) => item.availableDate === formatted);
     }
 
     result.sort((a, b) => {
@@ -1648,13 +1696,100 @@ export default function TruckList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, prefectureFilter, vehicleFilter, dateFilter]);
+  }, [listings, sortBy, filterCurrentArea, filterDestArea, filterAvailDateFrom, filterAvailDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterWeight, filterVehicleType, filterExcludeNegotiable]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   const searchContent = (
     <>
+      <Card className="mb-4">
+        <CardContent className="px-4 py-4 space-y-3">
+          <span className="font-bold text-sm" data-testid="text-truck-filter-title">検索条件</span>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center border rounded-md h-8 bg-background">
+                <MapPin className="w-3 h-3 ml-2 text-muted-foreground shrink-0" />
+                <input
+                  placeholder="空車地"
+                  value={filterCurrentArea}
+                  onChange={(e) => { setFilterCurrentArea(e.target.value); setPage(1); }}
+                  className="text-xs h-8 px-2 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground"
+                  data-testid="filter-truck-current-area"
+                />
+              </div>
+              <span className="text-[10px] text-muted-foreground">⇄</span>
+              <div className="flex items-center border rounded-md h-8 bg-background">
+                <input
+                  placeholder="行先地"
+                  value={filterDestArea}
+                  onChange={(e) => { setFilterDestArea(e.target.value); setPage(1); }}
+                  className="text-xs h-8 px-2.5 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground"
+                  data-testid="filter-truck-dest-area"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日</span>
+              <Input type="date" value={filterAvailDateFrom} onChange={(e) => { setFilterAvailDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" placeholder="（開始）" data-testid="filter-truck-avail-date-from" />
+              <span className="text-[11px] text-muted-foreground">〜</span>
+              <Input type="date" value={filterAvailDateTo} onChange={(e) => { setFilterAvailDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" placeholder="（終了）" data-testid="filter-truck-avail-date-to" />
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">着日</span>
+              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" placeholder="（開始）" data-testid="filter-truck-arrive-date-from" />
+              <span className="text-[11px] text-muted-foreground">〜</span>
+              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" placeholder="（終了）" data-testid="filter-truck-arrive-date-to" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
+              <input
+                placeholder="最低運賃（税別）"
+                value={filterMinFare}
+                onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }}
+                className="text-xs h-8 px-2.5 w-[110px] bg-transparent outline-none placeholder:text-muted-foreground"
+                data-testid="filter-truck-min-fare"
+              />
+              <span className="text-[11px] text-muted-foreground pr-2 whitespace-nowrap">円以下</span>
+            </div>
+            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
+              <input
+                placeholder="重量"
+                value={filterWeight}
+                onChange={(e) => { setFilterWeight(e.target.value); setPage(1); }}
+                className="text-xs h-8 px-2.5 w-[120px] bg-transparent outline-none placeholder:text-muted-foreground"
+                data-testid="filter-truck-weight"
+              />
+            </div>
+            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
+              <input
+                placeholder="車種"
+                value={filterVehicleType}
+                onChange={(e) => { setFilterVehicleType(e.target.value); setPage(1); }}
+                className="text-xs h-8 px-2.5 w-[120px] bg-transparent outline-none placeholder:text-muted-foreground"
+                data-testid="filter-truck-vehicle-type"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Checkbox id="truck-exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-truck-exclude-negotiable" className="h-3.5 w-3.5" />
+            <label htmlFor="truck-exclude-negotiable" className="text-[11px] cursor-pointer select-none text-muted-foreground">要相談を除く</label>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <Button onClick={handleTruckSearch} className="px-8" data-testid="button-truck-search">
+              <Search className="w-4 h-4 mr-1.5" />空車検索
+            </Button>
+            <Button variant="outline" onClick={handleTruckClear} data-testid="button-truck-clear">
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />クリア
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
         <div className="flex items-center gap-2 flex-wrap">
