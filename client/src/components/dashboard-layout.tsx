@@ -17,8 +17,6 @@ const userMenuItems: MenuItem[] = [
   { href: "/completed-cargo", label: "成約した荷物", icon: CheckCircle },
   { href: "/trucks", label: "AI空車検索・登録", icon: Truck },
   { href: "/companies", label: "企業検索", icon: Building },
-  { href: "/partners", label: "取引先招待", icon: Users },
-  { href: "/transport-ledger", label: "実運送体制管理簿", icon: BookOpen },
   { href: "/payment", label: "プラン", icon: CreditCard },
   { href: "/services", label: "便利サービス", icon: Star },
   { href: "/settings", label: "設定", icon: Settings },
