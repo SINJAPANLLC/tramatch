@@ -449,18 +449,18 @@ export default function CargoList() {
               <span className="text-[10px] text-muted-foreground px-0.5">⇄</span>
               <input placeholder="着地" value={filterArrival} onChange={(e) => { setFilterArrival(e.target.value); setPage(1); }} className="text-xs h-8 px-2 w-[80px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-arrival" />
             </div>
-            <div className="flex items-center gap-1.5 flex-1 min-w-[280px]">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日</span>
-              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 flex-1 min-w-0" data-testid="filter-depart-date-from" />
+              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-from" />
               <span className="text-[11px] text-muted-foreground">〜</span>
-              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 flex-1 min-w-0" data-testid="filter-depart-date-to" />
+              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-to" />
             </div>
-          </div>
-          <div className="flex items-center gap-1.5" style={{maxWidth: "340px"}}>
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">着日</span>
-            <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 flex-1 min-w-0" data-testid="filter-arrive-date-from" />
-            <span className="text-[11px] text-muted-foreground">〜</span>
-            <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 flex-1 min-w-0" data-testid="filter-arrive-date-to" />
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">着日</span>
+              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-from" />
+              <span className="text-[11px] text-muted-foreground">〜</span>
+              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-to" />
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
