@@ -1655,57 +1655,6 @@ export default function TruckList() {
 
   const searchContent = (
     <>
-      <Card className="mb-5">
-        <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm">AI空車検索</span>
-          </div>
-
-          <div className="flex gap-2">
-            <Textarea
-              placeholder={"例: 関東から関西 4t車 空車\n例: 東京 10t 大型車"}
-              value={aiSearchText}
-              onChange={(e) => setAiSearchText(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              onPaste={(e) => {
-                setTimeout(() => {
-                  const val = (e.target as HTMLTextAreaElement).value;
-                  setAiSearchText(val);
-                  setActiveSearch(parseAISearch(val));
-                  setPage(1);
-                }, 0);
-              }}
-              rows={2}
-              className="resize-none text-sm flex-1"
-              data-testid="input-truck-ai-search"
-            />
-            <div className="flex flex-col gap-1.5">
-              <Button onClick={handleSearch} className="flex-1" data-testid="button-truck-search">
-                <Search className="w-4 h-4 mr-1" />検索
-              </Button>
-              <Button variant="outline" onClick={handleClear} className="flex-1 text-xs" data-testid="button-truck-clear">
-                クリア
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {QUICK_FILTERS.map((f) => (
-              <Badge
-                key={f.value}
-                variant={quickFilter === f.value ? "default" : "outline"}
-                className="cursor-pointer text-xs"
-                onClick={() => { setQuickFilter(f.value); setPage(1); }}
-                data-testid={`truck-filter-${f.value}`}
-              >
-                {f.label}
-              </Badge>
-            ))}
-          </div>
-
-        </CardContent>
-      </Card>
 
       <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
         <div className="flex items-center gap-2 flex-wrap">
