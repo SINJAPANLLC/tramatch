@@ -964,9 +964,9 @@ function TruckRegisterTab() {
           </div>
         </div>
 
-        <div className={`border-l border-border bg-background flex flex-col w-full lg:w-[420px] lg:shrink-0 ${mobileTab !== "form" ? "hidden lg:flex" : ""}`}>
+        <div className={`border-l border-border bg-background overflow-y-auto w-full lg:w-[420px] ${mobileTab !== "form" ? "hidden lg:block" : ""}`}>
           <div
-            className="bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2 shrink-0"
+            className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2"
             data-testid="truck-form-panel-header"
           >
             <div className="flex items-center gap-2">
@@ -981,7 +981,7 @@ function TruckRegisterTab() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto p-3">
+          <div className="p-3">
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
                 <FormField control={form.control} name="title" render={({ field }) => (
@@ -1038,7 +1038,7 @@ function TruckRegisterTab() {
                     <FormField control={form.control} name="bodyType" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">車体タイプ（複数選択可）</FormLabel>
-                        <div className="grid grid-cols-2 gap-1.5 border border-border rounded-md p-2" data-testid="select-truck-body-type">
+                        <div className="grid grid-cols-3 gap-1.5 max-h-[140px] overflow-y-auto border border-border rounded-md p-2" data-testid="select-truck-body-type">
                           {BODY_TYPES.map(b => {
                             const selected = (field.value || "").split(",").map(s => s.trim()).filter(Boolean);
                             const isChecked = selected.includes(b);
@@ -2011,11 +2011,9 @@ export default function TruckList() {
         <div className="flex h-full relative">
           {activeTab === "search" ? (
             <>
-              <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
-                <div className="px-4 sm:px-6 pt-4 shrink-0">
+              <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
+                <div className="px-4 sm:px-6 py-4">
                   {tabBar(true)}
-                </div>
-                <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
                   {searchContent}
                 </div>
               </div>
@@ -2027,11 +2025,11 @@ export default function TruckList() {
               )}
             </>
           ) : activeTab === "register" ? (
-            <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 56px)" }}>
+            <div className="flex-1 flex flex-col overflow-hidden">
               <div className="px-4 sm:px-6 pt-4 shrink-0">
                 {tabBar(false)}
               </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-hidden">
                 <TruckRegisterTab />
               </div>
             </div>
