@@ -1051,22 +1051,25 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                     <FormField control={form.control} name="bodyType" render={({ field }) => {
                       const selected = (field.value || "").split(",").map(s => s.trim()).filter(Boolean);
                       return (
-                      <FormItem>
+                      <FormItem className="relative">
+                        <FormLabel className="text-xs">車体タイプ（複数選択可）</FormLabel>
                         <button
                           type="button"
-                          className="w-full flex items-center justify-between text-xs font-medium py-1 cursor-pointer"
+                          className="w-full flex items-center justify-between h-8 px-3 text-xs border border-border rounded-md bg-background cursor-pointer hover:border-primary/50 transition-colors"
                           onClick={() => setBodyTypeOpen(prev => !prev)}
                           data-testid="button-toggle-body-type"
                         >
-                          <span>車体タイプ（複数選択可）{selected.length > 0 && <Badge variant="secondary" className="ml-1.5 text-[10px] px-1 py-0">{selected.length}件</Badge>}</span>
-                          {bodyTypeOpen ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                          <span className={selected.length > 0 ? "text-foreground" : "text-muted-foreground"}>
+                            {selected.length > 0 ? `${selected.join(", ")}` : "選択"}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${bodyTypeOpen ? "rotate-180" : ""}`} />
                         </button>
                         {bodyTypeOpen && (
-                          <div className="grid grid-cols-3 gap-1.5 max-h-[140px] overflow-y-auto border border-border rounded-md p-2" data-testid="select-truck-body-type">
+                          <div className="absolute left-0 right-0 top-full z-20 mt-1 border border-border rounded-md bg-background shadow-lg p-2 grid grid-cols-3 gap-1.5 max-h-[180px] overflow-y-auto" data-testid="select-truck-body-type">
                             {BODY_TYPES.map(b => {
                               const isChecked = selected.includes(b);
                               return (
-                                <label key={b} className="flex items-center gap-1.5 cursor-pointer text-[11px] hover-elevate rounded px-1 py-0.5">
+                                <label key={b} className="flex items-center gap-1.5 cursor-pointer text-[11px] hover:bg-muted rounded px-1 py-0.5">
                                   <Checkbox
                                     checked={isChecked}
                                     onCheckedChange={(checked) => {
@@ -1079,11 +1082,6 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                                 </label>
                               );
                             })}
-                          </div>
-                        )}
-                        {!bodyTypeOpen && selected.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selected.map(s => <Badge key={s} variant="outline" className="text-[10px] px-1.5 py-0">{s}</Badge>)}
                           </div>
                         )}
                         <FormMessage />
