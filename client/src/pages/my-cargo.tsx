@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck, Pencil } from "lucide-react";
+import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck, Pencil, Download } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -417,6 +417,7 @@ export default function MyCargo() {
   const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price">("newest");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(100);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/my-cargo"],
@@ -488,6 +489,109 @@ export default function MyCargo() {
     return counts;
   }, [myCargo]);
 
+  const toggleCheck = (id: string) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const allPageChecked = paginated.length > 0 && paginated.every((c) => checkedIds.has(c.id));
+
+  const toggleAllPage = () => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (allPageChecked) {
+        paginated.forEach((c) => next.delete(c.id));
+      } else {
+        paginated.forEach((c) => next.add(c.id));
+      }
+      return next;
+    });
+  };
+
+  const exportCsv = () => {
+    const targets = filtered.filter((c) => checkedIds.has(c.id));
+    if (targets.length === 0) {
+      toast({ title: "エクスポートする荷物を選択してください", variant: "destructive" });
+      return;
+    }
+
+    const headers = [
+      "No", "状態", "形態", "発地", "発地住所", "発日", "発時間",
+      "着地", "着地住所", "着日", "着時間",
+      "荷種", "重量", "車種", "車体タイプ", "温度帯",
+      "運賃", "高速代", "税区分", "積合", "ドライバー作業",
+      "個数", "積込方法", "車両スペック", "必要装備",
+      "積込時間", "降ろし時間", "支払日", "台数",
+      "引越し", "緊急度", "備考",
+      "会社名", "担当者", "電話番号", "メール", "登録日",
+    ];
+
+    const statusLabel = (s: string) => s === "active" ? "掲載中" : s === "completed" ? "成約" : s === "cancelled" ? "不成約" : s;
+
+    const rows = targets.map((c, i) => [
+      String(i + 1),
+      statusLabel(c.status),
+      c.transportType || "",
+      c.departureArea,
+      c.departureAddress || "",
+      c.desiredDate,
+      c.departureTime || "",
+      c.arrivalArea,
+      c.arrivalAddress || "",
+      c.arrivalDate || "",
+      c.arrivalTime || "",
+      c.cargoType,
+      c.weight,
+      c.vehicleType,
+      c.bodyType || "",
+      c.temperatureControl || "",
+      c.price || "",
+      c.highwayFee || "",
+      c.taxType || "",
+      c.consolidation || "",
+      c.driverWork || "",
+      c.packageCount || "",
+      c.loadingMethod || "",
+      c.vehicleSpec || "",
+      c.equipment || "",
+      c.loadingTime || "",
+      c.unloadingTime || "",
+      c.paymentDate || "",
+      c.truckCount || "",
+      c.movingJob || "",
+      c.urgency || "",
+      (c.description || "").replace(/\n/g, " "),
+      c.companyName,
+      c.contactPerson || "",
+      c.contactPhone,
+      c.contactEmail || "",
+      new Date(c.createdAt).toLocaleDateString("ja-JP"),
+    ]);
+
+    const escape = (v: string) => {
+      if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+        return '"' + v.replace(/"/g, '""') + '"';
+      }
+      return v;
+    };
+
+    const bom = "\uFEFF";
+    const csv = bom + [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `荷物一覧_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: `${targets.length}件のCSVをダウンロードしました` });
+  };
+
   return (
     <DashboardLayout>
       <div className="flex h-full">
@@ -499,6 +603,22 @@ export default function MyCargo() {
                 <p className="text-sm text-muted-foreground mt-1">
                   自分が登録した荷物情報の一覧
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {checkedIds.size > 0 && (
+                  <span className="text-xs text-muted-foreground font-bold">{checkedIds.size}件選択中</span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={exportCsv}
+                  disabled={checkedIds.size === 0}
+                  data-testid="button-export-csv"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  CSV出力
+                </Button>
               </div>
             </div>
 
@@ -554,6 +674,15 @@ export default function MyCargo() {
                 <table className="w-full" data-testid="table-my-cargo">
                   <thead>
                     <tr className="border-b bg-muted/60">
+                      <th className="text-center px-2 py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={allPageChecked}
+                          onChange={toggleAllPage}
+                          className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                          data-testid="checkbox-select-all"
+                        />
+                      </th>
                       <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">状態</th>
                       <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
                       <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap min-w-[220px]">発着情報</th>
@@ -568,6 +697,7 @@ export default function MyCargo() {
                   <tbody className="divide-y divide-border">
                     {isLoading && Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-4" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-10 w-48" /></td>
@@ -591,6 +721,15 @@ export default function MyCargo() {
                           onClick={() => setSelectedCargoId(listing.id)}
                           data-testid={`row-my-cargo-${listing.id}`}
                         >
+                          <td className="px-2 py-3 text-center align-top" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={checkedIds.has(listing.id)}
+                              onChange={() => toggleCheck(listing.id)}
+                              className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                              data-testid={`checkbox-cargo-${listing.id}`}
+                            />
+                          </td>
                           <td className="px-2 py-3 text-center align-top">
                             {listing.status === "active" ? (
                               <Badge variant="outline" className="text-[10px] px-1 border-green-300 text-green-600">
@@ -715,7 +854,7 @@ export default function MyCargo() {
 
                     {!isLoading && paginated.length === 0 && (
                       <tr>
-                        <td colSpan={9} className="text-center py-16">
+                        <td colSpan={10} className="text-center py-16">
                           <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-30" />
                           <p className="font-medium text-muted-foreground" data-testid="text-empty-state">
                             {statusFilter === "all" ? "登録した荷物はありません" :
