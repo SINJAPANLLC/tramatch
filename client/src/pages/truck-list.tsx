@@ -2011,9 +2011,11 @@ export default function TruckList() {
         <div className="flex h-full relative">
           {activeTab === "search" ? (
             <>
-              <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
-                <div className="px-4 sm:px-6 py-4">
+              <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
+                <div className="px-4 sm:px-6 pt-4 shrink-0">
                   {tabBar(true)}
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
                   {searchContent}
                 </div>
               </div>
