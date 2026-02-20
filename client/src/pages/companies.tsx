@@ -50,8 +50,10 @@ type CompanyDetail = {
   annualRevenue: string | null;
   bankInfo: string | null;
   majorClients: string | null;
+  closingMonth: string | null;
   closingDay: string | null;
   paymentMonth: string | null;
+  paymentDay: string | null;
   paymentTerms: string | null;
   memberOrganization: string | null;
   digitalTachographCount: string | null;
@@ -232,8 +234,8 @@ ${row("荷物保険", detail?.cargoInsurance)}
           <DetailRow label="年間売上" value={detail?.annualRevenue ? `${detail.annualRevenue} 万円` : null} />
           <DetailRow label="取引先銀行" value={detail?.bankInfo} />
           <DetailRow label="主要取引先" value={detail?.majorClients} />
-          <DetailRow label="締め日" value={detail?.closingDay} />
-          <DetailRow label="支払月・支払日" value={detail?.paymentMonth} />
+          <DetailRow label="締め日" value={[detail?.closingMonth, detail?.closingDay].filter(Boolean).join(" ") || null} />
+          <DetailRow label="支払月・支払日" value={[detail?.paymentMonth, detail?.paymentDay].filter(Boolean).join(" ") || null} />
           <DetailRow label="営業地域" value={detail?.businessArea || company.businessArea} />
         </div>
 

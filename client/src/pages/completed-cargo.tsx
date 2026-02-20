@@ -67,8 +67,10 @@ type CompanyInfo = {
   annualRevenue: string | null;
   bankInfo: string | null;
   majorClients: string | null;
+  closingMonth: string | null;
   closingDay: string | null;
   paymentMonth: string | null;
+  paymentDay: string | null;
   businessArea: string | null;
   autoInvoiceAcceptance: string | null;
   memberOrganization: string | null;
@@ -1040,8 +1042,8 @@ function CargoDetailPanel({ listing, onClose, isContracted = false }: { listing:
             <DetailRow label="年間売上" value={companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null} />
             <DetailRow label="取引先銀行" value={companyInfo?.bankInfo} />
             <DetailRow label="主要取引先" value={companyInfo?.majorClients} />
-            <DetailRow label="締め日" value={companyInfo?.closingDay} />
-            <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
+            <DetailRow label="締め日" value={[companyInfo?.closingMonth, companyInfo?.closingDay].filter(Boolean).join(" ") || null} />
+            <DetailRow label="支払月・支払日" value={[companyInfo?.paymentMonth, companyInfo?.paymentDay].filter(Boolean).join(" ") || null} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
           </div>
 

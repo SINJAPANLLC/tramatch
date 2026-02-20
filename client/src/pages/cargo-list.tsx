@@ -987,8 +987,10 @@ type CompanyInfo = {
   annualRevenue: string | null;
   bankInfo: string | null;
   majorClients: string | null;
+  closingMonth: string | null;
   closingDay: string | null;
   paymentMonth: string | null;
+  paymentDay: string | null;
   businessArea: string | null;
   autoInvoiceAcceptance: string | null;
   memberOrganization: string | null;
@@ -1110,8 +1112,8 @@ ${row("事業所所在地", companyInfo?.officeLocations)}
 ${row("年間売上", companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null)}
 ${row("取引先銀行", companyInfo?.bankInfo)}
 ${row("主要取引先", companyInfo?.majorClients)}
-${row("締め日", companyInfo?.closingDay)}
-${row("支払月・支払日", companyInfo?.paymentMonth)}
+${row("締め日", [companyInfo?.closingMonth, companyInfo?.closingDay].filter(Boolean).join(" ") || null)}
+${row("支払月・支払日", [companyInfo?.paymentMonth, companyInfo?.paymentDay].filter(Boolean).join(" ") || null)}
 ${row("営業地域", companyInfo?.businessArea)}
 </table>
 <h3 style="font-size:14px;margin:8px 0">信用情報</h3>
@@ -1341,8 +1343,8 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
             <DetailRow label="年間売上" value={companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null} />
             <DetailRow label="取引先銀行" value={companyInfo?.bankInfo} />
             <DetailRow label="主要取引先" value={companyInfo?.majorClients} />
-            <DetailRow label="締め日" value={companyInfo?.closingDay} />
-            <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
+            <DetailRow label="締め日" value={[companyInfo?.closingMonth, companyInfo?.closingDay].filter(Boolean).join(" ") || null} />
+            <DetailRow label="支払月・支払日" value={[companyInfo?.paymentMonth, companyInfo?.paymentDay].filter(Boolean).join(" ") || null} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
 
           </div>
