@@ -1,5 +1,6 @@
 import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -186,6 +187,7 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  app.use(compression());
   app.use("/uploads", express.static(uploadDir));
 
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
@@ -372,23 +374,20 @@ export async function registerRoutes(
   app.get("/api/onboarding-progress", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;
-      const user = await storage.getUser(userId);
+      const [user, cargoCount, truckCount, partners] = await Promise.all([
+        storage.getUser(userId),
+        storage.getCargoCountByUserId(userId),
+        storage.getTruckCountByUserId(userId),
+        storage.getPartnersByUserId(userId),
+      ]);
       if (!user) return res.status(404).json({ message: "User not found" });
-
-      const allCargo = await storage.getCargoListings();
-      const myCargo = allCargo.filter(c => c.userId === userId);
-
-      const allTrucks = await storage.getTruckListings();
-      const myTrucks = allTrucks.filter(t => t.userId === userId);
-
-      const partners = await storage.getPartnersByUserId(userId);
 
       const profileComplete = !!(user.companyName && user.phone && user.address && user.representative);
 
       res.json({
         profileComplete,
-        cargoCount: myCargo.length,
-        truckCount: myTrucks.length,
+        cargoCount,
+        truckCount,
         partnerCount: partners.length,
         notificationSettingDone: !!(user.notifyEmail || user.notifyLine),
       });
@@ -412,18 +411,15 @@ export async function registerRoutes(
 
   app.get("/api/companies/:userId", async (req, res) => {
     try {
-      const user = await storage.getUser(req.params.userId);
+      const targetUserId = req.params.userId;
+      const [user, userCargo, userTrucks] = await Promise.all([
+        storage.getUser(targetUserId),
+        storage.getCargoListingsByUserId(targetUserId),
+        storage.getTruckListingsByUserId(targetUserId),
+      ]);
       if (!user) {
         return res.status(404).json({ message: "企業情報が見つかりません" });
       }
-      const now = new Date();
-      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-
-      const allCargo = await storage.getCargoListings();
-      const allTrucks = await storage.getTruckListings();
-      const userCargo = allCargo.filter(c => c.userId === req.params.userId);
-      const userTrucks = allTrucks.filter(t => t.userId === req.params.userId);
 
       const cargoCompleted = userCargo.filter(c => c.status === "completed").length;
       const cargoRegistered = userCargo.length;
@@ -820,10 +816,10 @@ export async function registerRoutes(
 
   app.get("/api/public/counts", async (_req, res) => {
     try {
-      const cargo = await storage.getCargoListings();
-      const trucks = await storage.getTruckListings();
-      const activeCargo = cargo.filter(c => c.status === "active").length;
-      const activeTrucks = trucks.filter(t => t.status === "active").length;
+      const [activeCargo, activeTrucks] = await Promise.all([
+        storage.getActiveCargoCount(),
+        storage.getActiveTruckCount(),
+      ]);
       res.json({ cargoCount: activeCargo, truckCount: activeTrucks });
     } catch (error) {
       res.json({ cargoCount: 0, truckCount: 0 });
@@ -866,10 +862,9 @@ export async function registerRoutes(
 
   app.get("/api/my-cargo", requireAuth, async (req, res) => {
     try {
-      const listings = await storage.getCargoListings();
+      const listings = await storage.getCargoListingsByUserId(req.session.userId as string);
       await expireOldCargoListings(listings);
-      const userListings = listings.filter(l => l.userId === req.session.userId);
-      res.json(userListings);
+      res.json(listings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user cargo listings" });
     }
@@ -1230,9 +1225,8 @@ export async function registerRoutes(
 
   app.get("/api/my-trucks", requireAuth, async (req, res) => {
     try {
-      const listings = await storage.getTruckListings();
-      const userListings = listings.filter(l => l.userId === req.session.userId);
-      res.json(userListings);
+      const listings = await storage.getTruckListingsByUserId(req.session.userId as string);
+      res.json(listings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user truck listings" });
     }
@@ -1361,12 +1355,14 @@ export async function registerRoutes(
 
   app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
     try {
-      const cargo = await storage.getCargoListings();
-      const trucks = await storage.getTruckListings();
-      const allUsers = await storage.getAllUsers();
+      const [cargoCount, truckCount, allUsers] = await Promise.all([
+        storage.getTotalCargoCount(),
+        storage.getTotalTruckCount(),
+        storage.getAllUsers(),
+      ]);
       res.json({
-        cargoCount: cargo.length,
-        truckCount: trucks.length,
+        cargoCount,
+        truckCount,
         userCount: allUsers.length,
       });
     } catch (error) {

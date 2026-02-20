@@ -35,12 +35,20 @@ export interface IStorage {
   deleteUser(id: string): Promise<boolean>;
 
   getCargoListings(): Promise<CargoListing[]>;
+  getCargoListingsByUserId(userId: string): Promise<CargoListing[]>;
   getCargoListing(id: string): Promise<CargoListing | undefined>;
   createCargoListing(listing: InsertCargoListing, userId?: string): Promise<CargoListing>;
+  getActiveCargoCount(): Promise<number>;
+  getTotalCargoCount(): Promise<number>;
+  getCargoCountByUserId(userId: string): Promise<number>;
 
   getTruckListings(): Promise<TruckListing[]>;
+  getTruckListingsByUserId(userId: string): Promise<TruckListing[]>;
   getTruckListing(id: string): Promise<TruckListing | undefined>;
   createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing>;
+  getActiveTruckCount(): Promise<number>;
+  getTotalTruckCount(): Promise<number>;
+  getTruckCountByUserId(userId: string): Promise<number>;
 
   updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
@@ -249,6 +257,40 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(cargoListings).orderBy(desc(cargoListings.createdAt));
   }
 
+  async getCargoListingsByUserId(userId: string): Promise<CargoListing[]> {
+    return db.select().from(cargoListings).where(eq(cargoListings.userId, userId)).orderBy(desc(cargoListings.createdAt));
+  }
+
+  async getActiveCargoCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(cargoListings).where(eq(cargoListings.status, "active"));
+    return result[0]?.count ?? 0;
+  }
+
+  async getActiveTruckCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(truckListings).where(eq(truckListings.status, "active"));
+    return result[0]?.count ?? 0;
+  }
+
+  async getTotalCargoCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(cargoListings);
+    return result[0]?.count ?? 0;
+  }
+
+  async getTotalTruckCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(truckListings);
+    return result[0]?.count ?? 0;
+  }
+
+  async getCargoCountByUserId(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(cargoListings).where(eq(cargoListings.userId, userId));
+    return result[0]?.count ?? 0;
+  }
+
+  async getTruckCountByUserId(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(truckListings).where(eq(truckListings.userId, userId));
+    return result[0]?.count ?? 0;
+  }
+
   async getCargoListing(id: string): Promise<CargoListing | undefined> {
     const [listing] = await db.select().from(cargoListings).where(eq(cargoListings.id, id));
     return listing;
@@ -263,6 +305,10 @@ export class DatabaseStorage implements IStorage {
 
   async getTruckListings(): Promise<TruckListing[]> {
     return db.select().from(truckListings).orderBy(desc(truckListings.createdAt));
+  }
+
+  async getTruckListingsByUserId(userId: string): Promise<TruckListing[]> {
+    return db.select().from(truckListings).where(eq(truckListings.userId, userId)).orderBy(desc(truckListings.createdAt));
   }
 
   async getTruckListing(id: string): Promise<TruckListing | undefined> {
