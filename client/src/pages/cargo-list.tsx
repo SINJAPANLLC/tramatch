@@ -451,15 +451,15 @@ export default function CargoList() {
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日</span>
-              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-from" />
+              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" data-testid="filter-depart-date-from" />
               <span className="text-[11px] text-muted-foreground">〜</span>
-              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-to" />
+              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" data-testid="filter-depart-date-to" />
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">着日</span>
-              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-from" />
+              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" data-testid="filter-arrive-date-from" />
               <span className="text-[11px] text-muted-foreground">〜</span>
-              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-to" />
+              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[135px]" data-testid="filter-arrive-date-to" />
             </div>
           </div>
 
