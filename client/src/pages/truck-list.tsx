@@ -1462,6 +1462,17 @@ export default function TruckList() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"search" | "register" | "my">("search");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeTab === "register" || activeTab === "my") {
+      const parent = containerRef.current?.parentElement;
+      if (parent) {
+        parent.style.overflow = "hidden";
+        return () => { parent.style.overflow = ""; };
+      }
+    }
+  }, [activeTab]);
   const [aiSearchText, setAiSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
@@ -2008,7 +2019,7 @@ export default function TruckList() {
   if (isAuthenticated) {
     return (
       <DashboardLayout>
-        <div className="flex h-[calc(100vh-56px)] relative">
+        <div ref={containerRef} className="flex h-[calc(100vh-56px)] max-h-[calc(100vh-56px)] relative overflow-hidden">
           {activeTab === "search" ? (
             <>
               <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
