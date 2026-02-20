@@ -190,7 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </div>
 
-      <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-w-0 overflow-y-auto">
         {children}
       </div>
     </div>
