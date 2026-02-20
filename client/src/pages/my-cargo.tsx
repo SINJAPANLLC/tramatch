@@ -20,7 +20,7 @@ const STATUS_FILTERS = [
   { label: "不成約", value: "cancelled" },
 ];
 
-const PER_PAGE_OPTIONS = [10, 20, 50];
+const PER_PAGE_OPTIONS = [20, 50, 100];
 
 function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
   const pages: (number | "...")[] = [];
@@ -416,7 +416,7 @@ export default function MyCargo() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price">("newest");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(100);
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/my-cargo"],
@@ -500,12 +500,6 @@ export default function MyCargo() {
                   自分が登録した荷物情報の一覧
                 </p>
               </div>
-              <Link href="/cargo/new">
-                <Button data-testid="button-add-cargo">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  新規登録
-                </Button>
-              </Link>
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap mb-4">
@@ -728,14 +722,6 @@ export default function MyCargo() {
                              statusFilter === "active" ? "掲載中の荷物はありません" :
                              "不成約の荷物はありません"}
                           </p>
-                          {statusFilter === "all" && (
-                            <Link href="/cargo/new">
-                              <Button className="mt-4" data-testid="button-empty-add-cargo">
-                                <Plus className="w-4 h-4 mr-1.5" />
-                                荷物を登録する
-                              </Button>
-                            </Link>
-                          )}
                         </td>
                       </tr>
                     )}
