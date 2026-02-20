@@ -760,7 +760,7 @@ function TruckRegisterTab() {
   const [mobileTab, setMobileTab] = useState<"chat" | "form">("chat");
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="bg-primary px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
         <Truck className="w-5 h-5 text-primary-foreground" />
         <div className="flex-1 min-w-0">
@@ -791,9 +791,8 @@ function TruckRegisterTab() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 relative">
-        <div className="absolute inset-0 flex overflow-hidden">
-        <div className={`flex-1 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        <div className={`flex-1 min-h-0 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3" data-testid="truck-chat-messages">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -1132,7 +1131,6 @@ function TruckRegisterTab() {
                   </div>
                 </div>
 
-
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" className="flex-1" disabled={mutation.isPending} data-testid="button-submit-truck">
                     {mutation.isPending ? "掲載中..." : "掲載する"}
@@ -1144,7 +1142,6 @@ function TruckRegisterTab() {
               </form>
             </Form>
           </div>
-        </div>
         </div>
       </div>
     </div>
@@ -2027,11 +2024,13 @@ export default function TruckList() {
               )}
             </>
           ) : activeTab === "register" ? (
-            <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+            <div className="absolute inset-0 flex flex-col">
               <div className="px-4 sm:px-6 pt-4 shrink-0">
                 {tabBar(false)}
               </div>
-              <TruckRegisterTab />
+              <div className="flex-1 min-h-0">
+                <TruckRegisterTab />
+              </div>
             </div>
           ) : (
             <>
