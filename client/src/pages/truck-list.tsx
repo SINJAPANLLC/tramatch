@@ -1483,12 +1483,24 @@ export default function TruckList() {
   const [filterArriveDateTo, setFilterArriveDateTo] = useState("");
   const [filterMinFare, setFilterMinFare] = useState("");
   const [filterWeight, setFilterWeight] = useState("");
-  const [filterVehicleType, setFilterVehicleType] = useState("");
+  const [filterVehicleType, setFilterVehicleType] = useState<string[]>([]);
   const [filterExcludeNegotiable, setFilterExcludeNegotiable] = useState(false);
+  const [bodyTypeDropdownOpen, setBodyTypeDropdownOpen] = useState(false);
+  const bodyTypeRef = useRef<HTMLDivElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (bodyTypeRef.current && !bodyTypeRef.current.contains(e.target as Node)) {
+        setBodyTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const { data: listings, isLoading } = useQuery<TruckListing[]>({
     queryKey: ["/api/trucks"],
@@ -1611,7 +1623,7 @@ export default function TruckList() {
     setFilterArriveDateTo("");
     setFilterMinFare("");
     setFilterWeight("");
-    setFilterVehicleType("");
+    setFilterVehicleType([]);
     setFilterExcludeNegotiable(false);
     setPage(1);
   }, []);
@@ -1666,9 +1678,9 @@ export default function TruckList() {
         (item.vehicleType || "").includes(filterWeight)
       );
     }
-    if (filterVehicleType) {
+    if (filterVehicleType.length > 0) {
       result = result.filter((item) =>
-        (item.bodyType || "").includes(filterVehicleType)
+        filterVehicleType.some((bt) => (item.bodyType || "").includes(bt))
       );
     }
 
@@ -1764,15 +1776,38 @@ export default function TruckList() {
                 {VEHICLE_TYPES.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
               </SelectContent>
             </Select>
-            <Select value={filterVehicleType || "all"} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
-              <SelectTrigger className="text-xs h-8 w-[140px] flex-shrink-0" data-testid="filter-truck-vehicle-type">
-                <SelectValue placeholder="車体タイプ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">車体タイプ</SelectItem>
-                {BODY_TYPES.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1 flex-shrink-0 relative" ref={bodyTypeRef}>
+              <button
+                type="button"
+                className="flex items-center justify-between gap-1 text-xs h-8 w-[160px] rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={() => setBodyTypeDropdownOpen((v) => !v)}
+                data-testid="filter-truck-vehicle-type"
+              >
+                <span className="truncate text-muted-foreground">
+                  {filterVehicleType.length > 0 ? `車体タイプ(${filterVehicleType.length})` : "車体タイプ"}
+                </span>
+                <ChevronLeft className={`w-3 h-3 text-muted-foreground transition-transform ${bodyTypeDropdownOpen ? "-rotate-90" : "rotate-0"}`} />
+              </button>
+              {bodyTypeDropdownOpen && (
+                <div className="absolute top-9 left-0 z-50 w-[200px] max-h-[260px] overflow-y-auto rounded-md border bg-popover p-2 shadow-md">
+                  {BODY_TYPES.map((bt) => (
+                    <label key={bt} className="flex items-center gap-2 px-1 py-1 cursor-pointer hover:bg-accent rounded text-xs">
+                      <Checkbox
+                        checked={filterVehicleType.includes(bt)}
+                        onCheckedChange={(checked) => {
+                          setFilterVehicleType((prev) =>
+                            checked ? [...prev, bt] : prev.filter((x) => x !== bt)
+                          );
+                          setPage(1);
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      {bt}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
