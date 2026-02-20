@@ -906,43 +906,51 @@ export async function registerRoutes(
       const listingData = parsed.data;
       const listing = await storage.createCargoListing(listingData, req.session.userId as string);
 
-      const allUsers = await storage.getAllUsers();
-      const appBaseUrl = process.env.APP_BASE_URL || `https://${req.get("host")}`;
-      const cargoVars = {
-        departureArea: listing.departureArea || "",
-        arrivalArea: listing.arrivalArea || "",
-        cargoType: listing.cargoType || "",
-        weight: listing.weight || "",
-        companyName: currentUser?.companyName || "",
-        appBaseUrl,
-      };
-      for (const u of allUsers) {
-        if (u.id !== req.session.userId && u.approved) {
-          await storage.createNotification({
-            userId: u.id,
-            type: "cargo_new",
-            title: "新しい荷物が登録されました",
-            message: `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType} ${listing.weight}`,
-            relatedId: listing.id,
-          });
+      res.status(201).json(listing);
 
-          if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
-            try {
-              const resolved = await resolveEmailTemplate(
-                "cargo_new",
-                cargoVars,
-                "【トラマッチ】新しい荷物が登録されました",
-                `新しい荷物案件が登録されました。\n\n出発地: ${listing.departureArea}\n到着地: ${listing.arrivalArea}\n荷物種類: ${listing.cargoType}\n重量: ${listing.weight}\n\nトラマッチにログインして詳細をご確認ください。`
-              );
-              if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
-            } catch (emailErr) {
-              console.error(`Cargo new email failed for ${u.email}:`, emailErr);
+      const sessionUserId = req.session.userId as string;
+      const host = req.get("host") || "";
+      setImmediate(async () => {
+        try {
+          const allUsers = await storage.getAllUsers();
+          const appBaseUrl = process.env.APP_BASE_URL || `https://${host}`;
+          const cargoVars = {
+            departureArea: listing.departureArea || "",
+            arrivalArea: listing.arrivalArea || "",
+            cargoType: listing.cargoType || "",
+            weight: listing.weight || "",
+            companyName: currentUser?.companyName || "",
+            appBaseUrl,
+          };
+          for (const u of allUsers) {
+            if (u.id !== sessionUserId && u.approved) {
+              await storage.createNotification({
+                userId: u.id,
+                type: "cargo_new",
+                title: "新しい荷物が登録されました",
+                message: `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType} ${listing.weight}`,
+                relatedId: listing.id,
+              });
+
+              if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
+                try {
+                  const resolved = await resolveEmailTemplate(
+                    "cargo_new",
+                    cargoVars,
+                    "【トラマッチ】新しい荷物が登録されました",
+                    `新しい荷物案件が登録されました。\n\n出発地: ${listing.departureArea}\n到着地: ${listing.arrivalArea}\n荷物種類: ${listing.cargoType}\n重量: ${listing.weight}\n\nトラマッチにログインして詳細をご確認ください。`
+                  );
+                  if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
+                } catch (emailErr) {
+                  console.error(`Cargo new email failed for ${u.email}:`, emailErr);
+                }
+              }
             }
           }
+        } catch (bgErr) {
+          console.error("Background cargo notification error:", bgErr);
         }
-      }
-
-      res.status(201).json(listing);
+      });
     } catch (error) {
       console.error("Failed to create cargo listing:", error);
       res.status(500).json({ message: "Failed to create cargo listing" });
@@ -1261,43 +1269,51 @@ export async function registerRoutes(
       }
       const listing = await storage.createTruckListing({ ...parsed.data }, req.session.userId as string);
 
-      const allUsers = await storage.getAllUsers();
-      const appBaseUrl = process.env.APP_BASE_URL || `https://${req.get("host")}`;
-      const truckVars = {
-        currentArea: listing.currentArea || "",
-        destinationArea: listing.destinationArea || "",
-        vehicleType: listing.vehicleType || "",
-        maxWeight: listing.maxWeight || "",
-        companyName: user?.companyName || "",
-        appBaseUrl,
-      };
-      for (const u of allUsers) {
-        if (u.id !== req.session.userId && u.approved) {
-          await storage.createNotification({
-            userId: u.id,
-            type: "truck_new",
-            title: "新しい空車が登録されました",
-            message: `${listing.currentArea}→${listing.destinationArea} ${listing.vehicleType} ${listing.maxWeight}`,
-            relatedId: listing.id,
-          });
+      res.status(201).json(listing);
 
-          if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
-            try {
-              const resolved = await resolveEmailTemplate(
-                "truck_new",
-                truckVars,
-                "【トラマッチ】新しい空車が登録されました",
-                `新しい空車情報が登録されました。\n\n現在地: ${listing.currentArea}\n行先: ${listing.destinationArea}\n車両タイプ: ${listing.vehicleType}\n積載量: ${listing.maxWeight}\n\nトラマッチにログインして詳細をご確認ください。`
-              );
-              if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
-            } catch (emailErr) {
-              console.error(`Truck new email failed for ${u.email}:`, emailErr);
+      const sessionUserId = req.session.userId as string;
+      const host = req.get("host") || "";
+      setImmediate(async () => {
+        try {
+          const allUsers = await storage.getAllUsers();
+          const appBaseUrl = process.env.APP_BASE_URL || `https://${host}`;
+          const truckVars = {
+            currentArea: listing.currentArea || "",
+            destinationArea: listing.destinationArea || "",
+            vehicleType: listing.vehicleType || "",
+            maxWeight: listing.maxWeight || "",
+            companyName: user?.companyName || "",
+            appBaseUrl,
+          };
+          for (const u of allUsers) {
+            if (u.id !== sessionUserId && u.approved) {
+              await storage.createNotification({
+                userId: u.id,
+                type: "truck_new",
+                title: "新しい空車が登録されました",
+                message: `${listing.currentArea}→${listing.destinationArea} ${listing.vehicleType} ${listing.maxWeight}`,
+                relatedId: listing.id,
+              });
+
+              if (u.notifyEmail && u.email && isEmailConfigured() && !isAgentAutoEmail(u.email)) {
+                try {
+                  const resolved = await resolveEmailTemplate(
+                    "truck_new",
+                    truckVars,
+                    "【トラマッチ】新しい空車が登録されました",
+                    `新しい空車情報が登録されました。\n\n現在地: ${listing.currentArea}\n行先: ${listing.destinationArea}\n車両タイプ: ${listing.vehicleType}\n積載量: ${listing.maxWeight}\n\nトラマッチにログインして詳細をご確認ください。`
+                  );
+                  if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
+                } catch (emailErr) {
+                  console.error(`Truck new email failed for ${u.email}:`, emailErr);
+                }
+              }
             }
           }
+        } catch (bgErr) {
+          console.error("Background truck notification error:", bgErr);
         }
-      }
-
-      res.status(201).json(listing);
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to create truck listing" });
     }
