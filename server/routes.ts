@@ -1773,8 +1773,8 @@ ${cargoFieldSchema}
 
 データ解析の注意点（非常に重要）:
 - 物流業界の略語・表記ゆれを正しく理解すること:
-  - 「発」「積地」「積込」= departureArea/departureAddress
-  - 「着」「卸地」「卸先」「降ろし」「納品先」= arrivalArea/arrivalAddress
+  - 「発」「積地」「積込」「積み」= departureArea/departureAddress（積む場所）
+  - 「着」「卸地」「卸先」「降ろし」「おろし」「納品先」= arrivalArea/arrivalAddress（降ろす場所）
   - 「W」「ウイング」= bodyType: "ウイング"
   - 「PG」「パワゲ」= bodyType: "パワーゲート付き"
   - 「4t」「4トン」= vehicleType: "4t車"、「大型」= vehicleType: "大型車"
@@ -1783,10 +1783,20 @@ ${cargoFieldSchema}
   - 「手積み」「手降ろし」「手積手降」= driverWork: "手積み手降ろし"
   - 「フォーク」= driverWork: "フォークリフト"
   - 「パレ」= loadingMethod: "パレット"、「バラ」= loadingMethod: "バラ積み"
-- 住所から都道府県を推測すること（例: 「横浜市」→ departureArea: "神奈川"）
+- 住所から都道府県を推測すること（例: 「横浜市」→ "神奈川"、「熊谷」→ "埼玉"、「香取市」→ "千葉"）
 - 日付の表記ゆれに対応（「3/5」「3月5日」「3.5」→ "YYYY/03/05"）
+- 数字だけの日付は文脈で判断（「24積み25」→ 24日に積み、25日に降ろし）
 - 時間の表記ゆれに対応（「朝8時」「8時」「AM8」→ "8:00"）
 - FAXや掲示板からコピーした書式、カンマ区切りやタブ区切りのデータにも対応すること
+
+短文・メモ形式の解析パターン:
+- 「24積み25」→ desiredDate: 当月24日、arrivalDate: 当月25日
+- 「熊谷積み」→ departureArea: "埼玉", departureAddress: "熊谷"
+- 「香取市」→ 文脈で判断（積み地の後なら着地）
+- 「4トン50」「4t50」→ vehicleType: "4t車", price: "50000"（2桁金額は万円単位）
+- 「大型80」→ vehicleType: "大型車", price: "80000"
+- 金額が2桁の場合は万円単位（50→50000）、5桁以上はそのまま
+- titleは自動生成: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」
 
 情報が不明な場合はそのフィールドを空文字にしてください。
 vehicleTypeとbodyTypeは複数選択の場合カンマ区切りで返してください（例: "4t車, 10t車"）。
@@ -1869,8 +1879,8 @@ JSONのみを返してください。説明文は不要です。`,
 
 データ解析の注意点（非常に重要）:
 - 物流業界でよく使われる略語や表記を正しく理解すること:
-  - 「発」「積地」「積込」= departureArea/departureAddress
-  - 「着」「卸地」「卸先」「降ろし」「納品先」= arrivalArea/arrivalAddress
+  - 「発」「積地」「積込」「積み」= departureArea/departureAddress（積む場所）
+  - 「着」「卸地」「卸先」「降ろし」「おろし」「納品先」= arrivalArea/arrivalAddress（降ろす場所）
   - 「W」「ウイング」= bodyType: "ウイング"
   - 「冷凍」「レイトウ」= temperatureControl: "冷凍（-18℃以下）"
   - 「冷蔵」= temperatureControl: "冷蔵（0〜10℃）"
@@ -1888,12 +1898,24 @@ JSONのみを返してください。説明文は不要です。`,
   - 「バラ」= loadingMethod: "バラ積み"
   - 「至急」「急ぎ」= urgency: "至急"
   - 「引越」「引っ越し」= movingJob: "引っ越し案件"
-- 住所から都道府県を推測すること（例: 「横浜市」→ departureArea: "神奈川"）
+- 住所から都道府県を推測すること（例: 「横浜市」→ departureArea: "神奈川"、「熊谷」→ departureArea: "埼玉"、「香取市」→ arrivalArea: "千葉"）
 - 日付の表記ゆれに対応（「3/5」「3月5日」「3.5」→ desiredDate: "YYYY/03/05"）
+- 数字だけの日付は文脈で判断（「24積み25」→ 24日に積み、25日に降ろし）
 - 時間の表記ゆれに対応（「朝8時」「8時」「AM8」→ departureTime: "8:00"）
 - 複数行のデータや表形式のデータも正確にパースすること
 - FAXや掲示板からコピーした書式、カンマ区切りやタブ区切りのデータにも対応すること
 - テキスト全体を必ず読み込み、見落としがないようにすること
+
+短文・メモ形式の解析パターン（非常に重要）:
+運送業界では以下のような超短文メモやLINE/チャットの短い文章で案件が流れてきます。正しく解析してください:
+- 「24積み25」→ desiredDate: 当月24日、arrivalDate: 当月25日（数字+積み+数字 = 積み日と降ろし日）
+- 「熊谷積み」→ departureArea: "埼玉", departureAddress: "熊谷"（地名+積み = 発地）
+- 「香取市」→ 前後の文脈で発地か着地か判断（積み地の後なら着地）→ arrivalArea: "千葉", arrivalAddress: "香取市"
+- 「4トン50」「4t50」→ vehicleType: "4t車", price: "50000"（車種+金額。50=50000円、35=35000円のように万円単位で省略されることが多い）
+- 「大型80」→ vehicleType: "大型車", price: "80000"
+- 「10t W」→ vehicleType: "10t車", bodyType: "ウイング"
+- 金額が2桁の場合は万円単位（50→50000、35→35000、80→80000）、5桁以上はそのまま
+- titleは自動生成すること: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」の形式で作成。荷種不明の場合は「{departureArea}→{arrivalArea} {vehicleType}」
 
 運賃相場の目安（一般的な参考値）:
 - 近距離（同一県内〜隣県）: 2t車 15,000〜25,000円、4t車 20,000〜35,000円、10t車 35,000〜55,000円
