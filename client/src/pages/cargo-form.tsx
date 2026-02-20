@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
-import { Package, Sparkles, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon, Send, ChevronDown, ChevronUp, CheckCircle2, CircleDot, Bot, User, Banknote, MessageSquare } from "lucide-react";
+import { Package, Sparkles, Upload, Mic, MicOff, FileText, Loader2, CalendarIcon, Send, ChevronDown, ChevronUp, CheckCircle2, CircleDot, Bot, User, Banknote, MessageSquare, Copy } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -96,7 +96,7 @@ const CARGO_FIELDS = [
   "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
   "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
   "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
-  "highwayFee", "equipment", "vehicleSpec",
+  "highwayFee", "equipment", "vehicleSpec", "truckCount",
   "urgency", "movingJob", "contactPerson",
   "description",
 ];
@@ -111,7 +111,7 @@ const FIELD_LABELS: Record<string, string> = {
   temperatureControl: "温度管理", price: "運賃(税別)", transportType: "形態",
   consolidation: "積合", driverWork: "作業", packageCount: "個数",
   loadingMethod: "荷姿", highwayFee: "高速代",
-  equipment: "必要装備", vehicleSpec: "車両指定",
+  equipment: "必要装備", vehicleSpec: "車両指定", truckCount: "台数",
   urgency: "緊急度", movingJob: "引越し", contactPerson: "担当者",
   description: "備考",
 };
@@ -190,6 +190,12 @@ export default function CargoForm() {
   const [totalItems, setTotalItems] = useState(0);
   const [extractedFields, setExtractedFields] = useState<Record<string, string>>({});
   const [editLoaded, setEditLoaded] = useState(false);
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
+
+  const { data: myCargoList } = useQuery<import("@shared/schema").CargoListing[]>({
+    queryKey: ["/api/my-cargo"],
+    enabled: showCopyDialog,
+  });
 
   const form = useForm<InsertCargoListing>({
     resolver: zodResolver(insertCargoListingSchema),
@@ -201,7 +207,7 @@ export default function CargoForm() {
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
       loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-      urgency: "", movingJob: "", contactPerson: "",
+      truckCount: "", urgency: "", movingJob: "", contactPerson: "",
     },
   });
 
@@ -259,6 +265,39 @@ export default function CargoForm() {
     return normalizedClean;
   }, []);
 
+  const copyFromCargo = useCallback((cargo: import("@shared/schema").CargoListing) => {
+    form.reset({
+      title: "", departureArea: "", departureAddress: "", departureTime: "",
+      arrivalArea: "", arrivalAddress: "", arrivalTime: "", cargoType: "",
+      weight: "", desiredDate: "", arrivalDate: "", vehicleType: "", bodyType: "",
+      temperatureControl: "", price: "", highwayFee: "", transportType: "スポット",
+      consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
+      description: "", companyName: "", contactPhone: "", contactEmail: "",
+      loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
+      truckCount: "", urgency: "", movingJob: "", contactPerson: "",
+    });
+    const fields: Record<string, string> = {};
+    for (const key of CARGO_FIELDS) {
+      const val = (cargo as any)[key];
+      if (val != null && val !== "") {
+        fields[key] = String(val);
+        form.setValue(key as keyof InsertCargoListing, String(val));
+      }
+    }
+    if (cargo.companyName) form.setValue("companyName", cargo.companyName);
+    if (cargo.contactPhone) form.setValue("contactPhone", cargo.contactPhone);
+    if (cargo.contactEmail) form.setValue("contactEmail", cargo.contactEmail || "");
+    form.setValue("title", "");
+    form.setValue("desiredDate", "");
+    form.setValue("arrivalDate", "");
+    fields["title"] = "";
+    fields["desiredDate"] = "";
+    fields["arrivalDate"] = "";
+    setExtractedFields(fields);
+    setShowCopyDialog(false);
+    toast({ title: "案件をコピーしました", description: "タイトルと日付は空欄にしています。必要な箇所を編集してください。" });
+  }, [form, toast]);
+
   const loadNextPendingItem = useCallback(() => {
     if (pendingItems.length > 0) {
       const nextItem = pendingItems[0];
@@ -273,7 +312,7 @@ export default function CargoForm() {
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
         loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-        urgency: "", movingJob: "", contactPerson: "",
+        truckCount: "", urgency: "", movingJob: "", contactPerson: "",
       });
       const normalized = normalizeAiItem(nextItem);
       setExtractedFields(normalized);
@@ -721,7 +760,46 @@ export default function CargoForm() {
                   <Badge variant="secondary" className="text-[10px]">{filledFieldCount}項目入力済</Badge>
                 )}
               </div>
+              {!isEditMode && (
+                <Button variant="outline" size="sm" onClick={() => setShowCopyDialog(true)} data-testid="button-copy-past-cargo">
+                  <Copy className="w-3 h-3 mr-1" />
+                  過去案件コピー
+                </Button>
+              )}
             </div>
+
+            {showCopyDialog && (
+              <div className="border-b border-border bg-muted/30 p-3 max-h-[300px] overflow-y-auto">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-bold">過去の荷物からコピー</span>
+                  <Button variant="ghost" size="sm" onClick={() => setShowCopyDialog(false)} data-testid="button-close-copy-dialog">
+                    閉じる
+                  </Button>
+                </div>
+                {!myCargoList ? (
+                  <div className="text-xs text-muted-foreground text-center py-4"><Loader2 className="w-4 h-4 animate-spin inline mr-1" />読み込み中...</div>
+                ) : myCargoList.length === 0 ? (
+                  <div className="text-xs text-muted-foreground text-center py-4">過去の荷物情報がありません</div>
+                ) : (
+                  <div className="space-y-1">
+                    {myCargoList.slice(0, 20).map((cargo) => (
+                      <button
+                        type="button"
+                        key={cargo.id}
+                        onClick={() => copyFromCargo(cargo)}
+                        className="w-full text-left p-2 rounded-md hover-elevate border border-border text-xs"
+                        data-testid={`button-copy-cargo-${cargo.id}`}
+                      >
+                        <div className="font-medium truncate">{cargo.title || `${cargo.departureArea}→${cargo.arrivalArea}`}</div>
+                        <div className="text-muted-foreground mt-0.5">
+                          {cargo.departureArea}→{cargo.arrivalArea} {cargo.vehicleType} {cargo.cargoType} {cargo.desiredDate}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="p-3">
                 <Form {...form}>
@@ -878,11 +956,18 @@ export default function CargoForm() {
                             </FormItem>
                           )} />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <FormField control={form.control} name="packageCount" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-xs">個数</FormLabel>
                               <FormControl><Input placeholder="例: 20パレット" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-package-count" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="truckCount" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">台数</FormLabel>
+                              <FormControl><Input placeholder="例: 1台" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-truck-count" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />
