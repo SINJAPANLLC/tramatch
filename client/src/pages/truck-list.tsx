@@ -1657,110 +1657,38 @@ export default function TruckList() {
     <>
       <Card className="mb-5">
         <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-sm">AI空車検索</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button variant={inputMode === "text" ? "default" : "ghost"} size="sm" onClick={() => setInputMode("text")} data-testid="button-truck-mode-text">
-                <Search className="w-3.5 h-3.5 mr-1" />テキスト
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm">AI空車検索</span>
+          </div>
+
+          <div className="flex gap-2">
+            <Textarea
+              placeholder={"例: 関東から関西 4t車 空車\n例: 東京 10t 大型車"}
+              value={aiSearchText}
+              onChange={(e) => setAiSearchText(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              onPaste={(e) => {
+                setTimeout(() => {
+                  const val = (e.target as HTMLTextAreaElement).value;
+                  setAiSearchText(val);
+                  setActiveSearch(parseAISearch(val));
+                  setPage(1);
+                }, 0);
+              }}
+              rows={2}
+              className="resize-none text-sm flex-1"
+              data-testid="input-truck-ai-search"
+            />
+            <div className="flex flex-col gap-1.5">
+              <Button onClick={handleSearch} className="flex-1" data-testid="button-truck-search">
+                <Search className="w-4 h-4 mr-1" />検索
               </Button>
-              <Button variant={inputMode === "file" ? "default" : "ghost"} size="sm" onClick={() => setInputMode("file")} data-testid="button-truck-mode-file">
-                <Upload className="w-3.5 h-3.5 mr-1" />ファイル
-              </Button>
-              <Button variant={inputMode === "voice" ? "default" : "ghost"} size="sm" onClick={() => setInputMode("voice")} data-testid="button-truck-mode-voice">
-                <Mic className="w-3.5 h-3.5 mr-1" />音声
+              <Button variant="outline" onClick={handleClear} className="flex-1 text-xs" data-testid="button-truck-clear">
+                クリア
               </Button>
             </div>
           </div>
-
-          {inputMode === "text" && (
-            <div className="flex gap-2">
-              <Textarea
-                placeholder={"例: 関東から関西 4t車 空車\n例: 東京 10t 大型車"}
-                value={aiSearchText}
-                onChange={(e) => setAiSearchText(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                onPaste={(e) => {
-                  setTimeout(() => {
-                    const val = (e.target as HTMLTextAreaElement).value;
-                    setAiSearchText(val);
-                    setActiveSearch(parseAISearch(val));
-                    setPage(1);
-                  }, 0);
-                }}
-                rows={2}
-                className="resize-none text-sm flex-1"
-                data-testid="input-truck-ai-search"
-              />
-              <div className="flex flex-col gap-1.5">
-                <Button onClick={handleSearch} className="flex-1" data-testid="button-truck-search">
-                  <Search className="w-4 h-4 mr-1" />検索
-                </Button>
-                <Button variant="outline" onClick={handleClear} className="flex-1 text-xs" data-testid="button-truck-clear">
-                  クリア
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {inputMode === "file" && (
-            <div className="space-y-3">
-              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
-                <input ref={fileInputRef} type="file" accept="image/*,.pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} className="hidden" data-testid="input-truck-file-upload" />
-                {isProcessing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">AIがファイルを解析中...</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <FileText className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">画像やスクリーンショットからAIが空車情報を読み取ります</p>
-                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} data-testid="button-truck-upload-file">
-                      <Upload className="w-4 h-4 mr-1.5" />ファイルを選択
-                    </Button>
-                    <p className="text-xs text-muted-foreground">JPG, PNG, PDF対応 (最大25MB)</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {inputMode === "voice" && (
-            <div className="space-y-3">
-              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
-                {isProcessing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">AIが音声を解析中...</p>
-                  </div>
-                ) : isRecording ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full bg-destructive/20 animate-ping" />
-                      <div className="relative w-16 h-16 rounded-full bg-destructive flex items-center justify-center">
-                        <MicOff className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-                    <p className="text-sm font-medium text-destructive">録音中...</p>
-                    <Button variant="destructive" onClick={stopRecording} data-testid="button-truck-stop-recording">
-                      <MicOff className="w-4 h-4 mr-1.5" />録音停止して検索
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Mic className="w-8 h-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">音声で空車を検索できます</p>
-                    <Button onClick={startRecording} data-testid="button-truck-start-recording">
-                      <Mic className="w-4 h-4 mr-1.5" />録音開始
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center gap-1.5 flex-wrap">
             {QUICK_FILTERS.map((f) => (
