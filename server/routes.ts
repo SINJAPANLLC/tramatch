@@ -2492,14 +2492,17 @@ statusの意味:
   // Admin: Send notification to users (multi-channel)
   app.post("/api/admin/notifications/send", requireAdmin, async (req, res) => {
     try {
-      const { title, message, target, channels } = req.body;
+      const { title, message, target, channels, userIds } = req.body;
       if (!title || !message) {
         return res.status(400).json({ message: "タイトルと本文は必須です" });
       }
       const selectedChannels: string[] = channels || ["system"];
       const allUsers = await storage.getAllUsers();
-      let targetUsers = allUsers.filter(u => u.role !== "admin" && u.approved);
-      if (target === "shippers") {
+      let targetUsers = allUsers.filter(u => u.approved);
+      if (target === "selected" && Array.isArray(userIds) && userIds.length > 0) {
+        const idSet = new Set(userIds);
+        targetUsers = targetUsers.filter(u => idSet.has(u.id));
+      } else if (target === "shippers") {
         targetUsers = targetUsers.filter(u => u.userType === "shipper");
       } else if (target === "carriers") {
         targetUsers = targetUsers.filter(u => u.userType === "carrier");

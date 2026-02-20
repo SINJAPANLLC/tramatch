@@ -85,6 +85,8 @@ export default function AdminNotifications() {
   const [sendTitle, setSendTitle] = useState("");
   const [sendMessage, setSendMessage] = useState("");
   const [sendChannels, setSendChannels] = useState<string[]>(["system"]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const currentChannel = activeTab !== "send" ? activeTab : "system";
 
@@ -96,6 +98,37 @@ export default function AdminNotifications() {
     queryKey: ["/api/admin/email-template-info"],
     enabled: activeTab === "email",
   });
+
+  const { data: allUsers } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: activeTab === "send",
+  });
+
+  const filteredUsers = (allUsers || []).filter((u: any) => {
+    if (!u.approved) return false;
+    const q = userSearchQuery.toLowerCase();
+    if (!q) return true;
+    return (u.companyName || "").toLowerCase().includes(q)
+      || (u.email || "").toLowerCase().includes(q)
+      || (u.contactName || "").toLowerCase().includes(q);
+  });
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const selectAllFiltered = () => {
+    const ids = filteredUsers.map((u: any) => u.id);
+    setSelectedUserIds(prev => {
+      const newSet = new Set(prev);
+      ids.forEach((id: string) => newSet.add(id));
+      return Array.from(newSet);
+    });
+  };
+
+  const deselectAll = () => setSelectedUserIds([]);
 
   const buildTemplateQueryKey = () => {
     const params = new URLSearchParams();
@@ -178,9 +211,13 @@ export default function AdminNotifications() {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/notifications/send", {
+      const payload: any = {
         title: sendTitle, message: sendMessage, target: sendTarget, channels: sendChannels,
-      });
+      };
+      if (sendTarget === "selected") {
+        payload.userIds = selectedUserIds;
+      }
+      const res = await apiRequest("POST", "/api/admin/notifications/send", payload);
       return res.json();
     },
     onSuccess: (data) => {
@@ -193,6 +230,8 @@ export default function AdminNotifications() {
       setSendTitle("");
       setSendMessage("");
       setSendTarget("all");
+      setSelectedUserIds([]);
+      setUserSearchQuery("");
     },
     onError: () => toast({ title: "通知の送信に失敗しました", variant: "destructive" }),
   });
@@ -745,7 +784,7 @@ export default function AdminNotifications() {
                   </div>
                   <div>
                     <Label className="text-xs">送信先</Label>
-                    <Select value={sendTarget} onValueChange={setSendTarget}>
+                    <Select value={sendTarget} onValueChange={(v) => { setSendTarget(v); if (v !== "selected") { setSelectedUserIds([]); setUserSearchQuery(""); } }}>
                       <SelectTrigger className="mt-1" data-testid="select-send-target">
                         <SelectValue />
                       </SelectTrigger>
@@ -753,9 +792,56 @@ export default function AdminNotifications() {
                         <SelectItem value="all">全ユーザー</SelectItem>
                         <SelectItem value="shippers">荷主のみ</SelectItem>
                         <SelectItem value="carriers">運送会社のみ</SelectItem>
+                        <SelectItem value="selected">個別選択</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {sendTarget === "selected" && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Label className="text-xs">ユーザー選択 ({selectedUserIds.length}人選択中)</Label>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={selectAllFiltered} data-testid="button-select-all-users">
+                            全選択
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={deselectAll} data-testid="button-deselect-all-users">
+                            全解除
+                          </Button>
+                        </div>
+                      </div>
+                      <Input
+                        className="mb-2"
+                        placeholder="会社名・メール・担当者名で検索..."
+                        value={userSearchQuery}
+                        onChange={e => setUserSearchQuery(e.target.value)}
+                        data-testid="input-user-search"
+                      />
+                      <div className="border border-border rounded-md max-h-[200px] overflow-y-auto">
+                        {filteredUsers.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">該当するユーザーがいません</p>
+                        ) : (
+                          filteredUsers.map((u: any) => (
+                            <label
+                              key={u.id}
+                              className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border last:border-b-0"
+                              data-testid={`user-select-${u.id}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.includes(u.id)}
+                                onChange={() => toggleUserSelection(u.id)}
+                                className="rounded border-border"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium truncate">{u.companyName || u.username}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{u.email} {u.role === "admin" ? "（管理者）" : ""}</p>
+                              </div>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label className="text-xs">タイトル</Label>
                     <Input className="mt-1" value={sendTitle} onChange={e => setSendTitle(e.target.value)} placeholder="通知タイトル" data-testid="input-send-title" />
@@ -767,7 +853,7 @@ export default function AdminNotifications() {
                   <Button
                     className="w-full"
                     onClick={() => sendMutation.mutate()}
-                    disabled={!sendTitle.trim() || !sendMessage.trim() || sendChannels.length === 0 || sendMutation.isPending}
+                    disabled={!sendTitle.trim() || !sendMessage.trim() || sendChannels.length === 0 || sendMutation.isPending || (sendTarget === "selected" && selectedUserIds.length === 0)}
                     data-testid="button-send-notification"
                   >
                     {sendMutation.isPending ? (
@@ -775,7 +861,7 @@ export default function AdminNotifications() {
                     ) : (
                       <Send className="w-4 h-4 mr-1.5" />
                     )}
-                    {sendMutation.isPending ? "送信中..." : `選択チャネルで一括送信`}
+                    {sendMutation.isPending ? "送信中..." : sendTarget === "selected" ? `${selectedUserIds.length}人に送信` : "選択チャネルで一括送信"}
                   </Button>
                 </div>
               </CardContent>
