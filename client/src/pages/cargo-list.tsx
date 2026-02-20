@@ -239,12 +239,31 @@ export default function CargoList() {
       });
     }
 
-    if (quickFilter !== "all") {
-      result = result.filter(
-        (item) =>
-          item.departureArea.includes(quickFilter) ||
-          item.arrivalArea.includes(quickFilter)
-      );
+    if (quickFilter !== "all" && quickFilter !== "宵積") {
+      const regionPrefectures: Record<string, string[]> = {
+        "関東": ["東京", "神奈川", "埼玉", "千葉", "茨城", "栃木", "群馬"],
+        "関西": ["大阪", "京都", "兵庫", "奈良", "滋賀", "和歌山"],
+        "中部": ["愛知", "静岡", "岐阜", "三重", "長野", "山梨", "新潟", "富山", "石川", "福井"],
+      };
+      const prefList = regionPrefectures[quickFilter];
+      if (prefList) {
+        result = result.filter(
+          (item) =>
+            prefList.some((p) => item.departureArea.includes(p)) &&
+            prefList.some((p) => item.arrivalArea.includes(p))
+        );
+      }
+    }
+
+    if (quickFilter === "宵積") {
+      result = result.filter((item) => {
+        if (!item.desiredDate) return false;
+        const desiredDate = new Date(item.desiredDate.replace(/\//g, "-"));
+        const today = new Date(todayStr.replace(/\//g, "-"));
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return desiredDate.getTime() === tomorrow.getTime();
+      });
     }
 
     if (todayOnly) {
