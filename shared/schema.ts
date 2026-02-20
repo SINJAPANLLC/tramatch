@@ -119,6 +119,7 @@ export const truckListings = pgTable("truck_listings", {
   vehicleType: text("vehicle_type").notNull(),
   bodyType: text("body_type"),
   maxWeight: text("max_weight").notNull(),
+  truckCount: text("truck_count"),
   availableDate: text("available_date").notNull(),
   price: text("price"),
   description: text("description"),

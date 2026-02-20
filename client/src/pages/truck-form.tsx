@@ -61,6 +61,7 @@ export default function TruckForm() {
       vehicleType: "",
       bodyType: "",
       maxWeight: "",
+      truckCount: "",
       availableDate: "",
       price: "",
       description: "",
@@ -76,6 +77,7 @@ export default function TruckForm() {
         vehicleType: editTruck.vehicleType || "",
         bodyType: editTruck.bodyType || "",
         maxWeight: editTruck.maxWeight || "",
+        truckCount: editTruck.truckCount || "",
         availableDate: editTruck.availableDate || "",
         price: editTruck.price || "",
         description: editTruck.description || "",
@@ -255,6 +257,19 @@ export default function TruckForm() {
                       <FormLabel>最大積載量</FormLabel>
                       <FormControl>
                         <Input placeholder="例: 10t" {...field} data-testid="input-max-weight" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="truckCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>台数</FormLabel>
+                      <FormControl>
+                        <Input placeholder="例: 1台" {...field} value={field.value || ""} data-testid="input-truck-count" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
