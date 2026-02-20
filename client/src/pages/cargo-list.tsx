@@ -52,7 +52,7 @@ const BODY_TYPES = [
   "その他"
 ];
 
-const PER_PAGE_OPTIONS = [10, 20, 50];
+const PER_PAGE_OPTIONS = [20, 50, 100];
 
 const SAVED_FILTERS_KEY = "tramatch_saved_cargo_filters";
 
@@ -89,7 +89,7 @@ export default function CargoList() {
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(100);
   const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price" | "departPref" | "arrivePref">("newest");
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
