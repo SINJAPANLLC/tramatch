@@ -98,7 +98,7 @@ function Router() {
       <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
       <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
       <Route path="/my-trucks">{() => <ProtectedRoute component={MyTrucks} />}</Route>
-      <Route path="/trucks/new">{() => <ProtectedRoute component={TruckForm} />}</Route>
+      <Route path="/trucks/new">{() => <ProtectedRoute component={TruckList} />}</Route>
       <Route path="/trucks/edit/:id">{() => <ProtectedRoute component={TruckForm} />}</Route>
       <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
       <Route path="/trucks">{() => <ProtectedRoute component={TruckList} />}</Route>
