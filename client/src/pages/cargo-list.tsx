@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation, Filter, RotateCcw } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ChevronDown, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation, Filter, RotateCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { CargoListing } from "@shared/schema";
@@ -62,7 +62,7 @@ interface SavedFilter {
     departure: string; arrival: string;
     departDateFrom: string; departDateTo: string;
     arriveDateFrom: string; arriveDateTo: string;
-    minFare: string; vehicleType: string; bodyType: string;
+    minFare: string; vehicleType: string; bodyType: string | string[];
     driverWork: string;
     excludeNegotiable: boolean; excludeWeightAny: boolean; excludeDriverWorkAny: boolean;
     consolidationOnly: boolean; excludeConsolidation: boolean;
@@ -107,7 +107,9 @@ export default function CargoList() {
   const [filterArriveDateTo, setFilterArriveDateTo] = useState("");
   const [filterMinFare, setFilterMinFare] = useState("");
   const [filterVehicleType, setFilterVehicleType] = useState("");
-  const [filterBodyType, setFilterBodyType] = useState("");
+  const [filterBodyTypes, setFilterBodyTypes] = useState<string[]>([]);
+  const [bodyTypeDropdownOpen, setBodyTypeDropdownOpen] = useState(false);
+  const bodyTypeRef = useRef<HTMLDivElement>(null);
   const [filterDriverWork, setFilterDriverWork] = useState("");
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
     try {
@@ -126,6 +128,16 @@ export default function CargoList() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bodyTypeRef.current && !bodyTypeRef.current.contains(e.target as Node)) {
+        setBodyTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const { data: listings, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
@@ -363,8 +375,8 @@ export default function CargoList() {
     if (filterVehicleType) {
       result = result.filter((item) => (item.vehicleType || "").includes(filterVehicleType));
     }
-    if (filterBodyType) {
-      result = result.filter((item) => (item.bodyType || "").includes(filterBodyType));
+    if (filterBodyTypes.length > 0) {
+      result = result.filter((item) => filterBodyTypes.some((bt) => (item.bodyType || "").includes(bt)));
     }
     if (filterExcludeWeightAny) {
       result = result.filter((item) => item.weight && item.weight !== "問わず");
@@ -423,7 +435,7 @@ export default function CargoList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterExcludeWeightAny, filterVehicleType, filterBodyType, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
+  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterExcludeWeightAny, filterVehicleType, filterBodyTypes, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -442,7 +454,7 @@ export default function CargoList() {
                   setFilterDeparture(f.departure); setFilterArrival(f.arrival);
                   setFilterDepartDateFrom(f.departDateFrom); setFilterDepartDateTo(f.departDateTo);
                   setFilterArriveDateFrom(f.arriveDateFrom); setFilterArriveDateTo(f.arriveDateTo);
-                  setFilterMinFare(f.minFare); setFilterVehicleType(f.vehicleType); setFilterBodyType(f.bodyType);
+                  setFilterMinFare(f.minFare); setFilterVehicleType(f.vehicleType); setFilterBodyTypes(Array.isArray(f.bodyType) ? f.bodyType : f.bodyType ? [f.bodyType] : []);
                   setFilterDriverWork(f.driverWork);
                   setFilterExcludeNegotiable(f.excludeNegotiable); setFilterExcludeWeightAny(f.excludeWeightAny);
                   setFilterExcludeDriverWorkAny(f.excludeDriverWorkAny);
@@ -553,16 +565,43 @@ export default function CargoList() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-shrink-0">
-              <Select value={filterBodyType || "all"} onValueChange={(v) => { setFilterBodyType(v === "all" ? "" : v); setPage(1); }}>
-                <SelectTrigger className="text-xs h-8 w-[130px]" data-testid="filter-body-type">
-                  <SelectValue placeholder="車体タイプ" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">車体タイプ</SelectItem>
-                  {BODY_TYPES.map((b) => (<SelectItem key={b} value={b}>{b}</SelectItem>))}
-                </SelectContent>
-              </Select>
+            <div className="flex-shrink-0 relative" ref={bodyTypeRef}>
+              <button
+                type="button"
+                className="flex items-center justify-between gap-1 text-xs h-8 w-[160px] rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={() => setBodyTypeDropdownOpen((v) => !v)}
+                data-testid="filter-body-type"
+              >
+                <span className="truncate text-left">
+                  {filterBodyTypes.length === 0 ? "車体タイプ" : `${filterBodyTypes.length}件選択中`}
+                </span>
+                <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
+              </button>
+              {bodyTypeDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-[200px] max-h-[240px] overflow-y-auto rounded-md border bg-background shadow-md p-1">
+                  <button
+                    type="button"
+                    className="w-full text-left text-xs px-2 py-1 text-muted-foreground hover:bg-muted rounded-sm mb-1"
+                    onClick={() => { setFilterBodyTypes([]); setPage(1); }}
+                    data-testid="filter-body-type-clear"
+                  >
+                    クリア
+                  </button>
+                  {BODY_TYPES.map((b) => (
+                    <label key={b} className="flex items-center gap-2 px-2 py-1 text-xs cursor-pointer hover:bg-muted rounded-sm" data-testid={`filter-body-type-${b}`}>
+                      <Checkbox
+                        checked={filterBodyTypes.includes(b)}
+                        onCheckedChange={(checked) => {
+                          setFilterBodyTypes((prev) => checked ? [...prev, b] : prev.filter((x) => x !== b));
+                          setPage(1);
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span>{b}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex-shrink-0">
               <Select value={filterDriverWork || "all"} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
@@ -640,7 +679,7 @@ export default function CargoList() {
                       departure: filterDeparture, arrival: filterArrival,
                       departDateFrom: filterDepartDateFrom, departDateTo: filterDepartDateTo,
                       arriveDateFrom: filterArriveDateFrom, arriveDateTo: filterArriveDateTo,
-                      minFare: filterMinFare, vehicleType: filterVehicleType, bodyType: filterBodyType,
+                      minFare: filterMinFare, vehicleType: filterVehicleType, bodyType: filterBodyTypes,
                       driverWork: filterDriverWork,
                       excludeNegotiable: filterExcludeNegotiable, excludeWeightAny: filterExcludeWeightAny,
                       excludeDriverWorkAny: filterExcludeDriverWorkAny,
@@ -667,7 +706,7 @@ export default function CargoList() {
                   setFilterDepartDateFrom(""); setFilterDepartDateTo("");
                   setFilterArriveDateFrom(""); setFilterArriveDateTo("");
                   setFilterMinFare(""); setFilterVehicleType("");
-                  setFilterBodyType(""); setFilterDriverWork("");
+                  setFilterBodyTypes([]); setFilterDriverWork("");
                   setFilterExcludeNegotiable(false); setFilterExcludeWeightAny(false);
                   setFilterExcludeDriverWorkAny(false);
                   setFilterConsolidationOnly(false); setFilterExcludeConsolidation(false);
