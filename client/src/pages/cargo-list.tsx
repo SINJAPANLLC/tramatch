@@ -666,7 +666,7 @@ export default function CargoList() {
             <Input placeholder="荷物番号" value={filterCargoNumber} onChange={(e) => { setFilterCargoNumber(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-cargo-number" />
           </div>
 
-          <div className="flex items-center justify-center gap-3 pt-2 border-t mt-1">
+          <div className="flex flex-col items-center gap-2 pt-2 border-t mt-1">
             <Button
               onClick={() => setPage(1)}
               className="px-10"
@@ -675,7 +675,7 @@ export default function CargoList() {
               <Search className="w-4 h-4 mr-1.5" />
               検索
             </Button>
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 justify-center">
               <Button
                 variant="outline"
                 size="sm"
