@@ -478,6 +478,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [extractedFields, setExtractedFields] = useState<Record<string, string>>({});
   const [pendingItems, setPendingItems] = useState<Record<string, unknown>[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -493,7 +494,12 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   });
 
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    setTimeout(() => {
+      const container = chatContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -799,7 +805,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
 
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <div className={`flex-1 min-h-0 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3" data-testid="truck-chat-messages">
+          <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3" data-testid="truck-chat-messages">
             {chatMessages.map((msg) => (
               <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
