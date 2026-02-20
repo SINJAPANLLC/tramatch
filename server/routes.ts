@@ -856,7 +856,7 @@ export async function registerRoutes(
     try {
       const listings = await storage.getCargoListings();
       await expireOldCargoListings(listings);
-      const activeListings = listings.filter(l => l.status === "active");
+      const activeListings = listings.filter(l => l.status === "active").map(({ privateNote, ...rest }) => rest);
       res.json(activeListings);
     } catch (error) {
       console.error("Failed to fetch cargo listings:", error);
@@ -882,6 +882,10 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Cargo listing not found" });
       }
       storage.incrementCargoViewCount(req.params.id).catch(() => {});
+      if (listing.userId !== req.session.userId) {
+        const { privateNote, ...publicListing } = listing;
+        return res.json(publicListing);
+      }
       res.json(listing);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch cargo listing" });
