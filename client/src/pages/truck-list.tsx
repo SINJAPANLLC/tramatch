@@ -763,7 +763,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   const [mobileTab, setMobileTab] = useState<"chat" | "form">("chat");
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto lg:overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="px-4 sm:px-6 pt-4 shrink-0">
         {tabBar(false)}
       </div>
@@ -2006,7 +2006,7 @@ export default function TruckList() {
 
   if (isAuthenticated && isRegisterPage) {
     return (
-      <DashboardLayout noScroll={activeTab !== "register"}>
+      <DashboardLayout noScroll>
         <div className="flex h-full relative overflow-hidden">
           {activeTab === "register" ? (
             <TruckRegisterTab tabBar={registerTabBar} />
