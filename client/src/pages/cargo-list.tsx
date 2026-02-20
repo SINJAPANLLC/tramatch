@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation } from "lucide-react";
+import { Package, Search, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, MapPin, X, Check, ArrowRight, Circle, Mic, MicOff, Upload, FileText, Loader2, Building2, Phone, Mail, DollarSign, Truck, CalendarDays, Sun, Navigation, Filter, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import type { CargoListing } from "@shared/schema";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -71,6 +73,25 @@ export default function CargoList() {
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [filterDeparture, setFilterDeparture] = useState("");
+  const [filterArrival, setFilterArrival] = useState("");
+  const [filterDepartDateFrom, setFilterDepartDateFrom] = useState("");
+  const [filterDepartDateTo, setFilterDepartDateTo] = useState("");
+  const [filterArriveDateFrom, setFilterArriveDateFrom] = useState("");
+  const [filterArriveDateTo, setFilterArriveDateTo] = useState("");
+  const [filterMinFare, setFilterMinFare] = useState("");
+  const [filterWeight, setFilterWeight] = useState("");
+  const [filterVehicleType, setFilterVehicleType] = useState("");
+  const [filterDriverWork, setFilterDriverWork] = useState("");
+  const [filterInvoiceAcceptance, setFilterInvoiceAcceptance] = useState("");
+  const [filterExcludeNegotiable, setFilterExcludeNegotiable] = useState(false);
+  const [filterExcludeWeightAny, setFilterExcludeWeightAny] = useState(false);
+  const [filterExcludeDriverWorkAny, setFilterExcludeDriverWorkAny] = useState(false);
+  const [filterConsolidationOnly, setFilterConsolidationOnly] = useState(false);
+  const [filterExcludeConsolidation, setFilterExcludeConsolidation] = useState(false);
+  const [filterMovingOnly, setFilterMovingOnly] = useState(false);
+  const [filterExcludeMoving, setFilterExcludeMoving] = useState(false);
+  const [filterCargoNumber, setFilterCargoNumber] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -249,6 +270,86 @@ export default function CargoList() {
       result = result.filter((item) => item.desiredDate === formatted);
     }
 
+    if (filterDeparture) {
+      result = result.filter((item) =>
+        (item.departureArea || "").includes(filterDeparture) ||
+        (item.departureAddress || "").includes(filterDeparture)
+      );
+    }
+    if (filterArrival) {
+      result = result.filter((item) =>
+        (item.arrivalArea || "").includes(filterArrival) ||
+        (item.arrivalAddress || "").includes(filterArrival)
+      );
+    }
+    if (filterDepartDateFrom) {
+      const from = filterDepartDateFrom.replace(/-/g, "/");
+      result = result.filter((item) => (item.desiredDate || "") >= from);
+    }
+    if (filterDepartDateTo) {
+      const to = filterDepartDateTo.replace(/-/g, "/");
+      result = result.filter((item) => (item.desiredDate || "") <= to);
+    }
+    if (filterArriveDateFrom) {
+      const from = filterArriveDateFrom.replace(/-/g, "/");
+      result = result.filter((item) => (item.arrivalDate || "") >= from);
+    }
+    if (filterArriveDateTo) {
+      const to = filterArriveDateTo.replace(/-/g, "/");
+      result = result.filter((item) => (item.arrivalDate || "") <= to);
+    }
+    if (filterMinFare) {
+      const minVal = parseInt(filterMinFare);
+      if (!isNaN(minVal)) {
+        result = result.filter((item) => {
+          const p = parseInt((item.price || "").replace(/[^0-9]/g, "") || "0");
+          return p >= minVal;
+        });
+      }
+    }
+    if (filterExcludeNegotiable) {
+      result = result.filter((item) => item.price && item.price !== "要相談" && item.price !== "0");
+    }
+    if (filterWeight) {
+      result = result.filter((item) => (item.weight || "").includes(filterWeight));
+    }
+    if (filterExcludeWeightAny) {
+      result = result.filter((item) => item.weight && item.weight !== "問わず");
+    }
+    if (filterVehicleType) {
+      result = result.filter((item) => (item.vehicleType || "").includes(filterVehicleType));
+    }
+    if (filterDriverWork) {
+      result = result.filter((item) => (item.driverWork || "") === filterDriverWork);
+    }
+    if (filterExcludeDriverWorkAny) {
+      result = result.filter((item) => item.driverWork && item.driverWork !== "問わず" && item.driverWork !== "");
+    }
+    if (filterInvoiceAcceptance) {
+      result = result.filter((item) => {
+        const user = listings ? true : false;
+        return user;
+      });
+    }
+    if (filterConsolidationOnly) {
+      result = result.filter((item) => item.consolidation === "可");
+    }
+    if (filterExcludeConsolidation) {
+      result = result.filter((item) => item.consolidation !== "可");
+    }
+    if (filterMovingOnly) {
+      result = result.filter((item) => item.movingJob === "引越し");
+    }
+    if (filterExcludeMoving) {
+      result = result.filter((item) => item.movingJob !== "引越し");
+    }
+    if (filterCargoNumber) {
+      const num = parseInt(filterCargoNumber);
+      if (!isNaN(num)) {
+        result = result.filter((item) => item.cargoNumber === num);
+      }
+    }
+
     result = [...result].sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -278,7 +379,7 @@ export default function CargoList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter]);
+  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterWeight, filterExcludeWeightAny, filterVehicleType, filterDriverWork, filterExcludeDriverWorkAny, filterInvoiceAcceptance, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -476,6 +577,176 @@ export default function CargoList() {
             </div>
           )}
 
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardContent className="p-3 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[200px]">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <Input
+                placeholder="発地"
+                value={filterDeparture}
+                onChange={(e) => { setFilterDeparture(e.target.value); setPage(1); }}
+                className="text-xs h-8"
+                data-testid="filter-departure"
+              />
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-[120px] max-w-[200px]">
+              <Input
+                placeholder="着地"
+                value={filterArrival}
+                onChange={(e) => { setFilterArrival(e.target.value); setPage(1); }}
+                className="text-xs h-8"
+                data-testid="filter-arrival"
+              />
+            </div>
+            <div className="flex items-center gap-1 flex-1 min-w-[280px]">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">発日（開始）</span>
+              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-depart-date-from" />
+              <span className="text-xs text-muted-foreground">〜（終了）</span>
+              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-depart-date-to" />
+            </div>
+            <div className="flex items-center gap-1 flex-1 min-w-[280px]">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">着日（開始）</span>
+              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-arrive-date-from" />
+              <span className="text-xs text-muted-foreground">〜（終了）</span>
+              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-arrive-date-to" />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 min-w-[160px] max-w-[200px]">
+              <Input
+                placeholder="運賃（税別）"
+                value={filterMinFare}
+                onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }}
+                className="text-xs h-8"
+                data-testid="filter-min-fare"
+              />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">円以上</span>
+            </div>
+            <div className="min-w-[120px] max-w-[160px]">
+              <Input
+                placeholder="重量"
+                value={filterWeight}
+                onChange={(e) => { setFilterWeight(e.target.value); setPage(1); }}
+                className="text-xs h-8"
+                data-testid="filter-weight"
+              />
+            </div>
+            <div className="min-w-[120px] max-w-[160px]">
+              <Select value={filterVehicleType} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8" data-testid="filter-vehicle-type">
+                  <SelectValue placeholder="車種" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全車種</SelectItem>
+                  {VEHICLE_TYPES.map((v) => (
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[140px] max-w-[180px]">
+              <Select value={filterDriverWork} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8" data-testid="filter-driver-work">
+                  <SelectValue placeholder="ドライバー作業" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全て</SelectItem>
+                  <SelectItem value="手積み手降ろし">手積み手降ろし</SelectItem>
+                  <SelectItem value="フォークリフト">フォークリフト</SelectItem>
+                  <SelectItem value="クレーン">クレーン</SelectItem>
+                  <SelectItem value="ゲート車">ゲート車</SelectItem>
+                  <SelectItem value="パレット">パレット</SelectItem>
+                  <SelectItem value="作業なし">作業なし</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[160px] max-w-[200px]">
+              <Select value={filterInvoiceAcceptance} onValueChange={(v) => { setFilterInvoiceAcceptance(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8" data-testid="filter-invoice-acceptance">
+                  <SelectValue placeholder="おまかせ請求受入可否" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全て</SelectItem>
+                  <SelectItem value="可">可</SelectItem>
+                  <SelectItem value="不可">不可</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-exclude-negotiable" />
+              <Label htmlFor="exclude-negotiable" className="text-xs text-muted-foreground cursor-pointer">要相談を除く</Label>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="exclude-weight-any" checked={filterExcludeWeightAny} onCheckedChange={(v) => { setFilterExcludeWeightAny(!!v); setPage(1); }} data-testid="filter-exclude-weight-any" />
+              <Label htmlFor="exclude-weight-any" className="text-xs text-muted-foreground cursor-pointer">問わずを除く</Label>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="exclude-driver-any" checked={filterExcludeDriverWorkAny} onCheckedChange={(v) => { setFilterExcludeDriverWorkAny(!!v); setPage(1); }} data-testid="filter-exclude-driver-any" />
+              <Label htmlFor="exclude-driver-any" className="text-xs text-muted-foreground cursor-pointer">問わずを除く</Label>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="consolidation-only" checked={filterConsolidationOnly} onCheckedChange={(v) => { setFilterConsolidationOnly(!!v); if (v) setFilterExcludeConsolidation(false); setPage(1); }} data-testid="filter-consolidation-only" />
+              <Label htmlFor="consolidation-only" className="text-xs text-muted-foreground cursor-pointer">積合のみ</Label>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="exclude-consolidation" checked={filterExcludeConsolidation} onCheckedChange={(v) => { setFilterExcludeConsolidation(!!v); if (v) setFilterConsolidationOnly(false); setPage(1); }} data-testid="filter-exclude-consolidation" />
+              <Label htmlFor="exclude-consolidation" className="text-xs text-muted-foreground cursor-pointer">積合を除く</Label>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="moving-only" checked={filterMovingOnly} onCheckedChange={(v) => { setFilterMovingOnly(!!v); if (v) setFilterExcludeMoving(false); setPage(1); }} data-testid="filter-moving-only" />
+              <Label htmlFor="moving-only" className="text-xs text-muted-foreground cursor-pointer">引越しのみ</Label>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Checkbox id="exclude-moving" checked={filterExcludeMoving} onCheckedChange={(v) => { setFilterExcludeMoving(!!v); if (v) setFilterMovingOnly(false); setPage(1); }} data-testid="filter-exclude-moving" />
+              <Label htmlFor="exclude-moving" className="text-xs text-muted-foreground cursor-pointer">引越しを除く</Label>
+            </div>
+            <div className="min-w-[140px] max-w-[180px]">
+              <Input
+                placeholder="荷物番号"
+                value={filterCargoNumber}
+                onChange={(e) => { setFilterCargoNumber(e.target.value); setPage(1); }}
+                className="text-xs h-8"
+                data-testid="filter-cargo-number"
+              />
+            </div>
+            {(filterDeparture || filterArrival || filterDepartDateFrom || filterDepartDateTo || filterArriveDateFrom || filterArriveDateTo || filterMinFare || filterWeight || filterVehicleType || filterDriverWork || filterInvoiceAcceptance || filterExcludeNegotiable || filterExcludeWeightAny || filterExcludeDriverWorkAny || filterConsolidationOnly || filterExcludeConsolidation || filterMovingOnly || filterExcludeMoving || filterCargoNumber) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground ml-auto"
+                onClick={() => {
+                  setFilterDeparture(""); setFilterArrival("");
+                  setFilterDepartDateFrom(""); setFilterDepartDateTo("");
+                  setFilterArriveDateFrom(""); setFilterArriveDateTo("");
+                  setFilterMinFare(""); setFilterWeight("");
+                  setFilterVehicleType(""); setFilterDriverWork("");
+                  setFilterInvoiceAcceptance("");
+                  setFilterExcludeNegotiable(false); setFilterExcludeWeightAny(false);
+                  setFilterExcludeDriverWorkAny(false);
+                  setFilterConsolidationOnly(false); setFilterExcludeConsolidation(false);
+                  setFilterMovingOnly(false); setFilterExcludeMoving(false);
+                  setFilterCargoNumber("");
+                  setPage(1);
+                }}
+                data-testid="button-clear-detail-filters"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                条件リセット
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
