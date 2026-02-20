@@ -96,7 +96,7 @@ const CARGO_FIELDS = [
   "desiredDate", "departureTime", "arrivalDate", "arrivalTime",
   "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl",
   "price", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod",
-  "highwayFee", "equipment", "vehicleSpec", "truckCount",
+  "highwayFee", "equipment", "vehicleSpec",
   "urgency", "movingJob", "contactPerson",
   "description",
 ];
@@ -111,7 +111,7 @@ const FIELD_LABELS: Record<string, string> = {
   temperatureControl: "温度管理", price: "運賃(税別)", transportType: "形態",
   consolidation: "積合", driverWork: "作業", packageCount: "個数",
   loadingMethod: "荷姿", highwayFee: "高速代",
-  equipment: "必要装備", vehicleSpec: "車両指定", truckCount: "台数",
+  equipment: "必要装備", vehicleSpec: "車両指定",
   urgency: "緊急度", movingJob: "引越し", contactPerson: "担当者",
   description: "備考",
 };
@@ -207,7 +207,7 @@ export default function CargoForm() {
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
       loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-      truckCount: "", urgency: "", movingJob: "", contactPerson: "",
+      urgency: "", movingJob: "", contactPerson: "",
     },
   });
 
@@ -274,7 +274,7 @@ export default function CargoForm() {
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
       loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-      truckCount: "", urgency: "", movingJob: "", contactPerson: "",
+      urgency: "", movingJob: "", contactPerson: "",
     });
     const fields: Record<string, string> = {};
     for (const key of CARGO_FIELDS) {
@@ -312,7 +312,7 @@ export default function CargoForm() {
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
         loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
-        truckCount: "", urgency: "", movingJob: "", contactPerson: "",
+        urgency: "", movingJob: "", contactPerson: "",
       });
       const normalized = normalizeAiItem(nextItem);
       setExtractedFields(normalized);
@@ -961,13 +961,6 @@ export default function CargoForm() {
                             <FormItem>
                               <FormLabel className="text-xs">個数</FormLabel>
                               <FormControl><Input placeholder="例: 20パレット" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-package-count" /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={form.control} name="truckCount" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">台数</FormLabel>
-                              <FormControl><Input placeholder="例: 1台" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-truck-count" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />
