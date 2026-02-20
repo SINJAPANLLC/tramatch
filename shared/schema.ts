@@ -99,6 +99,7 @@ export const cargoListings = pgTable("cargo_listings", {
   unloadingTime: text("unloading_time"),
   paymentDate: text("payment_date"),
   contactPerson: text("contact_person"),
+  truckCount: text("truck_count"),
   taxType: text("tax_type"),
   companyName: text("company_name").notNull(),
   contactPhone: text("contact_phone").notNull(),
