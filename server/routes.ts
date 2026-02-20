@@ -1795,8 +1795,22 @@ ${cargoFieldSchema}
 - 「香取市」→ 文脈で判断（積み地の後なら着地）
 - 「4トン50」「4t50」→ vehicleType: "4t車", price: "50000"（2桁金額は万円単位）
 - 「大型80」→ vehicleType: "大型車", price: "80000"
-- 金額が2桁の場合は万円単位（50→50000）、5桁以上はそのまま
+- 金額が2桁の場合は万円単位（50→50000）、5桁以上や「￥20000」のようにはっきり書かれている場合はそのまま
+- 「中原区～所沢」「A～B」「A→B」→ departureAddress/arrivalAddressに分割
+- 「8:00～9:00」→ departureTime: "8:00"（時間帯は開始時間を採用）
+- 「12:00指定」→ arrivalTime: "12:00"
+- 「朝当日」「当日」→ arrivalDate = desiredDate
 - titleは自動生成: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」
+
+車種・車体の解析:
+- 「2tL」「2tロング」→ vehicleType: "2t車", vehicleSpec: "ロング"
+- 「2tワイド」→ vehicleType: "2t車", vehicleSpec: "ワイド"
+- 「2tLかワイド」→ vehicleType: "2t車", vehicleSpec: "ロングまたはワイド"
+- 「L」「ロング」「ワイド」「ショート」等のサイズ指定はbodyTypeではなくvehicleSpecに入れる
+- サイズ指定だけで車体タイプ指定がない場合、引越し・家具運搬は bodyType: "箱車" が基本
+- 「W」は文脈で判断: 車体タイプなら「ウイング」、サイズなら「ワイド」
+- 引越し・家具運搬: bodyType: "箱車", movingJob: "引っ越し案件"
+- 「手伝いあり」→ descriptionに記載
 
 情報が不明な場合はそのフィールドを空文字にしてください。
 vehicleTypeとbodyTypeは複数選択の場合カンマ区切りで返してください（例: "4t車, 10t車"）。
@@ -1914,8 +1928,23 @@ JSONのみを返してください。説明文は不要です。`,
 - 「4トン50」「4t50」→ vehicleType: "4t車", price: "50000"（車種+金額。50=50000円、35=35000円のように万円単位で省略されることが多い）
 - 「大型80」→ vehicleType: "大型車", price: "80000"
 - 「10t W」→ vehicleType: "10t車", bodyType: "ウイング"
-- 金額が2桁の場合は万円単位（50→50000、35→35000、80→80000）、5桁以上はそのまま
+- 金額が2桁の場合は万円単位（50→50000、35→35000、80→80000）、5桁以上や「￥20000」のようにはっきり書かれている場合はそのまま
+- 「中原区～所沢」「A～B」「A→B」→ departureAddress: "中原区", arrivalAddress: "所沢"
+- 「8:00～9:00」「8時～9時」→ departureTime: "8:00"（時間帯の場合は開始時間を採用）
+- 「12:00指定」→ arrivalTime: "12:00"
+- 「朝当日」「朝イチ」→ departureTime: "午前中"、着日 = 発日と同日
+- 「当日」→ arrivalDate = desiredDate（同日着）
 - titleは自動生成すること: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」の形式で作成。荷種不明の場合は「{departureArea}→{arrivalArea} {vehicleType}」
+
+車種・車体の解析（非常に重要）:
+- 「2tL」「2tロング」「2トンロング」→ vehicleType: "2t車", vehicleSpec: "ロング"
+- 「2tワイド」「2トンワイド」→ vehicleType: "2t車", vehicleSpec: "ワイド"  
+- 「2tLかワイド」「2tロングかワイド」→ vehicleType: "2t車", vehicleSpec: "ロングまたはワイド"
+- 「L」「ロング」「ワイド」「ショート」等のサイズ指定はbodyTypeではなくvehicleSpecに入れる
+- サイズ指定だけで車体タイプの指定がない場合、一般的な引越しや家具運搬は bodyType: "箱車" が基本
+- 「W」は文脈で判断: 車体タイプとして使われていれば「ウイング」、それ以外は「ワイド」の略の可能性あり
+- 引越し案件・家具運搬の場合: bodyType は基本「箱車」（ウイングではない）、movingJob: "引っ越し案件"
+- 「手伝いあり」「荷主手伝い」→ description に記載（ドライバー以外の手伝いがある意味）
 
 運賃相場の目安（一般的な参考値）:
 - 近距離（同一県内〜隣県）: 2t車 15,000〜25,000円、4t車 20,000〜35,000円、10t車 35,000〜55,000円
