@@ -964,9 +964,9 @@ function TruckRegisterTab() {
           </div>
         </div>
 
-        <div className={`border-l border-border bg-background overflow-y-auto w-full lg:w-[420px] ${mobileTab !== "form" ? "hidden lg:block" : ""}`}>
+        <div className={`border-l border-border bg-background flex flex-col w-full lg:w-[420px] lg:shrink-0 ${mobileTab !== "form" ? "hidden lg:flex" : ""}`}>
           <div
-            className="sticky top-0 bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2"
+            className="bg-background z-10 border-b border-border px-3 py-2 flex items-center justify-between gap-2 shrink-0"
             data-testid="truck-form-panel-header"
           >
             <div className="flex items-center gap-2">
@@ -981,7 +981,7 @@ function TruckRegisterTab() {
             </div>
           </div>
 
-          <div className="p-3">
+          <div className="flex-1 min-h-0 overflow-y-auto p-3">
             <Form {...form}>
               <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
                 <FormField control={form.control} name="title" render={({ field }) => (
@@ -2027,7 +2027,7 @@ export default function TruckList() {
               )}
             </>
           ) : activeTab === "register" ? (
-            <div className="flex-1 flex flex-col overflow-hidden" style={{ height: "calc(100vh - 56px)", maxHeight: "calc(100vh - 56px)" }}>
+            <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 56px)" }}>
               <div className="px-4 sm:px-6 pt-4 shrink-0">
                 {tabBar(false)}
               </div>
