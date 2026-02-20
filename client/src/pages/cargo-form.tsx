@@ -39,7 +39,7 @@ const TRANSPORT_TYPE_OPTIONS = ["スポット", "定期"];
 const CONSOLIDATION_OPTIONS = ["不可", "可能"];
 const DRIVER_WORK_OPTIONS = ["手積み手降ろし", "フォークリフト", "クレーン", "ゲート車", "パレット", "作業なし", "その他"];
 const LOADING_METHODS = ["パレット", "バラ積み", "段ボール", "フレコン", "その他"];
-const TIME_OPTIONS = ["指定なし", "午前中", "午後", "夕方以降", "終日可", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+const TIME_OPTIONS = ["指定なし", "午前中", "午後", "夕方以降", "終日可", "0:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"];
 const URGENCY_OPTIONS = ["通常", "至急"];
 const AUTO_INVOICE_OPTIONS = ["推奨", "受入可", "受入不可", "未定"];
 
@@ -195,7 +195,7 @@ export default function CargoForm() {
       title: "", departureArea: "", departureAddress: "", departureTime: "",
       arrivalArea: "", arrivalAddress: "", arrivalTime: "", cargoType: "",
       weight: "", desiredDate: "", arrivalDate: "", vehicleType: "", bodyType: "",
-      temperatureControl: "", price: "", highwayFee: "", transportType: "",
+      temperatureControl: "", price: "", highwayFee: "", transportType: "スポット",
       consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
       description: "", companyName: "", contactPhone: "", contactEmail: "",
       loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
@@ -267,7 +267,7 @@ export default function CargoForm() {
         title: "", departureArea: "", departureAddress: "", departureTime: "",
         arrivalArea: "", arrivalAddress: "", arrivalTime: "", cargoType: "",
         weight: "", desiredDate: "", arrivalDate: "", vehicleType: "", bodyType: "",
-        temperatureControl: "", price: "", highwayFee: "", transportType: "",
+        temperatureControl: "", price: "", highwayFee: "", transportType: "スポット",
         consolidation: "", driverWork: "", packageCount: "", loadingMethod: "",
         description: "", companyName: "", contactPhone: "", contactEmail: "",
         loadingTime: "", unloadingTime: "", equipment: "", vehicleSpec: "",
@@ -726,7 +726,7 @@ export default function CargoForm() {
                   <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
                     <FormField control={form.control} name="title" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">タイトル</FormLabel>
+                        <FormLabel className="text-xs">タイトル（任意）</FormLabel>
                         <FormControl><Input placeholder="例: 東京→大阪 食品 10t" {...field} className="h-8 text-xs" data-testid="input-cargo-title" /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -858,7 +858,7 @@ export default function CargoForm() {
                     </div>
 
                     <div className="border-t border-border pt-3">
-                      <h3 className="text-xs font-bold text-muted-foreground mb-2">荷物情報</h3>
+                      <h3 className="text-xs font-bold text-muted-foreground mb-2">荷物情報（すべて任意）</h3>
                       <div className="space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                           <FormField control={form.control} name="cargoType" render={({ field }) => (
@@ -944,7 +944,7 @@ export default function CargoForm() {
                           const toggle = (v: string) => { const next = selected.includes(v) ? selected.filter(s => s !== v) : [...selected, v]; field.onChange(next.join(", ")); };
                           return (
                             <FormItem>
-                              <FormLabel className="text-xs">車体タイプ</FormLabel>
+                              <FormLabel className="text-xs">車体タイプ（複数選択）</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <FormControl>
@@ -1019,13 +1019,26 @@ export default function CargoForm() {
                     <div className="border-t border-border pt-3">
                       <h3 className="text-xs font-bold text-muted-foreground mb-2">運賃</h3>
                       <div className="space-y-2">
-                        <FormField control={form.control} name="price" render={({ field }) => (
+                        <FormField control={form.control} name="price" render={({ field }) => {
+                          const isNegotiable = field.value === "要相談";
+                          return (
                           <FormItem>
                             <FormLabel className="text-xs">運賃 円(税別)</FormLabel>
-                            <FormControl><Input placeholder="金額を入力 または 要相談" {...field} value={field.value || ""} className="h-8 text-xs" data-testid="input-price" /></FormControl>
+                            <FormControl><Input placeholder="金額を入力" {...field} value={isNegotiable ? "" : (field.value || "")} disabled={isNegotiable} className="h-8 text-xs" data-testid="input-price" /></FormControl>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <input
+                                type="checkbox"
+                                checked={isNegotiable}
+                                onChange={(e) => field.onChange(e.target.checked ? "要相談" : "")}
+                                className="rounded border-border"
+                                data-testid="checkbox-price-negotiable"
+                              />
+                              <span className="text-xs text-muted-foreground cursor-pointer" onClick={() => field.onChange(isNegotiable ? "" : "要相談")}>要相談</span>
+                            </div>
                             <FormMessage />
                           </FormItem>
-                        )} />
+                          );
+                        }} />
                         <div>
                           <div className="text-xs font-medium mb-1">支払サイト</div>
                           <div className="h-8 flex items-center text-xs text-muted-foreground bg-muted/50 rounded-md px-3" data-testid="text-payment-terms">
