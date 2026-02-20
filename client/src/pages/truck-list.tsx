@@ -1038,7 +1038,7 @@ function TruckRegisterTab() {
                     <FormField control={form.control} name="bodyType" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">車体タイプ（複数選択可）</FormLabel>
-                        <div className="grid grid-cols-2 gap-1.5 max-h-[160px] overflow-y-auto border border-border rounded-md p-2" data-testid="select-truck-body-type">
+                        <div className="grid grid-cols-2 gap-1.5 border border-border rounded-md p-2" data-testid="select-truck-body-type">
                           {BODY_TYPES.map(b => {
                             const selected = (field.value || "").split(",").map(s => s.trim()).filter(Boolean);
                             const isChecked = selected.includes(b);
