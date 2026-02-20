@@ -581,148 +581,145 @@ export default function CargoList() {
       </Card>
 
       <Card className="mb-4">
-        <div className="px-4 pt-3 pb-2 flex items-center gap-4 border-b flex-wrap">
-          <span className="text-sm font-bold text-foreground" data-testid="text-filter-title">検索条件</span>
-          <div className="flex items-center gap-2 flex-wrap">
-            {[
-              { label: "関東地場", value: "関東" },
-              { label: "関西地場", value: "関西" },
-              { label: "中部地場", value: "中部" },
-            ].map((f) => (
-              <Badge
-                key={f.value}
-                variant={quickFilter === f.value ? "default" : "outline"}
-                className="cursor-pointer text-xs"
-                onClick={() => { setQuickFilter(quickFilter === f.value ? "all" : f.value); setPage(1); }}
-                data-testid={`filter-quick-${f.value}`}
-              >
-                {f.label}
-              </Badge>
-            ))}
-            <Badge
-              variant={todayOnly ? "default" : "outline"}
-              className="cursor-pointer text-xs"
-              onClick={() => { setTodayOnly(!todayOnly); setPage(1); }}
-              data-testid="filter-today"
+        <div className="px-4 py-2.5 flex items-center gap-3 border-b flex-wrap">
+          <span className="text-sm font-bold text-foreground whitespace-nowrap" data-testid="text-filter-title">検索条件</span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">よく使う検索条件（0）</span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">1クリック検索</span>
+          {[
+            { label: "関東地場", value: "関東" },
+            { label: "関西地場", value: "関西" },
+            { label: "中部地場", value: "中部" },
+          ].map((f) => (
+            <span
+              key={f.value}
+              className={`text-xs font-semibold cursor-pointer whitespace-nowrap px-2 py-0.5 rounded transition-colors ${quickFilter === f.value ? "bg-primary text-primary-foreground" : "text-foreground hover:text-primary"}`}
+              onClick={() => { setQuickFilter(quickFilter === f.value ? "all" : f.value); setPage(1); }}
+              data-testid={`filter-quick-${f.value}`}
             >
-              当日荷物
-            </Badge>
-            <Badge
-              variant={quickFilter === "宵積" ? "default" : "outline"}
-              className="cursor-pointer text-xs"
-              onClick={() => { setQuickFilter(quickFilter === "宵積" ? "all" : "宵積"); setPage(1); }}
-              data-testid="filter-quick-yoizumi"
-            >
-              宵積荷物
-            </Badge>
-          </div>
+              {f.label}
+            </span>
+          ))}
+          <span
+            className={`text-xs font-semibold cursor-pointer whitespace-nowrap px-2 py-0.5 rounded transition-colors ${todayOnly ? "bg-primary text-primary-foreground" : "text-foreground hover:text-primary"}`}
+            onClick={() => { setTodayOnly(!todayOnly); setPage(1); }}
+            data-testid="filter-today"
+          >
+            当日荷物
+          </span>
+          <span
+            className={`text-xs font-semibold cursor-pointer whitespace-nowrap px-2 py-0.5 rounded transition-colors ${quickFilter === "宵積" ? "bg-primary text-primary-foreground" : "text-foreground hover:text-primary"}`}
+            onClick={() => { setQuickFilter(quickFilter === "宵積" ? "all" : "宵積"); setPage(1); }}
+            data-testid="filter-quick-yoizumi"
+          >
+            宵積荷物
+          </span>
         </div>
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="px-4 py-3 space-y-2.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 min-w-[200px] flex-[2]">
-              <div className="relative flex-1">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <Input placeholder="発地" value={filterDeparture} onChange={(e) => { setFilterDeparture(e.target.value); setPage(1); }} className="text-xs h-8 pl-8" data-testid="filter-departure" />
+            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
+              <div className="relative">
+                <MapPin className="w-3 h-3 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
+                <input placeholder="発地" value={filterDeparture} onChange={(e) => { setFilterDeparture(e.target.value); setPage(1); }} className="text-xs h-8 pl-7 pr-2 w-[90px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-departure" />
               </div>
-              <span className="text-xs text-muted-foreground">⇄</span>
-              <Input placeholder="着地" value={filterArrival} onChange={(e) => { setFilterArrival(e.target.value); setPage(1); }} className="text-xs h-8 flex-1" data-testid="filter-arrival" />
+              <span className="text-[10px] text-muted-foreground px-0.5">⇄</span>
+              <input placeholder="着地" value={filterArrival} onChange={(e) => { setFilterArrival(e.target.value); setPage(1); }} className="text-xs h-8 px-2 w-[80px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-arrival" />
             </div>
-            <div className="flex items-center gap-1 min-w-[240px] flex-[2]">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日（開始）</span>
-              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-from" />
-              <span className="text-[11px] text-muted-foreground">〜（終了）</span>
-              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-depart-date-to" />
+              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[125px]" data-testid="filter-depart-date-from" />
+              <span className="text-[11px] text-muted-foreground">〜</span>
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">（終了）</span>
+              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[125px]" data-testid="filter-depart-date-to" />
             </div>
-            <div className="flex items-center gap-1 min-w-[240px] flex-[2]">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">着日（開始）</span>
-              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-from" />
-              <span className="text-[11px] text-muted-foreground">〜（終了）</span>
-              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[120px]" data-testid="filter-arrive-date-to" />
+              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[125px]" data-testid="filter-arrive-date-from" />
+              <span className="text-[11px] text-muted-foreground">〜</span>
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">（終了）</span>
+              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[125px]" data-testid="filter-arrive-date-to" />
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1 min-w-[140px]">
-              <Input placeholder="運賃（税別）" value={filterMinFare} onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }} className="text-xs h-8 w-[110px]" data-testid="filter-min-fare" />
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">円以上</span>
+            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
+              <input placeholder="運賃（税別）" value={filterMinFare} onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }} className="text-xs h-8 px-2.5 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-min-fare" />
+              <span className="text-[11px] text-muted-foreground pr-2 whitespace-nowrap">円以上</span>
             </div>
-            <Input placeholder="重量" value={filterWeight} onChange={(e) => { setFilterWeight(e.target.value); setPage(1); }} className="text-xs h-8 w-[100px]" data-testid="filter-weight" />
-            <Select value={filterVehicleType || "all"} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
-              <SelectTrigger className="text-xs h-8 w-[120px]" data-testid="filter-vehicle-type">
-                <SelectValue placeholder="車種" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全車種</SelectItem>
-                {VEHICLE_TYPES.map((v) => (
-                  <SelectItem key={v} value={v}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterDriverWork || "all"} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
-              <SelectTrigger className="text-xs h-8 w-[140px]" data-testid="filter-driver-work">
-                <SelectValue placeholder="ドライバー作業" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
-                <SelectItem value="手積み手降ろし">手積み手降ろし</SelectItem>
-                <SelectItem value="フォークリフト">フォークリフト</SelectItem>
-                <SelectItem value="クレーン">クレーン</SelectItem>
-                <SelectItem value="ゲート車">ゲート車</SelectItem>
-                <SelectItem value="パレット">パレット</SelectItem>
-                <SelectItem value="作業なし">作業なし</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterInvoiceAcceptance || "all"} onValueChange={(v) => { setFilterInvoiceAcceptance(v === "all" ? "" : v); setPage(1); }}>
-              <SelectTrigger className="text-xs h-8 w-[170px]" data-testid="filter-invoice-acceptance">
-                <SelectValue placeholder="おまかせ請求受入可否" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
-                <SelectItem value="可">可</SelectItem>
-                <SelectItem value="不可">不可</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex-shrink-0">
+              <Input placeholder="重量" value={filterWeight} onChange={(e) => { setFilterWeight(e.target.value); setPage(1); }} className="text-xs h-8 w-[90px]" data-testid="filter-weight" />
+            </div>
+            <div className="flex-shrink-0">
+              <Input placeholder="車種" value={filterVehicleType} onChange={(e) => { setFilterVehicleType(e.target.value); setPage(1); }} className="text-xs h-8 w-[90px]" data-testid="filter-vehicle-type-input" />
+            </div>
+            <div className="flex-shrink-0">
+              <Select value={filterDriverWork || "all"} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8 w-[130px]" data-testid="filter-driver-work">
+                  <SelectValue placeholder="ドライバー作業" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">ドライバー作業</SelectItem>
+                  <SelectItem value="手積み手降ろし">手積み手降ろし</SelectItem>
+                  <SelectItem value="フォークリフト">フォークリフト</SelectItem>
+                  <SelectItem value="クレーン">クレーン</SelectItem>
+                  <SelectItem value="ゲート車">ゲート車</SelectItem>
+                  <SelectItem value="パレット">パレット</SelectItem>
+                  <SelectItem value="作業なし">作業なし</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-shrink-0">
+              <Select value={filterInvoiceAcceptance || "all"} onValueChange={(v) => { setFilterInvoiceAcceptance(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8 w-[170px]" data-testid="filter-invoice-acceptance">
+                  <SelectValue placeholder="おまかせ請求受入可否" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">おまかせ請求受入可否</SelectItem>
+                  <SelectItem value="可">可</SelectItem>
+                  <SelectItem value="不可">不可</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-x-5 gap-y-1.5 flex-wrap">
+          <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-exclude-negotiable" />
-              <Label htmlFor="exclude-negotiable" className="text-xs text-muted-foreground cursor-pointer select-none">要相談を除く</Label>
+              <Label htmlFor="exclude-negotiable" className="text-xs cursor-pointer select-none">要相談を除く</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-weight-any" checked={filterExcludeWeightAny} onCheckedChange={(v) => { setFilterExcludeWeightAny(!!v); setPage(1); }} data-testid="filter-exclude-weight-any" />
-              <Label htmlFor="exclude-weight-any" className="text-xs text-muted-foreground cursor-pointer select-none">問わずを除く</Label>
+              <Label htmlFor="exclude-weight-any" className="text-xs cursor-pointer select-none">問わずを除く</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-driver-any" checked={filterExcludeDriverWorkAny} onCheckedChange={(v) => { setFilterExcludeDriverWorkAny(!!v); setPage(1); }} data-testid="filter-exclude-driver-any" />
-              <Label htmlFor="exclude-driver-any" className="text-xs text-muted-foreground cursor-pointer select-none">問わずを除く</Label>
+              <Label htmlFor="exclude-driver-any" className="text-xs cursor-pointer select-none">問わずを除く</Label>
             </div>
           </div>
 
-          <div className="flex items-center gap-x-5 gap-y-1.5 flex-wrap">
+          <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Checkbox id="consolidation-only" checked={filterConsolidationOnly} onCheckedChange={(v) => { setFilterConsolidationOnly(!!v); if (v) setFilterExcludeConsolidation(false); setPage(1); }} data-testid="filter-consolidation-only" />
-              <Label htmlFor="consolidation-only" className="text-xs text-muted-foreground cursor-pointer select-none">積合のみ</Label>
+              <Label htmlFor="consolidation-only" className="text-xs cursor-pointer select-none">積合のみ</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-consolidation" checked={filterExcludeConsolidation} onCheckedChange={(v) => { setFilterExcludeConsolidation(!!v); if (v) setFilterConsolidationOnly(false); setPage(1); }} data-testid="filter-exclude-consolidation" />
-              <Label htmlFor="exclude-consolidation" className="text-xs text-muted-foreground cursor-pointer select-none">積合を除く</Label>
+              <Label htmlFor="exclude-consolidation" className="text-xs cursor-pointer select-none">積合を除く</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="moving-only" checked={filterMovingOnly} onCheckedChange={(v) => { setFilterMovingOnly(!!v); if (v) setFilterExcludeMoving(false); setPage(1); }} data-testid="filter-moving-only" />
-              <Label htmlFor="moving-only" className="text-xs text-muted-foreground cursor-pointer select-none">引越しのみ</Label>
+              <Label htmlFor="moving-only" className="text-xs cursor-pointer select-none">引越しのみ</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-moving" checked={filterExcludeMoving} onCheckedChange={(v) => { setFilterExcludeMoving(!!v); if (v) setFilterMovingOnly(false); setPage(1); }} data-testid="filter-exclude-moving" />
-              <Label htmlFor="exclude-moving" className="text-xs text-muted-foreground cursor-pointer select-none">引越しを除く</Label>
+              <Label htmlFor="exclude-moving" className="text-xs cursor-pointer select-none">引越しを除く</Label>
             </div>
-            <Input placeholder="荷物番号" value={filterCargoNumber} onChange={(e) => { setFilterCargoNumber(e.target.value); setPage(1); }} className="text-xs h-8 w-[140px]" data-testid="filter-cargo-number" />
+            <Input placeholder="荷物番号" value={filterCargoNumber} onChange={(e) => { setFilterCargoNumber(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-cargo-number" />
           </div>
 
-          <div className="flex items-center justify-center gap-3 pt-1">
+          <div className="flex items-center justify-center gap-3 pt-2 border-t mt-1">
             <Button
               onClick={() => setPage(1)}
-              className="px-8"
+              className="px-10"
               data-testid="button-filter-search"
             >
               <Search className="w-4 h-4 mr-1.5" />
