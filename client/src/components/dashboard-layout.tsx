@@ -100,7 +100,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children, noScroll }: { children: React.ReactNode; noScroll?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem("tramatch_sidebar_open");
@@ -190,7 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </div>
 
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      <div className={`flex-1 min-w-0 ${noScroll ? "overflow-hidden" : "overflow-y-auto"}`}>
         {children}
       </div>
     </div>
