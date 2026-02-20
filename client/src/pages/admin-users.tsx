@@ -411,6 +411,7 @@ function UserDetailPanel({
   isDeleting,
   isChangingPlan,
   isEditing,
+  editSuccess,
 }: {
   user: SafeUser | null;
   allUsers: SafeUser[];
