@@ -596,7 +596,7 @@ export default function MyCargo() {
       "個数", "積込方法", "車両スペック", "必要装備",
       "積込時間", "降ろし時間", "支払日", "台数",
       "引越し", "緊急度", "備考",
-      "会社名", "担当者", "電話番号", "メール", "登録日", "メモ",
+      "会社名", "担当者", "電話番号", "メール", "登録日",
     ];
 
     const statusLabel = (s: string) => s === "active" ? "掲載中" : s === "completed" ? "成約" : s === "cancelled" ? "不成約" : s;
@@ -640,7 +640,6 @@ export default function MyCargo() {
       c.contactPhone,
       c.contactEmail || "",
       new Date(c.createdAt).toLocaleDateString("ja-JP"),
-      (c.privateNote || "").replace(/\n/g, " "),
     ]);
 
     const escape = (v: string) => {
