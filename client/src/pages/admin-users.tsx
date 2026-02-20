@@ -3,7 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -124,6 +126,22 @@ export default function AdminUsers() {
     },
     onError: () => {
       toast({ title: "プラン変更に失敗しました", variant: "destructive" });
+    },
+  });
+
+  const [editSuccess, setEditSuccess] = useState(false);
+  const editUser = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, string | null> }) => {
+      const res = await apiRequest("PATCH", `/api/admin/users/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "ユーザー情報を更新しました" });
+      setEditSuccess(true);
+    },
+    onError: () => {
+      toast({ title: "更新に失敗しました", variant: "destructive" });
     },
   });
 
@@ -345,13 +363,39 @@ export default function AdminUsers() {
               }
             }}
             onChangePlan={(id, plan) => changePlan.mutate({ id, plan })}
+            onEditUser={(id, data) => { setEditSuccess(false); editUser.mutate({ id, data }); }}
             isApproving={approveUser.isPending}
             isDeleting={deleteUser.isPending}
             isChangingPlan={changePlan.isPending}
+            isEditing={editUser.isPending}
+            editSuccess={editSuccess}
           />
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+function EditField({ label, name, value, onChange, type = "text" }: { label: string; name: string; value: string; onChange: (name: string, value: string) => void; type?: "text" | "textarea" }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-bold text-muted-foreground">{label}</Label>
+      {type === "textarea" ? (
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(name, e.target.value)}
+          className="text-sm min-h-[80px]"
+          data-testid={`input-edit-${name}`}
+        />
+      ) : (
+        <Input
+          value={value}
+          onChange={(e) => onChange(name, e.target.value)}
+          className="text-sm h-9"
+          data-testid={`input-edit-${name}`}
+        />
+      )}
+    </div>
   );
 }
 
@@ -362,9 +406,11 @@ function UserDetailPanel({
   onApprove,
   onDelete,
   onChangePlan,
+  onEditUser,
   isApproving,
   isDeleting,
   isChangingPlan,
+  isEditing,
 }: {
   user: SafeUser | null;
   allUsers: SafeUser[];
@@ -372,23 +418,84 @@ function UserDetailPanel({
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
   onChangePlan: (id: string, plan: string) => void;
+  onEditUser: (id: string, data: Record<string, string | null>) => void;
   isApproving: boolean;
   isDeleting: boolean;
   isChangingPlan: boolean;
+  isEditing: boolean;
+  editSuccess: boolean;
 }) {
   const [permitExpanded, setPermitExpanded] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<Record<string, string>>({});
+
+  const initEditData = (u: SafeUser) => {
+    setEditData({
+      companyName: u.companyName || "",
+      companyNameKana: u.companyNameKana || "",
+      contactName: u.contactName || "",
+      email: u.email || "",
+      phone: u.phone || "",
+      fax: u.fax || "",
+      postalCode: u.postalCode || "",
+      address: u.address || "",
+      truckCount: u.truckCount || "",
+      representative: u.representative || "",
+      establishedDate: u.establishedDate || "",
+      capital: u.capital || "",
+      employeeCount: u.employeeCount || "",
+      websiteUrl: u.websiteUrl || "",
+      transportLicenseNumber: u.transportLicenseNumber || "",
+      invoiceRegistrationNumber: u.invoiceRegistrationNumber || "",
+      businessArea: u.businessArea || "",
+      businessDescription: u.businessDescription || "",
+    });
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (editMode) {
+          setEditMode(false);
+        } else {
+          onClose();
+        }
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, editMode]);
 
   useEffect(() => {
     setPermitExpanded(false);
+    setEditMode(false);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (editSuccess && editMode) {
+      setEditMode(false);
+    }
+  }, [editSuccess, editMode]);
+
+  const handleFieldChange = (name: string, value: string) => {
+    setEditData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    if (!user) return;
+    const changedData: Record<string, string | null> = {};
+    for (const [key, val] of Object.entries(editData)) {
+      const original = (user as any)[key] || "";
+      if (val !== original) {
+        changedData[key] = val || null;
+      }
+    }
+    if (Object.keys(changedData).length === 0) {
+      setEditMode(false);
+      return;
+    }
+    onEditUser(user.id, changedData);
+  };
 
   if (!user) {
     return (
@@ -410,232 +517,317 @@ function UserDetailPanel({
     <div className="w-full sm:w-[420px] shrink-0 border-l border-border bg-background h-full overflow-y-auto absolute sm:relative right-0 top-0 z-40 sm:z-auto" data-testid="panel-user-detail">
       <div className="sticky top-0 bg-background z-50">
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
-          <span className="text-sm font-bold text-foreground">ユーザー詳細</span>
-          <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
-            <X className="w-4 h-4" />
-          </Button>
+          <span className="text-sm font-bold text-foreground">{editMode ? "ユーザー編集" : "ユーザー詳細"}</span>
+          <div className="flex items-center gap-1">
+            {!editMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { initEditData(user); setEditMode(true); }}
+                data-testid="button-edit-user"
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1" />
+                編集
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditMode(false)}
+                  data-testid="button-cancel-edit"
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isEditing}
+                  data-testid="button-save-user"
+                >
+                  <Save className="w-3.5 h-3.5 mr-1" />
+                  {isEditing ? "保存中..." : "保存"}
+                </Button>
+              </>
+            )}
+            <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${isAdmin ? "bg-blue-50 dark:bg-blue-950/30" : "bg-primary/10"}`}>
-            {isAdmin ? <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" /> : <Building2 className="w-5 h-5 text-primary" />}
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-bold text-foreground text-base truncate">{user.companyName}</h3>
-            {user.companyNameKana && <p className="text-xs text-muted-foreground">{user.companyNameKana}</p>}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {isAdmin ? (
-            <Badge variant="default" className="text-xs">管理者</Badge>
-          ) : (
-            <>
-              <Badge variant={user.approved ? "default" : "destructive"} className="text-xs">
-                {user.approved ? "承認済" : "未承認"}
-              </Badge>
-              <Badge variant={user.plan === "premium" || user.plan === "premium_full" ? "default" : "outline"} className="text-xs">
-                <Crown className="w-3 h-3 mr-1" />
-                {user.plan === "premium" ? "β版プレミアム" : user.plan === "premium_full" ? "プレミアム" : "フリー"}
-              </Badge>
-              {user.addedByUserId && (
-                <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
-                  <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
-                </Badge>
-              )}
-            </>
-          )}
-          <span className="text-xs text-muted-foreground">{formatDate()}</span>
-        </div>
-
-        {user.addedByUserId && (() => {
-          const parent = allUsers.find(p => p.id === user.addedByUserId);
-          return parent ? (
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-by">
-              <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">
-                <UserPlus className="w-3 h-3 inline mr-1" />追加元ユーザー
-              </p>
-              <p className="text-sm text-foreground">{parent.companyName}</p>
-              <p className="text-xs text-muted-foreground">{parent.contactName} ({parent.email})</p>
-            </div>
-          ) : null;
-        })()}
-
-        {!user.addedByUserId && (() => {
-          const children = allUsers.filter(u => u.addedByUserId === user.id);
-          return children.length > 0 ? (
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-users">
-              <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
-                <Users className="w-3 h-3 inline mr-1" />追加ユーザー ({children.length}名)
-              </p>
-              <div className="space-y-1.5">
-                {children.map(c => (
-                  <div key={c.id} className="flex items-center gap-2 text-sm">
-                    <UserPlus className="w-3 h-3 text-blue-500 shrink-0" />
-                    <span className="text-foreground">{c.contactName || c.email}</span>
-                    <span className="text-xs text-muted-foreground">({c.email})</span>
-                  </div>
-                ))}
+        {!editMode ? (
+          <>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${isAdmin ? "bg-blue-50 dark:bg-blue-950/30" : "bg-primary/10"}`}>
+                {isAdmin ? <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" /> : <Building2 className="w-5 h-5 text-primary" />}
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-foreground text-base truncate">{user.companyName}</h3>
+                {user.companyNameKana && <p className="text-xs text-muted-foreground">{user.companyNameKana}</p>}
               </div>
             </div>
-          ) : null;
-        })()}
 
-        {!isAdmin && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              {!user.approved && (
-                <Button
-                  className="flex-1"
-                  onClick={() => onApprove(user.id)}
-                  disabled={isApproving}
-                  data-testid={`button-approve-user-${user.id}`}
-                >
-                  <CheckCircle className="w-4 h-4 mr-1.5" />
-                  {isApproving ? "承認中..." : "承認する"}
-                </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {isAdmin ? (
+                <Badge variant="default" className="text-xs">管理者</Badge>
+              ) : (
+                <>
+                  <Badge variant={user.approved ? "default" : "destructive"} className="text-xs">
+                    {user.approved ? "承認済" : "未承認"}
+                  </Badge>
+                  <Badge variant={user.plan === "premium" || user.plan === "premium_full" ? "default" : "outline"} className="text-xs">
+                    <Crown className="w-3 h-3 mr-1" />
+                    {user.plan === "premium" ? "β版プレミアム" : user.plan === "premium_full" ? "プレミアム" : "フリー"}
+                  </Badge>
+                  {user.addedByUserId && (
+                    <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                      <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
+                    </Badge>
+                  )}
+                </>
               )}
-              {user.plan === "free" && (
-                <Button
-                  className="flex-1"
-                  onClick={() => onChangePlan(user.id, "premium")}
-                  disabled={isChangingPlan}
-                  data-testid={`button-plan-beta-${user.id}`}
-                >
-                  <Crown className="w-4 h-4 mr-1.5" />
-                  β版プレミアムに変更
-                </Button>
-              )}
-              {user.plan === "free" && (
-                <Button
-                  className="flex-1"
-                  onClick={() => onChangePlan(user.id, "premium_full")}
-                  disabled={isChangingPlan}
-                  data-testid={`button-plan-full-${user.id}`}
-                >
-                  <Crown className="w-4 h-4 mr-1.5" />
-                  プレミアムに変更
-                </Button>
-              )}
-              {(user.plan === "premium" || user.plan === "premium_full") && (
+              <span className="text-xs text-muted-foreground">{formatDate()}</span>
+            </div>
+
+            {user.addedByUserId && (() => {
+              const parent = allUsers.find(p => p.id === user.addedByUserId);
+              return parent ? (
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-by">
+                  <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">
+                    <UserPlus className="w-3 h-3 inline mr-1" />追加元ユーザー
+                  </p>
+                  <p className="text-sm text-foreground">{parent.companyName}</p>
+                  <p className="text-xs text-muted-foreground">{parent.contactName} ({parent.email})</p>
+                </div>
+              ) : null;
+            })()}
+
+            {!user.addedByUserId && (() => {
+              const children = allUsers.filter(u => u.addedByUserId === user.id);
+              return children.length > 0 ? (
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3" data-testid="info-added-users">
+                  <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
+                    <Users className="w-3 h-3 inline mr-1" />追加ユーザー ({children.length}名)
+                  </p>
+                  <div className="space-y-1.5">
+                    {children.map(c => (
+                      <div key={c.id} className="flex items-center gap-2 text-sm">
+                        <UserPlus className="w-3 h-3 text-blue-500 shrink-0" />
+                        <span className="text-foreground">{c.contactName || c.email}</span>
+                        <span className="text-xs text-muted-foreground">({c.email})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {!isAdmin && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {!user.approved && (
+                    <Button
+                      className="flex-1"
+                      onClick={() => onApprove(user.id)}
+                      disabled={isApproving}
+                      data-testid={`button-approve-user-${user.id}`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1.5" />
+                      {isApproving ? "承認中..." : "承認する"}
+                    </Button>
+                  )}
+                  {user.plan === "free" && (
+                    <Button
+                      className="flex-1"
+                      onClick={() => onChangePlan(user.id, "premium")}
+                      disabled={isChangingPlan}
+                      data-testid={`button-plan-beta-${user.id}`}
+                    >
+                      <Crown className="w-4 h-4 mr-1.5" />
+                      β版プレミアムに変更
+                    </Button>
+                  )}
+                  {user.plan === "free" && (
+                    <Button
+                      className="flex-1"
+                      onClick={() => onChangePlan(user.id, "premium_full")}
+                      disabled={isChangingPlan}
+                      data-testid={`button-plan-full-${user.id}`}
+                    >
+                      <Crown className="w-4 h-4 mr-1.5" />
+                      プレミアムに変更
+                    </Button>
+                  )}
+                  {(user.plan === "premium" || user.plan === "premium_full") && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => onChangePlan(user.id, "free")}
+                      disabled={isChangingPlan}
+                      data-testid={`button-plan-free-${user.id}`}
+                    >
+                      フリーに変更
+                    </Button>
+                  )}
+                </div>
                 <Button
                   variant="outline"
-                  className="flex-1"
-                  onClick={() => onChangePlan(user.id, "free")}
-                  disabled={isChangingPlan}
-                  data-testid={`button-plan-free-${user.id}`}
+                  className="w-full text-destructive"
+                  onClick={() => onDelete(user.id)}
+                  disabled={isDeleting}
+                  data-testid={`button-delete-user-${user.id}`}
                 >
-                  フリーに変更
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  ユーザーを削除
                 </Button>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              className="w-full text-destructive"
-              onClick={() => onDelete(user.id)}
-              disabled={isDeleting}
-              data-testid={`button-delete-user-${user.id}`}
-            >
-              <Trash2 className="w-4 h-4 mr-1.5" />
-              ユーザーを削除
-            </Button>
-          </div>
-        )}
+              </div>
+            )}
 
-        <h4 className="text-sm font-bold text-foreground">基本情報</h4>
-        <div className="border border-border rounded-md overflow-hidden">
-          <DetailRow label="企業名" value={user.companyName} />
-          <DetailRow label="担当者" value={user.contactName} />
-          <DetailRow label="メール" value={user.email} />
-          <DetailRow label="電話番号" value={user.phone} />
-          {user.fax && <DetailRow label="FAX" value={user.fax} />}
-          <DetailRow label="住所" value={`${user.postalCode ? `〒${user.postalCode}\n` : ""}${user.address || "-"}`} />
-          {user.truckCount && <DetailRow label="保有台数" value={`${user.truckCount}台`} />}
-        </div>
-
-        {(user.representative || user.establishedDate || user.capital || user.employeeCount || user.websiteUrl || user.transportLicenseNumber || user.invoiceRegistrationNumber || user.businessArea || user.businessDescription) && (
-          <>
-            <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+            <h4 className="text-sm font-bold text-foreground">基本情報</h4>
             <div className="border border-border rounded-md overflow-hidden">
-              {user.representative && <DetailRow label="代表者" value={user.representative} />}
-              {user.establishedDate && <DetailRow label="設立" value={user.establishedDate} />}
-              {user.capital && <DetailRow label="資本金" value={user.capital} />}
-              {user.employeeCount && <DetailRow label="従業員数" value={`${user.employeeCount}名`} />}
-              {user.websiteUrl && (
-                <DetailRow label="URL">
-                  <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm break-all">{user.websiteUrl}</a>
-                </DetailRow>
-              )}
-              {user.transportLicenseNumber && <DetailRow label="運送許可番号" value={user.transportLicenseNumber} />}
-              {user.invoiceRegistrationNumber && <DetailRow label="インボイス" value={user.invoiceRegistrationNumber} />}
-              {user.businessArea && <DetailRow label="営業エリア" value={user.businessArea} />}
-              {user.businessDescription && <DetailRow label="事業内容" value={user.businessDescription} />}
+              <DetailRow label="企業名" value={user.companyName} />
+              <DetailRow label="担当者" value={user.contactName} />
+              <DetailRow label="メール" value={user.email} />
+              <DetailRow label="電話番号" value={user.phone} />
+              {user.fax && <DetailRow label="FAX" value={user.fax} />}
+              <DetailRow label="住所" value={`${user.postalCode ? `〒${user.postalCode}\n` : ""}${user.address || "-"}`} />
+              {user.truckCount && <DetailRow label="保有台数" value={`${user.truckCount}台`} />}
             </div>
-          </>
-        )}
 
-        <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-          <Shield className="w-3.5 h-3.5" />
-          許可証・資格証明書
-        </h4>
-        {user.permitFile ? (
-          isImageFile(user.permitFile) ? (
-            <div>
-              <div
-                className="relative rounded-md border overflow-hidden cursor-pointer group"
-                onClick={() => setPermitExpanded(!permitExpanded)}
-                data-testid={`permit-image-${user.id}`}
-              >
-                <img
-                  src={user.permitFile}
-                  alt="許可証"
-                  className={`w-full object-cover transition-all ${permitExpanded ? "max-h-[600px] object-contain" : "max-h-[160px]"}`}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                {!permitExpanded && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white text-xs font-medium">クリックで拡大</span>
+            {(user.representative || user.establishedDate || user.capital || user.employeeCount || user.websiteUrl || user.transportLicenseNumber || user.invoiceRegistrationNumber || user.businessArea || user.businessDescription) && (
+              <>
+                <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+                <div className="border border-border rounded-md overflow-hidden">
+                  {user.representative && <DetailRow label="代表者" value={user.representative} />}
+                  {user.establishedDate && <DetailRow label="設立" value={user.establishedDate} />}
+                  {user.capital && <DetailRow label="資本金" value={user.capital} />}
+                  {user.employeeCount && <DetailRow label="従業員数" value={`${user.employeeCount}名`} />}
+                  {user.websiteUrl && (
+                    <DetailRow label="URL">
+                      <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm break-all">{user.websiteUrl}</a>
+                    </DetailRow>
+                  )}
+                  {user.transportLicenseNumber && <DetailRow label="運送許可番号" value={user.transportLicenseNumber} />}
+                  {user.invoiceRegistrationNumber && <DetailRow label="インボイス" value={user.invoiceRegistrationNumber} />}
+                  {user.businessArea && <DetailRow label="営業エリア" value={user.businessArea} />}
+                  {user.businessDescription && <DetailRow label="事業内容" value={user.businessDescription} />}
+                </div>
+              </>
+            )}
+
+            <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              許可証・資格証明書
+            </h4>
+            {user.permitFile ? (
+              isImageFile(user.permitFile) ? (
+                <div>
+                  <div
+                    className="relative rounded-md border overflow-hidden cursor-pointer group"
+                    onClick={() => setPermitExpanded(!permitExpanded)}
+                    data-testid={`permit-image-${user.id}`}
+                  >
+                    <img
+                      src={user.permitFile}
+                      alt="許可証"
+                      className={`w-full object-cover transition-all ${permitExpanded ? "max-h-[600px] object-contain" : "max-h-[160px]"}`}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                    {!permitExpanded && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-white text-xs font-medium">クリックで拡大</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button variant="ghost" size="sm" onClick={() => setPermitExpanded(!permitExpanded)}>
+                      {permitExpanded ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
+                      {permitExpanded ? "縮小" : "拡大表示"}
+                    </Button>
+                    <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="sm">
+                        <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                        新しいタブ
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 rounded-md bg-muted/40">
+                  <div className="w-10 h-10 rounded-md bg-red-50 dark:bg-red-950/30 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">許可証ファイル（PDF）</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.permitFile.split("/").pop()}</p>
+                  </div>
+                  <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                      開く
+                    </Button>
+                  </a>
+                </div>
+              )
+            ) : (
+              <div className="p-4 rounded-md bg-muted/30 text-center">
+                <Shield className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">未アップロード</p>
               </div>
-              <div className="flex items-center gap-2 mt-2">
-                <Button variant="ghost" size="sm" onClick={() => setPermitExpanded(!permitExpanded)}>
-                  {permitExpanded ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
-                  {permitExpanded ? "縮小" : "拡大表示"}
-                </Button>
-                <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
-                  <Button variant="ghost" size="sm">
-                    <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                    新しいタブ
-                  </Button>
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 p-3 rounded-md bg-muted/40">
-              <div className="w-10 h-10 rounded-md bg-red-50 dark:bg-red-950/30 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5 text-red-500" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">許可証ファイル（PDF）</p>
-                <p className="text-xs text-muted-foreground truncate">{user.permitFile.split("/").pop()}</p>
-              </div>
-              <a href={user.permitFile} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm">
-                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                  開く
-                </Button>
-              </a>
-            </div>
-          )
+            )}
+          </>
         ) : (
-          <div className="p-4 rounded-md bg-muted/30 text-center">
-            <Shield className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
-            <p className="text-xs text-muted-foreground">未アップロード</p>
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+            <div className="space-y-3">
+              <EditField label="企業名" name="companyName" value={editData.companyName} onChange={handleFieldChange} />
+              <EditField label="企業名（カナ）" name="companyNameKana" value={editData.companyNameKana} onChange={handleFieldChange} />
+              <EditField label="担当者名" name="contactName" value={editData.contactName} onChange={handleFieldChange} />
+              <EditField label="メールアドレス" name="email" value={editData.email} onChange={handleFieldChange} />
+              <EditField label="電話番号" name="phone" value={editData.phone} onChange={handleFieldChange} />
+              <EditField label="FAX" name="fax" value={editData.fax} onChange={handleFieldChange} />
+              <EditField label="郵便番号" name="postalCode" value={editData.postalCode} onChange={handleFieldChange} />
+              <EditField label="住所" name="address" value={editData.address} onChange={handleFieldChange} />
+              <EditField label="保有台数" name="truckCount" value={editData.truckCount} onChange={handleFieldChange} />
+            </div>
+
+            <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+            <div className="space-y-3">
+              <EditField label="代表者" name="representative" value={editData.representative} onChange={handleFieldChange} />
+              <EditField label="設立年月" name="establishedDate" value={editData.establishedDate} onChange={handleFieldChange} />
+              <EditField label="資本金" name="capital" value={editData.capital} onChange={handleFieldChange} />
+              <EditField label="従業員数" name="employeeCount" value={editData.employeeCount} onChange={handleFieldChange} />
+              <EditField label="Webサイト" name="websiteUrl" value={editData.websiteUrl} onChange={handleFieldChange} />
+              <EditField label="運送許可番号" name="transportLicenseNumber" value={editData.transportLicenseNumber} onChange={handleFieldChange} />
+              <EditField label="インボイス番号" name="invoiceRegistrationNumber" value={editData.invoiceRegistrationNumber} onChange={handleFieldChange} />
+              <EditField label="営業エリア" name="businessArea" value={editData.businessArea} onChange={handleFieldChange} />
+              <EditField label="事業内容" name="businessDescription" value={editData.businessDescription} onChange={handleFieldChange} type="textarea" />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setEditMode(false)}
+                data-testid="button-cancel-edit-bottom"
+              >
+                キャンセル
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSave}
+                disabled={isEditing}
+                data-testid="button-save-user-bottom"
+              >
+                <Save className="w-3.5 h-3.5 mr-1" />
+                {isEditing ? "保存中..." : "保存"}
+              </Button>
+            </div>
           </div>
         )}
       </div>
