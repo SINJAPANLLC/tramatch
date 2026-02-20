@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Crown, Building2, CheckCircle, User, UserPlus, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2 } from "lucide-react";
+import { Crown, Building2, CheckCircle, User, UserPlus, ChevronRight, ChevronDown, Building, FileText, ShieldCheck, ScrollText, Landmark, CreditCard, FileInput, FileOutput, Calculator, Users, Mail, Receipt, Loader2, Bell, Smartphone, Plus, Clock, XCircle, CheckCircle2, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -218,7 +218,7 @@ const PREFECTURES = [
   "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
 ];
 
-type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "notification-prefs" | "email-cargo" | "usage";
+type SettingsTab = "basic" | "detail" | "credit" | "contract" | "bank" | "payment-method" | "invoice-receive" | "invoice-issue" | "accounting-contact" | "user-mgmt" | "notification-prefs" | "email-cargo" | "usage" | "partners" | "transport-ledger";
 
 const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Building }[] = [
   { key: "basic", label: "基本情報", group: "企業情報管理", icon: Building },
@@ -230,6 +230,8 @@ const TABS: { key: SettingsTab; label: string; group: string; icon: typeof Build
   { key: "invoice-receive", label: "請求書受領", group: "企業情報管理", icon: FileInput },
   { key: "invoice-issue", label: "請求書発行", group: "企業情報管理", icon: FileOutput },
   { key: "accounting-contact", label: "経理連絡先", group: "企業情報管理", icon: Calculator },
+  { key: "partners", label: "取引先招待", group: "取引先・管理簿", icon: UserPlus },
+  { key: "transport-ledger", label: "実運送体制管理簿", group: "取引先・管理簿", icon: FileText },
   { key: "user-mgmt", label: "ユーザー管理", group: "ユーザー管理", icon: Users },
   { key: "notification-prefs", label: "通知設定", group: "通知設定", icon: Bell },
   { key: "email-cargo", label: "荷物情報", group: "メール受信設定", icon: Mail },
@@ -525,6 +527,166 @@ function UsageAmountSection() {
             </table>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PartnersSection() {
+  const { toast } = useToast();
+  const [inviteEmail, setInviteEmail] = useState("");
+
+  const inviteMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const res = await apiRequest("POST", "/api/partners/invite", { email });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "招待メールを送信しました" });
+      setInviteEmail("");
+    },
+    onError: (error: Error) => {
+      toast({ title: "招待に失敗しました", description: error.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Card>
+      <CardContent className="p-4 sm:p-8 text-center">
+        <UserPlus className="w-12 h-12 text-primary mx-auto mb-4" />
+        <h2 className="text-lg font-bold text-foreground mb-2" data-testid="text-invite-heading">取引先を招待</h2>
+        <p className="text-sm text-muted-foreground mb-6">メールアドレスを入力して取引先をトラマッチに招待しましょう</p>
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="メールアドレスを入力..."
+                className="pl-9 text-sm"
+                data-testid="input-invite-email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && inviteEmail.trim()) {
+                    inviteMutation.mutate(inviteEmail);
+                  }
+                }}
+              />
+            </div>
+            <Button
+              data-testid="button-send-invite"
+              onClick={() => inviteMutation.mutate(inviteEmail)}
+              disabled={inviteMutation.isPending || !inviteEmail.trim()}
+            >
+              {inviteMutation.isPending ? "送信中..." : "招待する"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TransportLedgerSection() {
+  const { toast } = useToast();
+  const formatDateForInput = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+  const today = formatDateForInput(new Date());
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
+  const [shipperName, setShipperName] = useState("");
+  const [matchType, setMatchType] = useState("exact");
+
+  const handleExport = async () => {
+    if (!dateFrom) {
+      toast({ title: "発日範囲は必須です", variant: "destructive" });
+      return;
+    }
+    try {
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      if (shipperName) params.set("shipperName", shipperName);
+      const response = await fetch(`/api/transport-records/export?${params.toString()}`, { credentials: "include" });
+      if (!response.ok) throw new Error("エクスポートに失敗しました");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transport-ledger.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Excel出力完了" });
+    } catch (error: any) {
+      toast({ title: "エクスポートに失敗しました", description: error.message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4 sm:p-6">
+        <h2 className="text-base font-bold text-foreground mb-4">実運送体制管理簿出力</h2>
+        <div className="max-w-2xl mx-auto space-y-5">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-xs text-white bg-red-500 rounded px-1.5 py-0.5 font-bold">必須</span>
+              <Label className="font-bold text-sm">発日範囲</Label>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full sm:w-[160px] text-sm"
+                data-testid="input-date-from"
+              />
+              <span className="text-muted-foreground text-sm">～</span>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full sm:w-[160px] text-sm"
+                data-testid="input-date-to"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="hidden sm:block w-[30px]" />
+              <Label className="font-bold text-sm">真荷主名</Label>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Input
+                placeholder="真荷主名"
+                value={shipperName}
+                onChange={(e) => setShipperName(e.target.value)}
+                className="w-full sm:w-[220px] text-sm"
+                data-testid="input-shipper-name"
+              />
+              <Select value={matchType} onValueChange={setMatchType}>
+                <SelectTrigger className="w-[120px] text-sm" data-testid="select-match-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="exact">完全一致</SelectItem>
+                  <SelectItem value="partial">部分一致</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-center pt-4">
+            <Button onClick={handleExport} data-testid="button-export-excel">
+              <Download className="w-4 h-4 mr-1.5" />
+              この条件でExcelを出力
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1424,6 +1586,14 @@ export default function UserSettings() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {activeTab === "partners" && (
+              <PartnersSection />
+            )}
+
+            {activeTab === "transport-ledger" && (
+              <TransportLedgerSection />
             )}
 
             {activeTab === "user-mgmt" && (
