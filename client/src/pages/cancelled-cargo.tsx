@@ -139,8 +139,10 @@ type CompanyInfo = {
   annualRevenue: string | null;
   bankInfo: string | null;
   majorClients: string | null;
+  closingMonth: string | null;
   closingDay: string | null;
   paymentMonth: string | null;
+  paymentDay: string | null;
   businessArea: string | null;
   autoInvoiceAcceptance: string | null;
   memberOrganization: string | null;
@@ -201,7 +203,7 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
 <h2>企業情報</h2><h3 style="font-size:14px;margin:8px 0">基本情報</h3>
 <table>${row("法人名・事業者名", companyInfo?.companyName || listing.companyName)}${row("住所", companyInfo?.postalCode ? `〒${companyInfo.postalCode} ${companyInfo.address || "-"}` : companyInfo?.address || "-")}${row("電話番号", listing.contactPhone)}${row("FAX番号", companyInfo?.fax)}${row("請求事業者登録番号", companyInfo?.invoiceRegistrationNumber)}${row("業務内容・会社PR", companyInfo?.businessDescription)}${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount} 台` : "-")}${row("ウェブサイトURL", companyInfo?.websiteUrl)}</table>
 <h3 style="font-size:14px;margin:8px 0">詳細情報</h3>
-<table>${row("代表者", companyInfo?.representative)}${row("設立", companyInfo?.establishedDate)}${row("資本金", companyInfo?.capital ? `${companyInfo.capital} 万円` : null)}${row("従業員数", companyInfo?.employeeCount)}${row("事業所所在地", companyInfo?.officeLocations)}${row("年間売上", companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null)}${row("取引先銀行", companyInfo?.bankInfo)}${row("主要取引先", companyInfo?.majorClients)}${row("締め日", companyInfo?.closingDay)}${row("支払月・支払日", companyInfo?.paymentMonth)}${row("営業地域", companyInfo?.businessArea)}</table>
+<table>${row("代表者", companyInfo?.representative)}${row("設立", companyInfo?.establishedDate)}${row("資本金", companyInfo?.capital ? `${companyInfo.capital} 万円` : null)}${row("従業員数", companyInfo?.employeeCount)}${row("事業所所在地", companyInfo?.officeLocations)}${row("年間売上", companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null)}${row("取引先銀行", companyInfo?.bankInfo)}${row("主要取引先", companyInfo?.majorClients)}${row("締め日", [companyInfo?.closingMonth, companyInfo?.closingDay].filter(Boolean).join(" ") || null)}${row("支払月・支払日", [companyInfo?.paymentMonth, companyInfo?.paymentDay].filter(Boolean).join(" ") || null)}${row("営業地域", companyInfo?.businessArea)}</table>
 <h3 style="font-size:14px;margin:8px 0">信用情報</h3>
 <table>${row("加入組織", companyInfo?.memberOrganization)}${row("国交省認可番号", companyInfo?.transportLicenseNumber)}${row("デジタコ搭載数", companyInfo?.digitalTachographCount)}${row("GPS搭載数", companyInfo?.gpsCount)}${row("安全性優良事業所", companyInfo?.safetyExcellenceCert || "無")}${row("グリーン経営認証", companyInfo?.greenManagementCert || "無")}${row("ISO9000", companyInfo?.iso9000 || "無")}${row("ISO14000", companyInfo?.iso14000 || "無")}${row("ISO39001", companyInfo?.iso39001 || "無")}${row("荷物保険", companyInfo?.cargoInsurance)}</table></body></html>`;
     const printWindow = window.open("", "_blank");
@@ -397,8 +399,8 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <DetailRow label="年間売上" value={companyInfo?.annualRevenue ? `${companyInfo.annualRevenue} 万円` : null} />
             <DetailRow label="取引先銀行" value={companyInfo?.bankInfo} />
             <DetailRow label="主要取引先" value={companyInfo?.majorClients} />
-            <DetailRow label="締め日" value={companyInfo?.closingDay} />
-            <DetailRow label="支払月・支払日" value={companyInfo?.paymentMonth} />
+            <DetailRow label="締め日" value={[companyInfo?.closingMonth, companyInfo?.closingDay].filter(Boolean).join(" ") || null} />
+            <DetailRow label="支払月・支払日" value={[companyInfo?.paymentMonth, companyInfo?.paymentDay].filter(Boolean).join(" ") || null} />
             <DetailRow label="営業地域" value={companyInfo?.businessArea} />
 
           </div>
