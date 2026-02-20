@@ -184,6 +184,7 @@ export default function CargoForm() {
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { data: currentUser } = useQuery<UserType>({ queryKey: ["/api/user"] });
   const [pendingItems, setPendingItems] = useState<Record<string, unknown>[]>([]);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -212,7 +213,12 @@ export default function CargoForm() {
   });
 
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    setTimeout(() => {
+      const container = chatContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -577,7 +583,7 @@ export default function CargoForm() {
 
         <div className="flex-1 flex overflow-hidden">
           <div className={`flex-1 flex flex-col min-w-0 ${mobileTab !== "chat" ? "hidden lg:flex" : ""}`}>
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" data-testid="chat-messages">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" data-testid="chat-messages">
               {chatMessages.map((msg) => (
                 <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
