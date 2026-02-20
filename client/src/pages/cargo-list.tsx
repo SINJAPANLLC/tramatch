@@ -580,21 +580,25 @@ export default function CargoList() {
         </CardContent>
       </Card>
 
-      <Card className="mb-4">
-        <CardContent className="p-3 space-y-2.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[200px]">
-              <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <Input
-                placeholder="発地"
-                value={filterDeparture}
-                onChange={(e) => { setFilterDeparture(e.target.value); setPage(1); }}
-                className="text-xs h-8"
-                data-testid="filter-departure"
-              />
+      <Card className="mb-4 border-border/60">
+        <CardContent className="p-4 space-y-3">
+          <div className="grid grid-cols-[1fr_auto_1fr_1fr_1fr] items-end gap-2">
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">発地</Label>
+              <div className="relative">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <Input
+                  placeholder="発地"
+                  value={filterDeparture}
+                  onChange={(e) => { setFilterDeparture(e.target.value); setPage(1); }}
+                  className="text-xs h-8 pl-8"
+                  data-testid="filter-departure"
+                />
+              </div>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-[120px] max-w-[200px]">
+            <ArrowRight className="w-4 h-4 text-muted-foreground mb-1.5" />
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">着地</Label>
               <Input
                 placeholder="着地"
                 value={filterArrival}
@@ -603,32 +607,42 @@ export default function CargoList() {
                 data-testid="filter-arrival"
               />
             </div>
-            <div className="flex items-center gap-1 flex-1 min-w-[280px]">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">発日（開始）</span>
-              <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-depart-date-from" />
-              <span className="text-xs text-muted-foreground">〜（終了）</span>
-              <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-depart-date-to" />
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">発日</Label>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={filterDepartDateFrom} onChange={(e) => { setFilterDepartDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 flex-1" data-testid="filter-depart-date-from" />
+                <span className="text-xs text-muted-foreground">〜</span>
+                <Input type="date" value={filterDepartDateTo} onChange={(e) => { setFilterDepartDateTo(e.target.value); setPage(1); }} className="text-xs h-8 flex-1" data-testid="filter-depart-date-to" />
+              </div>
             </div>
-            <div className="flex items-center gap-1 flex-1 min-w-[280px]">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">着日（開始）</span>
-              <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-arrive-date-from" />
-              <span className="text-xs text-muted-foreground">〜（終了）</span>
-              <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 w-[130px]" data-testid="filter-arrive-date-to" />
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">着日</Label>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={filterArriveDateFrom} onChange={(e) => { setFilterArriveDateFrom(e.target.value); setPage(1); }} className="text-xs h-8 flex-1" data-testid="filter-arrive-date-from" />
+                <span className="text-xs text-muted-foreground">〜</span>
+                <Input type="date" value={filterArriveDateTo} onChange={(e) => { setFilterArriveDateTo(e.target.value); setPage(1); }} className="text-xs h-8 flex-1" data-testid="filter-arrive-date-to" />
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 min-w-[160px] max-w-[200px]">
-              <Input
-                placeholder="運賃（税別）"
-                value={filterMinFare}
-                onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }}
-                className="text-xs h-8"
-                data-testid="filter-min-fare"
-              />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">円以上</span>
+          <div className="h-px bg-border/60" />
+
+          <div className="grid grid-cols-5 items-end gap-2">
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">運賃（税別）</Label>
+              <div className="flex items-center gap-1">
+                <Input
+                  placeholder="金額"
+                  value={filterMinFare}
+                  onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }}
+                  className="text-xs h-8 flex-1"
+                  data-testid="filter-min-fare"
+                />
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">円以上</span>
+              </div>
             </div>
-            <div className="min-w-[120px] max-w-[160px]">
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">重量</Label>
               <Input
                 placeholder="重量"
                 value={filterWeight}
@@ -637,8 +651,9 @@ export default function CargoList() {
                 data-testid="filter-weight"
               />
             </div>
-            <div className="min-w-[120px] max-w-[160px]">
-              <Select value={filterVehicleType} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">車種</Label>
+              <Select value={filterVehicleType || "all"} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="text-xs h-8" data-testid="filter-vehicle-type">
                   <SelectValue placeholder="車種" />
                 </SelectTrigger>
@@ -650,8 +665,9 @@ export default function CargoList() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="min-w-[140px] max-w-[180px]">
-              <Select value={filterDriverWork} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">ドライバー作業</Label>
+              <Select value={filterDriverWork || "all"} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="text-xs h-8" data-testid="filter-driver-work">
                   <SelectValue placeholder="ドライバー作業" />
                 </SelectTrigger>
@@ -666,8 +682,9 @@ export default function CargoList() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="min-w-[160px] max-w-[200px]">
-              <Select value={filterInvoiceAcceptance} onValueChange={(v) => { setFilterInvoiceAcceptance(v === "all" ? "" : v); setPage(1); }}>
+            <div>
+              <Label className="text-[10px] text-muted-foreground mb-1 block">おまかせ請求受入可否</Label>
+              <Select value={filterInvoiceAcceptance || "all"} onValueChange={(v) => { setFilterInvoiceAcceptance(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="text-xs h-8" data-testid="filter-invoice-acceptance">
                   <SelectValue placeholder="おまかせ請求受入可否" />
                 </SelectTrigger>
@@ -680,39 +697,47 @@ export default function CargoList() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+          <div className="h-px bg-border/60" />
+
+          <div className="flex items-center gap-x-6 gap-y-2 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-exclude-negotiable" />
-              <Label htmlFor="exclude-negotiable" className="text-xs text-muted-foreground cursor-pointer">要相談を除く</Label>
+              <Label htmlFor="exclude-negotiable" className="text-xs text-muted-foreground cursor-pointer select-none">要相談を除く</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-weight-any" checked={filterExcludeWeightAny} onCheckedChange={(v) => { setFilterExcludeWeightAny(!!v); setPage(1); }} data-testid="filter-exclude-weight-any" />
-              <Label htmlFor="exclude-weight-any" className="text-xs text-muted-foreground cursor-pointer">問わずを除く</Label>
+              <Label htmlFor="exclude-weight-any" className="text-xs text-muted-foreground cursor-pointer select-none">問わずを除く</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-driver-any" checked={filterExcludeDriverWorkAny} onCheckedChange={(v) => { setFilterExcludeDriverWorkAny(!!v); setPage(1); }} data-testid="filter-exclude-driver-any" />
-              <Label htmlFor="exclude-driver-any" className="text-xs text-muted-foreground cursor-pointer">問わずを除く</Label>
+              <Label htmlFor="exclude-driver-any" className="text-xs text-muted-foreground cursor-pointer select-none">問わずを除く</Label>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <div className="w-px h-4 bg-border/60" />
+
             <div className="flex items-center gap-1.5">
               <Checkbox id="consolidation-only" checked={filterConsolidationOnly} onCheckedChange={(v) => { setFilterConsolidationOnly(!!v); if (v) setFilterExcludeConsolidation(false); setPage(1); }} data-testid="filter-consolidation-only" />
-              <Label htmlFor="consolidation-only" className="text-xs text-muted-foreground cursor-pointer">積合のみ</Label>
+              <Label htmlFor="consolidation-only" className="text-xs text-muted-foreground cursor-pointer select-none">積合のみ</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-consolidation" checked={filterExcludeConsolidation} onCheckedChange={(v) => { setFilterExcludeConsolidation(!!v); if (v) setFilterConsolidationOnly(false); setPage(1); }} data-testid="filter-exclude-consolidation" />
-              <Label htmlFor="exclude-consolidation" className="text-xs text-muted-foreground cursor-pointer">積合を除く</Label>
+              <Label htmlFor="exclude-consolidation" className="text-xs text-muted-foreground cursor-pointer select-none">積合を除く</Label>
             </div>
+
+            <div className="w-px h-4 bg-border/60" />
+
             <div className="flex items-center gap-1.5">
               <Checkbox id="moving-only" checked={filterMovingOnly} onCheckedChange={(v) => { setFilterMovingOnly(!!v); if (v) setFilterExcludeMoving(false); setPage(1); }} data-testid="filter-moving-only" />
-              <Label htmlFor="moving-only" className="text-xs text-muted-foreground cursor-pointer">引越しのみ</Label>
+              <Label htmlFor="moving-only" className="text-xs text-muted-foreground cursor-pointer select-none">引越しのみ</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-moving" checked={filterExcludeMoving} onCheckedChange={(v) => { setFilterExcludeMoving(!!v); if (v) setFilterMovingOnly(false); setPage(1); }} data-testid="filter-exclude-moving" />
-              <Label htmlFor="exclude-moving" className="text-xs text-muted-foreground cursor-pointer">引越しを除く</Label>
+              <Label htmlFor="exclude-moving" className="text-xs text-muted-foreground cursor-pointer select-none">引越しを除く</Label>
             </div>
-            <div className="min-w-[140px] max-w-[180px]">
+
+            <div className="w-px h-4 bg-border/60" />
+
+            <div className="w-[150px]">
               <Input
                 placeholder="荷物番号"
                 value={filterCargoNumber}
@@ -721,11 +746,12 @@ export default function CargoList() {
                 data-testid="filter-cargo-number"
               />
             </div>
+
             {(filterDeparture || filterArrival || filterDepartDateFrom || filterDepartDateTo || filterArriveDateFrom || filterArriveDateTo || filterMinFare || filterWeight || filterVehicleType || filterDriverWork || filterInvoiceAcceptance || filterExcludeNegotiable || filterExcludeWeightAny || filterExcludeDriverWorkAny || filterConsolidationOnly || filterExcludeConsolidation || filterMovingOnly || filterExcludeMoving || filterCargoNumber) && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-xs text-muted-foreground ml-auto"
+                className="text-xs ml-auto"
                 onClick={() => {
                   setFilterDeparture(""); setFilterArrival("");
                   setFilterDepartDateFrom(""); setFilterDepartDateTo("");
