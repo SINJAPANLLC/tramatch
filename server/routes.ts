@@ -859,6 +859,7 @@ export async function registerRoutes(
       const activeListings = listings.filter(l => l.status === "active");
       res.json(activeListings);
     } catch (error) {
+      console.error("Failed to fetch cargo listings:", error);
       res.status(500).json({ message: "Failed to fetch cargo listings" });
     }
   });
@@ -1238,6 +1239,7 @@ export async function registerRoutes(
       const listings = await storage.getTruckListings();
       res.json(listings);
     } catch (error) {
+      console.error("Failed to fetch truck listings:", error);
       res.status(500).json({ message: "Failed to fetch truck listings" });
     }
   });
