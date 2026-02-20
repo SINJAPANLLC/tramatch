@@ -519,7 +519,7 @@ export default function MyCargo() {
     }
 
     const headers = [
-      "No", "状態", "形態", "発地", "発地住所", "発日", "発時間",
+      "No", "管理番号", "状態", "形態", "発地", "発地住所", "発日", "発時間",
       "着地", "着地住所", "着日", "着時間",
       "荷種", "重量", "車種", "車体タイプ", "温度帯",
       "運賃", "高速代", "税区分", "積合", "ドライバー作業",
@@ -533,6 +533,7 @@ export default function MyCargo() {
 
     const rows = targets.map((c, i) => [
       String(i + 1),
+      c.cargoNumber ? String(c.cargoNumber) : "",
       statusLabel(c.status),
       c.transportType || "",
       c.departureArea,
