@@ -50,7 +50,7 @@ const BODY_TYPES = [
   "低床", "高床", "ロング", "ワイド", "ショート", "ワイドロング", "その他"
 ];
 
-const PER_PAGE_OPTIONS = [10, 20, 50];
+const PER_PAGE_OPTIONS = [10, 20, 50, 100];
 
 type InputMode = "text" | "file" | "voice";
 
@@ -1466,7 +1466,7 @@ export default function TruckList() {
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const [perPage, setPerPage] = useState(100);
   const [sortBy, setSortBy] = useState<"newest" | "date" | "price" | "currentArea" | "destArea">("newest");
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [isProcessing, setIsProcessing] = useState(false);
