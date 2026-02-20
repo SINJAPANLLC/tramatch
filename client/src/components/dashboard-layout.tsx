@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X } from "lucide-react";
+import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -104,11 +104,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem("tramatch_sidebar_open");
+    return saved !== null ? saved === "true" : true;
+  });
   const [location] = useLocation();
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    localStorage.setItem("tramatch_sidebar_open", String(sidebarOpen));
+  }, [sidebarOpen]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -121,9 +129,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-full overflow-hidden">
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
-        <SidebarContent />
-      </aside>
+      {sidebarOpen && (
+        <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
+          <div className="flex items-center justify-between p-2 border-b border-border">
+            <span className="text-xs font-semibold text-muted-foreground px-1">メニュー</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              data-testid="button-sidebar-close"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </Button>
+          </div>
+          <SidebarContent />
+        </aside>
+      )}
+      {!sidebarOpen && (
+        <div className="hidden lg:flex items-start pt-2 pl-1 shrink-0 border-r bg-muted/30">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            data-testid="button-sidebar-open"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       <div className="lg:hidden">
         <button
