@@ -64,7 +64,7 @@ interface SavedFilter {
     arriveDateFrom: string; arriveDateTo: string;
     minFare: string; vehicleType: string; bodyType: string | string[];
     driverWork: string;
-    excludeNegotiable: boolean; excludeWeightAny: boolean; excludeVehicleTypeAny: boolean; excludeBodyTypeAny: boolean; excludeDriverWorkAny: boolean;
+    excludeNegotiable: boolean; excludeVehicleTypeAny: boolean; excludeBodyTypeAny: boolean; excludeDriverWorkAny: boolean;
     consolidationOnly: boolean; excludeConsolidation: boolean;
     movingOnly: boolean; excludeMoving: boolean;
     cargoNumber: string;
@@ -118,7 +118,6 @@ export default function CargoList() {
     } catch { return []; }
   });
   const [filterExcludeNegotiable, setFilterExcludeNegotiable] = useState(false);
-  const [filterExcludeWeightAny, setFilterExcludeWeightAny] = useState(false);
   const [filterExcludeVehicleTypeAny, setFilterExcludeVehicleTypeAny] = useState(false);
   const [filterExcludeBodyTypeAny, setFilterExcludeBodyTypeAny] = useState(false);
   const [filterExcludeDriverWorkAny, setFilterExcludeDriverWorkAny] = useState(false);
@@ -386,9 +385,7 @@ export default function CargoList() {
     if (filterExcludeBodyTypeAny) {
       result = result.filter((item) => item.bodyType && item.bodyType !== "問わず" && item.bodyType !== "");
     }
-    if (filterExcludeWeightAny) {
-      result = result.filter((item) => item.weight && item.weight !== "問わず");
-    }
+
     if (filterDriverWork) {
       result = result.filter((item) => (item.driverWork || "") === filterDriverWork);
     }
@@ -443,7 +440,7 @@ export default function CargoList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterExcludeWeightAny, filterVehicleType, filterExcludeVehicleTypeAny, filterBodyTypes, filterExcludeBodyTypeAny, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
+  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterVehicleType, filterExcludeVehicleTypeAny, filterBodyTypes, filterExcludeBodyTypeAny, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -464,7 +461,7 @@ export default function CargoList() {
                   setFilterArriveDateFrom(f.arriveDateFrom); setFilterArriveDateTo(f.arriveDateTo);
                   setFilterMinFare(f.minFare); setFilterVehicleType(f.vehicleType); setFilterBodyTypes(Array.isArray(f.bodyType) ? f.bodyType : f.bodyType ? [f.bodyType] : []);
                   setFilterDriverWork(f.driverWork);
-                  setFilterExcludeNegotiable(f.excludeNegotiable); setFilterExcludeWeightAny(f.excludeWeightAny);
+                  setFilterExcludeNegotiable(f.excludeNegotiable);
                   setFilterExcludeVehicleTypeAny(f.excludeVehicleTypeAny ?? false); setFilterExcludeBodyTypeAny(f.excludeBodyTypeAny ?? false);
                   setFilterExcludeDriverWorkAny(f.excludeDriverWorkAny);
                   setFilterConsolidationOnly(f.consolidationOnly); setFilterExcludeConsolidation(f.excludeConsolidation);
@@ -650,10 +647,6 @@ export default function CargoList() {
 
           <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <Checkbox id="exclude-weight-any" checked={filterExcludeWeightAny} onCheckedChange={(v) => { setFilterExcludeWeightAny(!!v); setPage(1); }} data-testid="filter-exclude-weight-any" />
-              <Label htmlFor="exclude-weight-any" className="text-xs cursor-pointer select-none">重量 問わずを除く</Label>
-            </div>
-            <div className="flex items-center gap-1.5">
               <Checkbox id="consolidation-only" checked={filterConsolidationOnly} onCheckedChange={(v) => { setFilterConsolidationOnly(!!v); if (v) setFilterExcludeConsolidation(false); setPage(1); }} data-testid="filter-consolidation-only" />
               <Label htmlFor="consolidation-only" className="text-xs cursor-pointer select-none">積合のみ</Label>
             </div>
@@ -698,7 +691,7 @@ export default function CargoList() {
                       arriveDateFrom: filterArriveDateFrom, arriveDateTo: filterArriveDateTo,
                       minFare: filterMinFare, vehicleType: filterVehicleType, bodyType: filterBodyTypes,
                       driverWork: filterDriverWork,
-                      excludeNegotiable: filterExcludeNegotiable, excludeWeightAny: filterExcludeWeightAny,
+                      excludeNegotiable: filterExcludeNegotiable,
                       excludeVehicleTypeAny: filterExcludeVehicleTypeAny, excludeBodyTypeAny: filterExcludeBodyTypeAny,
                       excludeDriverWorkAny: filterExcludeDriverWorkAny,
                       consolidationOnly: filterConsolidationOnly, excludeConsolidation: filterExcludeConsolidation,
@@ -725,7 +718,7 @@ export default function CargoList() {
                   setFilterArriveDateFrom(""); setFilterArriveDateTo("");
                   setFilterMinFare(""); setFilterVehicleType("");
                   setFilterBodyTypes([]); setFilterDriverWork("");
-                  setFilterExcludeNegotiable(false); setFilterExcludeWeightAny(false);
+                  setFilterExcludeNegotiable(false);
                   setFilterExcludeVehicleTypeAny(false); setFilterExcludeBodyTypeAny(false);
                   setFilterExcludeDriverWorkAny(false);
                   setFilterConsolidationOnly(false); setFilterExcludeConsolidation(false);
