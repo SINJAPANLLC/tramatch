@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -129,6 +129,40 @@ export default function AdminUsers() {
     },
   });
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({ companyName: "", contactName: "", email: "", phone: "", password: "", role: "user" });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const addUser = useMutation({
+    mutationFn: async (data: typeof addForm) => {
+      const res = await apiRequest("POST", "/api/admin/users", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "ユーザーを追加しました" });
+      setShowAddForm(false);
+      setAddForm({ companyName: "", contactName: "", email: "", phone: "", password: "", role: "user" });
+    },
+    onError: async (error: any) => {
+      const msg = error?.message || "ユーザーの追加に失敗しました";
+      toast({ title: msg, variant: "destructive" });
+    },
+  });
+
+  const changeRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      await apiRequest("PATCH", `/api/admin/users/${id}/role`, { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "役割を変更しました" });
+    },
+    onError: () => {
+      toast({ title: "役割の変更に失敗しました", variant: "destructive" });
+    },
+  });
+
   const [editSuccess, setEditSuccess] = useState(false);
   const editUser = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, string | null> }) => {
@@ -160,6 +194,136 @@ export default function AdminUsers() {
               <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">ユーザー管理</h1>
               <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">全ユーザーの管理・プラン切替</p>
             </div>
+
+            <div className="flex justify-end mb-3">
+              <Button
+                onClick={() => setShowAddForm(!showAddForm)}
+                data-testid="button-add-user"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                ユーザー追加
+              </Button>
+            </div>
+
+            {showAddForm && (
+              <Card className="mb-5">
+                <CardContent className="p-5">
+                  <h3 className="text-sm font-bold text-foreground mb-4">新規ユーザー追加</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">企業名 <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={addForm.companyName}
+                        onChange={(e) => setAddForm(prev => ({ ...prev, companyName: e.target.value }))}
+                        placeholder="株式会社〇〇"
+                        data-testid="input-add-companyName"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">担当者名</Label>
+                      <Input
+                        value={addForm.contactName}
+                        onChange={(e) => setAddForm(prev => ({ ...prev, contactName: e.target.value }))}
+                        placeholder="山田 太郎"
+                        data-testid="input-add-contactName"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">メールアドレス <span className="text-destructive">*</span></Label>
+                      <Input
+                        type="email"
+                        value={addForm.email}
+                        onChange={(e) => setAddForm(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="user@example.com"
+                        data-testid="input-add-email"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">電話番号 <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={addForm.phone}
+                        onChange={(e) => setAddForm(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="03-1234-5678"
+                        data-testid="input-add-phone"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">パスワード <span className="text-destructive">*</span></Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={addForm.password}
+                          onChange={(e) => setAddForm(prev => ({ ...prev, password: e.target.value }))}
+                          placeholder="パスワード"
+                          className="pr-10"
+                          data-testid="input-add-password"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-muted-foreground">役割</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={addForm.role === "user" ? "default" : "outline"}
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setAddForm(prev => ({ ...prev, role: "user" }))}
+                          data-testid="button-add-role-user"
+                        >
+                          <User className="w-3.5 h-3.5 mr-1" />
+                          一般ユーザー
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={addForm.role === "admin" ? "default" : "outline"}
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setAddForm(prev => ({ ...prev, role: "admin" }))}
+                          data-testid="button-add-role-admin"
+                        >
+                          <Shield className="w-3.5 h-3.5 mr-1" />
+                          管理者
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-5">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setAddForm({ companyName: "", contactName: "", email: "", phone: "", password: "", role: "user" });
+                      }}
+                      data-testid="button-add-cancel"
+                    >
+                      キャンセル
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (!addForm.companyName || !addForm.email || !addForm.phone || !addForm.password) {
+                          toast({ title: "必須項目を入力してください", variant: "destructive" });
+                          return;
+                        }
+                        addUser.mutate(addForm);
+                      }}
+                      disabled={addUser.isPending}
+                      data-testid="button-add-submit"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      {addUser.isPending ? "追加中..." : "追加する"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
               <Card
@@ -364,10 +528,17 @@ export default function AdminUsers() {
             }}
             onChangePlan={(id, plan) => changePlan.mutate({ id, plan })}
             onEditUser={(id, data) => { setEditSuccess(false); editUser.mutate({ id, data }); }}
+            onChangeRole={(id, role) => {
+              const label = role === "admin" ? "管理者に変更" : "一般ユーザーに変更";
+              if (confirm(`${selectedUser?.companyName} を${label}しますか？`)) {
+                changeRole.mutate({ id, role });
+              }
+            }}
             isApproving={approveUser.isPending}
             isDeleting={deleteUser.isPending}
             isChangingPlan={changePlan.isPending}
             isEditing={editUser.isPending}
+            isChangingRole={changeRole.isPending}
             editSuccess={editSuccess}
           />
         )}
@@ -407,10 +578,12 @@ function UserDetailPanel({
   onDelete,
   onChangePlan,
   onEditUser,
+  onChangeRole,
   isApproving,
   isDeleting,
   isChangingPlan,
   isEditing,
+  isChangingRole,
   editSuccess,
 }: {
   user: SafeUser | null;
@@ -420,10 +593,12 @@ function UserDetailPanel({
   onDelete: (id: string) => void;
   onChangePlan: (id: string, plan: string) => void;
   onEditUser: (id: string, data: Record<string, string | null>) => void;
+  onChangeRole: (id: string, role: string) => void;
   isApproving: boolean;
   isDeleting: boolean;
   isChangingPlan: boolean;
   isEditing: boolean;
+  isChangingRole: boolean;
   editSuccess: boolean;
 }) {
   const [permitExpanded, setPermitExpanded] = useState(false);
@@ -626,9 +801,9 @@ function UserDetailPanel({
               ) : null;
             })()}
 
-            {!isAdmin && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+            <div className="space-y-2">
+              {!isAdmin && (
+                <div className="flex items-center gap-2 flex-wrap">
                   {!user.approved && (
                     <Button
                       className="flex-1"
@@ -674,18 +849,45 @@ function UserDetailPanel({
                     </Button>
                   )}
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full text-destructive"
-                  onClick={() => onDelete(user.id)}
-                  disabled={isDeleting}
-                  data-testid={`button-delete-user-${user.id}`}
-                >
-                  <Trash2 className="w-4 h-4 mr-1.5" />
-                  ユーザーを削除
-                </Button>
+              )}
+
+              <div className="flex items-center gap-2">
+                {isAdmin ? (
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => onChangeRole(user.id, "user")}
+                    disabled={isChangingRole}
+                    data-testid={`button-demote-user-${user.id}`}
+                  >
+                    <ShieldOff className="w-4 h-4 mr-1.5" />
+                    {isChangingRole ? "変更中..." : "一般ユーザーに変更"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => onChangeRole(user.id, "admin")}
+                    disabled={isChangingRole}
+                    data-testid={`button-promote-user-${user.id}`}
+                  >
+                    <ShieldCheck className="w-4 h-4 mr-1.5" />
+                    {isChangingRole ? "変更中..." : "管理者に変更"}
+                  </Button>
+                )}
               </div>
-            )}
+
+              <Button
+                variant="outline"
+                className="w-full text-destructive"
+                onClick={() => onDelete(user.id)}
+                disabled={isDeleting}
+                data-testid={`button-delete-user-${user.id}`}
+              >
+                <Trash2 className="w-4 h-4 mr-1.5" />
+                ユーザーを削除
+              </Button>
+            </div>
 
             <h4 className="text-sm font-bold text-foreground">基本情報</h4>
             <div className="border border-border rounded-md overflow-hidden">
