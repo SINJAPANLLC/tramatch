@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck, Pencil, Download } from "lucide-react";
+import { Package, MapPin, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Navigation, Truck, Pencil, Download, Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
@@ -472,6 +472,7 @@ export default function MyCargo() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(100);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
     queryKey: ["/api/my-cargo"],
@@ -484,6 +485,21 @@ export default function MyCargo() {
 
     if (statusFilter !== "all") {
       result = result.filter((c) => c.status === statusFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((c) =>
+        (c.cargoNumber && String(c.cargoNumber).includes(q)) ||
+        c.departureArea.toLowerCase().includes(q) ||
+        (c.departureAddress || "").toLowerCase().includes(q) ||
+        c.arrivalArea.toLowerCase().includes(q) ||
+        (c.arrivalAddress || "").toLowerCase().includes(q) ||
+        c.cargoType.toLowerCase().includes(q) ||
+        c.companyName.toLowerCase().includes(q) ||
+        (c.privateNote || "").toLowerCase().includes(q) ||
+        (c.description || "").toLowerCase().includes(q)
+      );
     }
 
     result.sort((a, b) => {
@@ -511,7 +527,7 @@ export default function MyCargo() {
     });
 
     return result;
-  }, [myCargo, statusFilter, sortBy]);
+  }, [myCargo, statusFilter, sortBy, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -692,6 +708,23 @@ export default function MyCargo() {
               ))}
             </div>
 
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="管理番号・発着地・荷種・メモで検索..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                className="w-full pl-9 pr-8 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                data-testid="input-search-cargo"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm" data-testid="text-result-count">
@@ -739,6 +772,7 @@ export default function MyCargo() {
                           data-testid="checkbox-select-all"
                         />
                       </th>
+                      <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">管理No</th>
                       <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">状態</th>
                       <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
                       <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap min-w-[220px]">発着情報</th>
@@ -754,6 +788,7 @@ export default function MyCargo() {
                     {isLoading && Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
                         <td className="px-2 py-3"><Skeleton className="h-4 w-4" /></td>
+                        <td className="px-2 py-3"><Skeleton className="h-4 w-8" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-4 w-12" /></td>
                         <td className="px-2 py-3"><Skeleton className="h-10 w-48" /></td>
@@ -785,6 +820,9 @@ export default function MyCargo() {
                               className="w-3.5 h-3.5 accent-primary cursor-pointer"
                               data-testid={`checkbox-cargo-${listing.id}`}
                             />
+                          </td>
+                          <td className="px-2 py-3 text-center align-top">
+                            <span className="text-[11px] font-bold text-muted-foreground">{listing.cargoNumber || "-"}</span>
                           </td>
                           <td className="px-2 py-3 text-center align-top">
                             {listing.status === "active" ? (
