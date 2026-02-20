@@ -1663,12 +1663,12 @@ export default function TruckList() {
     }
     if (filterWeight) {
       result = result.filter((item) =>
-        (item.maxWeight || "").includes(filterWeight)
+        (item.vehicleType || "").includes(filterWeight)
       );
     }
     if (filterVehicleType) {
       result = result.filter((item) =>
-        (item.vehicleType || "").includes(filterVehicleType)
+        (item.bodyType || "").includes(filterVehicleType)
       );
     }
 
@@ -1709,26 +1709,26 @@ export default function TruckList() {
 
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1 flex-shrink-0">
-              <div className="flex items-center border rounded-md h-8 bg-background">
-                <MapPin className="w-3 h-3 ml-2 text-muted-foreground shrink-0" />
-                <input
-                  placeholder="空車地"
-                  value={filterCurrentArea}
-                  onChange={(e) => { setFilterCurrentArea(e.target.value); setPage(1); }}
-                  className="text-xs h-8 px-2 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground"
-                  data-testid="filter-truck-current-area"
-                />
-              </div>
+              <Select value={filterCurrentArea || "all"} onValueChange={(v) => { setFilterCurrentArea(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8 w-[110px]" data-testid="filter-truck-current-area">
+                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
+                  <SelectValue placeholder="空車地" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">空車地</SelectItem>
+                  {PREFECTURES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                </SelectContent>
+              </Select>
               <span className="text-[10px] text-muted-foreground">⇄</span>
-              <div className="flex items-center border rounded-md h-8 bg-background">
-                <input
-                  placeholder="行先地"
-                  value={filterDestArea}
-                  onChange={(e) => { setFilterDestArea(e.target.value); setPage(1); }}
-                  className="text-xs h-8 px-2.5 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground"
-                  data-testid="filter-truck-dest-area"
-                />
-              </div>
+              <Select value={filterDestArea || "all"} onValueChange={(v) => { setFilterDestArea(v === "all" ? "" : v); setPage(1); }}>
+                <SelectTrigger className="text-xs h-8 w-[110px]" data-testid="filter-truck-dest-area">
+                  <SelectValue placeholder="行先地" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">行先地</SelectItem>
+                  {PREFECTURES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日</span>
@@ -1755,24 +1755,24 @@ export default function TruckList() {
               />
               <span className="text-[11px] text-muted-foreground pr-2 whitespace-nowrap">円以下</span>
             </div>
-            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
-              <input
-                placeholder="重量"
-                value={filterWeight}
-                onChange={(e) => { setFilterWeight(e.target.value); setPage(1); }}
-                className="text-xs h-8 px-2.5 w-[120px] bg-transparent outline-none placeholder:text-muted-foreground"
-                data-testid="filter-truck-weight"
-              />
-            </div>
-            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
-              <input
-                placeholder="車種"
-                value={filterVehicleType}
-                onChange={(e) => { setFilterVehicleType(e.target.value); setPage(1); }}
-                className="text-xs h-8 px-2.5 w-[120px] bg-transparent outline-none placeholder:text-muted-foreground"
-                data-testid="filter-truck-vehicle-type"
-              />
-            </div>
+            <Select value={filterWeight || "all"} onValueChange={(v) => { setFilterWeight(v === "all" ? "" : v); setPage(1); }}>
+              <SelectTrigger className="text-xs h-8 w-[120px] flex-shrink-0" data-testid="filter-truck-weight">
+                <SelectValue placeholder="車種" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">車種</SelectItem>
+                {VEHICLE_TYPES.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={filterVehicleType || "all"} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
+              <SelectTrigger className="text-xs h-8 w-[140px] flex-shrink-0" data-testid="filter-truck-vehicle-type">
+                <SelectValue placeholder="車体タイプ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">車体タイプ</SelectItem>
+                {BODY_TYPES.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center gap-1.5">
