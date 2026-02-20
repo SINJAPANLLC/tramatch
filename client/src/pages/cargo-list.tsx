@@ -64,7 +64,7 @@ interface SavedFilter {
     arriveDateFrom: string; arriveDateTo: string;
     minFare: string; vehicleType: string; bodyType: string | string[];
     driverWork: string;
-    excludeNegotiable: boolean; excludeWeightAny: boolean; excludeDriverWorkAny: boolean;
+    excludeNegotiable: boolean; excludeWeightAny: boolean; excludeVehicleTypeAny: boolean; excludeBodyTypeAny: boolean; excludeDriverWorkAny: boolean;
     consolidationOnly: boolean; excludeConsolidation: boolean;
     movingOnly: boolean; excludeMoving: boolean;
     cargoNumber: string;
@@ -119,6 +119,8 @@ export default function CargoList() {
   });
   const [filterExcludeNegotiable, setFilterExcludeNegotiable] = useState(false);
   const [filterExcludeWeightAny, setFilterExcludeWeightAny] = useState(false);
+  const [filterExcludeVehicleTypeAny, setFilterExcludeVehicleTypeAny] = useState(false);
+  const [filterExcludeBodyTypeAny, setFilterExcludeBodyTypeAny] = useState(false);
   const [filterExcludeDriverWorkAny, setFilterExcludeDriverWorkAny] = useState(false);
   const [filterConsolidationOnly, setFilterConsolidationOnly] = useState(false);
   const [filterExcludeConsolidation, setFilterExcludeConsolidation] = useState(false);
@@ -375,8 +377,14 @@ export default function CargoList() {
     if (filterVehicleType) {
       result = result.filter((item) => (item.vehicleType || "").includes(filterVehicleType));
     }
+    if (filterExcludeVehicleTypeAny) {
+      result = result.filter((item) => item.vehicleType && item.vehicleType !== "問わず" && item.vehicleType !== "");
+    }
     if (filterBodyTypes.length > 0) {
       result = result.filter((item) => filterBodyTypes.some((bt) => (item.bodyType || "").includes(bt)));
+    }
+    if (filterExcludeBodyTypeAny) {
+      result = result.filter((item) => item.bodyType && item.bodyType !== "問わず" && item.bodyType !== "");
     }
     if (filterExcludeWeightAny) {
       result = result.filter((item) => item.weight && item.weight !== "問わず");
@@ -435,7 +443,7 @@ export default function CargoList() {
     });
 
     return result;
-  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterExcludeWeightAny, filterVehicleType, filterBodyTypes, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
+  }, [listings, activeSearch, quickFilter, sortBy, todayOnly, todayStr, prefectureFilter, vehicleFilter, dateFilter, filterDeparture, filterArrival, filterDepartDateFrom, filterDepartDateTo, filterArriveDateFrom, filterArriveDateTo, filterMinFare, filterExcludeNegotiable, filterExcludeWeightAny, filterVehicleType, filterExcludeVehicleTypeAny, filterBodyTypes, filterExcludeBodyTypeAny, filterDriverWork, filterExcludeDriverWorkAny, filterConsolidationOnly, filterExcludeConsolidation, filterMovingOnly, filterExcludeMoving, filterCargoNumber]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -457,6 +465,7 @@ export default function CargoList() {
                   setFilterMinFare(f.minFare); setFilterVehicleType(f.vehicleType); setFilterBodyTypes(Array.isArray(f.bodyType) ? f.bodyType : f.bodyType ? [f.bodyType] : []);
                   setFilterDriverWork(f.driverWork);
                   setFilterExcludeNegotiable(f.excludeNegotiable); setFilterExcludeWeightAny(f.excludeWeightAny);
+                  setFilterExcludeVehicleTypeAny(f.excludeVehicleTypeAny ?? false); setFilterExcludeBodyTypeAny(f.excludeBodyTypeAny ?? false);
                   setFilterExcludeDriverWorkAny(f.excludeDriverWorkAny);
                   setFilterConsolidationOnly(f.consolidationOnly); setFilterExcludeConsolidation(f.excludeConsolidation);
                   setFilterMovingOnly(f.movingOnly); setFilterExcludeMoving(f.excludeMoving);
@@ -549,12 +558,18 @@ export default function CargoList() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center border rounded-md h-8 bg-background flex-shrink-0">
-              <input placeholder="運賃（税別）" value={filterMinFare} onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }} className="text-xs h-8 px-2.5 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-min-fare" />
-              <span className="text-[11px] text-muted-foreground pr-2 whitespace-nowrap">円以上</span>
+          <div className="flex items-start gap-3 flex-wrap">
+            <div className="flex flex-col gap-1 flex-shrink-0">
+              <div className="flex items-center border rounded-md h-8 bg-background">
+                <input placeholder="運賃（税別）" value={filterMinFare} onChange={(e) => { setFilterMinFare(e.target.value); setPage(1); }} className="text-xs h-8 px-2.5 w-[100px] bg-transparent outline-none placeholder:text-muted-foreground" data-testid="filter-min-fare" />
+                <span className="text-[11px] text-muted-foreground pr-2 whitespace-nowrap">円以上</span>
+              </div>
+              <div className="flex items-center gap-1.5 pl-0.5">
+                <Checkbox id="exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-exclude-negotiable" className="h-3.5 w-3.5" />
+                <Label htmlFor="exclude-negotiable" className="text-[11px] cursor-pointer select-none text-muted-foreground">要相談を除く</Label>
+              </div>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex flex-col gap-1 flex-shrink-0">
               <Select value={filterVehicleType || "all"} onValueChange={(v) => { setFilterVehicleType(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="text-xs h-8 w-[110px]" data-testid="filter-vehicle-type">
                   <SelectValue placeholder="車種" />
@@ -564,8 +579,12 @@ export default function CargoList() {
                   {VEHICLE_TYPES.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-1.5 pl-0.5">
+                <Checkbox id="exclude-vehicle-any" checked={filterExcludeVehicleTypeAny} onCheckedChange={(v) => { setFilterExcludeVehicleTypeAny(!!v); setPage(1); }} data-testid="filter-exclude-vehicle-any" className="h-3.5 w-3.5" />
+                <Label htmlFor="exclude-vehicle-any" className="text-[11px] cursor-pointer select-none text-muted-foreground">問わずを除く</Label>
+              </div>
             </div>
-            <div className="flex-shrink-0 relative" ref={bodyTypeRef}>
+            <div className="flex flex-col gap-1 flex-shrink-0 relative" ref={bodyTypeRef}>
               <button
                 type="button"
                 className="flex items-center justify-between gap-1 text-xs h-8 w-[160px] rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -578,7 +597,7 @@ export default function CargoList() {
                 <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
               </button>
               {bodyTypeDropdownOpen && (
-                <div className="absolute z-50 mt-1 w-[200px] max-h-[240px] overflow-y-auto rounded-md border bg-background shadow-md p-1">
+                <div className="absolute z-50 top-9 left-0 w-[200px] max-h-[240px] overflow-y-auto rounded-md border bg-background shadow-md p-1">
                   <button
                     type="button"
                     className="w-full text-left text-xs px-2 py-1 text-muted-foreground hover:bg-muted rounded-sm mb-1"
@@ -602,8 +621,12 @@ export default function CargoList() {
                   ))}
                 </div>
               )}
+              <div className="flex items-center gap-1.5 pl-0.5">
+                <Checkbox id="exclude-body-any" checked={filterExcludeBodyTypeAny} onCheckedChange={(v) => { setFilterExcludeBodyTypeAny(!!v); setPage(1); }} data-testid="filter-exclude-body-any" className="h-3.5 w-3.5" />
+                <Label htmlFor="exclude-body-any" className="text-[11px] cursor-pointer select-none text-muted-foreground">問わずを除く</Label>
+              </div>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex flex-col gap-1 flex-shrink-0">
               <Select value={filterDriverWork || "all"} onValueChange={(v) => { setFilterDriverWork(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="text-xs h-8 w-[130px]" data-testid="filter-driver-work">
                   <SelectValue placeholder="ドライバー作業" />
@@ -618,25 +641,18 @@ export default function CargoList() {
                   <SelectItem value="作業なし">作業なし</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-1.5 pl-0.5">
+                <Checkbox id="exclude-driver-any" checked={filterExcludeDriverWorkAny} onCheckedChange={(v) => { setFilterExcludeDriverWorkAny(!!v); setPage(1); }} data-testid="filter-exclude-driver-any" className="h-3.5 w-3.5" />
+                <Label htmlFor="exclude-driver-any" className="text-[11px] cursor-pointer select-none text-muted-foreground">問わずを除く</Label>
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <Checkbox id="exclude-negotiable" checked={filterExcludeNegotiable} onCheckedChange={(v) => { setFilterExcludeNegotiable(!!v); setPage(1); }} data-testid="filter-exclude-negotiable" />
-              <Label htmlFor="exclude-negotiable" className="text-xs cursor-pointer select-none">要相談を除く</Label>
-            </div>
             <div className="flex items-center gap-1.5">
               <Checkbox id="exclude-weight-any" checked={filterExcludeWeightAny} onCheckedChange={(v) => { setFilterExcludeWeightAny(!!v); setPage(1); }} data-testid="filter-exclude-weight-any" />
-              <Label htmlFor="exclude-weight-any" className="text-xs cursor-pointer select-none">問わずを除く</Label>
+              <Label htmlFor="exclude-weight-any" className="text-xs cursor-pointer select-none">重量 問わずを除く</Label>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Checkbox id="exclude-driver-any" checked={filterExcludeDriverWorkAny} onCheckedChange={(v) => { setFilterExcludeDriverWorkAny(!!v); setPage(1); }} data-testid="filter-exclude-driver-any" />
-              <Label htmlFor="exclude-driver-any" className="text-xs cursor-pointer select-none">問わずを除く</Label>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
             <div className="flex items-center gap-1.5">
               <Checkbox id="consolidation-only" checked={filterConsolidationOnly} onCheckedChange={(v) => { setFilterConsolidationOnly(!!v); if (v) setFilterExcludeConsolidation(false); setPage(1); }} data-testid="filter-consolidation-only" />
               <Label htmlFor="consolidation-only" className="text-xs cursor-pointer select-none">積合のみ</Label>
@@ -645,6 +661,7 @@ export default function CargoList() {
               <Checkbox id="exclude-consolidation" checked={filterExcludeConsolidation} onCheckedChange={(v) => { setFilterExcludeConsolidation(!!v); if (v) setFilterConsolidationOnly(false); setPage(1); }} data-testid="filter-exclude-consolidation" />
               <Label htmlFor="exclude-consolidation" className="text-xs cursor-pointer select-none">積合を除く</Label>
             </div>
+            <span className="border-l h-4" />
             <div className="flex items-center gap-1.5">
               <Checkbox id="moving-only" checked={filterMovingOnly} onCheckedChange={(v) => { setFilterMovingOnly(!!v); if (v) setFilterExcludeMoving(false); setPage(1); }} data-testid="filter-moving-only" />
               <Label htmlFor="moving-only" className="text-xs cursor-pointer select-none">引越しのみ</Label>
@@ -682,6 +699,7 @@ export default function CargoList() {
                       minFare: filterMinFare, vehicleType: filterVehicleType, bodyType: filterBodyTypes,
                       driverWork: filterDriverWork,
                       excludeNegotiable: filterExcludeNegotiable, excludeWeightAny: filterExcludeWeightAny,
+                      excludeVehicleTypeAny: filterExcludeVehicleTypeAny, excludeBodyTypeAny: filterExcludeBodyTypeAny,
                       excludeDriverWorkAny: filterExcludeDriverWorkAny,
                       consolidationOnly: filterConsolidationOnly, excludeConsolidation: filterExcludeConsolidation,
                       movingOnly: filterMovingOnly, excludeMoving: filterExcludeMoving,
@@ -708,6 +726,7 @@ export default function CargoList() {
                   setFilterMinFare(""); setFilterVehicleType("");
                   setFilterBodyTypes([]); setFilterDriverWork("");
                   setFilterExcludeNegotiable(false); setFilterExcludeWeightAny(false);
+                  setFilterExcludeVehicleTypeAny(false); setFilterExcludeBodyTypeAny(false);
                   setFilterExcludeDriverWorkAny(false);
                   setFilterConsolidationOnly(false); setFilterExcludeConsolidation(false);
                   setFilterMovingOnly(false); setFilterExcludeMoving(false);
