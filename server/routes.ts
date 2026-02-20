@@ -1455,6 +1455,81 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const { companyName, contactName, email, phone, password, role } = req.body;
+      if (!companyName || !email || !phone || !password) {
+        return res.status(400).json({ message: "企業名、メール、電話番号、パスワードは必須です" });
+      }
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています" });
+      }
+      const existingUsername = await storage.getUserByUsername(email);
+      if (existingUsername) {
+        return res.status(400).json({ message: "このユーザー名は既に使用されています" });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const isAdmin = role === "admin";
+      const newUser = await storage.createUser({
+        username: email,
+        password: hashedPassword,
+        companyName,
+        contactName: contactName || "",
+        email,
+        phone,
+        userType: "both",
+        role: isAdmin ? "admin" : "user",
+        approved: true,
+        plan: "free",
+      });
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "create",
+        targetType: "user",
+        targetId: newUser.id,
+        details: `ユーザー「${companyName}」を管理者が追加${isAdmin ? "（管理者権限）" : ""}`,
+        ipAddress: req.ip,
+      });
+      const { password: _, ...safeUser } = newUser;
+      res.status(201).json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "ユーザーの追加に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/role", requireAdmin, async (req, res) => {
+    try {
+      const { role } = req.body;
+      if (!role || !["admin", "user"].includes(role)) {
+        return res.status(400).json({ message: "無効な役割です" });
+      }
+      const targetUser = await storage.getUser(req.params.id as string);
+      if (!targetUser) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      if (targetUser.id === req.session.userId) {
+        return res.status(400).json({ message: "自分自身の役割は変更できません" });
+      }
+      await storage.updateUserProfile(req.params.id as string, { role });
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "update",
+        targetType: "user",
+        targetId: req.params.id as string,
+        details: `ユーザー「${targetUser.companyName}」の役割を${role === "admin" ? "管理者" : "一般ユーザー"}に変更`,
+        ipAddress: req.ip,
+      });
+      res.json({ message: "役割を変更しました" });
+    } catch (error) {
+      res.status(500).json({ message: "役割の変更に失敗しました" });
+    }
+  });
+
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id as string);
