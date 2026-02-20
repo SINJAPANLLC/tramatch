@@ -1704,61 +1704,6 @@ export default function TruckList() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={prefectureFilter} onValueChange={(v) => { setPrefectureFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-[130px] text-xs h-8" data-testid="select-truck-prefecture">
-                <MapPin className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
-                <SelectValue placeholder="都道府県" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全都道府県</SelectItem>
-                {PREFECTURES.map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={vehicleFilter} onValueChange={(v) => { setVehicleFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-[130px] text-xs h-8" data-testid="select-truck-vehicle">
-                <Truck className="w-3 h-3 mr-1 shrink-0 text-muted-foreground" />
-                <SelectValue placeholder="車種" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全車種</SelectItem>
-                {VEHICLE_TYPES.map((v) => (
-                  <SelectItem key={v} value={v}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center gap-1">
-              <CalendarDays className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => { setDateFilter(e.target.value); setPage(1); }}
-                className="w-[150px] text-xs h-8"
-                data-testid="input-truck-date-filter"
-              />
-              {dateFilter && (
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDateFilter(""); setPage(1); }} data-testid="button-truck-clear-date">
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
-            </div>
-
-            {(prefectureFilter !== "all" || vehicleFilter !== "all" || dateFilter) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={() => { setPrefectureFilter("all"); setVehicleFilter("all"); setDateFilter(""); setQuickFilter("all"); setPage(1); }}
-                data-testid="button-truck-clear-all-filters"
-              >
-                <X className="w-3 h-3 mr-1" />フィルター解除
-              </Button>
-            )}
-          </div>
         </CardContent>
       </Card>
 
