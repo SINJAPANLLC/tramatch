@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 const STATUS_FILTERS = [
   { label: "全て", value: "all" },
@@ -130,7 +131,30 @@ type CompanyInfo = {
 
 function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
   const [panelTab, setPanelTab] = useState<"cargo" | "company">("cargo");
+  const [noteText, setNoteText] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
+  const noteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setNoteText(listing?.privateNote || "");
+    setNoteSaved(false);
+  }, [listing?.id]);
+
+  const saveNoteMutation = useMutation({
+    mutationFn: async ({ id, note }: { id: string; note: string }) => {
+      await apiRequest("PATCH", `/api/cargo/${id}`, { privateNote: note });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
+      setNoteSaved(true);
+      if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+      noteTimerRef.current = setTimeout(() => setNoteSaved(false), 2000);
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "メモの保存に失敗しました", variant: "destructive" });
+    },
+  });
 
   const completeCargoMutation = useMutation({
     mutationFn: async (cargoId: string) => {
@@ -324,6 +348,36 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
             <div className="text-xs text-muted-foreground font-bold">
               閲覧数: {listing.viewCount}
             </div>
+          </div>
+
+          <div className="border border-border rounded-md p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-bold text-muted-foreground">案件メモ（自分だけに表示）</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {noteSaved && <span className="text-xs text-green-600 font-bold">保存しました</span>}
+                {saveNoteMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+              </div>
+            </div>
+            <Textarea
+              placeholder="荷主名や案件の詳細メモを入力..."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              className="text-sm min-h-[60px] resize-none"
+              data-testid="input-private-note"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-xs"
+              disabled={saveNoteMutation.isPending || noteText === (listing.privateNote || "")}
+              onClick={() => listing && saveNoteMutation.mutate({ id: listing.id, note: noteText })}
+              data-testid="button-save-note"
+            >
+              {saveNoteMutation.isPending ? "保存中..." : "メモを保存"}
+            </Button>
           </div>
         </div>
       ) : (
@@ -526,7 +580,7 @@ export default function MyCargo() {
       "個数", "積込方法", "車両スペック", "必要装備",
       "積込時間", "降ろし時間", "支払日", "台数",
       "引越し", "緊急度", "備考",
-      "会社名", "担当者", "電話番号", "メール", "登録日",
+      "会社名", "担当者", "電話番号", "メール", "登録日", "メモ",
     ];
 
     const statusLabel = (s: string) => s === "active" ? "掲載中" : s === "completed" ? "成約" : s === "cancelled" ? "不成約" : s;
@@ -570,6 +624,7 @@ export default function MyCargo() {
       c.contactPhone,
       c.contactEmail || "",
       new Date(c.createdAt).toLocaleDateString("ja-JP"),
+      (c.privateNote || "").replace(/\n/g, " "),
     ]);
 
     const escape = (v: string) => {
@@ -824,6 +879,11 @@ export default function MyCargo() {
                               <span className="text-[11px] text-muted-foreground font-bold">{listing.viewCount ?? 0}</span>
                             </div>
                             <div className="text-[10px] text-muted-foreground font-bold mt-0.5">{timeLabel}</div>
+                            {listing.privateNote && (
+                              <div className="flex items-center justify-center gap-0.5 mt-0.5" title={listing.privateNote}>
+                                <FileText className="w-3 h-3 text-amber-500" />
+                              </div>
+                            )}
                           </td>
                           <td className="px-2 py-3 align-top" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-1">
