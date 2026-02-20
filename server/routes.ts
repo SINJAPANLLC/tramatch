@@ -1428,6 +1428,33 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/admin/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const targetUser = await storage.getUser(req.params.id as string);
+      if (!targetUser) {
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
+      }
+      const updatedUser = await storage.updateUserProfile(req.params.id as string, req.body);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "更新に失敗しました" });
+      }
+      const admin = await storage.getUser(req.session.userId as string);
+      await storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: admin?.companyName || "管理者",
+        action: "edit",
+        targetType: "user",
+        targetId: req.params.id as string,
+        details: `ユーザー「${targetUser.companyName}」の情報を編集`,
+        ipAddress: req.ip,
+      });
+      const { password, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "ユーザー情報の更新に失敗しました" });
+    }
+  });
+
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id as string);
