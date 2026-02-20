@@ -1177,11 +1177,12 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="text-xs h-7" onClick={handlePrint} data-testid="button-print">
+            <Button variant="outline" size="sm" className="text-xs" onClick={handlePrint} data-testid="button-print">
               印刷
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-panel">
-              <X className="w-4 h-4" />
+            <Button variant="outline" size="sm" className="text-xs" onClick={onClose} data-testid="button-close-panel">
+              <X className="w-3.5 h-3.5 mr-1" />
+              閉じる
             </Button>
           </div>
         </div>
