@@ -17,6 +17,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 
 const PREFECTURES = [
@@ -1463,7 +1464,9 @@ function MyTrucksTab({ selectedTruckId, onSelectTruck }: { selectedTruckId: stri
 export default function TruckList() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"search" | "register" | "my">("search");
+  const [location, setLocation] = useLocation();
+  const isRegisterPage = location === "/trucks/new";
+  const [activeTab, setActiveTab] = useState<"register" | "my">("register");
   const [aiSearchText, setAiSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [quickFilter, setQuickFilter] = useState("all");
@@ -1978,16 +1981,8 @@ export default function TruckList() {
     </>
   );
 
-  const tabBar = (hasMarginBottom: boolean) => (
+  const registerTabBar = (hasMarginBottom: boolean) => (
     <div className={`flex items-center gap-0 border-b border-border ${hasMarginBottom ? "mb-5" : ""}`}>
-      <button
-        onClick={() => setActiveTab("search")}
-        className={`px-4 py-2.5 text-sm font-bold border-b-2 transition-colors ${activeTab === "search" ? "text-primary border-primary" : "text-muted-foreground border-transparent"}`}
-        data-testid="tab-truck-search"
-      >
-        <Search className="w-3.5 h-3.5 inline mr-1.5" />
-        空車検索
-      </button>
       <button
         onClick={() => setActiveTab("register")}
         className={`px-4 py-2.5 text-sm font-bold border-b-2 transition-colors ${activeTab === "register" ? "text-primary border-primary" : "text-muted-foreground border-transparent"}`}
@@ -2007,32 +2002,17 @@ export default function TruckList() {
     </div>
   );
 
-  if (isAuthenticated) {
+  if (isAuthenticated && isRegisterPage) {
     return (
       <DashboardLayout noScroll={activeTab !== "register"}>
         <div className="flex h-full relative overflow-hidden">
-          {activeTab === "search" ? (
-            <>
-              <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
-                <div className="px-4 sm:px-6 py-4">
-                  {tabBar(true)}
-                  {searchContent}
-                </div>
-              </div>
-              {selectedTruckId && (
-                <TruckDetailPanel
-                  listing={selectedTruck}
-                  onClose={() => setSelectedTruckId(null)}
-                />
-              )}
-            </>
-          ) : activeTab === "register" ? (
-            <TruckRegisterTab tabBar={tabBar} />
+          {activeTab === "register" ? (
+            <TruckRegisterTab tabBar={registerTabBar} />
           ) : (
             <>
               <div className={`flex-1 flex flex-col overflow-hidden ${editTruckId ? "hidden lg:flex" : ""}`}>
                 <div className="px-4 sm:px-6 pt-4 shrink-0">
-                  {tabBar(false)}
+                  {registerTabBar(false)}
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <MyTrucksTab selectedTruckId={editTruckId} onSelectTruck={setEditTruckId} />
@@ -2045,6 +2025,26 @@ export default function TruckList() {
                 />
               )}
             </>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <DashboardLayout noScroll>
+        <div className="flex h-full relative overflow-hidden">
+          <div className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTruckId ? "hidden lg:block" : ""}`}>
+            <div className="px-4 sm:px-6 py-4">
+              {searchContent}
+            </div>
+          </div>
+          {selectedTruckId && (
+            <TruckDetailPanel
+              listing={selectedTruck}
+              onClose={() => setSelectedTruckId(null)}
+            />
           )}
         </div>
       </DashboardLayout>
