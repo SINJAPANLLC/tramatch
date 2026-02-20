@@ -2027,11 +2027,11 @@ export default function TruckList() {
               )}
             </>
           ) : activeTab === "register" ? (
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden" style={{ height: "calc(100vh - 56px)", maxHeight: "calc(100vh - 56px)" }}>
               <div className="px-4 sm:px-6 pt-4 shrink-0">
                 {tabBar(false)}
               </div>
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <TruckRegisterTab />
               </div>
             </div>
