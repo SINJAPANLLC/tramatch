@@ -4,15 +4,3 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
-.local/
-.config/
-.replit
-backup.sql
-tramatch-deploy.tar.gz
-
-.local/
-.config/
-.replit
-backup.sql
-tramatch-deploy.tar.gz
-attached_assets/
