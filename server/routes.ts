@@ -380,7 +380,7 @@ export async function registerRoutes(
         storage.getTruckCountByUserId(userId),
         storage.getPartnersByUserId(userId),
       ]);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
 
       const profileComplete = !!(user.companyName && user.phone && user.address && user.representative);
 
@@ -392,7 +392,7 @@ export async function registerRoutes(
         notificationSettingDone: !!(user.notifyEmail || user.notifyLine),
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch onboarding progress" });
+      res.status(500).json({ message: "オンボーディング情報の取得に失敗しました" });
     }
   });
 
@@ -856,7 +856,7 @@ export async function registerRoutes(
       res.json(activeListings);
     } catch (error) {
       console.error("Failed to fetch cargo listings:", error);
-      res.status(500).json({ message: "Failed to fetch cargo listings" });
+      res.status(500).json({ message: "荷物一覧の取得に失敗しました" });
     }
   });
 
@@ -866,7 +866,7 @@ export async function registerRoutes(
       await expireOldCargoListings(listings);
       res.json(listings);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user cargo listings" });
+      res.status(500).json({ message: "荷物一覧の取得に失敗しました" });
     }
   });
 
@@ -874,7 +874,7 @@ export async function registerRoutes(
     try {
       const listing = await storage.getCargoListing(req.params.id);
       if (!listing) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       storage.incrementCargoViewCount(req.params.id).catch(() => {});
       if (listing.userId !== req.session.userId) {
@@ -883,7 +883,7 @@ export async function registerRoutes(
       }
       res.json(listing);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch cargo listing" });
+      res.status(500).json({ message: "荷物情報の取得に失敗しました" });
     }
   });
 
@@ -953,7 +953,7 @@ export async function registerRoutes(
       });
     } catch (error) {
       console.error("Failed to create cargo listing:", error);
-      res.status(500).json({ message: "Failed to create cargo listing" });
+      res.status(500).json({ message: "荷物の登録に失敗しました" });
     }
   });
 
@@ -961,18 +961,18 @@ export async function registerRoutes(
     try {
       const { status } = req.body;
       if (!status || !["active", "completed", "cancelled"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
+        return res.status(400).json({ message: "無効なステータスです" });
       }
       const cargoId = req.params.id as string;
       const listing = await storage.getCargoListing(cargoId);
       if (!listing) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       if (status === "completed" && listing.userId === req.session.userId) {
         return res.status(403).json({ message: "自分の荷物を成約にすることはできません" });
       }
       if (status !== "completed" && listing.userId !== req.session.userId) {
-        return res.status(403).json({ message: "Not authorized" });
+        return res.status(403).json({ message: "この操作を行う権限がありません" });
       }
       if (status === "completed") {
         const currentUser = await storage.getUser(req.session.userId as string);
@@ -983,7 +983,7 @@ export async function registerRoutes(
       const updated = await storage.updateCargoStatus(cargoId, status);
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update cargo status" });
+      res.status(500).json({ message: "荷物ステータスの更新に失敗しました" });
     }
   });
 
@@ -992,15 +992,15 @@ export async function registerRoutes(
       const cargoId = req.params.id as string;
       const listing = await storage.getCargoListing(cargoId);
       if (!listing) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       if (listing.userId !== req.session.userId) {
-        return res.status(403).json({ message: "Not authorized" });
+        return res.status(403).json({ message: "この操作を行う権限がありません" });
       }
       const updated = await storage.updateCargoListing(cargoId, req.body);
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update cargo listing" });
+      res.status(500).json({ message: "荷物情報の更新に失敗しました" });
     }
   });
 
@@ -1008,11 +1008,11 @@ export async function registerRoutes(
     try {
       const deleted = await storage.deleteCargoListing(req.params.id as string);
       if (!deleted) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
-      res.json({ message: "Deleted successfully" });
+      res.json({ message: "削除しました" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete cargo listing" });
+      res.status(500).json({ message: "荷物の削除に失敗しました" });
     }
   });
 
@@ -1021,7 +1021,7 @@ export async function registerRoutes(
       const request = await storage.getDispatchRequestByCargoId(req.params.cargoId as string);
       res.json(request || null);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dispatch request" });
+      res.status(500).json({ message: "配車依頼書の取得に失敗しました" });
     }
   });
 
@@ -1036,7 +1036,7 @@ export async function registerRoutes(
       });
       res.json(request);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create dispatch request" });
+      res.status(500).json({ message: "配車依頼書の作成に失敗しました" });
     }
   });
 
@@ -1045,11 +1045,11 @@ export async function registerRoutes(
       const { userId, id, cargoId, createdAt, sentAt, status, ...safeFields } = req.body;
       const updated = await storage.updateDispatchRequest(req.params.id as string, safeFields);
       if (!updated) {
-        return res.status(404).json({ message: "Dispatch request not found" });
+        return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update dispatch request" });
+      res.status(500).json({ message: "配車依頼書の更新に失敗しました" });
     }
   });
 
@@ -1057,7 +1057,7 @@ export async function registerRoutes(
     try {
       const dispatchRequest = await storage.getDispatchRequest(req.params.id as string);
       if (!dispatchRequest) {
-        return res.status(404).json({ message: "Dispatch request not found" });
+        return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
 
       const updated = await storage.updateDispatchRequest(req.params.id as string, {
@@ -1065,7 +1065,7 @@ export async function registerRoutes(
         sentAt: new Date(),
       } as any);
       if (!updated) {
-        return res.status(404).json({ message: "Dispatch request not found" });
+        return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
 
       const cargo = await storage.getCargoListing(dispatchRequest.cargoId);
@@ -1219,7 +1219,7 @@ export async function registerRoutes(
 
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to send dispatch request" });
+      res.status(500).json({ message: "配車依頼書の送信に失敗しました" });
     }
   });
 
@@ -1228,7 +1228,7 @@ export async function registerRoutes(
       const listings = await storage.getTruckListingsByUserId(req.session.userId as string);
       res.json(listings);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user truck listings" });
+      res.status(500).json({ message: "空車一覧の取得に失敗しました" });
     }
   });
 
@@ -1238,7 +1238,7 @@ export async function registerRoutes(
       res.json(listings);
     } catch (error) {
       console.error("Failed to fetch truck listings:", error);
-      res.status(500).json({ message: "Failed to fetch truck listings" });
+      res.status(500).json({ message: "空車一覧の取得に失敗しました" });
     }
   });
 
@@ -1246,11 +1246,11 @@ export async function registerRoutes(
     try {
       const listing = await storage.getTruckListing(req.params.id);
       if (!listing) {
-        return res.status(404).json({ message: "Truck listing not found" });
+        return res.status(404).json({ message: "空車情報が見つかりません" });
       }
       res.json(listing);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch truck listing" });
+      res.status(500).json({ message: "空車情報の取得に失敗しました" });
     }
   });
 
@@ -1315,7 +1315,7 @@ export async function registerRoutes(
         }
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to create truck listing" });
+      res.status(500).json({ message: "空車の登録に失敗しました" });
     }
   });
 
@@ -1324,10 +1324,10 @@ export async function registerRoutes(
       const truckId = req.params.id as string;
       const listing = await storage.getTruckListing(truckId);
       if (!listing) {
-        return res.status(404).json({ message: "Truck listing not found" });
+        return res.status(404).json({ message: "空車情報が見つかりません" });
       }
       if (listing.userId !== req.session.userId) {
-        return res.status(403).json({ message: "Not authorized" });
+        return res.status(403).json({ message: "この操作を行う権限がありません" });
       }
       const allowedFields = ["title", "currentArea", "destinationArea", "vehicleType", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
       const safeBody: Record<string, any> = {};
@@ -1337,7 +1337,7 @@ export async function registerRoutes(
       const updated = await storage.updateTruckListing(truckId, safeBody);
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update truck listing" });
+      res.status(500).json({ message: "空車情報の更新に失敗しました" });
     }
   });
 
@@ -1345,11 +1345,11 @@ export async function registerRoutes(
     try {
       const deleted = await storage.deleteTruckListing(req.params.id as string);
       if (!deleted) {
-        return res.status(404).json({ message: "Truck listing not found" });
+        return res.status(404).json({ message: "空車情報が見つかりません" });
       }
-      res.json({ message: "Deleted successfully" });
+      res.json({ message: "削除しました" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete truck listing" });
+      res.status(500).json({ message: "空車の削除に失敗しました" });
     }
   });
 
@@ -1366,7 +1366,7 @@ export async function registerRoutes(
         userCount: allUsers.length,
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch stats" });
+      res.status(500).json({ message: "統計情報の取得に失敗しました" });
     }
   });
 
@@ -1376,7 +1376,7 @@ export async function registerRoutes(
       const safeUsers = allUsers.map(({ password, ...u }) => u);
       res.json(safeUsers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch users" });
+      res.status(500).json({ message: "ユーザー一覧の取得に失敗しました" });
     }
   });
 
@@ -1551,7 +1551,7 @@ export async function registerRoutes(
       const user = await storage.getUser(req.params.id as string);
       const deleted = await storage.deleteUser(req.params.id as string);
       if (!deleted) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
@@ -1563,9 +1563,9 @@ export async function registerRoutes(
         details: `ユーザー「${user?.companyName}」を削除`,
         ipAddress: req.ip,
       });
-      res.json({ message: "Deleted successfully" });
+      res.json({ message: "削除しました" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete user" });
+      res.status(500).json({ message: "ユーザーの削除に失敗しました" });
     }
   });
 
@@ -1573,7 +1573,7 @@ export async function registerRoutes(
     try {
       const listing = await storage.getCargoListing(req.params.id as string);
       if (!listing) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       const cargoAllowed = ["title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress", "desiredDate", "arrivalDate", "departureTime", "arrivalTime", "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl", "price", "highwayFee", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod", "urgency", "description", "status"];
       const safeBody: Record<string, any> = {};
@@ -1591,7 +1591,7 @@ export async function registerRoutes(
       });
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update cargo listing" });
+      res.status(500).json({ message: "荷物情報の更新に失敗しました" });
     }
   });
 
@@ -1599,7 +1599,7 @@ export async function registerRoutes(
     try {
       const listing = await storage.getCargoListing(req.params.id as string);
       if (!listing) {
-        return res.status(404).json({ message: "Cargo listing not found" });
+        return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       await storage.deleteCargoListing(req.params.id as string);
       const admin = await storage.getUser(req.session.userId as string);
@@ -1612,9 +1612,9 @@ export async function registerRoutes(
         details: `荷物「${listing.title}」を管理者が削除`,
         ipAddress: req.ip,
       });
-      res.json({ message: "Deleted successfully" });
+      res.json({ message: "削除しました" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete cargo listing" });
+      res.status(500).json({ message: "荷物の削除に失敗しました" });
     }
   });
 
@@ -1622,7 +1622,7 @@ export async function registerRoutes(
     try {
       const listing = await storage.getTruckListing(req.params.id as string);
       if (!listing) {
-        return res.status(404).json({ message: "Truck listing not found" });
+        return res.status(404).json({ message: "空車情報が見つかりません" });
       }
       const truckAllowed = ["title", "currentArea", "destinationArea", "vehicleType", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
       const safeBody: Record<string, any> = {};
@@ -1640,7 +1640,7 @@ export async function registerRoutes(
       });
       res.json(updated);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update truck listing" });
+      res.status(500).json({ message: "空車情報の更新に失敗しました" });
     }
   });
 
@@ -1648,7 +1648,7 @@ export async function registerRoutes(
     try {
       const listing = await storage.getTruckListing(req.params.id as string);
       if (!listing) {
-        return res.status(404).json({ message: "Truck listing not found" });
+        return res.status(404).json({ message: "空車情報が見つかりません" });
       }
       await storage.deleteTruckListing(req.params.id as string);
       const admin = await storage.getUser(req.session.userId as string);
@@ -1661,9 +1661,9 @@ export async function registerRoutes(
         details: `車両「${listing.title}」を管理者が削除`,
         ipAddress: req.ip,
       });
-      res.json({ message: "Deleted successfully" });
+      res.json({ message: "削除しました" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete truck listing" });
+      res.status(500).json({ message: "空車の削除に失敗しました" });
     }
   });
 
@@ -1678,7 +1678,7 @@ export async function registerRoutes(
       ]);
       res.json({ logs, total, page, totalPages: Math.ceil(total / limit) });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch audit logs" });
+      res.status(500).json({ message: "操作ログの取得に失敗しました" });
     }
   });
 
