@@ -9,3 +9,9 @@ vite.config.ts.*
 .replit
 backup.sql
 tramatch-deploy.tar.gz
+
+.local/
+.config/
+.replit
+backup.sql
+tramatch-deploy.tar.gz
