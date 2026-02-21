@@ -42,6 +42,7 @@ const pageImports = {
   adminContactInquiries: () => import("@/pages/admin-contact-inquiries"),
   adminInvoices: () => import("@/pages/admin-invoices"),
   adminAgents: () => import("@/pages/admin-agents"),
+  adminAiTraining: () => import("@/pages/admin-ai-training"),
   guide: () => import("@/pages/guide"),
   faq: () => import("@/pages/faq"),
   contact: () => import("@/pages/contact"),
@@ -87,6 +88,7 @@ const AdminAuditLogs = lazy(pageImports.adminAuditLogs);
 const AdminContactInquiries = lazy(pageImports.adminContactInquiries);
 const AdminInvoices = lazy(pageImports.adminInvoices);
 const AdminAgents = lazy(pageImports.adminAgents);
+const AdminAiTraining = lazy(pageImports.adminAiTraining);
 const Guide = lazy(pageImports.guide);
 const Faq = lazy(pageImports.faq);
 const Contact = lazy(pageImports.contact);
@@ -140,7 +142,7 @@ const DASHBOARD_PATHS = [
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue", "/admin/invoices",
-  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs", "/admin/agents",
+  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs", "/admin/agents", "/admin/ai-training",
 ];
 
 function Router() {
@@ -183,6 +185,7 @@ function Router() {
         <Route path="/admin/contact-inquiries">{() => <AdminRoute component={AdminContactInquiries} />}</Route>
         <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
         <Route path="/admin/agents">{() => <AdminRoute component={AdminAgents} />}</Route>
+        <Route path="/admin/ai-training">{() => <AdminRoute component={AdminAiTraining} />}</Route>
         <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
         <Route path="/guide" component={Guide} />
         <Route path="/faq" component={Faq} />

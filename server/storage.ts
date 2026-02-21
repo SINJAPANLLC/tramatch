@@ -16,10 +16,12 @@ import {
   type UserAddRequest, type InsertUserAddRequest,
   type Invoice, type InsertInvoice,
   type Agent, type InsertAgent,
+  type AiTrainingExample, type InsertAiTrainingExample,
+  type AiCorrectionLog, type InsertAiCorrectionLog,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
-  invoices, agents
+  invoices, agents, aiTrainingExamples, aiCorrectionLogs
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -947,6 +949,65 @@ export class DatabaseStorage implements IStorage {
         })),
       };
     });
+  }
+
+  async getAiTrainingExamples(category?: string): Promise<AiTrainingExample[]> {
+    if (category) {
+      return db.select().from(aiTrainingExamples).where(and(eq(aiTrainingExamples.category, category), eq(aiTrainingExamples.isActive, true))).orderBy(desc(aiTrainingExamples.createdAt));
+    }
+    return db.select().from(aiTrainingExamples).orderBy(desc(aiTrainingExamples.createdAt));
+  }
+
+  async getAllAiTrainingExamples(): Promise<AiTrainingExample[]> {
+    return db.select().from(aiTrainingExamples).orderBy(desc(aiTrainingExamples.createdAt));
+  }
+
+  async createAiTrainingExample(example: InsertAiTrainingExample): Promise<AiTrainingExample> {
+    const [created] = await db.insert(aiTrainingExamples).values(example).returning();
+    return created;
+  }
+
+  async updateAiTrainingExample(id: string, data: Partial<InsertAiTrainingExample & { isActive: boolean }>): Promise<AiTrainingExample | undefined> {
+    const [updated] = await db.update(aiTrainingExamples).set(data).where(eq(aiTrainingExamples.id, id)).returning();
+    return updated;
+  }
+
+  async deleteAiTrainingExample(id: string): Promise<boolean> {
+    const result = await db.delete(aiTrainingExamples).where(eq(aiTrainingExamples.id, id));
+    return true;
+  }
+
+  async incrementAiTrainingUseCount(id: string): Promise<void> {
+    await db.update(aiTrainingExamples).set({ useCount: sql`${aiTrainingExamples.useCount} + 1` }).where(eq(aiTrainingExamples.id, id));
+  }
+
+  async getAiCorrectionLogs(limit = 50): Promise<AiCorrectionLog[]> {
+    return db.select().from(aiCorrectionLogs).orderBy(desc(aiCorrectionLogs.createdAt)).limit(limit);
+  }
+
+  async createAiCorrectionLog(log: InsertAiCorrectionLog): Promise<AiCorrectionLog> {
+    const [created] = await db.insert(aiCorrectionLogs).values(log).returning();
+    return created;
+  }
+
+  async promoteAiCorrectionToExample(id: string): Promise<AiTrainingExample | undefined> {
+    const [log] = await db.select().from(aiCorrectionLogs).where(eq(aiCorrectionLogs.id, id));
+    if (!log) return undefined;
+    const example = await this.createAiTrainingExample({
+      category: log.category,
+      inputText: log.originalInput,
+      expectedOutput: log.correctedOutput,
+      note: `自動昇格: ${log.correctedFields || '修正データ'}`,
+      isActive: true,
+      createdBy: log.userId,
+    });
+    await db.update(aiCorrectionLogs).set({ promoted: true }).where(eq(aiCorrectionLogs.id, id));
+    return example;
+  }
+
+  async deleteAiCorrectionLog(id: string): Promise<boolean> {
+    await db.delete(aiCorrectionLogs).where(eq(aiCorrectionLogs.id, id));
+    return true;
   }
 }
 

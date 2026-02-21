@@ -1851,6 +1851,16 @@ export async function registerRoutes(
         return res.status(400).json({ message: "テキストが必要です" });
       }
 
+      const trainingExamples = await storage.getAiTrainingExamples("cargo");
+      let fewShotSection = "";
+      if (trainingExamples.length > 0) {
+        const examples = trainingExamples.slice(0, 15).map((ex, i) => {
+          storage.incrementAiTrainingUseCount(ex.id);
+          return `例${i + 1}:\n入力: ${ex.inputText}\n正解出力: ${ex.expectedOutput}${ex.note ? `\n補足: ${ex.note}` : ""}`;
+        });
+        fewShotSection = `\n\n===== 学習済みの変換例（これらのパターンを参考にしてください） =====\n${examples.join("\n\n")}\n===== 学習例ここまで =====\n`;
+      }
+
       const cargoFieldSchema = `{
   "title": "タイトル（出発地→到着地 荷種 重量の形式）",
   "departureArea": "都道府県名のみ（例: 神奈川）",
@@ -1943,7 +1953,7 @@ ${cargoFieldSchema}
 
 情報が不明な場合はそのフィールドを空文字にしてください。入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は明確な記載がある場合のみ設定。
 vehicleTypeとbodyTypeは複数選択の場合カンマ区切りで返してください（例: "4t車, 10t車"）。
-JSONのみを返してください。説明文は不要です。`,
+JSONのみを返してください。説明文は不要です。${fewShotSection}`,
           },
           {
             role: "user",
@@ -1976,6 +1986,16 @@ JSONのみを返してください。説明文は不要です。`,
       const { messages, extractedFields } = req.body;
       if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ message: "メッセージが必要です" });
+      }
+
+      const chatTrainingExamples = await storage.getAiTrainingExamples("cargo");
+      let chatFewShotSection = "";
+      if (chatTrainingExamples.length > 0) {
+        const examples = chatTrainingExamples.slice(0, 10).map((ex, i) => {
+          storage.incrementAiTrainingUseCount(ex.id);
+          return `例${i + 1}:\n入力: ${ex.inputText}\n正解出力: ${ex.expectedOutput}${ex.note ? `\n補足: ${ex.note}` : ""}`;
+        });
+        chatFewShotSection = `\n\n===== 学習済みの変換例（これらのパターンを参考に精度を上げてください） =====\n${examples.join("\n\n")}\n===== 学習例ここまで =====\n`;
       }
 
       const cargoFieldSchema = `{
@@ -2105,7 +2125,7 @@ statusの意味:
 - 運賃の相談には積極的に応じて、具体的な金額を提案してください
 - 大量のデータが来た場合は、整理して要約してから確認してください
 - 入力データからできるだけ多くの情報を漏れなく抽出してください
-- ユーザーの入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は、テキストに明確に記載がある場合のみ設定すること。記載がなければ空文字にすること`;
+- ユーザーの入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は、テキストに明確に記載がある場合のみ設定すること。記載がなければ空文字にすること${chatFewShotSection}`;
 
       const apiMessages = [
         { role: "system" as const, content: systemPrompt },
@@ -2152,6 +2172,16 @@ statusの意味:
       const { messages, extractedFields } = req.body;
       if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ message: "メッセージが必要です" });
+      }
+
+      const truckTrainingExamples = await storage.getAiTrainingExamples("truck");
+      let truckFewShotSection = "";
+      if (truckTrainingExamples.length > 0) {
+        const examples = truckTrainingExamples.slice(0, 10).map((ex, i) => {
+          storage.incrementAiTrainingUseCount(ex.id);
+          return `例${i + 1}:\n入力: ${ex.inputText}\n正解出力: ${ex.expectedOutput}${ex.note ? `\n補足: ${ex.note}` : ""}`;
+        });
+        truckFewShotSection = `\n\n===== 学習済みの変換例 =====\n${examples.join("\n\n")}\n===== 学習例ここまで =====\n`;
       }
 
       const truckFieldSchema = `{
@@ -2206,7 +2236,7 @@ statusの意味:
 - 返答は必ず有効なJSONで返してください
 - messageは必ず日本語で、丁寧だが堅すぎない口調で
 - 運賃の相談には積極的に応じて、具体的な金額を提案してください
-- 大量のデータが来た場合は、整理して要約してから確認してください`;
+- 大量のデータが来た場合は、整理して要約してから確認してください${truckFewShotSection}`;
 
       const apiMessages = [
         { role: "system" as const, content: systemPrompt },
@@ -2245,6 +2275,103 @@ statusの意味:
     } catch (error) {
       console.error("Truck chat error:", error);
       res.status(500).json({ message: "AIとの通信に失敗しました" });
+    }
+  });
+
+  app.post("/api/ai/feedback", requireAuth, async (req, res) => {
+    try {
+      const { category, originalInput, aiOutput, correctedOutput, correctedFields } = req.body;
+      if (!originalInput || !aiOutput || !correctedOutput) {
+        return res.status(400).json({ message: "必要なデータが不足しています" });
+      }
+      const log = await storage.createAiCorrectionLog({
+        category: category || "cargo",
+        originalInput,
+        aiOutput: JSON.stringify(aiOutput),
+        correctedOutput: JSON.stringify(correctedOutput),
+        correctedFields: correctedFields ? JSON.stringify(correctedFields) : null,
+        userId: req.session.userId as string,
+      });
+      res.json(log);
+    } catch (error) {
+      console.error("AI feedback error:", error);
+      res.status(500).json({ message: "フィードバックの保存に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/ai-training", requireAdmin, async (_req, res) => {
+    try {
+      const examples = await storage.getAllAiTrainingExamples();
+      res.json(examples);
+    } catch (error) {
+      res.status(500).json({ message: "学習データの取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/ai-training", requireAdmin, async (req, res) => {
+    try {
+      const { category, inputText, expectedOutput, note } = req.body;
+      if (!inputText || !expectedOutput) {
+        return res.status(400).json({ message: "入力テキストと期待出力が必要です" });
+      }
+      const example = await storage.createAiTrainingExample({
+        category: category || "cargo",
+        inputText,
+        expectedOutput: typeof expectedOutput === "string" ? expectedOutput : JSON.stringify(expectedOutput),
+        note,
+        isActive: true,
+        createdBy: req.session.userId as string,
+      });
+      res.json(example);
+    } catch (error) {
+      res.status(500).json({ message: "学習データの作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/ai-training/:id", requireAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateAiTrainingExample(req.params.id, req.body);
+      if (!updated) return res.status(404).json({ message: "学習データが見つかりません" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "学習データの更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/ai-training/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteAiTrainingExample(req.params.id);
+      res.json({ message: "学習データを削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "学習データの削除に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/ai-corrections", requireAdmin, async (_req, res) => {
+    try {
+      const logs = await storage.getAiCorrectionLogs(100);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "修正ログの取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/ai-corrections/:id/promote", requireAdmin, async (req, res) => {
+    try {
+      const example = await storage.promoteAiCorrectionToExample(req.params.id);
+      if (!example) return res.status(404).json({ message: "修正ログが見つかりません" });
+      res.json(example);
+    } catch (error) {
+      res.status(500).json({ message: "学習データへの昇格に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/ai-corrections/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteAiCorrectionLog(req.params.id);
+      res.json({ message: "修正ログを削除しました" });
+    } catch (error) {
+      res.status(500).json({ message: "修正ログの削除に失敗しました" });
     }
   });
 
