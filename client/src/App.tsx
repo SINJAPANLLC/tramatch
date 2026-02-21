@@ -5,52 +5,120 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import LandingPage from "@/pages/home";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import Dashboard from "@/pages/dashboard";
-import CargoList from "@/pages/cargo-list";
-import TruckList from "@/pages/truck-list";
-import CargoDetail from "@/pages/cargo-detail";
-import TruckDetail from "@/pages/truck-detail";
-import CargoForm from "@/pages/cargo-form";
-import MyCargo from "@/pages/my-cargo";
-import CompletedCargo from "@/pages/completed-cargo";
-import CancelledCargo from "@/pages/cancelled-cargo";
-import Companies from "@/pages/companies";
-import Partners from "@/pages/partners";
-import TransportLedger from "@/pages/transport-ledger";
-import Payment from "@/pages/payment";
-import Services from "@/pages/services";
-import UserSettings from "@/pages/user-settings";
-import AdminDashboard from "@/pages/admin-dashboard";
-import AdminApplications from "@/pages/admin-applications";
-import AdminUsers from "@/pages/admin-users";
-import AdminRevenue from "@/pages/admin-revenue";
-import AdminNotifications from "@/pages/admin-notifications";
-import AdminSeo from "@/pages/admin-seo";
-import AdminSettings from "@/pages/admin-settings";
-import AdminAnnouncements from "@/pages/admin-announcements";
-import AdminListings from "@/pages/admin-listings";
-import AdminAuditLogs from "@/pages/admin-audit-logs";
-import AdminContactInquiries from "@/pages/admin-contact-inquiries";
-import AdminInvoices from "@/pages/admin-invoices";
-import AdminAgents from "@/pages/admin-agents";
-import Guide from "@/pages/guide";
-import Faq from "@/pages/faq";
-import Contact from "@/pages/contact";
-import CompanyInfoPage from "@/pages/company-info";
-import Terms from "@/pages/terms";
-import Privacy from "@/pages/privacy";
-import Columns from "@/pages/columns";
-import ColumnDetail from "@/pages/column-detail";
-import ForgotPassword from "@/pages/forgot-password";
-import ResetPassword from "@/pages/reset-password";
-import TruckForm from "@/pages/truck-form";
-import MyTrucks from "@/pages/my-trucks";
-import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+
+const LandingPage = lazy(() => import("@/pages/home"));
+
+const pageImports = {
+  login: () => import("@/pages/login"),
+  register: () => import("@/pages/register"),
+  dashboard: () => import("@/pages/dashboard"),
+  cargoList: () => import("@/pages/cargo-list"),
+  truckList: () => import("@/pages/truck-list"),
+  cargoDetail: () => import("@/pages/cargo-detail"),
+  truckDetail: () => import("@/pages/truck-detail"),
+  cargoForm: () => import("@/pages/cargo-form"),
+  myCargo: () => import("@/pages/my-cargo"),
+  completedCargo: () => import("@/pages/completed-cargo"),
+  cancelledCargo: () => import("@/pages/cancelled-cargo"),
+  companies: () => import("@/pages/companies"),
+  partners: () => import("@/pages/partners"),
+  transportLedger: () => import("@/pages/transport-ledger"),
+  payment: () => import("@/pages/payment"),
+  services: () => import("@/pages/services"),
+  userSettings: () => import("@/pages/user-settings"),
+  adminDashboard: () => import("@/pages/admin-dashboard"),
+  adminApplications: () => import("@/pages/admin-applications"),
+  adminUsers: () => import("@/pages/admin-users"),
+  adminRevenue: () => import("@/pages/admin-revenue"),
+  adminNotifications: () => import("@/pages/admin-notifications"),
+  adminSeo: () => import("@/pages/admin-seo"),
+  adminSettings: () => import("@/pages/admin-settings"),
+  adminAnnouncements: () => import("@/pages/admin-announcements"),
+  adminListings: () => import("@/pages/admin-listings"),
+  adminAuditLogs: () => import("@/pages/admin-audit-logs"),
+  adminContactInquiries: () => import("@/pages/admin-contact-inquiries"),
+  adminInvoices: () => import("@/pages/admin-invoices"),
+  adminAgents: () => import("@/pages/admin-agents"),
+  guide: () => import("@/pages/guide"),
+  faq: () => import("@/pages/faq"),
+  contact: () => import("@/pages/contact"),
+  companyInfo: () => import("@/pages/company-info"),
+  terms: () => import("@/pages/terms"),
+  privacy: () => import("@/pages/privacy"),
+  columns: () => import("@/pages/columns"),
+  columnDetail: () => import("@/pages/column-detail"),
+  forgotPassword: () => import("@/pages/forgot-password"),
+  resetPassword: () => import("@/pages/reset-password"),
+  truckForm: () => import("@/pages/truck-form"),
+  myTrucks: () => import("@/pages/my-trucks"),
+  notFound: () => import("@/pages/not-found"),
+};
+
+const Login = lazy(pageImports.login);
+const Register = lazy(pageImports.register);
+const Dashboard = lazy(pageImports.dashboard);
+const CargoList = lazy(pageImports.cargoList);
+const TruckList = lazy(pageImports.truckList);
+const CargoDetail = lazy(pageImports.cargoDetail);
+const TruckDetail = lazy(pageImports.truckDetail);
+const CargoForm = lazy(pageImports.cargoForm);
+const MyCargo = lazy(pageImports.myCargo);
+const CompletedCargo = lazy(pageImports.completedCargo);
+const CancelledCargo = lazy(pageImports.cancelledCargo);
+const Companies = lazy(pageImports.companies);
+const Partners = lazy(pageImports.partners);
+const TransportLedger = lazy(pageImports.transportLedger);
+const Payment = lazy(pageImports.payment);
+const Services = lazy(pageImports.services);
+const UserSettings = lazy(pageImports.userSettings);
+const AdminDashboard = lazy(pageImports.adminDashboard);
+const AdminApplications = lazy(pageImports.adminApplications);
+const AdminUsers = lazy(pageImports.adminUsers);
+const AdminRevenue = lazy(pageImports.adminRevenue);
+const AdminNotifications = lazy(pageImports.adminNotifications);
+const AdminSeo = lazy(pageImports.adminSeo);
+const AdminSettings = lazy(pageImports.adminSettings);
+const AdminAnnouncements = lazy(pageImports.adminAnnouncements);
+const AdminListings = lazy(pageImports.adminListings);
+const AdminAuditLogs = lazy(pageImports.adminAuditLogs);
+const AdminContactInquiries = lazy(pageImports.adminContactInquiries);
+const AdminInvoices = lazy(pageImports.adminInvoices);
+const AdminAgents = lazy(pageImports.adminAgents);
+const Guide = lazy(pageImports.guide);
+const Faq = lazy(pageImports.faq);
+const Contact = lazy(pageImports.contact);
+const CompanyInfoPage = lazy(pageImports.companyInfo);
+const Terms = lazy(pageImports.terms);
+const Privacy = lazy(pageImports.privacy);
+const Columns = lazy(pageImports.columns);
+const ColumnDetail = lazy(pageImports.columnDetail);
+const ForgotPassword = lazy(pageImports.forgotPassword);
+const ResetPassword = lazy(pageImports.resetPassword);
+const TruckForm = lazy(pageImports.truckForm);
+const MyTrucks = lazy(pageImports.myTrucks);
+const NotFound = lazy(pageImports.notFound);
+
+function usePreloadAllPages() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Object.values(pageImports).forEach((importFn) => {
+        importFn().catch(() => {});
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[200px]">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -77,54 +145,56 @@ const DASHBOARD_PATHS = [
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={LandingPage} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/forgot-password" component={ForgotPassword} />
-      <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
-      <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
-      <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
-      <Route path="/cancelled-cargo">{() => <ProtectedRoute component={CancelledCargo} />}</Route>
-      <Route path="/companies">{() => <ProtectedRoute component={Companies} />}</Route>
-      <Route path="/partners">{() => <ProtectedRoute component={Partners} />}</Route>
-      <Route path="/transport-ledger">{() => <ProtectedRoute component={TransportLedger} />}</Route>
-      <Route path="/payment">{() => <ProtectedRoute component={Payment} />}</Route>
-      <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
-      <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
-      <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
-      <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
-      <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
-      <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
-      <Route path="/my-trucks">{() => <ProtectedRoute component={MyTrucks} />}</Route>
-      <Route path="/trucks/new">{() => <ProtectedRoute component={TruckList} />}</Route>
-      <Route path="/trucks/edit/:id">{() => <ProtectedRoute component={TruckForm} />}</Route>
-      <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
-      <Route path="/trucks">{() => <ProtectedRoute component={TruckList} />}</Route>
-      <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
-      <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
-      <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
-      <Route path="/admin/invoices">{() => <AdminRoute component={AdminInvoices} />}</Route>
-      <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
-      <Route path="/admin/announcements">{() => <AdminRoute component={AdminAnnouncements} />}</Route>
-      <Route path="/admin/listings">{() => <AdminRoute component={AdminListings} />}</Route>
-      <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
-      <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
-      <Route path="/admin/contact-inquiries">{() => <AdminRoute component={AdminContactInquiries} />}</Route>
-      <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
-      <Route path="/admin/agents">{() => <AdminRoute component={AdminAgents} />}</Route>
-      <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
-      <Route path="/guide" component={Guide} />
-      <Route path="/faq" component={Faq} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/company-info" component={CompanyInfoPage} />
-      <Route path="/terms" component={Terms} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/columns/:slug" component={ColumnDetail} />
-      <Route path="/columns" component={Columns} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<LoadingFallback />}>
+      <Switch>
+        <Route path="/" component={LandingPage} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
+        <Route path="/my-cargo">{() => <ProtectedRoute component={MyCargo} />}</Route>
+        <Route path="/completed-cargo">{() => <ProtectedRoute component={CompletedCargo} />}</Route>
+        <Route path="/cancelled-cargo">{() => <ProtectedRoute component={CancelledCargo} />}</Route>
+        <Route path="/companies">{() => <ProtectedRoute component={Companies} />}</Route>
+        <Route path="/partners">{() => <ProtectedRoute component={Partners} />}</Route>
+        <Route path="/transport-ledger">{() => <ProtectedRoute component={TransportLedger} />}</Route>
+        <Route path="/payment">{() => <ProtectedRoute component={Payment} />}</Route>
+        <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
+        <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
+        <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
+        <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
+        <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
+        <Route path="/cargo">{() => <ProtectedRoute component={CargoList} />}</Route>
+        <Route path="/my-trucks">{() => <ProtectedRoute component={MyTrucks} />}</Route>
+        <Route path="/trucks/new">{() => <ProtectedRoute component={TruckList} />}</Route>
+        <Route path="/trucks/edit/:id">{() => <ProtectedRoute component={TruckForm} />}</Route>
+        <Route path="/trucks/:id">{() => <ProtectedRoute component={TruckDetail} />}</Route>
+        <Route path="/trucks">{() => <ProtectedRoute component={TruckList} />}</Route>
+        <Route path="/admin/applications">{() => <AdminRoute component={AdminApplications} />}</Route>
+        <Route path="/admin/users">{() => <AdminRoute component={AdminUsers} />}</Route>
+        <Route path="/admin/revenue">{() => <AdminRoute component={AdminRevenue} />}</Route>
+        <Route path="/admin/invoices">{() => <AdminRoute component={AdminInvoices} />}</Route>
+        <Route path="/admin/notifications">{() => <AdminRoute component={AdminNotifications} />}</Route>
+        <Route path="/admin/announcements">{() => <AdminRoute component={AdminAnnouncements} />}</Route>
+        <Route path="/admin/listings">{() => <AdminRoute component={AdminListings} />}</Route>
+        <Route path="/admin/seo">{() => <AdminRoute component={AdminSeo} />}</Route>
+        <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
+        <Route path="/admin/contact-inquiries">{() => <AdminRoute component={AdminContactInquiries} />}</Route>
+        <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
+        <Route path="/admin/agents">{() => <AdminRoute component={AdminAgents} />}</Route>
+        <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
+        <Route path="/guide" component={Guide} />
+        <Route path="/faq" component={Faq} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/company-info" component={CompanyInfoPage} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/columns/:slug" component={ColumnDetail} />
+        <Route path="/columns" component={Columns} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
@@ -132,6 +202,8 @@ function AppLayout() {
   const [loc] = useLocation();
   const { isAuthenticated } = useAuth();
   const isDashboardPage = isAuthenticated && DASHBOARD_PATHS.some((p) => loc === p || loc.startsWith(p + "/"));
+
+  usePreloadAllPages();
 
   if (isDashboardPage) {
     return (

@@ -1,0 +1,63 @@
+t@srv1087935:/var/www/tramatch# pm2 logs tramatch --lines 10
+[TAILING] Tailing last 10 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-out.log last 10 lines:
+6|tramatch | > NODE_ENV=production node dist/index.cjs
+6|tramatch | 
+6|tramatch | 
+6|tramatch | > rest-express@1.0.0 start
+6|tramatch | > NODE_ENV=production node dist/index.cjs
+6|tramatch | 
+6|tramatch | 
+6|tramatch | > rest-express@1.0.0 start
+6|tramatch | > NODE_ENV=production node dist/index.cjs
+6|tramatch | 
+
+/root/.pm2/logs/tramatch-error.log last 10 lines:
+6|tramatch |     at new Dt (/var/www/tramatch/dist/index.cjs:133:56232)
+6|tramatch |     at Object.<anonymous> (/var/www/tramatch/dist/index.cjs:352:5947)
+6|tramatch |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+6|tramatch |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+6|tramatch |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+6|tramatch |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+6|tramatch |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+6|tramatch |     at node:internal/main/run_main_module:28:49
+6|tramatch | 
+6|tramatch | Node.js v20.20.0
+
+^C
+root@srv1087935:/var/www/tramatch# pm2 logs tramatch --err --lines 30
+[TAILING] Tailing last 30 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-error.log last 30 lines:
+6|tramatch | rn this._client.delete(Ae`/vector_stores/${e}`,{...t,headers:We([{"OpenAI-Beta":"assistants=v2"},t?.headers])})}search(e,t,r){return this._client.getAPIList(Ae`/vector_stores/${e}/search`,Os,{body:t,method:"post",...r,headers:We([{"OpenAI-Beta":"assistants=v2"},r?.headers])})}};ko.Files=Ff;ko.FileBatches=Tf});var lu,h3=Z(()=>{At();kr();Rr();Oa();ur();lu=class extends Pe{create(e,t){return this._client.post("/videos",yo({body:e,...t},this._client))}retrieve(e,t){return this._client.get(Ae`/videos/${e}`,t)}list(e={},t){return this._client.getAPIList("/videos",vo,{query:e,...t})}delete(e,t){return this._client.delete(Ae`/videos/${e}`,t)}downloadContent(e,t={},r){return this._client.get(Ae`/videos/${e}/content`,{query:t,...r,headers:We([{Accept:"application/binary"},r?.headers]),__binaryResponse:!0})}remix(e,t,r){return this._client.post(Ae`/videos/${e}/remix`,yo({body:t,...r},this._client))}}});var If,QU,e1,uu,m3=Z(()=>{Na();Ga();At();Rr();uu=class extends Pe{constructor(){super(...arguments),If.add(this)}async unwrap(e,t,r=this._client.webhookSecret,a=300){return await this.verifySignature(e,t,r,a),JSON.parse(e)}async verifySignature(e,t,r=this._client.webhookSecret,a=300){if(typeof crypto>"u"||typeof crypto.subtle.importKey!="function"||typeof crypto.subtle.verify!="function")throw new Error("Webhook signature verification is only supported when the `crypto` global is defined");ge(this,If,"m",QU).call(this,r);let c=We([t]).values,p=ge(this,If,"m",e1).call(this,c,"webhook-signature"),f=ge(this,If,"m",e1).call(this,c,"webhook-timestamp"),y=ge(this,If,"m",e1).call(this,c,"webhook-id"),b=parseInt(f,10);if(isNaN(b))throw new Ts("Invalid webhook timestamp format");let h=Math.floor(Date.now()/1e3);if(h-b>a)throw new Ts("Webhook timestamp is too old");if(b>h+a)throw new Ts("Webhook timestamp is too new");let g=p.split(" ").map(A=>A.startsWith("v1,")?A.substring(3):A),x=r.startsWith("whsec_")?Buffer.from(r.replace("whsec_",""),"base64"):Buffer.from(r,"utf-8"),E=y?`${y}.${f}.${e}`:`${f}.${e}`,C=await crypto.subtle.importKey("raw",x,{name:"HMAC",hash:"SHA-256"},!1,["verify"]);for(let A of g)try{let I=Buffer.from(A,"base64");if(await crypto.subtle.verify("HMAC",C,I,new TextEncoder().encode(E)))return}catch{continue}throw new Ts("The given webhook signature does not match the expected signature")}};If=new WeakSet,QU=function(e){if(typeof e!="string"||e.length===0)throw new Error("The webhook secret must either be set using the env var, OPENAI_WEBHOOK_SECRET, on the client class, OpenAI({ webhookSecret: '123' }), or passed to this function")},e1=function(e,t){if(!e)throw new Error("Headers are required");let r=e.get(t);if(r==null)throw new Error(`Missing required header: ${t}`);return r}});var XU=Z(()=>{m3()});var YU=Z(()=>{XU()});var JU=Z(()=>{FU();IU();uC();pC();CC();kC();IC();NC();OC();LC();jC();WC();GC();KC();QC();XC();ZC();n3();c3();u3();d3();h3();YU()});var g3,x3,t1,ZU,Dt,r1=Z(()=>{Na();mA();go();Vp();wv();yA();X0();Qq();nU();vA();Fs();kr();MA();JU();Pv();pC();kC();OC();jC();KC();QC();XC();h3();uC();CC();sC();IC();NC();LC();WC();GC();ZC();n3();c3();u3();d3();m3();yA();Rr();wC();J0();go();Dt=class{constructor({baseURL:e=bc("OPENAI_BASE_URL"),apiKey:t=bc("OPENAI_API_KEY"),organization:r=bc("OPENAI_ORG_ID")??null,project:a=bc("OPENAI_PROJECT_ID")??null,webhookSecret:c=bc("OPENAI_WEBHOOK_SECRET")??null,...p}={}){if(g3.add(this),t1.set(this,void 0),this.completions=new Yl(this),this.chat=new xc(this),this.embeddings=new Zl(this),this.files=new tu(this),this.images=new au(this),this.audio=new Ds(this),this.moderations=new ou(this),this.models=new su(this),this.fineTuning=new Xa(this),this.graders=new Ac(this),this.vectorStores=new ko(this),this.webhooks=new uu(this),this.beta=new Qa(this),this.batches=new Vl(this),this.uploads=new kc(this),this.responses=new Ao(this),this.realtime=new So(this),this.conversations=new Ec(this),this.evals=new Sc(this),this.containers=new _c(this),this.skills=new Co(this),this.videos=new lu(this),t===void 0)throw new ht("Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.");let f={apiKey:t,organization:r,project:a,webhookSecret:c,...p,baseURL:e||"https://api.openai.com/v1"};if(!f.dangerouslyAllowBrowser&&Hq())throw new ht(`It looks like you're running in a browser-like environment.
+6|tramatch |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+6|tramatch | 
+6|tramatch | ht [Error]: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+6|tramatch |     at new Dt (/var/www/tramatch/dist/index.cjs:133:56232)
+6|tramatch |     at Object.<anonymous> (/var/www/tramatch/dist/index.cjs:352:5947)
+6|tramatch |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+6|tramatch |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+6|tramatch |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+6|tramatch |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+6|tramatch |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+6|tramatch |     at node:internal/main/run_main_module:28:49
+6|tramatch | 
+6|tramatch | Node.js v20.20.0
+
+^C
+root@srv1087935:/var/www/tramatch# cat .env
+DATABASE_URL=postgresql://neondb_owner:npg_ZOBp5n6RymGd@ep-wispy-sky-ai3gvzlm-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
+OPENAI_API_KEY=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
+SESSION_SECRET=jWyIs4Bs1ypDPriZESb54PdoaXoI7K55gVAc+dN7QZCoUAQDjKLORebsVYeHd0W+kBPfnX2UCH7SggbDuq6YSw==
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USER=info@tramatch-sinjapan.com
+SMTP_PASS=@Kazuya8008
+SMTP_FROM=info@tramatch-sinjapan.com
+SQUARE_ACCESS_TOKEN=EAAAlyLnjXwy0SxmvZiD8_Rtmvvshz1S2DjyqOPgCCd0XjNPqez5DZI8sD5QeSen
+SQUARE_LOCATION_ID=LD95R63AEZZRH
+SQUARE_ENVIRONMENT=production
+VITE_SQUARE_APP_ID=sq0idp-_B3lrgtH3hmJc4TNy4lZUw
+VITE_SQUARE_LOCATION_ID=LD95R63AEZZRH
+VITE_SQUARE_ENVIRONMENT=production
+NODE_ENV=production
+root@srv1087935:/var/www/tramatch# 
