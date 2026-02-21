@@ -2138,6 +2138,96 @@ statusの意味:
 - 入力データからできるだけ多くの情報を漏れなく抽出してください
 - ユーザーの入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。特にloadingMethod（荷姿）、driverWork（作業）、consolidation（積合）、temperatureControl（温度管理）等は、テキストに明確に記載がある場合のみ設定すること。記載がなければ空文字にすること${chatFewShotSection}`;
 
+      const lastUserMsg = messages[messages.length - 1];
+      const lastUserText = lastUserMsg?.content || "";
+      const lineCount = lastUserText.split(/\n/).filter((l: string) => l.trim()).length;
+      const isBulkData = lastUserText.length > 300 && lineCount >= 3;
+
+      if (isBulkData) {
+        console.log(`[cargo-chat] Bulk data detected (${lastUserText.length} chars, ${lineCount} lines). Using parse-first approach.`);
+        const parseResponse = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
+
+重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。
+
+入力に複数の案件（荷物）が含まれている場合は、それぞれ個別のオブジェクトとして配列で返してください。
+1件だけの場合も配列で返してください。すべての荷物を漏れなく抽出してください。
+
+各案件のフォーマット:
+${cargoFieldSchema}
+
+返却形式:
+{ "items": [ {案件1}, {案件2}, ... ] }
+
+データ解析の注意点:
+- 「W」「ウイング」= bodyType: "ウイング"
+- 「PG」「パワゲ」= bodyType: "パワーゲート付き"
+- 「4t」「4トン」= vehicleType: "4t車"、「大型」= vehicleType: "大型車"
+- 「箱」= bodyType: "箱車"
+- 「高速込」= highwayFee: "込み"、「高速別」= highwayFee: "別途"
+- 住所から都道府県を推測（「横浜市」→"神奈川"、「熊谷」→"埼玉"、「江東区」→"東京"）
+- 日付の表記ゆれ（「3/5」→"${new Date().getFullYear()}/03/05"）
+- 時間の表記ゆれ（「8時」→"8:00"）
+- 金額が2桁の場合は万円単位（50→50000）
+- 「当日」→ arrivalDate = desiredDate
+- 「貸切」→ consolidation: "不可"
+- titleは自動生成: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」
+- 引越し案件: bodyType="箱車", movingJob="引っ越し案件"
+- 情報がないフィールドは空文字にすること${chatFewShotSection}`,
+            },
+            { role: "user", content: lastUserText },
+          ],
+          max_tokens: 16000,
+          response_format: { type: "json_object" },
+        });
+
+        const parseContent = parseResponse.choices[0]?.message?.content || "{}";
+        let parsedItems: Record<string, unknown>[] = [];
+        try {
+          const parsed = JSON.parse(parseContent);
+          parsedItems = parsed.items && Array.isArray(parsed.items) ? parsed.items : [parsed];
+        } catch {
+          try {
+            const itemsMatch = parseContent.match(/"items"\s*:\s*(\[[\s\S]*)/);
+            if (itemsMatch) {
+              let itemsStr = itemsMatch[1];
+              let depth = 0;
+              let endIdx = 0;
+              for (let i = 0; i < itemsStr.length; i++) {
+                if (itemsStr[i] === '[') depth++;
+                if (itemsStr[i] === ']') { depth--; if (depth === 0) { endIdx = i + 1; break; } }
+              }
+              if (endIdx > 0) {
+                itemsStr = itemsStr.substring(0, endIdx).replace(/,\s*([}\]])/g, "$1");
+                try { parsedItems = JSON.parse(itemsStr); } catch {}
+              }
+            }
+          } catch {}
+        }
+
+        const itemCount = parsedItems.length;
+        const firstItem = itemCount > 0 ? parsedItems[0] : {};
+        const msg = itemCount > 1
+          ? `${itemCount}件の荷物情報を読み取りました。1件目をフォームに反映しています。内容を確認して掲載してください。`
+          : itemCount === 1
+            ? "荷物情報を読み取りました。フォームに反映しています。内容を確認して掲載してください。"
+            : "入力内容から荷物情報を読み取れませんでした。もう少し詳しく入力してください。";
+
+        console.log(`[cargo-chat] Parse-first extracted ${itemCount} items`);
+
+        return res.json({
+          message: msg,
+          extractedFields: itemCount === 1 ? firstItem : {},
+          items: parsedItems,
+          priceSuggestion: null,
+          status: itemCount > 0 ? "confirming" : "extracting",
+        });
+      }
+
       const apiMessages = [
         { role: "system" as const, content: systemPrompt },
         ...messages.map((m: { role: string; content: string }) => ({
@@ -2159,10 +2249,50 @@ statusの意味:
       const content = response.choices[0]?.message?.content || "{}";
       try {
         const parsed = JSON.parse(content);
+        const parsedItems = parsed.items || [];
+        const parsedFields = parsed.extractedFields || {};
+        if (parsedItems.length === 0 && Object.keys(parsedFields).length === 0 && lastUserText.length > 100) {
+          console.log("[cargo-chat] AI returned empty items/fields for substantial input, retrying with parse...");
+          const retryResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `あなたは日本の運送・物流の専門家です。ユーザーが入力した荷物情報を構造化データに変換してください。
+入力に複数の案件が含まれている場合は配列で返してください。
+重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。
+各案件のフォーマット: ${cargoFieldSchema}
+返却形式: { "items": [ {案件1}, {案件2}, ... ] }
+住所から都道府県を推測、日付の表記ゆれに対応、金額2桁は万円単位。
+titleは自動生成: 「{departureArea}→{arrivalArea} {cargoType} {vehicleType}」
+JSONのみを返してください。${chatFewShotSection}`,
+              },
+              { role: "user", content: lastUserText },
+            ],
+            max_tokens: 16000,
+            response_format: { type: "json_object" },
+          });
+          const retryContent = retryResponse.choices[0]?.message?.content || "{}";
+          try {
+            const retryParsed = JSON.parse(retryContent);
+            const retryItems = retryParsed.items && Array.isArray(retryParsed.items) ? retryParsed.items : [retryParsed];
+            const retryCount = retryItems.length;
+            console.log(`[cargo-chat] Retry extracted ${retryCount} items`);
+            return res.json({
+              message: retryCount > 1
+                ? `${retryCount}件の荷物情報を読み取りました。1件目をフォームに反映しています。内容を確認して掲載してください。`
+                : "荷物情報を読み取りました。フォームに反映しています。",
+              extractedFields: retryCount === 1 ? retryItems[0] : {},
+              items: retryItems,
+              priceSuggestion: null,
+              status: "confirming",
+            });
+          } catch {}
+        }
         res.json({
           message: parsed.message || "荷物情報を読み取りました。フォームに反映しています。",
-          extractedFields: parsed.extractedFields || {},
-          items: parsed.items || [],
+          extractedFields: parsedFields,
+          items: parsedItems,
           priceSuggestion: parsed.priceSuggestion || null,
           status: parsed.status || "chatting",
         });
