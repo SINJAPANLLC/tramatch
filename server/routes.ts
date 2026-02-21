@@ -2104,12 +2104,19 @@ JSONのみを返してください。説明文は不要です。${fewShotSection
 
 応答のJSON形式（必ずこの形式で返してください）:
 {
-  "message": "ユーザーへの返答テキスト（親しみやすく、簡潔に）",
+  "message": "ユーザーへの返答テキスト（自然な日本語の会話文のみ。絶対にJSONデータ、フィールド名、配列、オブジェクトを含めないこと）",
   "extractedFields": ${cargoFieldSchema} のうち抽出できたフィールドのみのオブジェクト（抽出できなかったフィールドは含めない）,
   "items": [複数案件の場合は各案件のフィールドオブジェクトの配列、1件または追加抽出なしの場合は空配列],
   "priceSuggestion": { "min": 最低額数字, "max": 最高額数字, "reason": "根拠の説明" } または null,
   "status": "extracting" | "confirming" | "ready" | "chatting"
 }
+
+【最重要ルール】messageフィールドには絶対にJSONデータを入れないこと:
+- messageには「"items":」「"departureArea":」「"vehicleType":」等のJSON構文を絶対に含めない
+- 荷物データはすべてitemsフィールドとextractedFieldsフィールドに入れること。messageにはデータの中身を書かない
+- ユーザーが「○件ある」「もっとある」等と言った場合も、messageは自然な会話で返し、データはitemsに入れる
+- 良いmessage例: 「28件の荷物を確認しました。すべてフォームに順番に反映していきます。」
+- 悪いmessage例: 「以下の荷物を検出しました: {"title":"埼玉→東京"...」← これは絶対NG
 
 statusの意味:
 - "extracting": 情報を抽出中、まだ不足あり

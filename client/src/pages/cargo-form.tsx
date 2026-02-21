@@ -463,12 +463,17 @@ export default function CargoForm() {
         }
       }
 
-      let cleanMessage = data.message || "";
-      cleanMessage = cleanMessage.replace(/```[\s\S]*?```/g, "").replace(/\{[\s\S]*?"[a-zA-Z]+"[\s\S]*?\}/g, (match: string) => {
-        if (match.includes('"departureArea"') || match.includes('"arrivalArea"') || match.includes('"items"') || match.includes('"extractedFields"')) return "";
-        return match;
-      }).replace(/\n{3,}/g, "\n\n").trim();
-      if (!cleanMessage) cleanMessage = "荷物情報を読み取りました。右側のフォームに反映しています。";
+      let cleanMessage = (data.message || "").replace(/```[\s\S]*?```/g, "");
+      cleanMessage = cleanMessage.replace(/[,\s]*"items"\s*:\s*\[[\s\S]*/g, "");
+      cleanMessage = cleanMessage.replace(/[,\s]*"extractedFields"\s*:\s*\{[\s\S]*/g, "");
+      cleanMessage = cleanMessage.replace(/\{[^{}]*"(departureArea|arrivalArea|vehicleType|bodyType|title|cargoType|desiredDate|price|highwayFee|driverWork|loadingMethod|temperatureControl|arrivalAddress|departureAddress|arrivalDate|departureTime|arrivalTime|movingJob|urgency|consolidation|description|contactPerson|weight|packageCount)"[^{}]*\}/g, "");
+      cleanMessage = cleanMessage.replace(/\[[\s,]*\]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+      if (!cleanMessage || cleanMessage.length < 5) {
+        const itemCount = data.items?.length || 0;
+        cleanMessage = itemCount > 1
+          ? `${itemCount}件の荷物情報を読み取りました。1件目をフォームに反映しています。内容を確認して掲載してください。`
+          : "荷物情報を読み取りました。右側のフォームに反映しています。内容を確認して掲載してください。";
+      }
 
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
