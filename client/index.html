@@ -35,6 +35,9 @@
         50% { opacity:1; transform:scale(1.03) }
       }
     </style>
+    <script>
+      setTimeout(function(){var s=document.getElementById('splash-screen');if(s){s.style.opacity='0';setTimeout(function(){s.remove()},400)}},8000);
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
