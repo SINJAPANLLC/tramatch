@@ -1,0 +1,69 @@
+root@srv1087935:/var/www/tramatch# cd /var/www/tramatch
+git stash
+git pull origin main
+npm install
+npm run build
+pm2 restart tramatch
+Saved working directory and index state WIP on main: ceb61e6 最新版アップデート
+From github.com:SINJAPANLLC/tramatch
+ * branch            main       -> FETCH_HEAD
+Updating ceb61e6..e5b71dc
+error: The following untracked working tree files would be overwritten by merge:
+	client/public/splash-logo.jpg
+Please move or remove them before you merge.
+Aborting
+
+up to date, audited 580 packages in 1s
+
+92 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (1 low, 1 moderate, 4 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming (5) ../node_modules/@tanstack/react-query/build/modern/index.j
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2718 modules transformed.
+../dist/public/index.html                                      3.59 kB │ gzip:   1.17 kB
+../dist/public/assets/tra_match_logo_white-ZjAReWwH.jpg       28.88 kB
+../dist/public/assets/IMG_0046_1771206816410-ClwqCtPN.jpg     29.02 kB
+../dist/public/assets/index-DdOEezFE.css                     114.21 kB │ gzip:  17.82 kB
+../dist/public/assets/index-BUoA5hC8.js                    1,286.81 kB │ gzip: 320.77 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.71s
+building server...
+
+  dist/index.cjs  3.0mb ⚠️
+
+⚡ Done in 186ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 9 ])
+[PM2] [tramatch](9) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 76.3mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 7.7%     │ 153.8mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 7.7%     │ 107.1mb  │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 815.1mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 99.0mb   │
+│ 9  │ tramatch           │ fork     │ 51   │ online    │ 0%       │ 20.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 
