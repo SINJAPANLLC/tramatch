@@ -436,3 +436,36 @@ export const agents = pgTable("agents", {
 export const insertAgentSchema = createInsertSchema(agents).omit({ id: true, createdAt: true });
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type Agent = typeof agents.$inferSelect;
+
+export const aiTrainingExamples = pgTable("ai_training_examples", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull().default("cargo"),
+  inputText: text("input_text").notNull(),
+  expectedOutput: text("expected_output").notNull(),
+  note: text("note"),
+  isActive: boolean("is_active").notNull().default(true),
+  useCount: integer("use_count").notNull().default(0),
+  successRate: integer("success_rate").notNull().default(0),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAiTrainingExampleSchema = createInsertSchema(aiTrainingExamples).omit({ id: true, useCount: true, successRate: true, createdAt: true });
+export type InsertAiTrainingExample = z.infer<typeof insertAiTrainingExampleSchema>;
+export type AiTrainingExample = typeof aiTrainingExamples.$inferSelect;
+
+export const aiCorrectionLogs = pgTable("ai_correction_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull().default("cargo"),
+  originalInput: text("original_input").notNull(),
+  aiOutput: text("ai_output").notNull(),
+  correctedOutput: text("corrected_output").notNull(),
+  correctedFields: text("corrected_fields"),
+  userId: varchar("user_id"),
+  promoted: boolean("promoted").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAiCorrectionLogSchema = createInsertSchema(aiCorrectionLogs).omit({ id: true, promoted: true, createdAt: true });
+export type InsertAiCorrectionLog = z.infer<typeof insertAiCorrectionLogSchema>;
+export type AiCorrectionLog = typeof aiCorrectionLogs.$inferSelect;

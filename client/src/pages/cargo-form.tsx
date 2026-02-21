@@ -192,6 +192,8 @@ export default function CargoForm() {
   const [extractedFields, setExtractedFields] = useState<Record<string, string>>({});
   const [editLoaded, setEditLoaded] = useState(false);
   const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const aiOriginalFieldsRef = useRef<Record<string, string>>({});
+  const userInputTextRef = useRef<string>("");
 
   const { data: myCargoList } = useQuery<import("@shared/schema").CargoListing[]>({
     queryKey: ["/api/my-cargo"],
@@ -262,6 +264,7 @@ export default function CargoForm() {
       for (const key of CARGO_FIELDS) {
         if (normalized[key]) merged[key] = normalized[key];
       }
+      aiOriginalFieldsRef.current = { ...merged };
       return merged;
     });
     const normalizedClean: Record<string, string> = {};
@@ -335,6 +338,35 @@ export default function CargoForm() {
     }
   }, [pendingItems, currentItemIndex, totalItems, form, applyFieldsToForm, toast, setLocation]);
 
+  const sendAiFeedback = useCallback(async (submittedData: InsertCargoListing) => {
+    const aiOriginal = aiOriginalFieldsRef.current;
+    const inputText = userInputTextRef.current;
+    if (!inputText || Object.keys(aiOriginal).length === 0) return;
+
+    const correctedFields: string[] = [];
+    const correctedOutput: Record<string, string> = {};
+    for (const key of CARGO_FIELDS) {
+      const submitted = String((submittedData as Record<string, unknown>)[key] || "").trim();
+      const original = (aiOriginal[key] || "").trim();
+      correctedOutput[key] = submitted;
+      if (submitted !== original && (submitted || original)) {
+        correctedFields.push(`${FIELD_LABELS[key] || key}: "${original}" → "${submitted}"`);
+      }
+    }
+
+    if (correctedFields.length > 0) {
+      try {
+        await apiRequest("POST", "/api/ai/feedback", {
+          category: "cargo",
+          originalInput: inputText,
+          aiOutput: aiOriginal,
+          correctedOutput,
+          correctedFields,
+        });
+      } catch {}
+    }
+  }, []);
+
   const mutation = useMutation({
     mutationFn: async (data: InsertCargoListing) => {
       if (isEditMode && editId) {
@@ -344,7 +376,10 @@ export default function CargoForm() {
       const res = await apiRequest("POST", "/api/cargo", data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      if (!isEditMode) {
+        sendAiFeedback(variables);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
       if (isEditMode) {
         toast({ title: "荷物情報を更新しました" });
@@ -367,6 +402,10 @@ export default function CargoForm() {
   const sendChatMessage = useCallback(async (userMessage: string, opts?: { skipGuard?: boolean; skipUserMsg?: boolean }) => {
     if (!userMessage.trim()) return;
     if (!opts?.skipGuard && isAiProcessing) return;
+
+    if (!opts?.skipUserMsg) {
+      userInputTextRef.current = userInputTextRef.current ? userInputTextRef.current + "\n" + userMessage : userMessage;
+    }
 
     let userMsg: ChatMessage | null = null;
     if (!opts?.skipUserMsg) {
