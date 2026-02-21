@@ -2150,7 +2150,7 @@ statusの意味:
           messages: [
             {
               role: "system",
-              content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。
+              content: `あなたは日本の運送・物流の専門家です。ユーザーが自然言語で入力した荷物情報を構造化データに変換してください。結果はJSON形式で返してください。
 
 重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。
 
@@ -2160,7 +2160,7 @@ statusの意味:
 各案件のフォーマット:
 ${cargoFieldSchema}
 
-返却形式:
+返却形式（JSON）:
 { "items": [ {案件1}, {案件2}, ... ] }
 
 データ解析の注意点:
