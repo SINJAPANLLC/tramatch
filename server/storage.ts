@@ -56,8 +56,9 @@ export interface IStorage {
   deleteCargoListing(id: string): Promise<boolean>;
   deleteTruckListing(id: string): Promise<boolean>;
   incrementCargoViewCount(id: string): Promise<void>;
-  updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined>;
+  updateCargoStatus(id: string, status: string, acceptedByUserId?: string): Promise<CargoListing | undefined>;
   updateCargoListing(id: string, data: Partial<CargoListing>): Promise<CargoListing | undefined>;
+  getContractedCargoByUserId(userId: string): Promise<CargoListing[]>;
 
   getNotificationsByUserId(userId: string): Promise<Notification[]>;
   getUnreadNotificationCount(userId: string): Promise<number>;
@@ -337,12 +338,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cargoListings.id, id));
   }
 
-  async updateCargoStatus(id: string, status: string): Promise<CargoListing | undefined> {
+  async updateCargoStatus(id: string, status: string, acceptedByUserId?: string): Promise<CargoListing | undefined> {
+    const setData: any = { status };
+    if (acceptedByUserId) {
+      setData.acceptedByUserId = acceptedByUserId;
+    }
+    if (status !== "completed") {
+      setData.acceptedByUserId = null;
+    }
     const [updated] = await db.update(cargoListings)
-      .set({ status })
+      .set(setData)
       .where(eq(cargoListings.id, id))
       .returning();
     return updated;
+  }
+
+  async getContractedCargoByUserId(userId: string): Promise<CargoListing[]> {
+    return db.select().from(cargoListings)
+      .where(eq(cargoListings.acceptedByUserId, userId));
   }
 
   async updateCargoListing(id: string, data: Partial<CargoListing>): Promise<CargoListing | undefined> {
