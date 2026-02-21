@@ -523,10 +523,14 @@ export default function CargoForm() {
       if (!response.ok) throw new Error("抽出に失敗しました");
       const data = await response.json();
       if (data.text) {
+        const extractedLines = data.text.split("\n").filter((l: string) => l.trim()).length;
+        const previewText = extractedLines > 5
+          ? `ファイルから${extractedLines}行のデータを読み取りました。解析中...`
+          : `ファイルから以下の情報を読み取りました：\n\n${data.text}\n\n荷物情報を解析中...`;
         setChatMessages(prev => [...prev, {
           id: `ai-extract-${Date.now()}`,
           role: "assistant",
-          content: `ファイルから以下の情報を読み取りました：\n\n${data.text}\n\nこの情報から荷物を登録しますね。`,
+          content: previewText,
         }]);
         await sendChatMessage(data.text, { skipGuard: true, skipUserMsg: true });
       } else {
