@@ -1,0 +1,178 @@
+root@srv1087935:/var/www/tramatch# cd /var/www/tramatch
+git pull origin main
+npm install
+npm run build
+pm2 restart tramatch
+remote: Enumerating objects: 90, done.
+remote: Counting objects: 100% (90/90), done.
+remote: Compressing objects: 100% (48/48), done.
+remote: Total 90 (delta 39), reused 90 (delta 39), pack-reused 0 (from 0)
+Unpacking objects: 100% (90/90), 4.56 MiB | 1.32 MiB/s, done.
+From github.com:SINJAPANLLC/tramatch
+ * branch            main       -> FETCH_HEAD
+   ceb61e6..e5b71dc  main       -> origin/main
+Updating ceb61e6..e5b71dc
+error: Your local changes to the following files would be overwritten by merge:
+	client/src/App.tsx
+	client/src/hooks/use-auth.ts
+	client/src/lib/queryClient.ts
+	client/src/main.tsx
+	script/build.ts
+	server/routes.ts
+Please commit your changes or stash them before you merge.
+error: The following untracked working tree files would be overwritten by merge:
+	client/public/splash-logo.jpg
+Please move or remove them before you merge.
+Aborting
+
+up to date, audited 580 packages in 2s
+
+92 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (1 low, 1 moderate, 4 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming (5) ../vite/preload-helper.js
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2719 modules transformed.
+../dist/public/index.html                                    3.59 kB │ gzip:   1.17 kB
+../dist/public/assets/tra_match_logo_white-ZjAReWwH.jpg     28.88 kB
+../dist/public/assets/IMG_0046_1771206816410-ClwqCtPN.jpg   29.02 kB
+../dist/public/assets/index-C1uJMzjX.css                   114.31 kB │ gzip:  17.84 kB
+../dist/public/assets/IMG_0046_1771226022407-Oxg-gFb7.js     0.07 kB │ gzip:   0.09 kB
+../dist/public/assets/chevron-down-B0HYEt-v.js               0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-up-BYZGdGd_.js                 0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-left-DXDwPRQK.js               0.13 kB │ gzip:   0.14 kB
+../dist/public/assets/circle-B46EAD-h.js                     0.13 kB │ gzip:   0.13 kB
+../dist/public/assets/loader-circle-BdZHSjXx.js              0.14 kB │ gzip:   0.15 kB
+../dist/public/assets/navigation-BFl6eCHi.js                 0.15 kB │ gzip:   0.15 kB
+../dist/public/assets/arrow-right-b5ciC-QP.js                0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/arrow-left-D4Qv7exs.js                 0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/search-D1oFKtlH.js                     0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/skeleton-CDFZ7TVj.js                   0.17 kB │ gzip:   0.16 kB
+../dist/public/assets/circle-check-C0qGJamj.js               0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-dot-CItbyRgh.js                 0.18 kB │ gzip:   0.15 kB
+../dist/public/assets/clock-Dz6Rhpeu.js                      0.18 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-check-big-CsQTpAyQ.js           0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/smartphone-PuvDIxTz.js                 0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/trending-up-DOL4h2uT.js                0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/circle-x-DC3DvVaa.js                   0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/mail-M95kBrUR.js                       0.21 kB │ gzip:   0.20 kB
+../dist/public/assets/dollar-sign-DJi8Z1uL.js                0.22 kB │ gzip:   0.19 kB
+../dist/public/assets/index-HSjyz8Hh.js                      0.23 kB │ gzip:   0.17 kB
+../dist/public/assets/copy-CbR98u2Y.js                       0.23 kB │ gzip:   0.21 kB
+../dist/public/assets/globe-CEsLpDMs.js                      0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/arrow-up-down-B__ObEm1.js              0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/banknote-CllOmOqA.js                   0.24 kB │ gzip:   0.21 kB
+../dist/public/assets/external-link-CU1jxDP7.js              0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/chart-column-C0B_1ogO.js               0.25 kB │ gzip:   0.19 kB
+../dist/public/assets/user-check-C9P26HSP.js                 0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/eye-CLaVKHOm.js                        0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/upload-UcZa0k3c.js                     0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/calendar-BZT5gK_X.js                   0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/download-CXNI1jtI.js                   0.26 kB │ gzip:   0.22 kB
+../dist/public/assets/pencil-049LPZYL.js                     0.27 kB │ gzip:   0.23 kB
+../dist/public/assets/send-BiHdqgAf.js                       0.29 kB │ gzip:   0.23 kB
+../dist/public/assets/users-BD6Uc4Zc.js                      0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/user-x-ZRGxLeoq.js                     0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/shield-check-OP84TyGG.js               0.32 kB │ gzip:   0.25 kB
+../dist/public/assets/save-D1NFnCeR.js                       0.32 kB │ gzip:   0.23 kB
+../dist/public/assets/bot-CWV5S490.js                        0.33 kB │ gzip:   0.23 kB
+../dist/public/assets/file-text-9M0l4o-8.js                  0.33 kB │ gzip:   0.22 kB
+../dist/public/assets/shield-CHGPXzpt.js                     0.35 kB │ gzip:   0.26 kB
+../dist/public/assets/key-round-CSBkt2iS.js                  0.35 kB │ gzip:   0.26 kB
+../dist/public/assets/crown-BqvU5z3Q.js                      0.36 kB │ gzip:   0.26 kB
+../dist/public/assets/eye-off-8SrbZT81.js                    0.43 kB │ gzip:   0.27 kB
+../dist/public/assets/handshake-Cy4Cd9tj.js                  0.44 kB │ gzip:   0.28 kB
+../dist/public/assets/textarea-4LEuns2Z.js                   0.50 kB │ gzip:   0.32 kB
+../dist/public/assets/label-BKO-PkHt.js                      0.52 kB │ gzip:   0.36 kB
+../dist/public/assets/triangle-alert-BDnKYNH-.js             0.53 kB │ gzip:   0.32 kB
+../dist/public/assets/input-DUiSRTIw.js                      0.58 kB │ gzip:   0.35 kB
+../dist/public/assets/mic-XMSMlSwa.js                        0.64 kB │ gzip:   0.33 kB
+../dist/public/assets/not-found-CV-OTw4A.js                  0.81 kB │ gzip:   0.45 kB
+../dist/public/assets/card-DDbgIHZe.js                       1.02 kB │ gzip:   0.38 kB
+../dist/public/assets/partners-f1QnzUbH.js                   2.19 kB │ gzip:   1.09 kB
+../dist/public/assets/switch-7hvr0qma.js                     2.37 kB │ gzip:   1.20 kB
+../dist/public/assets/login-BfSXw9Dq.js                      2.57 kB │ gzip:   1.22 kB
+../dist/public/assets/guide-DpF_5_l_.js                      3.06 kB │ gzip:   1.51 kB
+../dist/public/assets/forgot-password-B24mAHIO.js            3.12 kB │ gzip:   1.41 kB
+../dist/public/assets/company-info-B-MvZDaR.js               3.34 kB │ gzip:   1.49 kB
+../dist/public/assets/transport-ledger-fJcObAuP.js           3.63 kB │ gzip:   1.59 kB
+../dist/public/assets/columns-ZHaWVo37.js                    3.70 kB │ gzip:   1.65 kB
+../dist/public/assets/reset-password-Lugo_b05.js             4.03 kB │ gzip:   1.59 kB
+../dist/public/assets/faq-GB2EKpSZ.js                        4.21 kB │ gzip:   1.92 kB
+../dist/public/assets/services-x826ug5h.js                   4.68 kB │ gzip:   2.13 kB
+../dist/public/assets/admin-audit-logs-Dg8Inji7.js           4.91 kB │ gzip:   1.76 kB
+../dist/public/assets/column-detail-C3wr0utu.js              5.21 kB │ gzip:   2.01 kB
+../dist/public/assets/my-trucks-BV6YnJBF.js                  5.74 kB │ gzip:   2.14 kB
+../dist/public/assets/truck-detail-Dwl-9fY6.js               5.81 kB │ gzip:   1.66 kB
+../dist/public/assets/contact-DBwvGkZH.js                    5.83 kB │ gzip:   2.06 kB
+../dist/public/assets/admin-contact-inquiries-DA1062Qx.js    6.26 kB │ gzip:   2.26 kB
+../dist/public/assets/register-CTMoRiZ5.js                   6.70 kB │ gzip:   2.53 kB
+../dist/public/assets/dialog-CkURVWb3.js                     7.02 kB │ gzip:   2.56 kB
+../dist/public/assets/dashboard-D8viGYqi.js                  7.52 kB │ gzip:   2.44 kB
+../dist/public/assets/admin-announcements-B-iOsYrq.js        7.92 kB │ gzip:   2.75 kB
+../dist/public/assets/truck-form-BVIUiXTq.js                 7.95 kB │ gzip:   3.05 kB
+../dist/public/assets/cargo-detail-E4NKyHYC.js               8.01 kB │ gzip:   2.35 kB
+../dist/public/assets/checkbox-CzRi9LjG.js                   8.57 kB │ gzip:   3.40 kB
+../dist/public/assets/dashboard-layout-DRCKbHdd.js           9.03 kB │ gzip:   3.48 kB
+../dist/public/assets/payment-ifdtJ2l_.js                    9.62 kB │ gzip:   1.85 kB
+../dist/public/assets/admin-invoices-Dlxy7On6.js            11.07 kB │ gzip:   3.19 kB
+../dist/public/assets/admin-seo-DO7AwHNf.js                 11.55 kB │ gzip:   3.89 kB
+../dist/public/assets/privacy-D9i4QMZ0.js                   13.06 kB │ gzip:   3.55 kB
+../dist/public/assets/companies-z4TpE-ZN.js                 14.31 kB │ gzip:   4.32 kB
+../dist/public/assets/admin-dashboard-DTVragB1.js           15.20 kB │ gzip:   3.46 kB
+../dist/public/assets/admin-listings-BnnHkM84.js            17.82 kB │ gzip:   3.52 kB
+../dist/public/assets/admin-revenue-iceAAAt_.js             18.45 kB │ gzip:   3.87 kB
+../dist/public/assets/terms-DSEJcVyR.js                     20.36 kB │ gzip:   6.21 kB
+../dist/public/assets/select-sMG7VXAE.js                    20.89 kB │ gzip:   7.26 kB
+../dist/public/assets/cancelled-cargo-Bz0m5-Ni.js           21.53 kB │ gzip:   6.32 kB
+../dist/public/assets/admin-applications-C9m3V5pd.js        23.22 kB │ gzip:   5.48 kB
+../dist/public/assets/admin-settings-DsJ3ygf3.js            23.32 kB │ gzip:   6.09 kB
+../dist/public/assets/admin-notifications-CyLctsEQ.js       25.41 kB │ gzip:   6.95 kB
+../dist/public/assets/admin-users-C48LFvmE.js               30.66 kB │ gzip:   7.60 kB
+../dist/public/assets/home-B3xuJFeI.js                      33.11 kB │ gzip:   6.71 kB
+../dist/public/assets/admin-agents-CZIZoSd6.js              36.31 kB │ gzip:   8.13 kB
+../dist/public/assets/my-cargo-jv9puwuw.js                  36.44 kB │ gzip:   9.91 kB
+../dist/public/assets/cargo-list-GI8jQngp.js                47.99 kB │ gzip:  12.49 kB
+../dist/public/assets/completed-cargo-BG8ZYahl.js           50.53 kB │ gzip:  10.62 kB
+../dist/public/assets/user-settings-DTueJICw.js             59.91 kB │ gzip:  13.38 kB
+../dist/public/assets/truck-list-DLapPJB9.js                62.46 kB │ gzip:  16.16 kB
+../dist/public/assets/cargo-form-CVVOhU5M.js               118.68 kB │ gzip:  31.92 kB
+../dist/public/assets/schema-Q-xkGMbu.js                   134.31 kB │ gzip:  35.89 kB
+../dist/public/assets/index-Cv0OSbmF.js                    319.96 kB │ gzip: 103.95 kB
+✓ built in 6.28s
+injecting splash screen...
+building server...
+
+  dist/index.cjs  3.0mb ⚠️
+
+⚡ Done in 300ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 9 ])
+[PM2] [tramatch](9) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 76.2mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 153.9mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 107.0mb  │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 815.1mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 99.1mb   │
+│ 9  │ tramatch           │ fork     │ 50   │ online    │ 0%       │ 26.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 
