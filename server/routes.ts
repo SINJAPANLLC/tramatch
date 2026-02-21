@@ -2308,6 +2308,7 @@ statusの意味:
       const examples = await storage.getAllAiTrainingExamples();
       res.json(examples);
     } catch (error) {
+      console.error("AI training fetch error:", error);
       res.status(500).json({ message: "学習データの取得に失敗しました" });
     }
   });
