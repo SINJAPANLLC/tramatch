@@ -17,6 +17,7 @@ export function useAuth() {
       return res.json();
     },
     onSuccess: () => {
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
   });
@@ -43,6 +44,7 @@ export function useAuth() {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setLocation("/");
     },
