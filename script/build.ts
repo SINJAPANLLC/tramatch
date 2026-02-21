@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, writeFile, copyFile } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -37,6 +37,14 @@ async function buildAll() {
 
   console.log("building client...");
   await viteBuild();
+
+  console.log("injecting splash screen...");
+  const indexPath = "dist/public/index.html";
+  let html = await readFile(indexPath, "utf-8");
+  const splashHtml = `<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;transition:opacity 0.4s ease-out"><img src="/splash-logo.jpg" alt="TRA MATCH" style="max-width:320px;width:60%;animation:splashPulse 1.5s ease-in-out infinite" /></div><style>@keyframes splashPulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.03)}}</style>`;
+  html = html.replace('<div id="root"></div>', splashHtml + '<div id="root"></div>');
+  await writeFile(indexPath, html);
+  try { await copyFile("client/public/splash-logo.jpg", "dist/public/splash-logo.jpg"); } catch {}
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
