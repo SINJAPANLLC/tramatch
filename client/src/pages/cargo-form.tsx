@@ -463,7 +463,15 @@ export default function CargoForm() {
         }
       }
 
-      let cleanMessage = (data.message || "").replace(/```[\s\S]*?```/g, "");
+      let rawMsg = data.message || "";
+      try {
+        const jsonCheck = JSON.parse(rawMsg);
+        if (jsonCheck && typeof jsonCheck === "object" && jsonCheck.message) {
+          rawMsg = jsonCheck.message;
+        }
+      } catch {}
+      let cleanMessage = rawMsg.replace(/```[\s\S]*?```/g, "");
+      cleanMessage = cleanMessage.replace(/^\s*\{\s*"message"\s*:\s*"/, "").replace(/"\s*,?\s*"(items|extractedFields|priceSuggestion|status)"[\s\S]*$/, "").replace(/"\s*\}\s*$/, "");
       cleanMessage = cleanMessage.replace(/[,\s]*"items"\s*:\s*\[[\s\S]*/g, "");
       cleanMessage = cleanMessage.replace(/[,\s]*"extractedFields"\s*:\s*\{[\s\S]*/g, "");
       cleanMessage = cleanMessage.replace(/\{[^{}]*"(departureArea|arrivalArea|vehicleType|bodyType|title|cargoType|desiredDate|price|highwayFee|driverWork|loadingMethod|temperatureControl|arrivalAddress|departureAddress|arrivalDate|departureTime|arrivalTime|movingJob|urgency|consolidation|description|contactPerson|weight|packageCount)"[^{}]*\}/g, "");
