@@ -1960,7 +1960,7 @@ JSONのみを返してください。説明文は不要です。${fewShotSection
             content: text,
           },
         ],
-        max_tokens: 2000,
+        max_tokens: text.length > 1000 ? 10000 : 4000,
         response_format: { type: "json_object" },
       });
 
@@ -2146,10 +2146,13 @@ statusの意味:
         })),
       ];
 
+      const inputLength = messages.reduce((sum: number, m: { content: string }) => sum + (m.content?.length || 0), 0);
+      const maxTokens = inputLength > 2000 ? 10000 : inputLength > 500 ? 4000 : 2000;
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: apiMessages,
-        max_tokens: 2000,
+        max_tokens: maxTokens,
         response_format: { type: "json_object" },
       });
 
@@ -2157,19 +2160,39 @@ statusの意味:
       try {
         const parsed = JSON.parse(content);
         res.json({
-          message: parsed.message || "申し訳ございません、もう一度お試しください。",
+          message: parsed.message || "荷物情報を読み取りました。フォームに反映しています。",
           extractedFields: parsed.extractedFields || {},
           items: parsed.items || [],
           priceSuggestion: parsed.priceSuggestion || null,
           status: parsed.status || "chatting",
         });
       } catch {
+        let fallbackMsg = "荷物情報を処理中です。フォームに反映しています。";
+        let fallbackItems: Record<string, unknown>[] = [];
+        try {
+          const msgMatch = content.match(/"message"\s*:\s*"([^"]+)"/);
+          if (msgMatch) fallbackMsg = msgMatch[1];
+          const itemsMatch = content.match(/"items"\s*:\s*(\[[\s\S]*)/);
+          if (itemsMatch) {
+            let itemsStr = itemsMatch[1];
+            let depth = 0;
+            let endIdx = 0;
+            for (let i = 0; i < itemsStr.length; i++) {
+              if (itemsStr[i] === '[') depth++;
+              if (itemsStr[i] === ']') { depth--; if (depth === 0) { endIdx = i + 1; break; } }
+            }
+            if (endIdx > 0) {
+              itemsStr = itemsStr.substring(0, endIdx).replace(/,\s*([}\]])/g, "$1");
+              try { fallbackItems = JSON.parse(itemsStr); } catch {}
+            }
+          }
+        } catch {}
         res.json({
-          message: content,
+          message: fallbackMsg,
           extractedFields: {},
-          items: [],
+          items: fallbackItems,
           priceSuggestion: null,
-          status: "chatting",
+          status: fallbackItems.length > 0 ? "extracting" : "chatting",
         });
       }
     } catch (error) {
@@ -2257,10 +2280,13 @@ statusの意味:
         })),
       ];
 
+      const truckInputLen = messages.reduce((sum: number, m: { content: string }) => sum + (m.content?.length || 0), 0);
+      const truckMaxTokens = truckInputLen > 2000 ? 8000 : truckInputLen > 500 ? 4000 : 2000;
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: apiMessages,
-        max_tokens: 2000,
+        max_tokens: truckMaxTokens,
         response_format: { type: "json_object" },
       });
 
@@ -2268,15 +2294,20 @@ statusの意味:
       try {
         const parsed = JSON.parse(content);
         res.json({
-          message: parsed.message || "申し訳ございません、もう一度お試しください。",
+          message: parsed.message || "空車情報を読み取りました。",
           extractedFields: parsed.extractedFields || {},
           items: parsed.items || [],
           priceSuggestion: parsed.priceSuggestion || null,
           status: parsed.status || "chatting",
         });
       } catch {
+        let truckFallbackMsg = "空車情報を処理中です。";
+        try {
+          const m = content.match(/"message"\s*:\s*"([^"]+)"/);
+          if (m) truckFallbackMsg = m[1];
+        } catch {}
         res.json({
-          message: content,
+          message: truckFallbackMsg,
           extractedFields: {},
           items: [],
           priceSuggestion: null,
