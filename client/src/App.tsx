@@ -7,52 +7,110 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 const LandingPage = lazy(() => import("@/pages/home"));
-const Login = lazy(() => import("@/pages/login"));
-const Register = lazy(() => import("@/pages/register"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
-const CargoList = lazy(() => import("@/pages/cargo-list"));
-const TruckList = lazy(() => import("@/pages/truck-list"));
-const CargoDetail = lazy(() => import("@/pages/cargo-detail"));
-const TruckDetail = lazy(() => import("@/pages/truck-detail"));
-const CargoForm = lazy(() => import("@/pages/cargo-form"));
-const MyCargo = lazy(() => import("@/pages/my-cargo"));
-const CompletedCargo = lazy(() => import("@/pages/completed-cargo"));
-const CancelledCargo = lazy(() => import("@/pages/cancelled-cargo"));
-const Companies = lazy(() => import("@/pages/companies"));
-const Partners = lazy(() => import("@/pages/partners"));
-const TransportLedger = lazy(() => import("@/pages/transport-ledger"));
-const Payment = lazy(() => import("@/pages/payment"));
-const Services = lazy(() => import("@/pages/services"));
-const UserSettings = lazy(() => import("@/pages/user-settings"));
-const AdminDashboard = lazy(() => import("@/pages/admin-dashboard"));
-const AdminApplications = lazy(() => import("@/pages/admin-applications"));
-const AdminUsers = lazy(() => import("@/pages/admin-users"));
-const AdminRevenue = lazy(() => import("@/pages/admin-revenue"));
-const AdminNotifications = lazy(() => import("@/pages/admin-notifications"));
-const AdminSeo = lazy(() => import("@/pages/admin-seo"));
-const AdminSettings = lazy(() => import("@/pages/admin-settings"));
-const AdminAnnouncements = lazy(() => import("@/pages/admin-announcements"));
-const AdminListings = lazy(() => import("@/pages/admin-listings"));
-const AdminAuditLogs = lazy(() => import("@/pages/admin-audit-logs"));
-const AdminContactInquiries = lazy(() => import("@/pages/admin-contact-inquiries"));
-const AdminInvoices = lazy(() => import("@/pages/admin-invoices"));
-const AdminAgents = lazy(() => import("@/pages/admin-agents"));
-const Guide = lazy(() => import("@/pages/guide"));
-const Faq = lazy(() => import("@/pages/faq"));
-const Contact = lazy(() => import("@/pages/contact"));
-const CompanyInfoPage = lazy(() => import("@/pages/company-info"));
-const Terms = lazy(() => import("@/pages/terms"));
-const Privacy = lazy(() => import("@/pages/privacy"));
-const Columns = lazy(() => import("@/pages/columns"));
-const ColumnDetail = lazy(() => import("@/pages/column-detail"));
-const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
-const ResetPassword = lazy(() => import("@/pages/reset-password"));
-const TruckForm = lazy(() => import("@/pages/truck-form"));
-const MyTrucks = lazy(() => import("@/pages/my-trucks"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+
+const pageImports = {
+  login: () => import("@/pages/login"),
+  register: () => import("@/pages/register"),
+  dashboard: () => import("@/pages/dashboard"),
+  cargoList: () => import("@/pages/cargo-list"),
+  truckList: () => import("@/pages/truck-list"),
+  cargoDetail: () => import("@/pages/cargo-detail"),
+  truckDetail: () => import("@/pages/truck-detail"),
+  cargoForm: () => import("@/pages/cargo-form"),
+  myCargo: () => import("@/pages/my-cargo"),
+  completedCargo: () => import("@/pages/completed-cargo"),
+  cancelledCargo: () => import("@/pages/cancelled-cargo"),
+  companies: () => import("@/pages/companies"),
+  partners: () => import("@/pages/partners"),
+  transportLedger: () => import("@/pages/transport-ledger"),
+  payment: () => import("@/pages/payment"),
+  services: () => import("@/pages/services"),
+  userSettings: () => import("@/pages/user-settings"),
+  adminDashboard: () => import("@/pages/admin-dashboard"),
+  adminApplications: () => import("@/pages/admin-applications"),
+  adminUsers: () => import("@/pages/admin-users"),
+  adminRevenue: () => import("@/pages/admin-revenue"),
+  adminNotifications: () => import("@/pages/admin-notifications"),
+  adminSeo: () => import("@/pages/admin-seo"),
+  adminSettings: () => import("@/pages/admin-settings"),
+  adminAnnouncements: () => import("@/pages/admin-announcements"),
+  adminListings: () => import("@/pages/admin-listings"),
+  adminAuditLogs: () => import("@/pages/admin-audit-logs"),
+  adminContactInquiries: () => import("@/pages/admin-contact-inquiries"),
+  adminInvoices: () => import("@/pages/admin-invoices"),
+  adminAgents: () => import("@/pages/admin-agents"),
+  guide: () => import("@/pages/guide"),
+  faq: () => import("@/pages/faq"),
+  contact: () => import("@/pages/contact"),
+  companyInfo: () => import("@/pages/company-info"),
+  terms: () => import("@/pages/terms"),
+  privacy: () => import("@/pages/privacy"),
+  columns: () => import("@/pages/columns"),
+  columnDetail: () => import("@/pages/column-detail"),
+  forgotPassword: () => import("@/pages/forgot-password"),
+  resetPassword: () => import("@/pages/reset-password"),
+  truckForm: () => import("@/pages/truck-form"),
+  myTrucks: () => import("@/pages/my-trucks"),
+  notFound: () => import("@/pages/not-found"),
+};
+
+const Login = lazy(pageImports.login);
+const Register = lazy(pageImports.register);
+const Dashboard = lazy(pageImports.dashboard);
+const CargoList = lazy(pageImports.cargoList);
+const TruckList = lazy(pageImports.truckList);
+const CargoDetail = lazy(pageImports.cargoDetail);
+const TruckDetail = lazy(pageImports.truckDetail);
+const CargoForm = lazy(pageImports.cargoForm);
+const MyCargo = lazy(pageImports.myCargo);
+const CompletedCargo = lazy(pageImports.completedCargo);
+const CancelledCargo = lazy(pageImports.cancelledCargo);
+const Companies = lazy(pageImports.companies);
+const Partners = lazy(pageImports.partners);
+const TransportLedger = lazy(pageImports.transportLedger);
+const Payment = lazy(pageImports.payment);
+const Services = lazy(pageImports.services);
+const UserSettings = lazy(pageImports.userSettings);
+const AdminDashboard = lazy(pageImports.adminDashboard);
+const AdminApplications = lazy(pageImports.adminApplications);
+const AdminUsers = lazy(pageImports.adminUsers);
+const AdminRevenue = lazy(pageImports.adminRevenue);
+const AdminNotifications = lazy(pageImports.adminNotifications);
+const AdminSeo = lazy(pageImports.adminSeo);
+const AdminSettings = lazy(pageImports.adminSettings);
+const AdminAnnouncements = lazy(pageImports.adminAnnouncements);
+const AdminListings = lazy(pageImports.adminListings);
+const AdminAuditLogs = lazy(pageImports.adminAuditLogs);
+const AdminContactInquiries = lazy(pageImports.adminContactInquiries);
+const AdminInvoices = lazy(pageImports.adminInvoices);
+const AdminAgents = lazy(pageImports.adminAgents);
+const Guide = lazy(pageImports.guide);
+const Faq = lazy(pageImports.faq);
+const Contact = lazy(pageImports.contact);
+const CompanyInfoPage = lazy(pageImports.companyInfo);
+const Terms = lazy(pageImports.terms);
+const Privacy = lazy(pageImports.privacy);
+const Columns = lazy(pageImports.columns);
+const ColumnDetail = lazy(pageImports.columnDetail);
+const ForgotPassword = lazy(pageImports.forgotPassword);
+const ResetPassword = lazy(pageImports.resetPassword);
+const TruckForm = lazy(pageImports.truckForm);
+const MyTrucks = lazy(pageImports.myTrucks);
+const NotFound = lazy(pageImports.notFound);
+
+function usePreloadAllPages() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Object.values(pageImports).forEach((importFn) => {
+        importFn().catch(() => {});
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+}
 
 function LoadingFallback() {
   return (
@@ -144,6 +202,8 @@ function AppLayout() {
   const [loc] = useLocation();
   const { isAuthenticated } = useAuth();
   const isDashboardPage = isAuthenticated && DASHBOARD_PATHS.some((p) => loc === p || loc.startsWith(p + "/"));
+
+  usePreloadAllPages();
 
   if (isDashboardPage) {
     return (
