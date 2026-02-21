@@ -1068,97 +1068,125 @@ function CargoDetailPanel({ listing, onClose, isContracted = false }: { listing:
   );
 }
 
-function BillingTable({ items, selectedId, onSelect }: {
-  items: CargoListing[];
+function BillingTable({ paymentItems, invoiceItems, selectedId, onSelect }: {
+  paymentItems: CargoListing[];
+  invoiceItems: CargoListing[];
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
-  if (items.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-bold" data-testid="text-billing-empty">請求・支払情報はまだありません</p>
-          <p className="text-xs text-muted-foreground mt-2">成約した荷物の請求・支払情報がここに表示されます</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const [billingTab, setBillingTab] = useState<"payment" | "invoice">("payment");
+  const items = billingTab === "payment" ? paymentItems : invoiceItems;
 
   const getBillingStatus = (item: CargoListing) => {
     if (!item.paymentDate) return { label: "未設定", cls: "border-gray-300 text-gray-500" };
     const dueDate = new Date(item.paymentDate.replace(/\//g, "-"));
     const now = new Date();
-    if (dueDate < now) return { label: "入金済", cls: "border-green-300 text-green-600" };
+    if (dueDate < now) return { label: billingTab === "payment" ? "支払済" : "入金済", cls: "border-green-300 text-green-600" };
     const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays <= 30) return { label: "入金待ち", cls: "border-yellow-300 text-yellow-600" };
-    return { label: "請求中", cls: "border-blue-300 text-blue-600" };
+    if (diffDays <= 30) return { label: billingTab === "payment" ? "支払予定" : "入金待ち", cls: "border-yellow-300 text-yellow-600" };
+    return { label: billingTab === "payment" ? "支払予定" : "請求中", cls: "border-blue-300 text-blue-600" };
   };
 
   return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs" data-testid="table-billing">
-          <thead>
-            <tr className="bg-muted/50 border-b border-border">
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">成約番号</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">区分</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">取引先</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">発地→着地</th>
-              <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運賃(税別)</th>
-              <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">消費税</th>
-              <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">合計(税込)</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">入金予定日</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">状態</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => {
-              const priceNum = item.price ? parseInt(item.price.replace(/[^0-9]/g, ""), 10) : 0;
-              const tax = Math.floor(priceNum * 0.1);
-              const total = priceNum + tax;
-              const isContractedItem = (item as any).listingType === "contracted";
-              const status = getBillingStatus(item);
-              return (
-                <tr
-                  key={item.id}
-                  className={`border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-muted/30 ${selectedId === item.id ? "bg-primary/5" : ""}`}
-                  onClick={() => onSelect(item.id)}
-                  data-testid={`row-billing-${item.id}`}
-                >
-                  <td className="px-3 py-2.5 whitespace-nowrap font-bold">{item.cargoNumber || "-"}</td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    {isContractedItem ? (
-                      <Badge variant="outline" className="text-[10px] border-purple-300 text-purple-600">受託</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-600">自社</Badge>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    <div className="font-bold">{item.companyName}</div>
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
-                    {item.departureArea} → {item.arrivalArea}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-right font-bold">
-                    {priceNum > 0 ? `${formatPrice(String(priceNum))}円` : "-"}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-right text-muted-foreground">
-                    {tax > 0 ? `${formatPrice(String(tax))}円` : "-"}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-right font-bold">
-                    {total > 0 ? `${formatPrice(String(total))}円` : "-"}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.paymentDate || "-"}</td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    <Badge variant="outline" className={`text-[10px] ${status.cls}`}>{status.label}</Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div>
+      <div className="flex items-center gap-1 mb-3">
+        <button
+          onClick={() => { setBillingTab("payment"); onSelect(""); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
+            billingTab === "payment"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+          data-testid="tab-billing-payment"
+        >
+          支払い ({paymentItems.length})
+        </button>
+        <button
+          onClick={() => { setBillingTab("invoice"); onSelect(""); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
+            billingTab === "invoice"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+          data-testid="tab-billing-invoice"
+        >
+          請求 ({invoiceItems.length})
+        </button>
       </div>
+
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-bold" data-testid="text-billing-empty">
+              {billingTab === "payment" ? "支払い情報はまだありません" : "請求情報はまだありません"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              {billingTab === "payment"
+                ? "自社荷物を成約した場合の支払い情報がここに表示されます"
+                : "受託荷物を成約した場合の請求情報がここに表示されます"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="border border-border rounded-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" data-testid="table-billing">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">成約番号</th>
+                  <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">取引先</th>
+                  <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">発地→着地</th>
+                  <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運賃(税別)</th>
+                  <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">消費税</th>
+                  <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">合計(税込)</th>
+                  <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">
+                    {billingTab === "payment" ? "支払予定日" : "入金予定日"}
+                  </th>
+                  <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">状態</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const priceNum = item.price ? parseInt(item.price.replace(/[^0-9]/g, ""), 10) : 0;
+                  const tax = Math.floor(priceNum * 0.1);
+                  const total = priceNum + tax;
+                  const status = getBillingStatus(item);
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`border-b border-border last:border-b-0 cursor-pointer transition-colors hover:bg-muted/30 ${selectedId === item.id ? "bg-primary/5" : ""}`}
+                      onClick={() => onSelect(item.id)}
+                      data-testid={`row-billing-${item.id}`}
+                    >
+                      <td className="px-3 py-2.5 whitespace-nowrap font-bold">{item.cargoNumber || "-"}</td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <div className="font-bold">{item.companyName}</div>
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">
+                        {item.departureArea} → {item.arrivalArea}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-right font-bold">
+                        {priceNum > 0 ? `${formatPrice(String(priceNum))}円` : "-"}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-right text-muted-foreground">
+                        {tax > 0 ? `${formatPrice(String(tax))}円` : "-"}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-right font-bold">
+                        {total > 0 ? `${formatPrice(String(total))}円` : "-"}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{item.paymentDate || "-"}</td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <Badge variant="outline" className={`text-[10px] ${status.cls}`}>{status.label}</Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1270,10 +1298,8 @@ export default function CompletedCargo() {
 
   const completedOwn = allCargo?.filter((c) => c.status === "completed") ?? [];
   const completedContracted = contractedCargo?.filter((c) => c.status === "completed") ?? [];
-  const allCompleted = [...completedOwn, ...completedContracted];
   const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const sortedBilling = [...allCompleted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const selectedCargo = useMemo(() => {
     if (!selectedCargoId) return null;
@@ -1351,7 +1377,8 @@ export default function CompletedCargo() {
               )
             ) : (
               <BillingTable
-                items={sortedBilling}
+                paymentItems={sorted}
+                invoiceItems={sortedContracted}
                 selectedId={selectedCargoId}
                 onSelect={setSelectedCargoId}
               />
