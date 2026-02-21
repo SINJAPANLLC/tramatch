@@ -463,10 +463,17 @@ export default function CargoForm() {
         }
       }
 
+      let cleanMessage = data.message || "";
+      cleanMessage = cleanMessage.replace(/```[\s\S]*?```/g, "").replace(/\{[\s\S]*?"[a-zA-Z]+"[\s\S]*?\}/g, (match: string) => {
+        if (match.includes('"departureArea"') || match.includes('"arrivalArea"') || match.includes('"items"') || match.includes('"extractedFields"')) return "";
+        return match;
+      }).replace(/\n{3,}/g, "\n\n").trim();
+      if (!cleanMessage) cleanMessage = "荷物情報を読み取りました。右側のフォームに反映しています。";
+
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: "assistant",
-        content: data.message,
+        content: cleanMessage,
         extractedFields: data.extractedFields,
         priceSuggestion: data.priceSuggestion,
         items: data.items,
