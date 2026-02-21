@@ -121,6 +121,8 @@
 - `GET /api/cargo` - List all cargo listings
 - `GET /api/cargo/:id` - Get cargo listing detail
 - `POST /api/cargo` - Create cargo listing (auth required)
+- `PATCH /api/cargo/:id/status` - Change cargo status (auth required, sets acceptedByUserId on completion)
+- `GET /api/contracted-cargo` - Get cargo contracted by current user (auth required)
 - `DELETE /api/cargo/:id` - Delete cargo listing (auth required)
 - `GET /api/trucks` - List all truck listings
 - `GET /api/trucks/:id` - Get truck listing detail

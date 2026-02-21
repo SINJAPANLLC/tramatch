@@ -1264,17 +1264,24 @@ export default function CompletedCargo() {
     queryKey: ["/api/my-cargo"],
   });
 
-  const completedOwn = allCargo?.filter((c) => c.status === "completed" && (c as any).listingType !== "contracted") ?? [];
-  const completedContracted = allCargo?.filter((c) => c.status === "completed" && (c as any).listingType === "contracted") ?? [];
-  const allCompleted = allCargo?.filter((c) => c.status === "completed") ?? [];
+  const { data: contractedCargo, isLoading: isLoadingContracted } = useQuery<CargoListing[]>({
+    queryKey: ["/api/contracted-cargo"],
+  });
+
+  const completedOwn = allCargo?.filter((c) => c.status === "completed") ?? [];
+  const completedContracted = contractedCargo?.filter((c) => c.status === "completed") ?? [];
+  const allCompleted = [...completedOwn, ...completedContracted];
   const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedBilling = [...allCompleted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const selectedCargo = useMemo(() => {
-    if (!selectedCargoId || !allCargo) return null;
-    return allCargo.find((l) => l.id === selectedCargoId) || null;
-  }, [selectedCargoId, allCargo]);
+    if (!selectedCargoId) return null;
+    const fromOwn = allCargo?.find((l) => l.id === selectedCargoId);
+    if (fromOwn) return fromOwn;
+    const fromContracted = contractedCargo?.find((l) => l.id === selectedCargoId);
+    return fromContracted || null;
+  }, [selectedCargoId, allCargo, contractedCargo]);
 
   const mainTabs = [
     { key: "own" as const, label: "自社荷物の成約", icon: Package },
@@ -1314,7 +1321,7 @@ export default function CompletedCargo() {
               ))}
             </div>
 
-            {isLoading ? (
+            {(isLoading || isLoadingContracted) ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />

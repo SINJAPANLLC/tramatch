@@ -980,10 +980,20 @@ export async function registerRoutes(
           return res.status(403).json({ message: "荷物の成約にはβ版プレミアムプランへの加入が必要です" });
         }
       }
-      const updated = await storage.updateCargoStatus(cargoId, status);
+      const acceptedByUserId = status === "completed" ? req.session.userId as string : undefined;
+      const updated = await storage.updateCargoStatus(cargoId, status, acceptedByUserId);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ message: "荷物ステータスの更新に失敗しました" });
+    }
+  });
+
+  app.get("/api/contracted-cargo", requireAuth, async (req, res) => {
+    try {
+      const listings = await storage.getContractedCargoByUserId(req.session.userId as string);
+      res.json(listings);
+    } catch (error) {
+      res.status(500).json({ message: "受託荷物一覧の取得に失敗しました" });
     }
   });
 
