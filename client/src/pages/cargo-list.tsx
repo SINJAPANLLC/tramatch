@@ -59,7 +59,7 @@ const SAVED_FILTERS_KEY = "tramatch_saved_cargo_filters";
 interface SavedFilter {
   name: string;
   filters: {
-    departure: string; arrival: string;
+    departure: string | string[]; arrival: string | string[];
     departDateFrom: string; departDateTo: string;
     arriveDateFrom: string; arriveDateTo: string;
     minFare: string; vehicleType: string; bodyType: string | string[];
@@ -99,8 +99,12 @@ export default function CargoList() {
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [filterDeparture, setFilterDeparture] = useState("");
-  const [filterArrival, setFilterArrival] = useState("");
+  const [filterDeparture, setFilterDeparture] = useState<string[]>([]);
+  const [filterArrival, setFilterArrival] = useState<string[]>([]);
+  const [departureDropdownOpen, setDepartureDropdownOpen] = useState(false);
+  const [arrivalDropdownOpen, setArrivalDropdownOpen] = useState(false);
+  const departureRef = useRef<HTMLDivElement>(null);
+  const arrivalRef = useRef<HTMLDivElement>(null);
   const [filterDepartDateFrom, setFilterDepartDateFrom] = useState("");
   const [filterDepartDateTo, setFilterDepartDateTo] = useState("");
   const [filterArriveDateFrom, setFilterArriveDateFrom] = useState("");
@@ -134,6 +138,12 @@ export default function CargoList() {
     const handleClickOutside = (e: MouseEvent) => {
       if (bodyTypeRef.current && !bodyTypeRef.current.contains(e.target as Node)) {
         setBodyTypeDropdownOpen(false);
+      }
+      if (departureRef.current && !departureRef.current.contains(e.target as Node)) {
+        setDepartureDropdownOpen(false);
+      }
+      if (arrivalRef.current && !arrivalRef.current.contains(e.target as Node)) {
+        setArrivalDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -340,16 +350,20 @@ export default function CargoList() {
       result = result.filter((item) => item.desiredDate === formatted);
     }
 
-    if (filterDeparture) {
+    if (filterDeparture.length > 0) {
       result = result.filter((item) =>
-        (item.departureArea || "").includes(filterDeparture) ||
-        (item.departureAddress || "").includes(filterDeparture)
+        filterDeparture.some((p) =>
+          (item.departureArea || "").includes(p) ||
+          (item.departureAddress || "").includes(p)
+        )
       );
     }
-    if (filterArrival) {
+    if (filterArrival.length > 0) {
       result = result.filter((item) =>
-        (item.arrivalArea || "").includes(filterArrival) ||
-        (item.arrivalAddress || "").includes(filterArrival)
+        filterArrival.some((p) =>
+          (item.arrivalArea || "").includes(p) ||
+          (item.arrivalAddress || "").includes(p)
+        )
       );
     }
     if (filterDepartDateFrom) {
@@ -463,7 +477,7 @@ export default function CargoList() {
                 className="text-xs font-semibold cursor-pointer whitespace-nowrap px-2 py-0.5 rounded text-foreground hover:text-primary transition-colors"
                 onClick={() => {
                   const f = sf.filters;
-                  setFilterDeparture(f.departure); setFilterArrival(f.arrival);
+                  setFilterDeparture(Array.isArray(f.departure) ? f.departure : f.departure ? [f.departure] : []); setFilterArrival(Array.isArray(f.arrival) ? f.arrival : f.arrival ? [f.arrival] : []);
                   setFilterDepartDateFrom(f.departDateFrom); setFilterDepartDateTo(f.departDateTo);
                   setFilterArriveDateFrom(f.arriveDateFrom); setFilterArriveDateTo(f.arriveDateTo);
                   setFilterMinFare(f.minFare); setFilterVehicleType(f.vehicleType); setFilterBodyTypes(Array.isArray(f.bodyType) ? f.bodyType : f.bodyType ? [f.bodyType] : []);
@@ -528,25 +542,83 @@ export default function CargoList() {
         <CardContent className="px-4 py-3 space-y-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1 flex-shrink-0">
-              <Select value={filterDeparture || "all"} onValueChange={(v) => { setFilterDeparture(v === "all" ? "" : v); setPage(1); }}>
-                <SelectTrigger className="text-xs h-8 w-[100px]" data-testid="filter-departure">
-                  <SelectValue placeholder="発地" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">発地</SelectItem>
-                  {PREFECTURES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <div className="relative" ref={departureRef}>
+                <button
+                  type="button"
+                  className="flex items-center justify-between gap-1 text-xs h-8 w-[120px] rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onClick={() => { setDepartureDropdownOpen((v) => !v); setArrivalDropdownOpen(false); }}
+                  data-testid="filter-departure"
+                >
+                  <span className="truncate text-left">
+                    {filterDeparture.length === 0 ? "発地" : filterDeparture.length <= 2 ? filterDeparture.join(",") : `${filterDeparture.length}件選択`}
+                  </span>
+                  <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
+                </button>
+                {departureDropdownOpen && (
+                  <div className="absolute z-50 top-9 left-0 w-[160px] max-h-[300px] overflow-y-auto rounded-md border bg-background shadow-md p-1">
+                    <button
+                      type="button"
+                      className="w-full text-left text-xs px-2 py-1 text-muted-foreground hover:bg-muted rounded-sm mb-1"
+                      onClick={() => { setFilterDeparture([]); setPage(1); }}
+                      data-testid="filter-departure-clear"
+                    >
+                      クリア
+                    </button>
+                    {PREFECTURES.map((p) => (
+                      <label key={p} className="flex items-center gap-2 px-2 py-1 text-xs cursor-pointer hover:bg-muted rounded-sm" data-testid={`filter-departure-${p}`}>
+                        <Checkbox
+                          checked={filterDeparture.includes(p)}
+                          onCheckedChange={(checked) => {
+                            setFilterDeparture((prev) => checked ? [...prev, p] : prev.filter((x) => x !== p));
+                            setPage(1);
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span>{p}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
               <span className="text-[10px] text-muted-foreground">⇄</span>
-              <Select value={filterArrival || "all"} onValueChange={(v) => { setFilterArrival(v === "all" ? "" : v); setPage(1); }}>
-                <SelectTrigger className="text-xs h-8 w-[100px]" data-testid="filter-arrival">
-                  <SelectValue placeholder="着地" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">着地</SelectItem>
-                  {PREFECTURES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <div className="relative" ref={arrivalRef}>
+                <button
+                  type="button"
+                  className="flex items-center justify-between gap-1 text-xs h-8 w-[120px] rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onClick={() => { setArrivalDropdownOpen((v) => !v); setDepartureDropdownOpen(false); }}
+                  data-testid="filter-arrival"
+                >
+                  <span className="truncate text-left">
+                    {filterArrival.length === 0 ? "着地" : filterArrival.length <= 2 ? filterArrival.join(",") : `${filterArrival.length}件選択`}
+                  </span>
+                  <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
+                </button>
+                {arrivalDropdownOpen && (
+                  <div className="absolute z-50 top-9 left-0 w-[160px] max-h-[300px] overflow-y-auto rounded-md border bg-background shadow-md p-1">
+                    <button
+                      type="button"
+                      className="w-full text-left text-xs px-2 py-1 text-muted-foreground hover:bg-muted rounded-sm mb-1"
+                      onClick={() => { setFilterArrival([]); setPage(1); }}
+                      data-testid="filter-arrival-clear"
+                    >
+                      クリア
+                    </button>
+                    {PREFECTURES.map((p) => (
+                      <label key={p} className="flex items-center gap-2 px-2 py-1 text-xs cursor-pointer hover:bg-muted rounded-sm" data-testid={`filter-arrival-${p}`}>
+                        <Checkbox
+                          checked={filterArrival.includes(p)}
+                          onCheckedChange={(checked) => {
+                            setFilterArrival((prev) => checked ? [...prev, p] : prev.filter((x) => x !== p));
+                            setPage(1);
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span>{p}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-[11px] text-muted-foreground whitespace-nowrap">発日</span>
@@ -721,7 +793,7 @@ export default function CargoList() {
                 size="sm"
                 className="text-xs"
                 onClick={() => {
-                  setFilterDeparture(""); setFilterArrival("");
+                  setFilterDeparture([]); setFilterArrival([]);
                   setFilterDepartDateFrom(""); setFilterDepartDateTo("");
                   setFilterArriveDateFrom(""); setFilterArriveDateTo("");
                   setFilterMinFare(""); setFilterVehicleType("");
