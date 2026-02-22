@@ -144,10 +144,17 @@ export default function CargoList() {
     queryKey: ["/api/cargo"],
   });
 
+  const { data: directCargo } = useQuery<CargoListing>({
+    queryKey: ["/api/cargo", selectedCargoId],
+    enabled: !!selectedCargoId && (!listings || !listings.find((l) => l.id === selectedCargoId)),
+  });
+
   const selectedCargo = useMemo(() => {
-    if (!selectedCargoId || !listings) return null;
-    return listings.find((l) => l.id === selectedCargoId) || null;
-  }, [selectedCargoId, listings]);
+    if (!selectedCargoId) return null;
+    const fromList = listings?.find((l) => l.id === selectedCargoId);
+    if (fromList) return fromList;
+    return directCargo || null;
+  }, [selectedCargoId, listings, directCargo]);
 
   const handleSearch = () => {
     setActiveSearch(parseAISearch(aiSearchText));
@@ -944,6 +951,7 @@ export default function CargoList() {
             <CargoDetailPanel
               listing={selectedCargo}
               onClose={() => setSelectedCargoId(null)}
+              onSelectCargo={(id) => setSelectedCargoId(id)}
             />
           )}
         </div>
@@ -1009,7 +1017,7 @@ type CompanyInfo = {
   truckCount3m: number;
 };
 
-function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; onClose: () => void }) {
+function CargoDetailPanel({ listing, onClose, onSelectCargo }: { listing: CargoListing | null; onClose: () => void; onSelectCargo?: (id: string) => void }) {
   const [panelTab, setPanelTab] = useState<"cargo" | "company">("cargo");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -1031,6 +1039,16 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
   const { data: companyInfo } = useQuery<CompanyInfo>({
     queryKey: ["/api/companies", listing?.userId],
     enabled: !!listing?.userId,
+  });
+
+  const { data: companyCargo } = useQuery<CargoListing[]>({
+    queryKey: ["/api/cargo/by-user", listing?.userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cargo/by-user/${listing?.userId}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!listing?.userId && panelTab === "company",
   });
 
   useEffect(() => {
@@ -1312,6 +1330,41 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
               トラマッチ登録年月 {companyInfo?.registrationDate || "-"}
             </div>
           </Card>
+
+          {(() => {
+            const otherCargo = (companyCargo || []).filter(c => c.id !== listing.id);
+            if (otherCargo.length === 0) return null;
+            return (
+              <>
+                <h4 className="text-sm font-bold text-foreground" data-testid="heading-company-cargo">この企業の荷物 ({otherCargo.length}件)</h4>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {otherCargo.map((cargo) => (
+                    <div
+                      key={cargo.id}
+                      className="border border-border rounded-md p-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => {
+                        if (onSelectCargo) {
+                          setPanelTab("cargo");
+                          onSelectCargo(cargo.id);
+                        }
+                      }}
+                      data-testid={`company-cargo-${cargo.id}`}
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                        <span>{cargo.departureArea}</span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                        <span>{cargo.arrivalArea}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-muted-foreground">{cargo.cargoType || cargo.vehicleType || "-"} {cargo.desiredDate || ""}</span>
+                        <span className="text-xs font-bold text-foreground">{cargo.price ? `¥${formatPrice(cargo.price)}` : "要相談"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
 
           <h4 className="text-sm font-bold text-foreground">基本情報</h4>
           <div className="border border-border rounded-md overflow-hidden">
