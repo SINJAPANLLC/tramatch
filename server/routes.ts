@@ -870,6 +870,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/cargo/by-user/:userId", requireAuth, async (req, res) => {
+    try {
+      const listings = await storage.getCargoListingsByUserId(req.params.userId as string);
+      const activeListings = listings.filter(l => l.status === "active").map(({ privateNote, ...rest }) => rest);
+      res.json(activeListings);
+    } catch (error) {
+      res.status(500).json({ message: "荷物一覧の取得に失敗しました" });
+    }
+  });
+
   app.get("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
       const listing = await storage.getCargoListing(req.params.id);
