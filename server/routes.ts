@@ -268,6 +268,7 @@ export async function registerRoutes(
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
+      console.error("Login error:", error);
       res.status(500).json({ message: "ログインに失敗しました" });
     }
   });
