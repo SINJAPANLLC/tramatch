@@ -127,8 +127,8 @@ export interface IStorage {
   updateTruckListing(id: string, data: Partial<TruckListing>): Promise<TruckListing | undefined>;
 
   createAuditLog(log: { userId?: string; userName?: string; action: string; targetType: string; targetId?: string; details?: string; ipAddress?: string }): Promise<void>;
-  getAuditLogs(limit?: number, offset?: number): Promise<AuditLog[]>;
-  getAuditLogCount(): Promise<number>;
+  getAuditLogs(limit?: number, offset?: number, filters?: { action?: string; targetType?: string; userId?: string }): Promise<AuditLog[]>;
+  getAuditLogCount(filters?: { action?: string; targetType?: string; userId?: string }): Promise<number>;
 
   createContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry>;
   getContactInquiries(): Promise<ContactInquiry[]>;
@@ -671,12 +671,29 @@ export class DatabaseStorage implements IStorage {
     await db.insert(auditLogs).values(log);
   }
 
-  async getAuditLogs(limit = 100, offset = 0): Promise<AuditLog[]> {
-    return db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(limit).offset(offset);
+  async getAuditLogs(limit = 100, offset = 0, filters?: { action?: string; targetType?: string; userId?: string }): Promise<AuditLog[]> {
+    const conditions = [];
+    if (filters?.action) conditions.push(eq(auditLogs.action, filters.action));
+    if (filters?.targetType) conditions.push(eq(auditLogs.targetType, filters.targetType));
+    if (filters?.userId) conditions.push(eq(auditLogs.userId, filters.userId));
+    const query = db.select().from(auditLogs);
+    if (conditions.length > 0) {
+      return query.where(and(...conditions)).orderBy(desc(auditLogs.createdAt)).limit(limit).offset(offset);
+    }
+    return query.orderBy(desc(auditLogs.createdAt)).limit(limit).offset(offset);
   }
 
-  async getAuditLogCount(): Promise<number> {
-    const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(auditLogs);
+  async getAuditLogCount(filters?: { action?: string; targetType?: string; userId?: string }): Promise<number> {
+    const conditions = [];
+    if (filters?.action) conditions.push(eq(auditLogs.action, filters.action));
+    if (filters?.targetType) conditions.push(eq(auditLogs.targetType, filters.targetType));
+    if (filters?.userId) conditions.push(eq(auditLogs.userId, filters.userId));
+    const query = db.select({ count: sql<number>`count(*)::int` }).from(auditLogs);
+    if (conditions.length > 0) {
+      const [row] = await query.where(and(...conditions));
+      return row?.count || 0;
+    }
+    const [row] = await query;
     return row?.count || 0;
   }
 

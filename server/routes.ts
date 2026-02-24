@@ -281,6 +281,15 @@ export async function registerRoutes(
         lastLoginLocation: locationStr || undefined,
       }).catch(() => {});
 
+      storage.createAuditLog({
+        userId: user.id,
+        userName: user.companyName || user.username,
+        action: "login",
+        targetType: "session",
+        details: `ログイン（IP: ${clientIp}${locationStr ? `, ${locationStr}` : ""}）`,
+        ipAddress: clientIp,
+      }).catch(() => {});
+
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
@@ -933,6 +942,16 @@ export async function registerRoutes(
       const listingData = parsed.data;
       const listing = await storage.createCargoListing(listingData, req.session.userId as string);
 
+      storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: currentUser?.companyName || currentUser?.username || "",
+        action: "create",
+        targetType: "cargo",
+        targetId: listing.id,
+        details: `荷物登録: ${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ""}`,
+        ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
+      }).catch(() => {});
+
       res.status(201).json(listing);
 
       const sessionUserId = req.session.userId as string;
@@ -1047,6 +1066,16 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
+      const currentUser = await storage.getUser(req.session.userId as string);
+      storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: currentUser?.companyName || currentUser?.username || "",
+        action: "delete",
+        targetType: "cargo",
+        targetId: req.params.id,
+        details: "荷物削除",
+        ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
+      }).catch(() => {});
       res.json({ message: "削除しました" });
     } catch (error) {
       res.status(500).json({ message: "荷物の削除に失敗しました" });
@@ -1306,6 +1335,16 @@ export async function registerRoutes(
       }
       const listing = await storage.createTruckListing({ ...parsed.data }, req.session.userId as string);
 
+      storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: user?.companyName || user?.username || "",
+        action: "create",
+        targetType: "truck",
+        targetId: listing.id,
+        details: `空車登録: ${listing.currentArea}→${listing.destinationArea} ${listing.vehicleType || ""}`,
+        ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
+      }).catch(() => {});
+
       res.status(201).json(listing);
 
       const sessionUserId = req.session.userId as string;
@@ -1384,6 +1423,16 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ message: "空車情報が見つかりません" });
       }
+      const currentUser = await storage.getUser(req.session.userId as string);
+      storage.createAuditLog({
+        userId: req.session.userId as string,
+        userName: currentUser?.companyName || currentUser?.username || "",
+        action: "delete",
+        targetType: "truck",
+        targetId: req.params.id,
+        details: "空車削除",
+        ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
+      }).catch(() => {});
       res.json({ message: "削除しました" });
     } catch (error) {
       res.status(500).json({ message: "空車の削除に失敗しました" });
@@ -1727,9 +1776,12 @@ export async function registerRoutes(
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = (page - 1) * limit;
+      const action = req.query.action as string | undefined;
+      const targetType = req.query.targetType as string | undefined;
+      const userId = req.query.userId as string | undefined;
       const [logs, total] = await Promise.all([
-        storage.getAuditLogs(limit, offset),
-        storage.getAuditLogCount(),
+        storage.getAuditLogs(limit, offset, { action, targetType, userId }),
+        storage.getAuditLogCount({ action, targetType, userId }),
       ]);
       res.json({ logs, total, page, totalPages: Math.ceil(total / limit) });
     } catch (error) {
