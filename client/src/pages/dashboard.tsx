@@ -42,8 +42,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.profileComplete,
       href: "/settings",
       action: "設定へ",
-      badge: null,
-      badgeColor: "",
+      time: "約2分",
     },
     {
       id: "cargo",
@@ -52,8 +51,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.cargoCount > 0,
       href: "/cargo/new",
       action: "登録する",
-      badge: null,
-      badgeColor: "",
+      time: "約3分",
     },
     {
       id: "truck",
@@ -62,8 +60,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.truckCount > 0,
       href: "/trucks",
       action: "登録する",
-      badge: null,
-      badgeColor: "",
+      time: "約3分",
     },
     {
       id: "search",
@@ -72,8 +69,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: false,
       href: "/companies",
       action: "検索する",
-      badge: null,
-      badgeColor: "",
+      time: "約1分",
     },
     {
       id: "partner",
@@ -82,8 +78,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.partnerCount > 0,
       href: "/partners",
       action: "登録する",
-      badge: null,
-      badgeColor: "",
+      time: "約1分",
     },
     {
       id: "notification",
@@ -92,17 +87,25 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.notificationSettingDone,
       href: "/settings",
       action: "設定へ",
-      badge: null,
-      badgeColor: "",
+      time: "約1分",
     },
   ];
 
   const completedCount = steps.filter(s => s.done).length;
   const totalCount = steps.length;
   const progressPercent = Math.round((completedCount / totalCount) * 100);
+  const allDone = completedCount === totalCount;
+  const remainingCount = totalCount - completedCount;
+  const nextStep = steps.find(s => !s.done);
+
+  const encourageMessage = allDone
+    ? "すべて完了しました！準備万端です！"
+    : remainingCount === 1
+      ? "あと1つで完了です！もう少し！"
+      : `あと${remainingCount}つ完了するとすべての機能が活用できます`;
 
   return (
-    <Card className="mb-6" data-testid="card-onboarding-checklist">
+    <Card className={`mb-6 ${!allDone ? "border-primary/40 shadow-md" : ""}`} data-testid="card-onboarding-checklist">
       <CardContent className="p-4 sm:p-5">
         <div
           className="flex items-center justify-between gap-4 flex-wrap cursor-pointer select-none"
@@ -118,7 +121,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
             <div className="flex items-center gap-2">
               <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-emerald-500" : "bg-primary"}`}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -128,41 +131,62 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
           </div>
         </div>
 
+        <div className={`mt-2 px-1 text-xs font-bold ${allDone ? "text-emerald-600" : "text-primary"}`} data-testid="text-encourage">
+          {encourageMessage}
+        </div>
+
         {!collapsed && (
-          <div className="mt-4 space-y-1" data-testid="list-onboarding-steps">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`flex items-center gap-3 p-2.5 rounded-md transition-colors ${step.done ? "opacity-60" : "hover-elevate"}`}
-                data-testid={`step-${step.id}`}
-              >
-                {step.done ? (
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                ) : (
-                  <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                      {step.label}
-                    </p>
-                    {step.badge && (
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${step.badgeColor}`} data-testid={`badge-${step.id}`}>
-                        {step.badge}
-                      </span>
-                    )}
+          <div className="mt-3 space-y-1" data-testid="list-onboarding-steps">
+            {steps.map((step) => {
+              const isNext = !step.done && step.id === nextStep?.id;
+              return (
+                <div
+                  key={step.id}
+                  className={`flex items-center gap-3 p-2.5 rounded-md transition-all ${
+                    step.done
+                      ? "opacity-60"
+                      : isNext
+                        ? "bg-primary/5 border border-primary/30 shadow-sm"
+                        : "hover-elevate"
+                  }`}
+                  data-testid={`step-${step.id}`}
+                >
+                  {step.done ? (
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  ) : isNext ? (
+                    <div className="relative shrink-0">
+                      <Circle className="w-5 h-5 text-primary shrink-0" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full animate-ping" />
+                    </div>
+                  ) : (
+                    <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : isNext ? "text-primary font-bold" : "text-foreground"}`}>
+                        {step.label}
+                      </p>
+                      {!step.done && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{step.time}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{step.description}</p>
+                  {!step.done && (
+                    <Link href={step.href}>
+                      <Button
+                        variant={isNext ? "default" : "outline"}
+                        size="sm"
+                        className={isNext ? "animate-pulse" : ""}
+                        data-testid={`button-step-${step.id}`}
+                      >
+                        {step.action}
+                      </Button>
+                    </Link>
+                  )}
                 </div>
-                {!step.done && (
-                  <Link href={step.href}>
-                    <Button variant="outline" size="sm" data-testid={`button-step-${step.id}`}>
-                      {step.action}
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
