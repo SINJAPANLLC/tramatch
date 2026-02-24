@@ -38,7 +38,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
     {
       id: "profile",
       label: "プロフィールを完成させる",
-      description: "会社名・住所・代表者名・電話番号を設定",
+      description: "企業情報を設定すると企業情報登録済バッジが付与されます",
       done: progress.profileComplete,
       href: "/settings",
       action: "設定へ",
@@ -48,7 +48,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
     {
       id: "cargo",
       label: "荷物を登録する",
-      description: "最初の荷物情報を登録してマッチングを開始",
+      description: "最初の荷物情報を登録して頂くと荷物にNewバッジが付与されます",
       done: progress.cargoCount > 0,
       href: "/cargo/new",
       action: "登録する",
@@ -58,7 +58,7 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
     {
       id: "truck",
       label: "空車を登録する",
-      description: "空車情報を登録して荷物を見つける",
+      description: "最初の空車情報を登録して頂くと空車にNewバッジが付与されます",
       done: progress.truckCount > 0,
       href: "/trucks",
       action: "登録する",
