@@ -1198,8 +1198,8 @@ export default function CargoForm() {
                         <div>
                           <div className="text-xs font-medium mb-1">支払サイト</div>
                           <div className="h-8 flex items-center text-xs text-muted-foreground bg-muted/50 rounded-md px-3" data-testid="text-payment-terms">
-                            {currentUser?.paymentTerms || currentUser?.closingDay || currentUser?.paymentMonth
-                              ? [currentUser.closingDay && `締日: ${currentUser.closingDay}`, currentUser.paymentMonth && `支払月: ${currentUser.paymentMonth}`, currentUser.paymentTerms].filter(Boolean).join(" / ")
+                            {currentUser?.paymentTerms || currentUser?.closingDay || currentUser?.paymentMonth || currentUser?.paymentDay
+                              ? [currentUser.closingDay && `締日: ${currentUser.closingDay}`, currentUser.paymentMonth && `支払月: ${currentUser.paymentMonth}`, currentUser.paymentDay && `支払日: ${currentUser.paymentDay}`, currentUser.paymentTerms].filter(Boolean).join(" / ")
                               : "設定画面で支払サイトを登録してください"}
                           </div>
                         </div>
