@@ -97,6 +97,10 @@ export interface IStorage {
   getSeoArticles(): Promise<SeoArticle[]>;
   getPublishedSeoArticles(): Promise<SeoArticle[]>;
   getSeoArticleBySlug(slug: string): Promise<SeoArticle | undefined>;
+  getSeoArticlesByCategory(category: string): Promise<SeoArticle[]>;
+  getPopularSeoArticles(limit?: number): Promise<SeoArticle[]>;
+  getRelatedSeoArticles(articleId: string, category: string, limit?: number): Promise<SeoArticle[]>;
+  incrementSeoArticleViewCount(id: string): Promise<void>;
   getTodayAutoArticleCount(): Promise<number>;
   createSeoArticle(data: InsertSeoArticle): Promise<SeoArticle>;
   updateSeoArticle(id: string, data: Partial<InsertSeoArticle>): Promise<SeoArticle | undefined>;
@@ -543,6 +547,36 @@ export class DatabaseStorage implements IStorage {
   async getSeoArticleBySlug(slug: string): Promise<SeoArticle | undefined> {
     const [a] = await db.select().from(seoArticles).where(eq(seoArticles.slug, slug));
     return a;
+  }
+
+  async getSeoArticlesByCategory(category: string): Promise<SeoArticle[]> {
+    return db.select().from(seoArticles)
+      .where(and(eq(seoArticles.status, "published"), eq(seoArticles.category, category)))
+      .orderBy(desc(seoArticles.createdAt));
+  }
+
+  async getPopularSeoArticles(limit = 10): Promise<SeoArticle[]> {
+    return db.select().from(seoArticles)
+      .where(eq(seoArticles.status, "published"))
+      .orderBy(desc(seoArticles.viewCount))
+      .limit(limit);
+  }
+
+  async getRelatedSeoArticles(articleId: string, category: string, limit = 5): Promise<SeoArticle[]> {
+    return db.select().from(seoArticles)
+      .where(and(
+        eq(seoArticles.status, "published"),
+        eq(seoArticles.category, category),
+        sql`${seoArticles.id} != ${articleId}`
+      ))
+      .orderBy(desc(seoArticles.viewCount))
+      .limit(limit);
+  }
+
+  async incrementSeoArticleViewCount(id: string): Promise<void> {
+    await db.update(seoArticles)
+      .set({ viewCount: sql`COALESCE(${seoArticles.viewCount}, 0) + 1` })
+      .where(eq(seoArticles.id, id));
   }
 
   async getTodayAutoArticleCount(): Promise<number> {

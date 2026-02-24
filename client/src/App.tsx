@@ -51,6 +51,10 @@ const pageImports = {
   privacy: () => import("@/pages/privacy"),
   columns: () => import("@/pages/columns"),
   columnDetail: () => import("@/pages/column-detail"),
+  columnCategory: () => import("@/pages/column-category"),
+  guideKyukakyusha: () => import("@/pages/guide-kyukakyusha"),
+  compareSites: () => import("@/pages/compare-sites"),
+  alternativeTrabox: () => import("@/pages/alternative-trabox"),
   forgotPassword: () => import("@/pages/forgot-password"),
   resetPassword: () => import("@/pages/reset-password"),
   truckForm: () => import("@/pages/truck-form"),
@@ -97,6 +101,10 @@ const Terms = lazy(pageImports.terms);
 const Privacy = lazy(pageImports.privacy);
 const Columns = lazy(pageImports.columns);
 const ColumnDetail = lazy(pageImports.columnDetail);
+const ColumnCategory = lazy(pageImports.columnCategory);
+const GuideKyukakyusha = lazy(pageImports.guideKyukakyusha);
+const CompareSites = lazy(pageImports.compareSites);
+const AlternativeTrabox = lazy(pageImports.alternativeTrabox);
 const ForgotPassword = lazy(pageImports.forgotPassword);
 const ResetPassword = lazy(pageImports.resetPassword);
 const TruckForm = lazy(pageImports.truckForm);
@@ -193,8 +201,16 @@ function Router() {
         <Route path="/company-info" component={CompanyInfoPage} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />
-        <Route path="/columns/:slug" component={ColumnDetail} />
-        <Route path="/columns" component={Columns} />
+        <Route path="/column/kyukakyusha" component={ColumnCategory} />
+        <Route path="/column/truck-order" component={ColumnCategory} />
+        <Route path="/column/carrier-sales" component={ColumnCategory} />
+        <Route path="/column/:slug" component={ColumnDetail} />
+        <Route path="/column" component={Columns} />
+        <Route path="/columns/:slug">{({ params }: any) => <Redirect to={`/column/${params.slug}`} />}</Route>
+        <Route path="/columns">{() => <Redirect to="/column" />}</Route>
+        <Route path="/guide/kyukakyusha-complete" component={GuideKyukakyusha} />
+        <Route path="/compare/kyukakyusha-sites" component={CompareSites} />
+        <Route path="/alternative/trabox" component={AlternativeTrabox} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>
