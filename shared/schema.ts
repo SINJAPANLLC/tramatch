@@ -64,6 +64,9 @@ export const users = pgTable("users", {
   accountingContactPhone: text("accounting_contact_phone"),
   accountingContactFax: text("accounting_contact_fax"),
   adminMemo: text("admin_memo"),
+  lastLoginAt: text("last_login_at"),
+  lastLoginIp: text("last_login_ip"),
+  lastLoginLocation: text("last_login_location"),
   addedByUserId: varchar("added_by_user_id"),
 });
 
