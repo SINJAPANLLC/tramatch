@@ -40,6 +40,35 @@ type SafeUser = {
   businessArea?: string;
   businessDescription?: string;
   invoiceRegistrationNumber?: string;
+  paymentTerms?: string;
+  officeLocations?: string;
+  annualRevenue?: string;
+  bankInfo?: string;
+  majorClients?: string;
+  closingDay?: string;
+  paymentMonth?: string;
+  autoInvoiceAcceptance?: string;
+  memberOrganization?: string;
+  digitalTachographCount?: string;
+  gpsCount?: string;
+  safetyExcellenceCert?: string;
+  greenManagementCert?: string;
+  iso9000?: string;
+  iso14000?: string;
+  iso39001?: string;
+  cargoInsurance?: string;
+  lineUserId?: string;
+  closingMonth?: string;
+  paymentDay?: string;
+  bankName?: string;
+  bankBranch?: string;
+  accountType?: string;
+  accountNumber?: string;
+  accountHolderKana?: string;
+  accountingContactName?: string;
+  accountingContactEmail?: string;
+  accountingContactPhone?: string;
+  accountingContactFax?: string;
   adminMemo?: string | null;
   addedByUserId?: string | null;
 };
@@ -916,31 +945,98 @@ function UserDetailPanel({
             <h4 className="text-sm font-bold text-foreground">基本情報</h4>
             <div className="border border-border rounded-md overflow-hidden">
               <DetailRow label="企業名" value={user.companyName} />
+              {user.companyNameKana && <DetailRow label="カナ" value={user.companyNameKana} />}
               <DetailRow label="担当者" value={user.contactName} />
               <DetailRow label="メール" value={user.email} />
               <DetailRow label="電話番号" value={user.phone} />
               {user.fax && <DetailRow label="FAX" value={user.fax} />}
               <DetailRow label="住所" value={`${user.postalCode ? `〒${user.postalCode}\n` : ""}${user.address || "-"}`} />
+              <DetailRow label="ユーザー種別" value={user.userType === "shipper" ? "荷主" : user.userType === "carrier" ? "運送会社" : user.userType === "both" ? "荷主・運送会社" : user.userType} />
               {user.truckCount && <DetailRow label="保有台数" value={`${user.truckCount}台`} />}
             </div>
 
-            {(user.representative || user.establishedDate || user.capital || user.employeeCount || user.websiteUrl || user.transportLicenseNumber || user.invoiceRegistrationNumber || user.businessArea || user.businessDescription) && (
+            <h4 className="text-sm font-bold text-foreground">企業詳細</h4>
+            <div className="border border-border rounded-md overflow-hidden">
+              {user.representative && <DetailRow label="代表者" value={user.representative} />}
+              {user.establishedDate && <DetailRow label="設立" value={user.establishedDate} />}
+              {user.capital && <DetailRow label="資本金" value={user.capital} />}
+              {user.employeeCount && <DetailRow label="従業員数" value={`${user.employeeCount}名`} />}
+              {user.officeLocations && <DetailRow label="事業所" value={user.officeLocations} />}
+              {user.annualRevenue && <DetailRow label="年商" value={user.annualRevenue} />}
+              {user.majorClients && <DetailRow label="主要取引先" value={user.majorClients} />}
+              {user.memberOrganization && <DetailRow label="加盟団体" value={user.memberOrganization} />}
+              {user.websiteUrl && (
+                <DetailRow label="URL">
+                  <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm break-all">{user.websiteUrl}</a>
+                </DetailRow>
+              )}
+              {user.businessArea && <DetailRow label="営業エリア" value={user.businessArea} />}
+              {user.businessDescription && <DetailRow label="事業内容" value={user.businessDescription} />}
+              {!user.representative && !user.establishedDate && !user.capital && !user.employeeCount && !user.officeLocations && !user.annualRevenue && !user.majorClients && !user.memberOrganization && !user.websiteUrl && !user.businessArea && !user.businessDescription && (
+                <DetailRow label="-" value="未登録" />
+              )}
+            </div>
+
+            <h4 className="text-sm font-bold text-foreground">運送関連</h4>
+            <div className="border border-border rounded-md overflow-hidden">
+              {user.transportLicenseNumber && <DetailRow label="運送許可番号" value={user.transportLicenseNumber} />}
+              {user.invoiceRegistrationNumber && <DetailRow label="インボイス番号" value={user.invoiceRegistrationNumber} />}
+              {user.digitalTachographCount && <DetailRow label="デジタコ" value={`${user.digitalTachographCount}台`} />}
+              {user.gpsCount && <DetailRow label="GPS" value={`${user.gpsCount}台`} />}
+              {user.cargoInsurance && <DetailRow label="貨物保険" value={user.cargoInsurance} />}
+              {user.autoInvoiceAcceptance && <DetailRow label="自動受領" value={user.autoInvoiceAcceptance} />}
+              {!user.transportLicenseNumber && !user.invoiceRegistrationNumber && !user.digitalTachographCount && !user.gpsCount && !user.cargoInsurance && !user.autoInvoiceAcceptance && (
+                <DetailRow label="-" value="未登録" />
+              )}
+            </div>
+
+            {(user.safetyExcellenceCert || user.greenManagementCert || user.iso9000 || user.iso14000 || user.iso39001) && (
               <>
-                <h4 className="text-sm font-bold text-foreground">詳細情報</h4>
+                <h4 className="text-sm font-bold text-foreground">認証・資格</h4>
                 <div className="border border-border rounded-md overflow-hidden">
-                  {user.representative && <DetailRow label="代表者" value={user.representative} />}
-                  {user.establishedDate && <DetailRow label="設立" value={user.establishedDate} />}
-                  {user.capital && <DetailRow label="資本金" value={user.capital} />}
-                  {user.employeeCount && <DetailRow label="従業員数" value={`${user.employeeCount}名`} />}
-                  {user.websiteUrl && (
-                    <DetailRow label="URL">
-                      <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm break-all">{user.websiteUrl}</a>
-                    </DetailRow>
-                  )}
-                  {user.transportLicenseNumber && <DetailRow label="運送許可番号" value={user.transportLicenseNumber} />}
-                  {user.invoiceRegistrationNumber && <DetailRow label="インボイス" value={user.invoiceRegistrationNumber} />}
-                  {user.businessArea && <DetailRow label="営業エリア" value={user.businessArea} />}
-                  {user.businessDescription && <DetailRow label="事業内容" value={user.businessDescription} />}
+                  {user.safetyExcellenceCert && <DetailRow label="安全性優良" value={user.safetyExcellenceCert} />}
+                  {user.greenManagementCert && <DetailRow label="グリーン経営" value={user.greenManagementCert} />}
+                  {user.iso9000 && <DetailRow label="ISO9000" value={user.iso9000} />}
+                  {user.iso14000 && <DetailRow label="ISO14000" value={user.iso14000} />}
+                  {user.iso39001 && <DetailRow label="ISO39001" value={user.iso39001} />}
+                </div>
+              </>
+            )}
+
+            <h4 className="text-sm font-bold text-foreground">支払・決済情報</h4>
+            <div className="border border-border rounded-md overflow-hidden">
+              {user.closingDay && <DetailRow label="締め日" value={user.closingDay} />}
+              {user.closingMonth && <DetailRow label="締め月" value={user.closingMonth} />}
+              {user.paymentMonth && <DetailRow label="支払月" value={user.paymentMonth} />}
+              {user.paymentDay && <DetailRow label="支払日" value={user.paymentDay} />}
+              {user.paymentTerms && <DetailRow label="支払条件" value={user.paymentTerms} />}
+              {!user.closingDay && !user.closingMonth && !user.paymentMonth && !user.paymentDay && !user.paymentTerms && (
+                <DetailRow label="-" value="未登録" />
+              )}
+            </div>
+
+            {(user.bankName || user.bankBranch || user.accountNumber || user.bankInfo) && (
+              <>
+                <h4 className="text-sm font-bold text-foreground">銀行口座情報</h4>
+                <div className="border border-border rounded-md overflow-hidden">
+                  {user.bankName && <DetailRow label="銀行名" value={user.bankName} />}
+                  {user.bankBranch && <DetailRow label="支店名" value={user.bankBranch} />}
+                  {user.accountType && <DetailRow label="口座種別" value={user.accountType} />}
+                  {user.accountNumber && <DetailRow label="口座番号" value={user.accountNumber} />}
+                  {user.accountHolderKana && <DetailRow label="口座名義" value={user.accountHolderKana} />}
+                  {user.bankInfo && <DetailRow label="その他" value={user.bankInfo} />}
+                </div>
+              </>
+            )}
+
+            {(user.accountingContactName || user.accountingContactEmail || user.accountingContactPhone) && (
+              <>
+                <h4 className="text-sm font-bold text-foreground">経理担当者</h4>
+                <div className="border border-border rounded-md overflow-hidden">
+                  {user.accountingContactName && <DetailRow label="担当者名" value={user.accountingContactName} />}
+                  {user.accountingContactEmail && <DetailRow label="メール" value={user.accountingContactEmail} />}
+                  {user.accountingContactPhone && <DetailRow label="電話番号" value={user.accountingContactPhone} />}
+                  {user.accountingContactFax && <DetailRow label="FAX" value={user.accountingContactFax} />}
                 </div>
               </>
             )}
