@@ -478,3 +478,21 @@ export const aiCorrectionLogs = pgTable("ai_correction_logs", {
 export const insertAiCorrectionLogSchema = createInsertSchema(aiCorrectionLogs).omit({ id: true, promoted: true, createdAt: true });
 export type InsertAiCorrectionLog = z.infer<typeof insertAiCorrectionLogSchema>;
 export type AiCorrectionLog = typeof aiCorrectionLogs.$inferSelect;
+
+export const youtubeVideos = pgTable("youtube_videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: text("video_id").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  publishedAt: timestamp("published_at"),
+  channelTitle: text("channel_title"),
+  duration: text("duration"),
+  viewCount: integer("view_count").default(0),
+  isVisible: boolean("is_visible").notNull().default(true),
+  fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+});
+
+export const insertYoutubeVideoSchema = createInsertSchema(youtubeVideos).omit({ id: true, fetchedAt: true });
+export type InsertYoutubeVideo = z.infer<typeof insertYoutubeVideoSchema>;
+export type YoutubeVideo = typeof youtubeVideos.$inferSelect;

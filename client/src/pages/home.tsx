@@ -1,9 +1,9 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, Search, ArrowRight, Shield, Handshake, Clock, MapPin, Users, FileText, ChevronRight, Building2 } from "lucide-react";
+import { Package, Truck, Search, ArrowRight, Shield, Handshake, Clock, MapPin, Users, FileText, ChevronRight, Building2, Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { CargoListing, TruckListing, Announcement, SeoArticle } from "@shared/schema";
+import type { CargoListing, TruckListing, Announcement, SeoArticle, YoutubeVideo } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -302,6 +302,74 @@ function ColumnsPreviewSection() {
                 </CardContent>
               </Card>
             </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function YouTubePreviewSection() {
+  const { data: videos, isLoading } = useQuery<YoutubeVideo[]>({
+    queryKey: ["/api/youtube-videos"],
+  });
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+
+  if (isLoading) return null;
+  if (!videos || videos.length === 0) return null;
+
+  const displayVideos = videos.slice(0, 3);
+
+  return (
+    <section className="py-16 sm:py-20 bg-white">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground" data-testid="text-youtube-heading">動画コンテンツ</h2>
+            <p className="text-base text-muted-foreground mt-1">物流・求荷求車に関するお役立ち動画</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {displayVideos.map((video) => (
+            <Card
+              key={video.id}
+              className="h-full hover-elevate cursor-pointer overflow-hidden"
+              data-testid={`card-youtube-${video.id}`}
+              onClick={() => setActiveVideoId(video.videoId)}
+            >
+              <div className="relative aspect-video bg-muted">
+                {activeVideoId === video.videoId ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    title={video.title}
+                  />
+                ) : (
+                  <>
+                    <img
+                      src={video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                      alt={video.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
+                      <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                        <Play className="w-7 h-7 text-white fill-white ml-0.5" />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-bold text-foreground line-clamp-2 mb-2">{video.title}</h3>
+                {video.publishedAt && (
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(video.publishedAt).toLocaleDateString("ja-JP")}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -702,6 +770,8 @@ export default function Home() {
       <AnnouncementsSection />
 
       <ColumnsPreviewSection />
+
+      <YouTubePreviewSection />
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
