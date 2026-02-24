@@ -3,7 +3,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import compression from "compression";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, dbPool } from "./db";
 import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
@@ -1398,6 +1398,24 @@ export async function registerRoutes(
       res.json(safeUsers);
     } catch (error) {
       res.status(500).json({ message: "ユーザー一覧の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/active-sessions", requireAdmin, async (_req, res) => {
+    try {
+      const result = await dbPool.query(
+        "SELECT sess FROM session WHERE expire > NOW()"
+      );
+      const activeUserIds = new Set<string>();
+      for (const row of result.rows) {
+        const sess = typeof row.sess === "string" ? JSON.parse(row.sess) : row.sess;
+        if (sess?.userId) {
+          activeUserIds.add(sess.userId);
+        }
+      }
+      res.json(Array.from(activeUserIds));
+    } catch (error) {
+      res.status(500).json({ message: "アクティブセッションの取得に失敗しました" });
     }
   });
 

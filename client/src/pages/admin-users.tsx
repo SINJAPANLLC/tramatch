@@ -98,6 +98,11 @@ export default function AdminUsers() {
     queryKey: ["/api/admin/users"],
   });
 
+  const { data: activeSessionUserIds } = useQuery<string[]>({
+    queryKey: ["/api/admin/active-sessions"],
+    refetchInterval: 30000,
+  });
+
   const allNonAdmin = users?.filter(u => u.role !== "admin") ?? [];
   const approvedCount = allNonAdmin.filter(u => u.approved).length;
   const pendingCount = allNonAdmin.filter(u => !u.approved).length;
@@ -473,6 +478,7 @@ export default function AdminUsers() {
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">担当者</th>
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">連絡先</th>
+                        <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">状態</th>
                         <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">ステータス</th>
                         <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">プラン</th>
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">登録日</th>
@@ -515,6 +521,19 @@ export default function AdminUsers() {
                               {u.phone && <div className="text-[11px] text-muted-foreground font-bold mt-0.5">{u.phone}</div>}
                             </td>
                             <td className="px-3 py-3 text-center align-top">
+                              {activeSessionUserIds?.includes(u.id) ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 dark:text-green-400" data-testid={`status-online-${u.id}`}>
+                                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                  ON
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground" data-testid={`status-offline-${u.id}`}>
+                                  <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+                                  OFF
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-3 text-center align-top">
                               {isAdmin ? (
                                 <Badge variant="default" className="text-[10px]">管理者</Badge>
                               ) : u.approved ? (
@@ -550,6 +569,7 @@ export default function AdminUsers() {
           <UserDetailPanel
             user={selectedUser}
             allUsers={users ?? []}
+            activeSessionUserIds={activeSessionUserIds ?? []}
             onClose={() => setSelectedUserId(null)}
             onApprove={(id) => approveUser.mutate(id)}
             onDelete={(id) => {
@@ -604,6 +624,7 @@ function EditField({ label, name, value, onChange, type = "text" }: { label: str
 function UserDetailPanel({
   user,
   allUsers,
+  activeSessionUserIds,
   onClose,
   onApprove,
   onDelete,
@@ -619,6 +640,7 @@ function UserDetailPanel({
 }: {
   user: SafeUser | null;
   allUsers: SafeUser[];
+  activeSessionUserIds: string[];
   onClose: () => void;
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
@@ -819,7 +841,17 @@ function UserDetailPanel({
                   )}
                 </>
               )}
-              <span className="text-xs text-muted-foreground">{formatDate()}</span>
+              {activeSessionUserIds.includes(user.id) ? (
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-green-600 dark:text-green-400" data-testid="detail-status-online">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  ログイン中
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground" data-testid="detail-status-offline">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+                  オフライン
+                </span>
+              )}
             </div>
 
             {user.addedByUserId && (() => {
@@ -945,6 +977,7 @@ function UserDetailPanel({
               <DetailRow label="住所" value={`${user.postalCode ? `〒${user.postalCode}\n` : ""}${user.address || "-"}`} />
               <DetailRow label="ユーザー種別" value={user.userType === "shipper" ? "荷主" : user.userType === "carrier" ? "運送会社" : user.userType === "both" ? "荷主・運送会社" : user.userType} />
               {user.truckCount && <DetailRow label="保有台数" value={`${user.truckCount}台`} />}
+              <DetailRow label="登録日" value={formatDate()} />
             </div>
 
             <h4 className="text-sm font-bold text-foreground">企業詳細</h4>
