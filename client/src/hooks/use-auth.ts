@@ -19,6 +19,9 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/onboarding-progress"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/cargo-listings"] });
+      queryClient.prefetchQuery({ queryKey: ["/api/truck-listings"] });
     },
   });
 
