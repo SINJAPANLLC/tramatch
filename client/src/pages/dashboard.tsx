@@ -73,8 +73,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
     },
     {
       id: "partner",
-      label: "取引先を登録する",
-      description: "取引先を登録して管理する",
+      label: "取引先を招待する",
+      description: "取引先を招待して管理する",
       done: progress.partnerCount > 0,
       href: "/partners",
       action: "登録する",
