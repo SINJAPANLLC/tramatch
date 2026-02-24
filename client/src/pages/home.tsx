@@ -321,12 +321,12 @@ function YouTubePreviewSection() {
   const displayVideos = videos.slice(0, 3);
 
   return (
-    <section className="py-16 sm:py-20 bg-white">
+    <section className="py-16 sm:py-20 bg-primary">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-foreground" data-testid="text-youtube-heading">動画コンテンツ</h2>
-            <p className="text-base text-muted-foreground mt-1">物流・求荷求車に関するお役立ち動画</p>
+            <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-youtube-heading">動画コンテンツ</h2>
+            <p className="text-base text-primary-foreground mt-1 text-shadow">物流・求荷求車に関するお役立ち動画</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
