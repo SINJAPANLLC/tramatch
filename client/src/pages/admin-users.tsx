@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,6 +40,7 @@ type SafeUser = {
   businessArea?: string;
   businessDescription?: string;
   invoiceRegistrationNumber?: string;
+  adminMemo?: string | null;
   addedByUserId?: string | null;
 };
 
@@ -601,9 +602,32 @@ function UserDetailPanel({
   isChangingRole: boolean;
   editSuccess: boolean;
 }) {
+  const { toast } = useToast();
   const [permitExpanded, setPermitExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<Record<string, string>>({});
+  const [memoText, setMemoText] = useState(user?.adminMemo || "");
+  const [memoEditing, setMemoEditing] = useState(false);
+
+  useEffect(() => {
+    setMemoText(user?.adminMemo || "");
+    setMemoEditing(false);
+  }, [user?.id, user?.adminMemo]);
+
+  const saveMemo = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      await apiRequest("PATCH", `/api/admin/users/${user.id}`, { adminMemo: memoText || null });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setMemoEditing(false);
+      toast({ title: "メモを保存しました" });
+    },
+    onError: () => {
+      toast({ title: "メモの保存に失敗しました", variant: "destructive" });
+    },
+  });
 
   const initEditData = (u: SafeUser) => {
     setEditData({
@@ -983,6 +1007,63 @@ function UserDetailPanel({
                 <p className="text-xs text-muted-foreground">未アップロード</p>
               </div>
             )}
+
+            <div className="border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 p-3 space-y-2" data-testid="section-admin-memo">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <StickyNote className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300">管理者メモ</span>
+                </div>
+                {!memoEditing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => setMemoEditing(true)}
+                    data-testid="button-edit-memo"
+                  >
+                    <Pencil className="w-3 h-3 mr-1" />
+                    編集
+                  </Button>
+                )}
+              </div>
+              {memoEditing ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={memoText}
+                    onChange={(e) => setMemoText(e.target.value)}
+                    placeholder="このユーザーに関するメモを入力..."
+                    className="text-sm min-h-[80px] bg-white dark:bg-background border-amber-200 dark:border-amber-800"
+                    data-testid="input-admin-memo"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => { setMemoText(user.adminMemo || ""); setMemoEditing(false); }}
+                      data-testid="button-cancel-memo"
+                    >
+                      キャンセル
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => saveMemo.mutate()}
+                      disabled={saveMemo.isPending}
+                      data-testid="button-save-memo"
+                    >
+                      <Save className="w-3 h-3 mr-1" />
+                      {saveMemo.isPending ? "保存中..." : "保存"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-foreground whitespace-pre-wrap" data-testid="text-admin-memo">
+                  {user.adminMemo || <span className="text-muted-foreground text-xs">メモなし</span>}
+                </p>
+              )}
+            </div>
           </>
         ) : (
           <div className="space-y-4">
