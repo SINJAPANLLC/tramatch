@@ -26,6 +26,7 @@ type NotificationTemplate = {
   name: string;
   subject: string | null;
   body: string;
+  htmlBody: string | null;
   triggerEvent: string | null;
   isActive: boolean;
   createdAt: string;
@@ -75,8 +76,11 @@ export default function AdminNotifications() {
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
+  const [formHtmlBody, setFormHtmlBody] = useState("");
   const [formTrigger, setFormTrigger] = useState("");
   const [formCategory, setFormCategory] = useState("regular");
+  const [emailEditMode, setEmailEditMode] = useState<"text" | "html">("text");
+  const [previewMode, setPreviewMode] = useState<"text" | "html">("text");
 
   const [aiPurpose, setAiPurpose] = useState("");
   const [aiTone, setAiTone] = useState("standard");
@@ -149,7 +153,7 @@ export default function AdminNotifications() {
   };
 
   const createMutation = useMutation({
-    mutationFn: async (data: { category: string; channel: string; name: string; subject?: string; body: string; triggerEvent?: string }) => {
+    mutationFn: async (data: { category: string; channel: string; name: string; subject?: string; body: string; htmlBody?: string; triggerEvent?: string }) => {
       const res = await apiRequest("POST", "/api/admin/notification-templates", data);
       return res.json();
     },
@@ -257,9 +261,12 @@ export default function AdminNotifications() {
     setFormName("");
     setFormSubject("");
     setFormBody("");
+    setFormHtmlBody("");
     setFormTrigger("");
     setFormCategory("regular");
     setPreviewTemplate(null);
+    setEmailEditMode("text");
+    setPreviewMode("text");
   }
 
   function startEdit(t: NotificationTemplate) {
@@ -269,8 +276,10 @@ export default function AdminNotifications() {
     setFormName(t.name);
     setFormSubject(t.subject || "");
     setFormBody(t.body);
+    setFormHtmlBody(t.htmlBody || "");
     setFormTrigger(t.triggerEvent || "");
     setFormCategory(t.category);
+    setEmailEditMode(t.htmlBody ? "html" : "text");
   }
 
   function startCreate() {
@@ -280,8 +289,10 @@ export default function AdminNotifications() {
     setFormName("");
     setFormSubject("");
     setFormBody("");
+    setFormHtmlBody("");
     setFormTrigger("");
     setFormCategory("regular");
+    setEmailEditMode("text");
   }
 
   function handleSaveTemplate() {
@@ -300,6 +311,7 @@ export default function AdminNotifications() {
           name: formName,
           subject: currentChannel === "email" ? formSubject : null,
           body: formBody,
+          htmlBody: currentChannel === "email" && formHtmlBody.trim() ? formHtmlBody : null,
           triggerEvent: formTrigger || null,
           category: formCategory,
         },
@@ -311,6 +323,7 @@ export default function AdminNotifications() {
         name: formName,
         subject: currentChannel === "email" ? formSubject : undefined,
         body: formBody,
+        htmlBody: currentChannel === "email" && formHtmlBody.trim() ? formHtmlBody : undefined,
         triggerEvent: formTrigger || undefined,
       });
     }
@@ -419,7 +432,7 @@ export default function AdminNotifications() {
                           className={`p-3 rounded-md border cursor-pointer transition-colors ${
                             (editingTemplate?.id === t.id || previewTemplate?.id === t.id) ? "border-primary bg-primary/5" : "border-border hover-elevate"
                           }`}
-                          onClick={() => { resetForm(); setPreviewTemplate(t); }}
+                          onClick={() => { resetForm(); setPreviewTemplate(t); setPreviewMode(t.htmlBody ? "html" : "text"); }}
                           data-testid={`template-item-${t.id}`}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -430,6 +443,11 @@ export default function AdminNotifications() {
                               </p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
+                              {t.htmlBody && (
+                                <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-600 dark:text-emerald-400">
+                                  HTML
+                                </Badge>
+                              )}
                               <Badge variant="outline" className="text-[10px]">
                                 {categoryOptions.find(c => c.value === t.category)?.label || t.category}
                               </Badge>
@@ -543,20 +561,69 @@ export default function AdminNotifications() {
                         </div>
                       )}
                       <div>
-                        <Label className="text-xs">
-                          {currentChannel === "line" ? "LINE メッセージ本文" : currentChannel === "email" ? "メール本文" : "通知メッセージ"}
-                        </Label>
-                        <Textarea
-                          className="mt-1 min-h-[200px] font-mono text-sm"
-                          value={formBody}
-                          onChange={e => setFormBody(e.target.value)}
-                          placeholder={
-                            currentChannel === "line"
-                              ? "{{会社名}} 様\n新着荷物: {{荷物名}}\n{{出発地}}→{{到着地}}"
-                              : "{{会社名}} 様\n\nいつもトラマッチをご利用いただき..."
-                          }
-                          data-testid="input-template-body"
-                        />
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className="text-xs">
+                            {currentChannel === "line" ? "LINE メッセージ本文" : currentChannel === "email" ? "メール本文" : "通知メッセージ"}
+                          </Label>
+                          {currentChannel === "email" && (
+                            <div className="flex items-center gap-1 border border-border rounded-md overflow-hidden">
+                              <button
+                                type="button"
+                                className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${emailEditMode === "text" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                                onClick={() => setEmailEditMode("text")}
+                                data-testid="button-edit-mode-text"
+                              >
+                                テキスト
+                              </button>
+                              <button
+                                type="button"
+                                className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${emailEditMode === "html" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                                onClick={() => setEmailEditMode("html")}
+                                data-testid="button-edit-mode-html"
+                              >
+                                HTMLデザイン
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {emailEditMode === "text" || currentChannel !== "email" ? (
+                          <Textarea
+                            className="mt-1 min-h-[200px] font-mono text-sm"
+                            value={formBody}
+                            onChange={e => setFormBody(e.target.value)}
+                            placeholder={
+                              currentChannel === "line"
+                                ? "{{会社名}} 様\n新着荷物: {{荷物名}}\n{{出発地}}→{{到着地}}"
+                                : "{{会社名}} 様\n\nいつもトラマッチをご利用いただき..."
+                            }
+                            data-testid="input-template-body"
+                          />
+                        ) : (
+                          <div className="space-y-2 mt-1">
+                            <Textarea
+                              className="min-h-[250px] font-mono text-xs leading-relaxed"
+                              value={formHtmlBody}
+                              onChange={e => setFormHtmlBody(e.target.value)}
+                              placeholder={`<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; margin: 0; padding: 20px; }\n    .header { background: #0d9488; color: white; padding: 20px; text-align: center; }\n    .content { padding: 20px; }\n  </style>\n</head>\n<body>\n  <div class="header">\n    <h1>トラマッチ</h1>\n  </div>\n  <div class="content">\n    <p>{{会社名}} 様</p>\n    <p>いつもトラマッチをご利用いただき...</p>\n  </div>\n</body>\n</html>`}
+                              data-testid="input-template-html-body"
+                            />
+                            {formHtmlBody.trim() && (
+                              <div className="border border-border rounded-md overflow-hidden">
+                                <div className="bg-muted/40 px-3 py-1.5 border-b border-border flex items-center gap-1.5">
+                                  <Eye className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-[11px] font-medium text-muted-foreground">リアルタイムプレビュー</span>
+                                </div>
+                                <iframe
+                                  srcDoc={formHtmlBody}
+                                  className="w-full min-h-[300px] bg-white border-0"
+                                  sandbox=""
+                                  title="HTML Preview"
+                                  data-testid="iframe-html-preview-edit"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {currentChannel === "email" && formTrigger && emailTemplateInfo ? (
                           (() => {
                             const info = emailTemplateInfo.find(i => i.triggerEvent === formTrigger);
@@ -574,8 +641,15 @@ export default function AdminNotifications() {
                             );
                           })()
                         ) : (
+                          currentChannel !== "email" && (
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
+                            </p>
+                          )
+                        )}
+                        {currentChannel === "email" && emailEditMode === "text" && (
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"}, {"{{荷物名}}"}, {"{{出発地}}"}, {"{{到着地}}"}, {"{{車両タイプ}}"}
+                            変数: {"{{会社名}}"}, {"{{ユーザー名}}"}, {"{{日付}}"} など自由に使用可能。HTMLデザインタブで見た目も編集できます。
                           </p>
                         )}
                         {currentChannel === "line" && (
@@ -699,13 +773,51 @@ export default function AdminNotifications() {
                             <p className="text-sm font-bold text-foreground">{previewTemplate.subject}</p>
                           </div>
                         )}
-                        <div className="p-3">
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {previewTemplate.channel === "line" ? "LINEメッセージ" : previewTemplate.channel === "email" ? "メール本文" : "通知メッセージ"}
-                          </p>
-                          <div className="text-sm text-foreground whitespace-pre-wrap font-mono bg-muted/20 p-3 rounded-md min-h-[150px]" data-testid="text-preview-body">
-                            {previewTemplate.body}
+                        {previewTemplate.channel === "email" && previewTemplate.htmlBody && (
+                          <div className="bg-muted/30 px-3 py-1.5 border-b border-border flex items-center justify-between">
+                            <span className="text-[11px] text-muted-foreground">表示モード</span>
+                            <div className="flex items-center gap-1 border border-border rounded-md overflow-hidden">
+                              <button
+                                type="button"
+                                className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${previewMode === "text" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                                onClick={() => setPreviewMode("text")}
+                                data-testid="button-preview-mode-text"
+                              >
+                                テキスト
+                              </button>
+                              <button
+                                type="button"
+                                className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${previewMode === "html" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                                onClick={() => setPreviewMode("html")}
+                                data-testid="button-preview-mode-html"
+                              >
+                                HTMLプレビュー
+                              </button>
+                            </div>
                           </div>
+                        )}
+                        <div className="p-3">
+                          {previewTemplate.channel === "email" && previewTemplate.htmlBody && previewMode === "html" ? (
+                            <>
+                              <p className="text-xs text-muted-foreground mb-2">HTMLメールプレビュー</p>
+                              <iframe
+                                srcDoc={previewTemplate.htmlBody}
+                                className="w-full min-h-[400px] bg-white border border-border rounded-md"
+                                sandbox=""
+                                title="HTML Email Preview"
+                                data-testid="iframe-html-preview"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {previewTemplate.channel === "line" ? "LINEメッセージ" : previewTemplate.channel === "email" ? "メール本文（テキスト版）" : "通知メッセージ"}
+                              </p>
+                              <div className="text-sm text-foreground whitespace-pre-wrap font-mono bg-muted/20 p-3 rounded-md min-h-[150px]" data-testid="text-preview-body">
+                                {previewTemplate.body}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
