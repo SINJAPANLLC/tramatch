@@ -496,3 +496,22 @@ export const youtubeVideos = pgTable("youtube_videos", {
 export const insertYoutubeVideoSchema = createInsertSchema(youtubeVideos).omit({ id: true, fetchedAt: true });
 export type InsertYoutubeVideo = z.infer<typeof insertYoutubeVideoSchema>;
 export type YoutubeVideo = typeof youtubeVideos.$inferSelect;
+
+export const youtubeAutoPublishJobs = pgTable("youtube_auto_publish_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topic: text("topic").notNull(),
+  script: text("script"),
+  audioUrl: text("audio_url"),
+  videoUrl: text("video_url"),
+  youtubeVideoId: text("youtube_video_id"),
+  youtubeTitle: text("youtube_title"),
+  youtubeDescription: text("youtube_description"),
+  status: text("status").notNull().default("pending"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertYoutubeAutoPublishJobSchema = createInsertSchema(youtubeAutoPublishJobs).omit({ id: true, createdAt: true, completedAt: true });
+export type InsertYoutubeAutoPublishJob = z.infer<typeof insertYoutubeAutoPublishJobSchema>;
+export type YoutubeAutoPublishJob = typeof youtubeAutoPublishJobs.$inferSelect;
