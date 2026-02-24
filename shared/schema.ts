@@ -272,6 +272,7 @@ export const notificationTemplates = pgTable("notification_templates", {
   name: text("name").notNull(),
   subject: text("subject"),
   body: text("body").notNull(),
+  htmlBody: text("html_body"),
   triggerEvent: text("trigger_event"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
