@@ -328,6 +328,12 @@ function YouTubePreviewSection() {
             <h2 className="text-2xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-youtube-heading">動画コンテンツ</h2>
             <p className="text-base text-primary-foreground mt-1 text-shadow">物流・求荷求車に関するお役立ち動画</p>
           </div>
+          <a href="https://www.youtube.com/@tramatch" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" className="text-primary-foreground border-primary-foreground/40 bg-primary-foreground/10" data-testid="link-all-videos">
+              すべて見る
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayVideos.map((video) => (
