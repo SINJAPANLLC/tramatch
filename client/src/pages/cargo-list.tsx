@@ -906,7 +906,7 @@ export default function CargoList() {
                   </td>
                   <td className="px-2 py-3 align-top">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-start gap-1 min-w-0">
+                      <div className="flex items-start gap-1 min-w-0 w-[140px] shrink-0">
                         <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1 flex-wrap">
