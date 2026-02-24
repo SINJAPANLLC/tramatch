@@ -212,7 +212,7 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
             {user?.companyName}さん、こんにちは
           </h1>
-          <p className="text-sm text-primary-foreground mt-1 text-shadow">マッチング情報の概要をご確認ください</p>
+          <p className="text-sm text-primary-foreground mt-1 text-shadow">ダッシュボード</p>
         </div>
 
         {onboardingProgress && (
