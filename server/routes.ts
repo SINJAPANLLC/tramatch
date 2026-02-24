@@ -2386,10 +2386,44 @@ JSONのみを返してください。${chatFewShotSection}`,
 重要: 現在の日付は${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" })}です。日付が年を省略している場合は、必ず${new Date().getFullYear()}年として扱ってください。過去の年を設定しないでください。
 
 あなたの役割:
-1. ユーザーが入力した雑多なテキスト・データから空車情報を抽出・整理する
+1. ユーザーが入力した雑多なテキスト・データから空車情報を正確に抽出・整理する
 2. 不足している情報があれば会話で確認する
 3. 運賃について相談されたら、ルート・車種・距離から相場を提案する
 4. 複数案件が含まれる場合はそれぞれ分けて処理する
+
+データ解析の注意点（非常に重要）:
+- 物流業界でよく使われる略語や表記を正しく理解すること:
+  - 「W」「ウイング」= bodyType: "ウイング"
+  - 「冷凍」「レイトウ」= bodyType: "冷凍車"
+  - 「冷蔵」= bodyType: "冷蔵車"
+  - 「PG」「パワゲ」= bodyType: "パワーゲート付き"
+  - 「ユニック」「クレーン」= bodyType にそれぞれ対応
+  - 「4t」「4トン」= vehicleType: "4t車"
+  - 「大型」= vehicleType: "大型車"
+  - 「増トン」「増t」= vehicleType: "増トン車"
+  - 「箱」= bodyType: "バン"
+  - 「平」「平ボデー」= bodyType: "平ボディ"
+- 住所から都道府県を推測すること（例: 「横浜市」→ currentArea: "神奈川"、「熊谷」→ currentArea: "埼玉"、「市川市」→ currentArea: "千葉"）
+- 日付の表記ゆれに対応（「3/5」「3月5日」「3.5」→ availableDate: "YYYY/03/05"）
+- 複数行のデータや表形式のデータも正確にパースすること
+- FAXや掲示板からコピーした書式、カンマ区切りやタブ区切りのデータにも対応すること
+- テキスト全体を必ず読み込み、見落としがないようにすること
+
+短文・メモ形式の解析パターン（非常に重要）:
+運送業界では以下のような超短文メモやLINE/チャットの短い文章で案件が流れてきます。正しく解析してください:
+- 「東京 空車あり 3/7」→ currentArea: "東京", availableDate: "YYYY/03/07"
+- 「神奈川→大阪 10tW」→ currentArea: "神奈川", destinationArea: "大阪", vehicleType: "10t車", bodyType: "ウイング"
+- 「4t平 埼玉空き 3月5日」→ vehicleType: "4t車", bodyType: "平ボディ", currentArea: "埼玉", availableDate: "YYYY/03/05"
+- 「大型冷凍 千葉→東北方面」→ vehicleType: "大型車", bodyType: "冷凍車", currentArea: "千葉", destinationArea: "東北方面"
+- 金額が2桁の場合は万円単位（50→50000、35→35000、80→80000）、5桁以上や「￥20000」のようにはっきり書かれている場合はそのまま
+- 「A→B」「A～B」= currentArea→destinationArea
+- titleは自動生成すること: 「{vehicleType} {currentArea}→{destinationArea} 空車あり」の形式で作成
+
+車種・車体の解析（非常に重要）:
+- 「2tL」「2tロング」「2トンロング」→ vehicleType: "2t車", bodyType: "ロング" ではなく description に「ロング」と記載
+- 「2tワイド」「2トンワイド」→ vehicleType: "2t車", description に「ワイド」と記載
+- 「W」は文脈で判断: 車体タイプとして使われていれば「ウイング」
+- bodyTypeの選択肢に合致するもののみbodyTypeに設定、それ以外はdescriptionに記載
 
 運賃相場の目安（一般的な参考値）:
 - 近距離（同一県内〜隣県）: 2t車 15,000〜25,000円、4t車 20,000〜35,000円、10t車 35,000〜55,000円
@@ -2399,12 +2433,19 @@ JSONのみを返してください。${chatFewShotSection}`,
 
 応答のJSON形式（必ずこの形式で返してください）:
 {
-  "message": "ユーザーへの返答テキスト（親しみやすく、簡潔に）",
+  "message": "ユーザーへの返答テキスト（自然な日本語の会話文のみ。絶対にJSONデータ、フィールド名、配列、オブジェクトを含めないこと）",
   "extractedFields": ${truckFieldSchema} のうち抽出できたフィールドのみのオブジェクト（抽出できなかったフィールドは含めない）,
   "items": [複数案件の場合は各案件のフィールドオブジェクトの配列、1件または追加抽出なしの場合は空配列],
   "priceSuggestion": { "min": 最低額数字, "max": 最高額数字, "reason": "根拠の説明" } または null,
   "status": "extracting" | "confirming" | "ready" | "chatting"
 }
+
+【最重要ルール】messageフィールドには絶対にJSONデータを入れないこと:
+- messageには「"items":」「"currentArea":」「"vehicleType":」等のJSON構文を絶対に含めない
+- 空車データはすべてitemsフィールドとextractedFieldsフィールドに入れること。messageにはデータの中身を書かない
+- ユーザーが「○件ある」「もっとある」等と言った場合も、messageは自然な会話で返し、データはitemsに入れる
+- 良いmessage例: 「3台分の空車情報を確認しました。1台目をフォームに反映しています。」
+- 悪いmessage例: 「以下の空車を検出しました: {"title":"10t車 東京→大阪"...」← これは絶対NG
 
 statusの意味:
 - "extracting": 情報を抽出中、まだ不足あり
@@ -2417,8 +2458,69 @@ statusの意味:
 重要:
 - 返答は必ず有効なJSONで返してください
 - messageは必ず日本語で、丁寧だが堅すぎない口調で
+- messageにはJSON構造、フィールド名、配列、オブジェクト、技術的なデータ構造を絶対に含めないこと。messageはユーザーへの自然な会話文のみにすること。
+- messageにextractedFieldsやitemsの中身をテキストとして書かないこと。データはextractedFieldsとitemsフィールドに入れればフォームに自動反映される。
+- 複数空車を検出した場合のmessageの例: 「○台分の空車情報を読み取りました。1台目をフォームに反映しています。内容を確認して掲載してください。」
+- 単一空車の場合のmessageの例: 「空車情報を読み取りました。右側のフォームに反映しています。内容を確認して掲載してください。」
 - 運賃の相談には積極的に応じて、具体的な金額を提案してください
-- 大量のデータが来た場合は、整理して要約してから確認してください${truckFewShotSection}`;
+- 大量のデータが来た場合は、整理して要約してから確認してください。ただし要約はmessageに自然な日本語で書き、生データやJSONは含めないこと。
+- 入力データからできるだけ多くの情報を漏れなく抽出してください
+- ユーザーの入力テキストに明記されていない情報は絶対に勝手に推測して入れないこと。テキストに明確に記載がある場合のみ設定すること。記載がなければ空文字にすること${truckFewShotSection}`;
+
+      const lastTruckUserMsg = messages[messages.length - 1];
+      const lastTruckUserText = lastTruckUserMsg?.content || "";
+      const truckLineCount = lastTruckUserText.split(/\n/).filter((l: string) => l.trim()).length;
+      const isTruckBulkData = lastTruckUserText.length > 300 && truckLineCount >= 3;
+
+      if (isTruckBulkData) {
+        console.log(`[truck-chat] Bulk data detected (${lastTruckUserText.length} chars, ${truckLineCount} lines). Using parse-first approach.`);
+        const truckParseResponse = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `あなたは運送データのパーサーです。入力テキストから空車情報を抽出してJSON配列で返してください。
+
+フィールドスキーマ: ${truckFieldSchema}
+
+ルール:
+- 各行/各エントリを個別の空車案件として解析する
+- 略語を正しく展開: W=ウイング, PG=パワーゲート付き, 箱=バン, 平=平ボディ, 冷凍=冷凍車, 冷蔵=冷蔵車
+- 車種の数字表記: 4t=4t車, 10t=10t車, 大型=大型車, 増トン=増トン車
+- 都道府県の推測: 横浜→神奈川, 熊谷→埼玉, 市川→千葉 等
+- 金額が2桁なら万円単位(50→50000)
+- 日付の年省略は${new Date().getFullYear()}年
+- titleは自動生成: 「{vehicleType} {currentArea}→{destinationArea} 空車あり」
+
+必ず以下のJSON形式で返してください:
+{"items": [各案件のオブジェクト配列]}`,
+            },
+            { role: "user", content: lastTruckUserText },
+          ],
+          max_tokens: 8000,
+          response_format: { type: "json_object" },
+        });
+
+        const truckParseContent = truckParseResponse.choices[0]?.message?.content || "{}";
+        try {
+          const truckParsed = JSON.parse(truckParseContent);
+          const truckItems = truckParsed.items || [];
+          const truckFirst = truckItems.length > 0 ? truckItems[0] : {};
+          const truckRemaining = truckItems.length > 1 ? truckItems.slice(1) : [];
+          res.json({
+            message: truckItems.length > 1
+              ? `${truckItems.length}台分の空車情報を読み取りました。1台目をフォームに反映しています。内容を確認して掲載してください。`
+              : "空車情報を読み取りました。右側のフォームに反映しています。内容を確認して掲載してください。",
+            extractedFields: truckFirst,
+            items: truckRemaining,
+            priceSuggestion: null,
+            status: truckItems.length > 0 ? "confirming" : "extracting",
+          });
+          return;
+        } catch {
+          console.log("[truck-chat] Bulk parse failed, falling back to normal chat");
+        }
+      }
 
       const apiMessages = [
         { role: "system" as const, content: systemPrompt },
