@@ -208,6 +208,12 @@ function AppLayout() {
 
   usePreloadAllPages();
 
+  useEffect(() => {
+    if (typeof (window as any).__dismissSplash === "function") {
+      (window as any).__dismissSplash();
+    }
+  }, []);
+
   if (isDashboardPage) {
     return (
       <div className="fixed inset-0 flex flex-col">
