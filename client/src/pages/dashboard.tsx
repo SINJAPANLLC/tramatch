@@ -131,10 +131,6 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
           </div>
         </div>
 
-        <div className={`mt-2 px-1 text-xs font-bold ${allDone ? "text-emerald-600" : "text-primary"}`} data-testid="text-encourage">
-          {encourageMessage}
-        </div>
-
         {!collapsed && (
           <div className="mt-3 space-y-1" data-testid="list-onboarding-steps">
             {steps.map((step) => {
