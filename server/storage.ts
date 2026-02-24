@@ -19,10 +19,11 @@ import {
   type AiTrainingExample, type InsertAiTrainingExample,
   type AiCorrectionLog, type InsertAiCorrectionLog,
   type YoutubeVideo, type InsertYoutubeVideo,
+  type YoutubeAutoPublishJob,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
-  invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos
+  invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -191,6 +192,13 @@ export interface IStorage {
   upsertYoutubeVideo(data: InsertYoutubeVideo): Promise<YoutubeVideo>;
   deleteYoutubeVideo(id: string): Promise<boolean>;
   updateYoutubeVideoVisibility(id: string, isVisible: boolean): Promise<YoutubeVideo | undefined>;
+
+  createYoutubeAutoPublishJob(data: { topic: string; status: string }): Promise<YoutubeAutoPublishJob>;
+  getYoutubeAutoPublishJob(id: string): Promise<YoutubeAutoPublishJob | undefined>;
+  getYoutubeAutoPublishJobs(limit?: number): Promise<YoutubeAutoPublishJob[]>;
+  updateYoutubeAutoPublishJob(id: string, fields: Record<string, any>): Promise<void>;
+  completeYoutubeAutoPublishJob(id: string): Promise<void>;
+  getRecentAutoPublishTopics(days: number): Promise<string[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1103,6 +1111,41 @@ export class DatabaseStorage implements IStorage {
       .where(eq(youtubeVideos.id, id))
       .returning();
     return updated;
+  }
+
+  async createYoutubeAutoPublishJob(data: { topic: string; status: string }): Promise<YoutubeAutoPublishJob> {
+    const [job] = await db.insert(youtubeAutoPublishJobs)
+      .values({ topic: data.topic, status: data.status })
+      .returning();
+    return job;
+  }
+
+  async getYoutubeAutoPublishJob(id: string): Promise<YoutubeAutoPublishJob | undefined> {
+    const [job] = await db.select().from(youtubeAutoPublishJobs).where(eq(youtubeAutoPublishJobs.id, id));
+    return job;
+  }
+
+  async getYoutubeAutoPublishJobs(limit = 50): Promise<YoutubeAutoPublishJob[]> {
+    return db.select().from(youtubeAutoPublishJobs).orderBy(desc(youtubeAutoPublishJobs.createdAt)).limit(limit);
+  }
+
+  async updateYoutubeAutoPublishJob(id: string, fields: Record<string, any>): Promise<void> {
+    await db.update(youtubeAutoPublishJobs).set(fields).where(eq(youtubeAutoPublishJobs.id, id));
+  }
+
+  async completeYoutubeAutoPublishJob(id: string): Promise<void> {
+    await db.update(youtubeAutoPublishJobs)
+      .set({ status: "completed", completedAt: new Date() })
+      .where(eq(youtubeAutoPublishJobs.id, id));
+  }
+
+  async getRecentAutoPublishTopics(days: number): Promise<string[]> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const jobs = await db.select({ topic: youtubeAutoPublishJobs.topic })
+      .from(youtubeAutoPublishJobs)
+      .where(gte(youtubeAutoPublishJobs.createdAt, since));
+    return jobs.map((j) => j.topic);
   }
 }
 

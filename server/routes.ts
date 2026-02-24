@@ -3572,6 +3572,40 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.post("/api/admin/youtube/auto-publish", requireAdmin, async (_req, res) => {
+    try {
+      const { runDailyAutoPublish } = await import("./youtube-auto-publisher");
+      const result = await runDailyAutoPublish();
+      res.json({ message: `${result.started}本の動画生成を開始しました`, ...result });
+    } catch (error: any) {
+      res.status(500).json({ message: error?.message || "自動投稿の開始に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/youtube/auto-publish-single", requireAdmin, async (req, res) => {
+    try {
+      const { topic } = req.body;
+      if (!topic) return res.status(400).json({ message: "トピックを指定してください" });
+      const { processAutoPublishJob } = await import("./youtube-auto-publisher");
+      const job = await storage.createYoutubeAutoPublishJob({ topic, status: "pending" });
+      processAutoPublishJob(job.id).catch((err: any) =>
+        console.error(`[YouTube Auto] Single job ${job.id} error:`, err?.message)
+      );
+      res.json({ message: "動画生成を開始しました", jobId: job.id });
+    } catch (error: any) {
+      res.status(500).json({ message: error?.message || "動画生成の開始に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/youtube/auto-publish-jobs", requireAdmin, async (_req, res) => {
+    try {
+      const jobs = await storage.getYoutubeAutoPublishJobs(50);
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ message: "ジョブの取得に失敗しました" });
+    }
+  });
+
   // Admin: SEO Articles
   app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
     try {
