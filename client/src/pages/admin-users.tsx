@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -856,10 +857,10 @@ function UserDetailPanel({
 
             <div className="space-y-2">
               {!isAdmin && (
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="space-y-2">
                   {!user.approved && (
                     <Button
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => onApprove(user.id)}
                       disabled={isApproving}
                       data-testid={`button-approve-user-${user.id}`}
@@ -868,39 +869,30 @@ function UserDetailPanel({
                       {isApproving ? "承認中..." : "承認する"}
                     </Button>
                   )}
-                  {user.plan === "free" && (
-                    <Button
-                      className="flex-1"
-                      onClick={() => onChangePlan(user.id, "premium")}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-bold text-muted-foreground shrink-0">プラン</Label>
+                    <Select
+                      value={user.plan}
+                      onValueChange={(value) => {
+                        if (value !== user.plan) {
+                          const planLabels: Record<string, string> = { free: "フリー", premium: "β版プレミアム", premium_full: "プレミアム" };
+                          if (confirm(`${user.companyName} のプランを「${planLabels[value]}」に変更しますか？`)) {
+                            onChangePlan(user.id, value);
+                          }
+                        }
+                      }}
                       disabled={isChangingPlan}
-                      data-testid={`button-plan-beta-${user.id}`}
                     >
-                      <Crown className="w-4 h-4 mr-1.5" />
-                      β版プレミアムに変更
-                    </Button>
-                  )}
-                  {user.plan === "free" && (
-                    <Button
-                      className="flex-1"
-                      onClick={() => onChangePlan(user.id, "premium_full")}
-                      disabled={isChangingPlan}
-                      data-testid={`button-plan-full-${user.id}`}
-                    >
-                      <Crown className="w-4 h-4 mr-1.5" />
-                      プレミアムに変更
-                    </Button>
-                  )}
-                  {(user.plan === "premium" || user.plan === "premium_full") && (
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => onChangePlan(user.id, "free")}
-                      disabled={isChangingPlan}
-                      data-testid={`button-plan-free-${user.id}`}
-                    >
-                      フリーに変更
-                    </Button>
-                  )}
+                      <SelectTrigger className="flex-1 h-8 text-sm" data-testid={`select-plan-${user.id}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">フリー</SelectItem>
+                        <SelectItem value="premium">β版プレミアム</SelectItem>
+                        <SelectItem value="premium_full">プレミアム</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
 
