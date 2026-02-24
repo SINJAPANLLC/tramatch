@@ -18,10 +18,11 @@ import {
   type Agent, type InsertAgent,
   type AiTrainingExample, type InsertAiTrainingExample,
   type AiCorrectionLog, type InsertAiCorrectionLog,
+  type YoutubeVideo, type InsertYoutubeVideo,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
-  invoices, agents, aiTrainingExamples, aiCorrectionLogs
+  invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -184,6 +185,12 @@ export interface IStorage {
     recentCargo: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
     recentTrucks: Array<{ id: string; title: string; status: string; price: string | null; createdAt: Date }>;
   }>>;
+
+  getYoutubeVideos(): Promise<YoutubeVideo[]>;
+  getVisibleYoutubeVideos(limit?: number): Promise<YoutubeVideo[]>;
+  upsertYoutubeVideo(data: InsertYoutubeVideo): Promise<YoutubeVideo>;
+  deleteYoutubeVideo(id: string): Promise<boolean>;
+  updateYoutubeVideoVisibility(id: string, isVisible: boolean): Promise<YoutubeVideo | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1059,6 +1066,43 @@ export class DatabaseStorage implements IStorage {
   async deleteAiCorrectionLog(id: string): Promise<boolean> {
     await db.delete(aiCorrectionLogs).where(eq(aiCorrectionLogs.id, id));
     return true;
+  }
+
+  async getYoutubeVideos(): Promise<YoutubeVideo[]> {
+    return db.select().from(youtubeVideos).orderBy(desc(youtubeVideos.publishedAt));
+  }
+
+  async getVisibleYoutubeVideos(limit = 6): Promise<YoutubeVideo[]> {
+    return db.select().from(youtubeVideos)
+      .where(eq(youtubeVideos.isVisible, true))
+      .orderBy(desc(youtubeVideos.publishedAt))
+      .limit(limit);
+  }
+
+  async upsertYoutubeVideo(data: InsertYoutubeVideo): Promise<YoutubeVideo> {
+    const existing = await db.select().from(youtubeVideos).where(eq(youtubeVideos.videoId, data.videoId));
+    if (existing.length > 0) {
+      const [updated] = await db.update(youtubeVideos)
+        .set({ ...data, fetchedAt: new Date() })
+        .where(eq(youtubeVideos.videoId, data.videoId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(youtubeVideos).values(data).returning();
+    return created;
+  }
+
+  async deleteYoutubeVideo(id: string): Promise<boolean> {
+    await db.delete(youtubeVideos).where(eq(youtubeVideos.id, id));
+    return true;
+  }
+
+  async updateYoutubeVideoVisibility(id: string, isVisible: boolean): Promise<YoutubeVideo | undefined> {
+    const [updated] = await db.update(youtubeVideos)
+      .set({ isVisible })
+      .where(eq(youtubeVideos.id, id))
+      .returning();
+    return updated;
   }
 }
 

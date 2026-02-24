@@ -3492,6 +3492,86 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.get("/api/youtube-videos", async (_req, res) => {
+    try {
+      const limit = parseInt(_req.query.limit as string) || 6;
+      const videos = await storage.getVisibleYoutubeVideos(limit);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "動画の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/youtube/fetch", requireAdmin, async (_req, res) => {
+    try {
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      const channelId = process.env.YOUTUBE_CHANNEL_ID;
+      if (!apiKey || !channelId) {
+        return res.status(400).json({ message: "YOUTUBE_API_KEY と YOUTUBE_CHANNEL_ID の環境変数を設定してください" });
+      }
+
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=20&order=date&type=video&key=${apiKey}`;
+      const searchRes = await fetch(searchUrl);
+      if (!searchRes.ok) {
+        const errBody = await searchRes.text();
+        return res.status(500).json({ message: `YouTube API エラー: ${errBody}` });
+      }
+      const searchData = await searchRes.json() as any;
+      const items = searchData.items || [];
+
+      let savedCount = 0;
+      for (const item of items) {
+        const videoId = item.id?.videoId;
+        if (!videoId) continue;
+        await storage.upsertYoutubeVideo({
+          videoId,
+          title: item.snippet?.title || "",
+          description: item.snippet?.description || "",
+          thumbnailUrl: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || "",
+          publishedAt: item.snippet?.publishedAt ? new Date(item.snippet.publishedAt) : null,
+          channelTitle: item.snippet?.channelTitle || "",
+          duration: null,
+          viewCount: 0,
+          isVisible: true,
+        });
+        savedCount++;
+      }
+
+      res.json({ message: `${savedCount}件の動画を取得しました`, count: savedCount });
+    } catch (error) {
+      res.status(500).json({ message: "YouTube動画の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/youtube-videos", requireAdmin, async (_req, res) => {
+    try {
+      const videos = await storage.getYoutubeVideos();
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "動画の取得に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/youtube-videos/:id/visibility", requireAdmin, async (req, res) => {
+    try {
+      const { isVisible } = req.body;
+      const video = await storage.updateYoutubeVideoVisibility(req.params.id, isVisible);
+      if (!video) return res.status(404).json({ message: "動画が見つかりません" });
+      res.json(video);
+    } catch (error) {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/youtube-videos/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteYoutubeVideo(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "削除に失敗しました" });
+    }
+  });
+
   // Admin: SEO Articles
   app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
     try {

@@ -28,6 +28,7 @@ Ensure all UI/UX changes align with the established design system (turquoise/tea
 - **Company and Partner Management**: Functionality for searching companies and managing business partners.
 - **Transport Ledger**: Management system for transport records.
 - **Payment Integration**: Secure payment processing with Square Web Payments SDK.
+- **YouTube Video Integration**: Fetches videos from a YouTube channel via YouTube Data API v3 and displays them on the LP. Videos are cached in `youtube_videos` table. Requires `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID` environment variables. Admin can trigger fetch via `/api/admin/youtube/fetch` and manage visibility.
 
 **File Management**: The system supports file uploads (PDF/JPG/PNG, max 10MB) via multer, primarily for registration documents.
 
