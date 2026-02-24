@@ -899,6 +899,9 @@ export default function CargoList() {
                     ) : (
                       <span className="text-xs text-muted-foreground font-bold">-</span>
                     )}
+                    {listing.createdAt && (Date.now() - new Date(listing.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
+                      <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-300 animate-pulse mt-0.5" data-testid={`badge-new-cargo-${listing.id}`}>New</span>
+                    )}
                   </td>
                   <td className="px-2 py-3 align-top max-w-[120px]">
                     <div className="font-bold text-foreground text-[12px] leading-tight truncate">{listing.companyName}</div>
