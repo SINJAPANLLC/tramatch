@@ -899,7 +899,7 @@ export default function CargoList() {
                     ) : (
                       <span className="text-xs text-muted-foreground font-bold">-</span>
                     )}
-                    {listing.createdAt && (Date.now() - new Date(listing.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
+                    {listing.createdAt && (Date.now() - new Date(listing.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000) && (
                       <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-300 animate-pulse mt-0.5" data-testid={`badge-new-cargo-${listing.id}`}>New</span>
                     )}
                   </td>
@@ -1441,7 +1441,12 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
             );
           })()}
 
-          <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-bold text-foreground">基本情報</h4>
+            {companyInfo?.companyName && companyInfo?.phone && companyInfo?.address && companyInfo?.representative && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300" data-testid="badge-company-profile-complete">企業情報登録済</span>
+            )}
+          </div>
           <div className="border border-border rounded-md overflow-hidden">
             <DetailRow label="法人名・事業者名">
               <div>
