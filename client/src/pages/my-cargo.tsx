@@ -851,8 +851,8 @@ export default function MyCargo() {
                             )}
                           </td>
                           <td className="px-2 py-3 align-top">
-                            <div className="space-y-1">
-                              <div className="flex items-start gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-start gap-1 min-w-0 w-[140px] shrink-0">
                                 <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1 flex-wrap">
@@ -866,12 +866,8 @@ export default function MyCargo() {
                                   </div>
                                 </div>
                               </div>
-
-                              <div className="flex items-center gap-1 pl-0.5">
-                                <div className="w-px h-2 bg-border ml-[4px]" />
-                              </div>
-
-                              <div className="flex items-start gap-1.5">
+                              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <div className="flex items-start gap-1 min-w-0">
                                 <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1 flex-wrap">
