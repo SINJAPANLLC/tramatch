@@ -42,6 +42,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.profileComplete,
       href: "/settings",
       action: "設定へ",
+      badge: progress.profileComplete ? "企業情報登録済" : null,
+      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300",
     },
     {
       id: "cargo",
@@ -50,6 +52,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.cargoCount > 0,
       href: "/cargo/new",
       action: "登録する",
+      badge: progress.cargoCount === 0 ? "New" : null,
+      badgeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-300 animate-pulse",
     },
     {
       id: "truck",
@@ -58,6 +62,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.truckCount > 0,
       href: "/trucks",
       action: "登録する",
+      badge: progress.truckCount === 0 ? "New" : null,
+      badgeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-300 animate-pulse",
     },
     {
       id: "search",
@@ -66,6 +72,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: false,
       href: "/companies",
       action: "検索する",
+      badge: null,
+      badgeColor: "",
     },
     {
       id: "partner",
@@ -74,6 +82,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.partnerCount > 0,
       href: "/partners",
       action: "登録する",
+      badge: null,
+      badgeColor: "",
     },
     {
       id: "notification",
@@ -82,6 +92,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.notificationSettingDone,
       href: "/settings",
       action: "設定へ",
+      badge: null,
+      badgeColor: "",
     },
   ];
 
@@ -130,9 +142,16 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
                   <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {step.label}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                      {step.label}
+                    </p>
+                    {step.badge && (
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${step.badgeColor}`} data-testid={`badge-${step.id}`}>
+                        {step.badge}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{step.description}</p>
                 </div>
                 {!step.done && (
