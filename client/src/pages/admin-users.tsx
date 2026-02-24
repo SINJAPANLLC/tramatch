@@ -71,6 +71,9 @@ type SafeUser = {
   accountingContactPhone?: string;
   accountingContactFax?: string;
   adminMemo?: string | null;
+  lastLoginAt?: string | null;
+  lastLoginIp?: string | null;
+  lastLoginLocation?: string | null;
   addedByUserId?: string | null;
 };
 
@@ -853,6 +856,26 @@ function UserDetailPanel({
                 </span>
               )}
             </div>
+
+            {(user.lastLoginAt || user.lastLoginLocation || user.lastLoginIp) && (
+              <div className="border border-border rounded-md overflow-hidden bg-muted/20" data-testid="section-login-info">
+                <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                  <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    最終ログイン情報
+                  </span>
+                </div>
+                {user.lastLoginAt && (
+                  <DetailRow label="日時" value={new Date(user.lastLoginAt).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })} />
+                )}
+                {user.lastLoginLocation && (
+                  <DetailRow label="場所" value={user.lastLoginLocation} />
+                )}
+                {user.lastLoginIp && (
+                  <DetailRow label="IPアドレス" value={user.lastLoginIp} />
+                )}
+              </div>
+            )}
 
             {user.addedByUserId && (() => {
               const parent = allUsers.find(p => p.id === user.addedByUserId);

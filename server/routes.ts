@@ -265,6 +265,22 @@ export async function registerRoutes(
       req.session.userId = user.id;
       req.session.role = user.role;
 
+      const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+      const now = new Date().toISOString();
+      let locationStr = "";
+      try {
+        const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=status,country,regionName,city`);
+        const geo = await geoRes.json();
+        if (geo.status === "success") {
+          locationStr = [geo.country, geo.regionName, geo.city].filter(Boolean).join(" ");
+        }
+      } catch {}
+      storage.updateUserProfile(user.id, {
+        lastLoginAt: now,
+        lastLoginIp: clientIp,
+        lastLoginLocation: locationStr || undefined,
+      }).catch(() => {});
+
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
@@ -368,7 +384,7 @@ export async function registerRoutes(
     if (!user) {
       return res.status(401).json({ message: "ユーザーが見つかりません" });
     }
-    const { password, adminMemo, ...safeUser } = user;
+    const { password, adminMemo, lastLoginAt, lastLoginIp, lastLoginLocation, ...safeUser } = user;
     res.json(safeUser);
   });
 
