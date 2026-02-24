@@ -367,7 +367,7 @@ export async function registerRoutes(
     if (!user) {
       return res.status(401).json({ message: "ユーザーが見つかりません" });
     }
-    const { password, ...safeUser } = user;
+    const { password, adminMemo, ...safeUser } = user;
     res.json(safeUser);
   });
 
