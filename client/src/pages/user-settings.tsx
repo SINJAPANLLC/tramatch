@@ -1016,7 +1016,12 @@ export default function UserSettings() {
             {activeTab === "basic" && (
               <Card>
                 <CardContent className="p-4 sm:p-6">
-                  <h2 className="text-base font-bold text-foreground mb-6">企業基本情報</h2>
+                  <div className="flex items-center gap-2 mb-6">
+                    <h2 className="text-base font-bold text-foreground">企業基本情報</h2>
+                    {user?.companyName && user?.phone && user?.address && user?.representative && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300" data-testid="badge-profile-complete">企業情報登録済</span>
+                    )}
+                  </div>
                   <div className="mb-4">
                     <span className="text-sm font-medium text-foreground">{user?.companyName}</span>
                   </div>
