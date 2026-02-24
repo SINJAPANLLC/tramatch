@@ -59,6 +59,7 @@ export default function TruckForm() {
       currentArea: "",
       destinationArea: "",
       vehicleType: "",
+      truckCount: "",
       bodyType: "",
       maxWeight: "",
       availableDate: "",
@@ -74,6 +75,7 @@ export default function TruckForm() {
         currentArea: editTruck.currentArea || "",
         destinationArea: editTruck.destinationArea || "",
         vehicleType: editTruck.vehicleType || "",
+        truckCount: editTruck.truckCount || "",
         bodyType: editTruck.bodyType || "",
         maxWeight: editTruck.maxWeight || "",
         availableDate: editTruck.availableDate || "",
@@ -193,28 +195,43 @@ export default function TruckForm() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="vehicleType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>車種</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                <div className="grid grid-cols-[1fr_80px] gap-2">
+                  <FormField
+                    control={form.control}
+                    name="vehicleType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>車種</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-truck-vehicle-type">
+                              <SelectValue placeholder="選択" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {VEHICLE_TYPES.map((v) => (
+                              <SelectItem key={v} value={v}>{v}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="truckCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>台数</FormLabel>
                         <FormControl>
-                          <SelectTrigger data-testid="select-truck-vehicle-type">
-                            <SelectValue placeholder="選択してください" />
-                          </SelectTrigger>
+                          <Input {...field} value={field.value || ""} placeholder="1" data-testid="input-truck-count" />
                         </FormControl>
-                        <SelectContent>
-                          {VEHICLE_TYPES.map((v) => (
-                            <SelectItem key={v} value={v}>{v}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="bodyType"

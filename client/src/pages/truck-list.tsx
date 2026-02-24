@@ -56,7 +56,7 @@ const PER_PAGE_OPTIONS = [10, 20, 50, 100];
 type InputMode = "text" | "file" | "voice";
 
 const TRUCK_FIELDS = [
-  "title", "currentArea", "destinationArea", "vehicleType", "bodyType",
+  "title", "currentArea", "destinationArea", "vehicleType", "truckCount", "bodyType",
   "maxWeight", "availableDate", "price", "description",
 ];
 
@@ -224,6 +224,7 @@ ${row("タイトル", listing.title)}
 ${row("企業名", listing.companyName)}
 ${row("車種", listing.vehicleType)}
 ${row("車体タイプ", listing.bodyType)}
+${row("台数", listing.truckCount ? `${listing.truckCount}台` : "-")}
 ${row("最大積載量", listing.maxWeight)}
 ${row("空車日", listing.availableDate)}
 ${row("連絡先", listing.contactPhone)}
@@ -323,6 +324,7 @@ ${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount}
               </div>
             </DetailRow>
             <DetailRow label="車種" value={listing.vehicleType} />
+            <DetailRow label="台数" value={listing.truckCount ? `${listing.truckCount}台` : "-"} />
             <DetailRow label="車体タイプ" value={listing.bodyType || "-"} />
             <DetailRow label="最大積載量" value={listing.maxWeight} />
             <DetailRow label="空車日" value={listing.availableDate} />
@@ -489,7 +491,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   const form = useForm<InsertTruckListing>({
     resolver: zodResolver(truckFormSchema),
     defaultValues: {
-      title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
+      title: "", currentArea: "", destinationArea: "", vehicleType: "", truckCount: "", bodyType: "",
       maxWeight: "", availableDate: "", price: "", description: "",
     },
   });
@@ -1036,7 +1038,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                 <div className="border-t border-border pt-3">
                   <h3 className="text-xs font-bold text-muted-foreground mb-2">車両情報</h3>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-[1fr_60px] gap-2">
                       <FormField control={form.control} name="vehicleType" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">車種</FormLabel>
@@ -1044,6 +1046,13 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                             <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-truck-vehicle-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
                             <SelectContent>{VEHICLE_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="truckCount" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">台数</FormLabel>
+                          <FormControl><Input {...field} value={field.value || ""} placeholder="1" className="h-8 text-xs" data-testid="input-truck-count" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />

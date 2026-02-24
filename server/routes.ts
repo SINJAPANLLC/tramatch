@@ -1644,7 +1644,7 @@ export async function registerRoutes(
       if (!listing) {
         return res.status(404).json({ message: "空車情報が見つかりません" });
       }
-      const truckAllowed = ["title", "currentArea", "destinationArea", "vehicleType", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
+      const truckAllowed = ["title", "currentArea", "destinationArea", "vehicleType", "truckCount", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
       const safeBody: Record<string, any> = {};
       for (const key of truckAllowed) { if (key in req.body) safeBody[key] = req.body[key]; }
       const updated = await storage.updateTruckListing(req.params.id as string, safeBody);
@@ -2372,6 +2372,7 @@ JSONのみを返してください。${chatFewShotSection}`,
   "destinationArea": "行先地の都道府県名のみ（例: 大阪）",
   "vehicleType": "車種（以下から選択: 軽車両, 1t車, 1.5t車, 2t車, 3t車, 4t車, 5t車, 6t車, 7t車, 8t車, 10t車, 11t車, 13t車, 15t車, 増トン車, 大型車, トレーラー, フルトレーラー, その他）",
   "bodyType": "車体タイプ（以下から選択: 平ボディ, バン, ウイング, 幌ウイング, 冷蔵車, 冷凍車, 冷凍冷蔵車, ダンプ, タンクローリー, 車載車, セルフローダー, セーフティローダー, ユニック, クレーン付き, パワーゲート付き, エアサス, コンテナ車, 海上コンテナ, 低床, 高床, その他）",
+  "truckCount": "台数（例: 1, 2, 3。数字のみ）",
   "maxWeight": "最大積載量（例: 10t, 2t, 500kg）",
   "availableDate": "空車日（YYYY/MM/DD形式）",
   "price": "最低運賃（税別、数字のみ、例: 50000。金額不明の場合は空文字）",
