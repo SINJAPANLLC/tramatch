@@ -42,8 +42,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.profileComplete,
       href: "/settings",
       action: "設定へ",
-      badge: progress.profileComplete ? "企業情報登録済" : null,
-      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300",
+      badge: null,
+      badgeColor: "",
     },
     {
       id: "cargo",
@@ -52,8 +52,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.cargoCount > 0,
       href: "/cargo/new",
       action: "登録する",
-      badge: progress.cargoCount === 0 ? "New" : null,
-      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 animate-pulse",
+      badge: null,
+      badgeColor: "",
     },
     {
       id: "truck",
@@ -62,8 +62,8 @@ function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
       done: progress.truckCount > 0,
       href: "/trucks",
       action: "登録する",
-      badge: progress.truckCount === 0 ? "New" : null,
-      badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 animate-pulse",
+      badge: null,
+      badgeColor: "",
     },
     {
       id: "search",
