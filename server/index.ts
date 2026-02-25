@@ -109,6 +109,9 @@ app.use((req, res, next) => {
   const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
   scheduleAutoPublish();
 
+  const { scheduleLeadCrawler } = await import("./lead-crawler");
+  scheduleLeadCrawler();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

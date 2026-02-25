@@ -21,11 +21,12 @@ import {
   type YoutubeVideo, type InsertYoutubeVideo,
   type YoutubeAutoPublishJob,
   type EmailCampaign, type InsertEmailCampaign,
+  type EmailLead, type InsertEmailLead,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
   invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs,
-  emailCampaigns
+  emailCampaigns, emailLeads
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -207,6 +208,16 @@ export interface IStorage {
   createEmailCampaign(data: InsertEmailCampaign): Promise<EmailCampaign>;
   updateEmailCampaign(id: string, data: Partial<EmailCampaign>): Promise<EmailCampaign | undefined>;
   deleteEmailCampaign(id: string): Promise<boolean>;
+
+  getEmailLeads(status?: string, limit?: number, offset?: number): Promise<EmailLead[]>;
+  getEmailLeadCount(status?: string): Promise<number>;
+  getEmailLeadByEmail(email: string): Promise<EmailLead | undefined>;
+  createEmailLead(data: InsertEmailLead): Promise<EmailLead>;
+  createEmailLeads(data: InsertEmailLead[]): Promise<number>;
+  updateEmailLead(id: string, data: Partial<EmailLead>): Promise<EmailLead | undefined>;
+  deleteEmailLead(id: string): Promise<boolean>;
+  getNewEmailLeadsForSending(limit: number): Promise<EmailLead[]>;
+  getTodaySentLeadCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1178,6 +1189,60 @@ export class DatabaseStorage implements IStorage {
   async deleteEmailCampaign(id: string): Promise<boolean> {
     const result = await db.delete(emailCampaigns).where(eq(emailCampaigns.id, id));
     return true;
+  }
+
+  async getEmailLeads(status?: string, limit = 100, offset = 0): Promise<EmailLead[]> {
+    if (status) {
+      return db.select().from(emailLeads).where(eq(emailLeads.status, status)).orderBy(desc(emailLeads.createdAt)).limit(limit).offset(offset);
+    }
+    return db.select().from(emailLeads).orderBy(desc(emailLeads.createdAt)).limit(limit).offset(offset);
+  }
+
+  async getEmailLeadCount(status?: string): Promise<number> {
+    const condition = status ? eq(emailLeads.status, status) : undefined;
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(emailLeads).where(condition);
+    return result?.count || 0;
+  }
+
+  async getEmailLeadByEmail(email: string): Promise<EmailLead | undefined> {
+    const [lead] = await db.select().from(emailLeads).where(eq(emailLeads.email, email));
+    return lead;
+  }
+
+  async createEmailLead(data: InsertEmailLead): Promise<EmailLead> {
+    const [lead] = await db.insert(emailLeads).values(data).returning();
+    return lead;
+  }
+
+  async createEmailLeads(data: InsertEmailLead[]): Promise<number> {
+    if (data.length === 0) return 0;
+    const result = await db.insert(emailLeads).values(data).onConflictDoNothing().returning();
+    return result.length;
+  }
+
+  async updateEmailLead(id: string, data: Partial<EmailLead>): Promise<EmailLead | undefined> {
+    const [lead] = await db.update(emailLeads).set(data).where(eq(emailLeads.id, id)).returning();
+    return lead;
+  }
+
+  async deleteEmailLead(id: string): Promise<boolean> {
+    await db.delete(emailLeads).where(eq(emailLeads.id, id));
+    return true;
+  }
+
+  async getNewEmailLeadsForSending(limit: number): Promise<EmailLead[]> {
+    return db.select().from(emailLeads)
+      .where(and(eq(emailLeads.status, "new"), sql`${emailLeads.email} IS NOT NULL AND ${emailLeads.email} != ''`))
+      .orderBy(emailLeads.createdAt)
+      .limit(limit);
+  }
+
+  async getTodaySentLeadCount(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(emailLeads)
+      .where(and(eq(emailLeads.status, "sent"), gte(emailLeads.sentAt, today)));
+    return result?.count || 0;
   }
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Mail, Plus, Send, Trash2, Edit, TestTube, Loader2, CheckCircle2, XCircle, Clock, AlertTriangle, RefreshCw, Eye } from "lucide-react";
+import {
+  Mail, Plus, Send, Trash2, Edit, Loader2, CheckCircle2, XCircle, Clock,
+  AlertTriangle, Eye, Search, Globe, Users, Settings, Bot, ExternalLink,
+} from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 
 type EmailCampaign = {
@@ -34,7 +37,32 @@ type EmailCampaign = {
   createdAt: string;
 };
 
-function statusBadge(status: string) {
+type EmailLead = {
+  id: string;
+  companyName: string;
+  email: string | null;
+  fax: string | null;
+  phone: string | null;
+  website: string | null;
+  address: string | null;
+  industry: string | null;
+  source: string | null;
+  status: string;
+  sentAt: string | null;
+  sentSubject: string | null;
+  createdAt: string;
+};
+
+type LeadsResponse = {
+  leads: EmailLead[];
+  total: number;
+  todaySent: number;
+  newCount: number;
+  sentCount: number;
+  failedCount: number;
+};
+
+function campaignStatusBadge(status: string) {
   switch (status) {
     case "completed":
       return <Badge className="bg-green-600 text-xs"><CheckCircle2 className="w-3 h-3 mr-1" />送信完了</Badge>;
@@ -49,6 +77,19 @@ function statusBadge(status: string) {
   }
 }
 
+function leadStatusBadge(status: string) {
+  switch (status) {
+    case "new":
+      return <Badge variant="secondary" className="text-xs">未送信</Badge>;
+    case "sent":
+      return <Badge className="bg-green-600 text-xs">送信済</Badge>;
+    case "failed":
+      return <Badge variant="destructive" className="text-xs">失敗</Badge>;
+    default:
+      return <Badge variant="outline" className="text-xs">{status}</Badge>;
+  }
+}
+
 function formatDate(dateVal: string | Date | null) {
   if (!dateVal) return "-";
   const d = new Date(dateVal);
@@ -57,7 +98,7 @@ function formatDate(dateVal: string | Date | null) {
 
 export default function AdminEmailMarketing() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("campaigns");
+  const [activeTab, setActiveTab] = useState("leads");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showConfirmSendDialog, setShowConfirmSendDialog] = useState(false);
@@ -69,12 +110,43 @@ export default function AdminEmailMarketing() {
   const [formBody, setFormBody] = useState("");
   const [formRecipients, setFormRecipients] = useState("");
 
-  const [testEmail, setTestEmail] = useState("");
+  const [crawlUrl, setCrawlUrl] = useState("");
+  const [leadFilter, setLeadFilter] = useState("");
+  const [leadEmailSubject, setLeadEmailSubject] = useState("");
+  const [leadEmailBody, setLeadEmailBody] = useState("");
 
-  const { data: campaigns, isLoading } = useQuery<EmailCampaign[]>({
+  const { data: campaigns, isLoading: campaignsLoading } = useQuery<EmailCampaign[]>({
     queryKey: ["/api/admin/email-campaigns"],
     refetchInterval: 5000,
   });
+
+  const { data: leadsData, isLoading: leadsLoading } = useQuery<LeadsResponse>({
+    queryKey: ["/api/admin/email-leads", leadFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams({ limit: "200" });
+      if (leadFilter) params.set("status", leadFilter);
+      const res = await fetch(`/api/admin/email-leads?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    refetchInterval: 10000,
+  });
+
+  const { data: leadSettings } = useQuery<{ subject: string; body: string }>({
+    queryKey: ["/api/admin/email-leads/settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/email-leads/settings", { credentials: "include" });
+      if (!res.ok) return { subject: "", body: "" };
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (leadSettings) {
+      if (leadSettings.subject) setLeadEmailSubject(leadSettings.subject);
+      if (leadSettings.body) setLeadEmailBody(leadSettings.body);
+    }
+  }, [leadSettings]);
 
   const createMutation = useMutation({
     mutationFn: async (data: { name: string; subject: string; body: string; recipients: string }) => {
@@ -87,9 +159,7 @@ export default function AdminEmailMarketing() {
       setShowCreateDialog(false);
       resetForm();
     },
-    onError: () => {
-      toast({ title: "作成に失敗しました", variant: "destructive" });
-    },
+    onError: () => toast({ title: "作成に失敗しました", variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -104,25 +174,18 @@ export default function AdminEmailMarketing() {
       setShowCreateDialog(false);
       resetForm();
     },
-    onError: () => {
-      toast({ title: "更新に失敗しました", variant: "destructive" });
-    },
+    onError: () => toast({ title: "更新に失敗しました", variant: "destructive" }),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/admin/email-campaigns/${id}`);
-    },
+  const deleteCampaignMutation = useMutation({
+    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/admin/email-campaigns/${id}`); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/email-campaigns"] });
       toast({ title: "キャンペーンを削除しました" });
     },
-    onError: () => {
-      toast({ title: "削除に失敗しました", variant: "destructive" });
-    },
   });
 
-  const sendMutation = useMutation({
+  const sendCampaignMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await apiRequest("POST", `/api/admin/email-campaigns/${id}/send`);
       return res.json();
@@ -133,22 +196,60 @@ export default function AdminEmailMarketing() {
       setShowConfirmSendDialog(false);
       setSelectedCampaign(null);
     },
-    onError: () => {
-      toast({ title: "送信の開始に失敗しました", variant: "destructive" });
+    onError: () => toast({ title: "送信の開始に失敗しました", variant: "destructive" }),
+  });
+
+  const crawlMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/email-leads/crawl");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: data.message });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
+    },
+    onError: () => toast({ title: "クロールの開始に失敗しました", variant: "destructive" }),
+  });
+
+  const crawlUrlMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const res = await apiRequest("POST", "/api/admin/email-leads/crawl-url", { url });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: data.message });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
+      setCrawlUrl("");
+    },
+    onError: () => toast({ title: "URLクロールに失敗しました", variant: "destructive" }),
+  });
+
+  const sendLeadsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/email-leads/send-now");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: data.message });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
+    },
+    onError: () => toast({ title: "送信の開始に失敗しました", variant: "destructive" }),
+  });
+
+  const deleteLeadMutation = useMutation({
+    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/admin/email-leads/${id}`); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
     },
   });
 
-  const testSendMutation = useMutation({
-    mutationFn: async (data: { to: string; subject: string; body: string }) => {
-      const res = await apiRequest("POST", "/api/admin/email-campaigns/test-send", data);
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (data: { subject: string; body: string }) => {
+      const res = await apiRequest("PATCH", "/api/admin/email-leads/settings", data);
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "テストメールを送信しました" });
-    },
-    onError: () => {
-      toast({ title: "テスト送信に失敗しました", variant: "destructive" });
-    },
+    onSuccess: () => toast({ title: "テンプレートを保存しました" }),
+    onError: () => toast({ title: "保存に失敗しました", variant: "destructive" }),
   });
 
   function resetForm() {
@@ -159,10 +260,7 @@ export default function AdminEmailMarketing() {
     setEditingCampaign(null);
   }
 
-  function openCreate() {
-    resetForm();
-    setShowCreateDialog(true);
-  }
+  function openCreate() { resetForm(); setShowCreateDialog(true); }
 
   function openEdit(campaign: EmailCampaign) {
     setEditingCampaign(campaign);
@@ -179,18 +277,10 @@ export default function AdminEmailMarketing() {
       return;
     }
     if (editingCampaign) {
-      updateMutation.mutate({
-        id: editingCampaign.id,
-        data: { name: formName, subject: formSubject, body: formBody, recipients: formRecipients },
-      });
+      updateMutation.mutate({ id: editingCampaign.id, data: { name: formName, subject: formSubject, body: formBody, recipients: formRecipients } });
     } else {
       createMutation.mutate({ name: formName, subject: formSubject, body: formBody, recipients: formRecipients });
     }
-  }
-
-  function confirmSend(campaign: EmailCampaign) {
-    setSelectedCampaign(campaign);
-    setShowConfirmSendDialog(true);
   }
 
   const recipientCount = formRecipients.split("\n").filter(e => e.trim() && e.includes("@")).length;
@@ -205,25 +295,250 @@ export default function AdminEmailMarketing() {
                 <Mail className="w-5 h-5 text-primary" />
                 メール営業
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">一括メール送信キャンペーンの管理</p>
+              <p className="text-sm text-muted-foreground mt-1">AIリード自動収集 & 一括メール送信</p>
             </div>
-            <Button onClick={openCreate} data-testid="button-create-campaign">
-              <Plus className="w-4 h-4 mr-1.5" />
-              新規作成
-            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-2xl font-bold text-foreground" data-testid="text-stat-total">{leadsData?.total || 0}</p>
+                <p className="text-xs text-muted-foreground">総リード数</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-2xl font-bold text-blue-600" data-testid="text-stat-new">{leadsData?.newCount || 0}</p>
+                <p className="text-xs text-muted-foreground">未送信</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-2xl font-bold text-green-600" data-testid="text-stat-sent">{leadsData?.sentCount || 0}</p>
+                <p className="text-xs text-muted-foreground">送信済</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <p className="text-2xl font-bold text-orange-600" data-testid="text-stat-today">{leadsData?.todaySent || 0}/300</p>
+                <p className="text-xs text-muted-foreground">本日送信</p>
+              </CardContent>
+            </Card>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="campaigns" data-testid="tab-campaigns">キャンペーン一覧</TabsTrigger>
-              <TabsTrigger value="test" data-testid="tab-test">テスト送信</TabsTrigger>
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="leads" data-testid="tab-leads">
+                <Users className="w-3.5 h-3.5 mr-1" />
+                リード一覧
+              </TabsTrigger>
+              <TabsTrigger value="crawl" data-testid="tab-crawl">
+                <Bot className="w-3.5 h-3.5 mr-1" />
+                自動収集
+              </TabsTrigger>
+              <TabsTrigger value="template" data-testid="tab-template">
+                <Settings className="w-3.5 h-3.5 mr-1" />
+                テンプレート
+              </TabsTrigger>
+              <TabsTrigger value="campaigns" data-testid="tab-campaigns">
+                <Send className="w-3.5 h-3.5 mr-1" />
+                キャンペーン
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="campaigns" className="mt-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <TabsContent value="leads" className="mt-4 space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex gap-1.5">
+                  {[
+                    { key: "", label: "すべて" },
+                    { key: "new", label: "未送信" },
+                    { key: "sent", label: "送信済" },
+                    { key: "failed", label: "失敗" },
+                  ].map(f => (
+                    <Badge
+                      key={f.key}
+                      variant={leadFilter === f.key ? "default" : "secondary"}
+                      className="cursor-pointer px-3 py-1"
+                      onClick={() => setLeadFilter(f.key)}
+                      data-testid={`badge-filter-${f.key || "all"}`}
+                    >
+                      {f.label}
+                    </Badge>
+                  ))}
                 </div>
+                <div className="flex-1" />
+                <Button
+                  size="sm"
+                  onClick={() => sendLeadsMutation.mutate()}
+                  disabled={sendLeadsMutation.isPending || (leadsData?.newCount || 0) === 0}
+                  data-testid="button-send-leads"
+                >
+                  {sendLeadsMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                  新規リードに一括送信
+                </Button>
+              </div>
+
+              {leadsLoading ? (
+                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+              ) : leadsData && leadsData.leads.length > 0 ? (
+                <div className="space-y-2">
+                  {leadsData.leads.map(lead => (
+                    <Card key={lead.id} data-testid={`card-lead-${lead.id}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="font-medium text-sm text-foreground truncate">{lead.companyName}</span>
+                              {leadStatusBadge(lead.status)}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                              {lead.email && <span className="font-mono">{lead.email}</span>}
+                              {lead.fax && <span>FAX: {lead.fax}</span>}
+                              {lead.phone && <span>TEL: {lead.phone}</span>}
+                              {lead.industry && <span>{lead.industry}</span>}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                              {lead.website && (
+                                <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5">
+                                  <ExternalLink className="w-3 h-3" />サイト
+                                </a>
+                              )}
+                              <span>取得: {formatDate(lead.createdAt)}</span>
+                              {lead.sentAt && <span>送信: {formatDate(lead.sentAt)}</span>}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
+                            onClick={() => deleteLeadMutation.mutate(lead.id)}
+                            data-testid={`button-delete-lead-${lead.id}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Users className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+                    <p className="text-muted-foreground" data-testid="text-empty-leads">リードがありません</p>
+                    <p className="text-sm text-muted-foreground mt-1">「自動収集」タブからAIクロールを開始してください</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="crawl" className="mt-4 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-primary" />
+                    AIリード自動収集
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
+                    <p className="font-medium text-foreground">自動スケジュール</p>
+                    <p className="text-muted-foreground">毎日 07:00 JST にAIが自動でクロールを実行し、一般貨物・利用運送企業のメールアドレスを収集します。</p>
+                    <p className="text-muted-foreground">毎日 10:00 JST に未送信リードへ営業メールを自動送信します（上限300件/日）。</p>
+                  </div>
+                  <Button
+                    onClick={() => crawlMutation.mutate()}
+                    disabled={crawlMutation.isPending}
+                    data-testid="button-start-crawl"
+                  >
+                    {crawlMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Search className="w-4 h-4 mr-1.5" />}
+                    今すぐAIクロール実行
+                  </Button>
+                  <p className="text-xs text-muted-foreground">AIが検索クエリを生成し、運送会社のウェブサイトからメール・FAX番号を自動抽出します。完了まで数分かかります。</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    URL指定クロール
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      value={crawlUrl}
+                      onChange={(e) => setCrawlUrl(e.target.value)}
+                      placeholder="https://example.co.jp/company"
+                      className="flex-1"
+                      data-testid="input-crawl-url"
+                    />
+                    <Button
+                      onClick={() => { if (crawlUrl) crawlUrlMutation.mutate(crawlUrl); }}
+                      disabled={crawlUrlMutation.isPending || !crawlUrl}
+                      data-testid="button-crawl-url"
+                    >
+                      {crawlUrlMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Search className="w-4 h-4 mr-1" />}
+                      抽出
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">企業のウェブサイトURLを入力すると、ページからメールアドレス・FAX番号を抽出します。</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="template" className="mt-4 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    自動送信メールテンプレート
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">AIクロールで収集したリードへの自動送信メールの内容を設定します。{"{company}"}で会社名に置換されます。</p>
+                  <div>
+                    <Label>件名</Label>
+                    <Input
+                      value={leadEmailSubject}
+                      onChange={(e) => setLeadEmailSubject(e.target.value)}
+                      placeholder="【トラマッチ】物流コスト削減のご提案"
+                      data-testid="input-lead-subject"
+                    />
+                  </div>
+                  <div>
+                    <Label>本文</Label>
+                    <Textarea
+                      value={leadEmailBody}
+                      onChange={(e) => setLeadEmailBody(e.target.value)}
+                      placeholder="営業メールの本文を入力..."
+                      rows={15}
+                      data-testid="input-lead-body"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => saveSettingsMutation.mutate({ subject: leadEmailSubject, body: leadEmailBody })}
+                    disabled={saveSettingsMutation.isPending}
+                    data-testid="button-save-template"
+                  >
+                    {saveSettingsMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
+                    テンプレートを保存
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="campaigns" className="mt-4 space-y-4">
+              <div className="flex justify-end">
+                <Button onClick={openCreate} data-testid="button-create-campaign">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  新規キャンペーン
+                </Button>
+              </div>
+
+              {campaignsLoading ? (
+                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
               ) : campaigns && campaigns.length > 0 ? (
                 <div className="space-y-3">
                   {campaigns.map((campaign) => {
@@ -234,71 +549,46 @@ export default function AdminEmailMarketing() {
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 className="font-bold text-foreground truncate" data-testid={`text-campaign-name-${campaign.id}`}>{campaign.name}</h3>
-                                {statusBadge(campaign.status)}
+                                <h3 className="font-bold text-foreground truncate">{campaign.name}</h3>
+                                {campaignStatusBadge(campaign.status)}
                               </div>
-                              <p className="text-sm text-muted-foreground truncate mb-2" data-testid={`text-campaign-subject-${campaign.id}`}>
-                                件名: {campaign.subject}
-                              </p>
+                              <p className="text-sm text-muted-foreground truncate mb-2">件名: {campaign.subject}</p>
                               <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                                 <span>宛先: {recipientLines.length}件</span>
                                 {campaign.status !== "draft" && (
                                   <>
-                                    <span className="text-green-600">送信成功: {campaign.sentCount}</span>
-                                    {campaign.failedCount > 0 && (
-                                      <span className="text-red-600">失敗: {campaign.failedCount}</span>
-                                    )}
+                                    <span className="text-green-600">成功: {campaign.sentCount}</span>
+                                    {campaign.failedCount > 0 && <span className="text-red-600">失敗: {campaign.failedCount}</span>}
                                   </>
                                 )}
                                 <span>作成: {formatDate(campaign.createdAt)}</span>
-                                {campaign.sentAt && <span>送信: {formatDate(campaign.sentAt)}</span>}
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => { setSelectedCampaign(campaign); setShowPreviewDialog(true); }}
-                                data-testid={`button-preview-${campaign.id}`}
-                              >
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedCampaign(campaign); setShowPreviewDialog(true); }}>
                                 <Eye className="w-4 h-4" />
                               </Button>
                               {campaign.status === "draft" && (
                                 <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => openEdit(campaign)}
-                                    data-testid={`button-edit-${campaign.id}`}
-                                  >
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(campaign)}>
                                     <Edit className="w-4 h-4" />
                                   </Button>
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => confirmSend(campaign)}
-                                    data-testid={`button-send-${campaign.id}`}
-                                  >
-                                    <Send className="w-3.5 h-3.5 mr-1" />
-                                    送信
+                                  <Button variant="default" size="sm" onClick={() => { setSelectedCampaign(campaign); setShowConfirmSendDialog(true); }}>
+                                    <Send className="w-3.5 h-3.5 mr-1" />送信
                                   </Button>
                                 </>
                               )}
                               {campaign.status === "sending" && (
                                 <Button variant="outline" size="sm" disabled>
                                   <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                  送信中 ({campaign.sentCount}/{campaign.totalCount})
+                                  {campaign.sentCount}/{campaign.totalCount}
                                 </Button>
                               )}
                               <Button
-                                variant="ghost"
-                                size="icon"
+                                variant="ghost" size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => deleteMutation.mutate(campaign.id)}
+                                onClick={() => deleteCampaignMutation.mutate(campaign.id)}
                                 disabled={campaign.status === "sending"}
-                                data-testid={`button-delete-${campaign.id}`}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -313,70 +603,10 @@ export default function AdminEmailMarketing() {
                 <Card>
                   <CardContent className="p-12 text-center">
                     <Mail className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-                    <p className="text-muted-foreground" data-testid="text-empty-state">キャンペーンがありません</p>
-                    <p className="text-sm text-muted-foreground mt-1">「新規作成」からメールキャンペーンを作成してください</p>
+                    <p className="text-muted-foreground">キャンペーンがありません</p>
                   </CardContent>
                 </Card>
               )}
-            </TabsContent>
-
-            <TabsContent value="test" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TestTube className="w-4 h-4" />
-                    テストメール送信
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>送信先メールアドレス</Label>
-                    <Input
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      placeholder="test@example.com"
-                      data-testid="input-test-email"
-                    />
-                  </div>
-                  <div>
-                    <Label>件名</Label>
-                    <Input
-                      value={formSubject}
-                      onChange={(e) => setFormSubject(e.target.value)}
-                      placeholder="テストメールの件名"
-                      data-testid="input-test-subject"
-                    />
-                  </div>
-                  <div>
-                    <Label>本文</Label>
-                    <Textarea
-                      value={formBody}
-                      onChange={(e) => setFormBody(e.target.value)}
-                      placeholder="テストメールの本文"
-                      rows={8}
-                      data-testid="input-test-body"
-                    />
-                  </div>
-                  <Button
-                    onClick={() => {
-                      if (!testEmail || !formSubject || !formBody) {
-                        toast({ title: "すべての項目を入力してください", variant: "destructive" });
-                        return;
-                      }
-                      testSendMutation.mutate({ to: testEmail, subject: formSubject, body: formBody });
-                    }}
-                    disabled={testSendMutation.isPending}
-                    data-testid="button-test-send"
-                  >
-                    {testSendMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-1.5" />
-                    )}
-                    テスト送信
-                  </Button>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>
@@ -386,66 +616,34 @@ export default function AdminEmailMarketing() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCampaign ? "キャンペーン編集" : "新規キャンペーン作成"}</DialogTitle>
-            <DialogDescription>
-              メール営業キャンペーンの内容を設定してください
-            </DialogDescription>
+            <DialogDescription>手動でメール送信先を指定してキャンペーンを作成します</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>キャンペーン名</Label>
-              <Input
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="例: 2026年3月 新規顧客開拓"
-                data-testid="input-campaign-name"
-              />
+              <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="例: 2026年3月 新規顧客開拓" data-testid="input-campaign-name" />
             </div>
             <div>
               <Label>メール件名</Label>
-              <Input
-                value={formSubject}
-                onChange={(e) => setFormSubject(e.target.value)}
-                placeholder="例: 【トラマッチ】物流コスト削減のご提案"
-                data-testid="input-campaign-subject"
-              />
+              <Input value={formSubject} onChange={(e) => setFormSubject(e.target.value)} placeholder="例: 【トラマッチ】物流コスト削減のご提案" data-testid="input-campaign-subject" />
             </div>
             <div>
               <Label>メール本文</Label>
-              <Textarea
-                value={formBody}
-                onChange={(e) => setFormBody(e.target.value)}
-                placeholder={"例:\nお世話になっております。\nトラマッチの○○です。\n\n貴社の物流コスト削減に...\n\nhttps://tramatch-sinjapan.com"}
-                rows={12}
-                data-testid="input-campaign-body"
-              />
+              <Textarea value={formBody} onChange={(e) => setFormBody(e.target.value)} placeholder="メール本文を入力..." rows={12} data-testid="input-campaign-body" />
               <p className="text-xs text-muted-foreground mt-1">URLは自動的にリンクに変換されます。HTMLタグも使用可能です。</p>
             </div>
             <div>
               <Label>送信先メールアドレス（1行に1アドレス）</Label>
-              <Textarea
-                value={formRecipients}
-                onChange={(e) => setFormRecipients(e.target.value)}
-                placeholder={"example1@company.co.jp\nexample2@company.co.jp\nexample3@company.co.jp"}
-                rows={6}
-                data-testid="input-campaign-recipients"
-              />
+              <Textarea value={formRecipients} onChange={(e) => setFormRecipients(e.target.value)} placeholder={"example1@company.co.jp\nexample2@company.co.jp"} rows={6} data-testid="input-campaign-recipients" />
               <p className="text-xs text-muted-foreground mt-1">
                 有効なメールアドレス: <span className="font-medium text-foreground">{recipientCount}件</span>
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>
-              キャンセル
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
-              data-testid="button-submit-campaign"
-            >
-              {(createMutation.isPending || updateMutation.isPending) ? (
-                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              ) : null}
+            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>キャンセル</Button>
+            <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-submit-campaign">
+              {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {editingCampaign ? "更新" : "作成"}
             </Button>
           </DialogFooter>
@@ -466,9 +664,7 @@ export default function AdminEmailMarketing() {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">本文</Label>
-                <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap text-sm">
-                  {selectedCampaign.body}
-                </div>
+                <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap text-sm">{selectedCampaign.body}</div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">送信先 ({selectedCampaign.recipients.split("\n").filter(e => e.trim() && e.includes("@")).length}件)</Label>
@@ -490,9 +686,7 @@ export default function AdminEmailMarketing() {
               <AlertTriangle className="w-5 h-5 text-orange-500" />
               送信確認
             </DialogTitle>
-            <DialogDescription>
-              この操作は取り消せません。本当に送信しますか？
-            </DialogDescription>
+            <DialogDescription>この操作は取り消せません。本当に送信しますか？</DialogDescription>
           </DialogHeader>
           {selectedCampaign && (
             <div className="space-y-2 text-sm">
@@ -502,20 +696,14 @@ export default function AdminEmailMarketing() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmSendDialog(false)}>
-              キャンセル
-            </Button>
+            <Button variant="outline" onClick={() => setShowConfirmSendDialog(false)}>キャンセル</Button>
             <Button
               variant="destructive"
-              onClick={() => selectedCampaign && sendMutation.mutate(selectedCampaign.id)}
-              disabled={sendMutation.isPending}
+              onClick={() => selectedCampaign && sendCampaignMutation.mutate(selectedCampaign.id)}
+              disabled={sendCampaignMutation.isPending}
               data-testid="button-confirm-send"
             >
-              {sendMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 mr-1.5" />
-              )}
+              {sendCampaignMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
               送信開始
             </Button>
           </DialogFooter>
