@@ -208,10 +208,17 @@ export async function generateThumbnail(title: string, jobId: string): Promise<s
   }
 
   const filterComplex = filterParts.join(";");
-  const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -frames:v 1 -q:v 2 "${thumbnailPath}" 2>&1`;
+  const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -frames:v 1 -update 1 -q:v 2 "${thumbnailPath}" 2>&1`;
 
   try {
     execSync(cmd, { timeout: 30000 });
+    if (fs.existsSync(thumbnailPath)) {
+      const size = fs.statSync(thumbnailPath).size;
+      console.log(`[YouTube Auto] Thumbnail generated: ${thumbnailPath} (${size} bytes)`);
+    } else {
+      console.error("[YouTube Auto] Thumbnail file not created");
+      return "";
+    }
   } catch (error: any) {
     console.error("[YouTube Auto] Thumbnail generation error:", error?.message?.substring(0, 300));
     return "";
