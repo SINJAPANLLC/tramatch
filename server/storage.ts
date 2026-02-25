@@ -269,7 +269,8 @@ export class DatabaseStorage implements IStorage {
       "cargoInsurance", "bankName", "bankBranch", "accountType", "accountNumber",
       "accountHolderKana", "plan",
       "accountingContactName", "accountingContactEmail", "accountingContactPhone", "accountingContactFax",
-      "lineUserId", "notifySystem", "notifyEmail", "notifyLine", "role"
+      "lineUserId", "notifySystem", "notifyEmail", "notifyLine", "role",
+      "adminMemo", "lastLoginAt", "lastLoginIp", "lastLoginLocation"
     ] as const;
     const updateData: Record<string, string | boolean | null> = {};
     for (const field of allowedFields) {
