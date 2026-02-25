@@ -68,7 +68,17 @@ export async function generateVideoScript(topic: string): Promise<{ title: strin
         content: `あなたは物流・運送業界の専門YouTubeチャンネル「トラマッチ公式」の台本作成者です。
 視聴者は運送会社の経営者、配車担当者、荷主企業の物流担当者です。
 トラマッチは求荷求車マッチングプラットフォームで、荷主と運送会社を効率的にマッチングするサービスです。
-サイトURL: ${SITE_URL}`,
+サイトURL: ${SITE_URL}
+
+【重要：音声読み上げ最適化ルール】
+台本は音声合成（TTS）で読み上げられます。以下のルールを厳守してください：
+- 句読点を適切に使い、文を短くする（1文30文字以内が理想）
+- 「、」で適度に息継ぎポイントを作る
+- 段落の区切りには「。　」（句点＋全角スペース）を入れて間を作る
+- 数字は漢数字ではなく算用数字で書く（例：「3つ」「10パーセント」）
+- 難読漢字にはカッコでよみがなを入れる
+- 「えー」「まあ」などのフィラーは入れない
+- 専門用語の初出時は簡単な説明を添える`,
       },
       {
         role: "user",
@@ -80,7 +90,7 @@ YouTubeアルゴリズムで評価される8〜12分の動画に最適化して�
 以下のJSON形式で出力してください:
 {
   "title": "YouTube動画のタイトル（30文字以内、検索されやすく興味を引くもの。数字や疑問形を活用）",
-  "script": "ナレーション台本（3000〜4000文字。以下の構成で:\n1. フック（最初の30秒で視聴者を引きつける問いかけや衝撃的な事実）\n2. チャンネル紹介（トラマッチ公式チャンネルです、と簡潔に）\n3. 本題（3〜5つのポイントに分けて詳しく解説。具体例や数字を交えて）\n4. 実践的なアドバイス（すぐに使える具体的なノウハウ）\n5. まとめ（要点を簡潔に振り返り）\n6. CTA（チャンネル登録・概要欄のトラマッチリンクへの誘導）\n自然な話し言葉で、「では」「さて」「ここで重要なのが」など接続詞を使って聞きやすく。「トラマッチ」への誘導は本題の中で2〜3回自然に含める）",
+  "script": "ナレーション台本（3000〜4000文字。以下の構成で:\n1. フック（最初の30秒で視聴者を引きつける問いかけや衝撃的な事実）\n2. チャンネル紹介（トラマッチ公式チャンネルです、と簡潔に）\n3. 本題（3〜5つのポイントに分けて詳しく解説。具体例や数字を交えて）\n4. 実践的なアドバイス（すぐに使える具体的なノウハウ）\n5. まとめ（要点を簡潔に振り返り）\n6. CTA（チャンネル登録・概要欄のトラマッチリンクへの誘導）\n自然で落ち着いた話し言葉で。「では」「さて」「ここで重要なのが」など接続詞を使って流れを作る。「トラマッチ」への誘導は本題の中で2〜3回自然に含める。段落間には間を置くため改行を入れる）",
   "description": "YouTube概要欄のテキスト（500〜800文字。動画の要約、タイムスタンプ（00:00形式で章立て）、関連キーワード、トラマッチへのリンク・CTA含む）",
   "tags": ["関連タグ8〜12個。検索ボリュームを意識"]
 }
@@ -115,52 +125,99 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
   ensureTempDir();
   const audioPath = path.join(TEMP_DIR, `${jobId}.mp3`);
 
+  const paragraphs = script.split(/\n\n+/).filter(p => p.trim());
   const chunks: string[] = [];
-  let remaining = script;
-  while (remaining.length > 0) {
-    if (remaining.length <= 4000) {
-      chunks.push(remaining);
-      break;
-    }
-    let splitAt = remaining.lastIndexOf("。", 4000);
-    if (splitAt === -1 || splitAt < 2000) splitAt = 4000;
-    else splitAt += 1;
-    chunks.push(remaining.substring(0, splitAt));
-    remaining = remaining.substring(splitAt);
-  }
 
-  if (chunks.length === 1) {
+  let current = "";
+  for (const para of paragraphs) {
+    if ((current + "\n\n" + para).length > 3800 && current.length > 0) {
+      chunks.push(current.trim());
+      current = para;
+    } else {
+      current = current ? current + "\n\n" + para : para;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+
+  if (chunks.length === 0) chunks.push(script);
+
+  const chunkPaths: string[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkPath = path.join(TEMP_DIR, `${jobId}_chunk${i}.mp3`);
     const mp3 = await openai.audio.speech.create({
       model: "tts-1-hd",
-      voice: "nova",
-      input: chunks[0],
-      speed: 0.95,
+      voice: "shimmer",
+      input: chunks[i],
+      speed: 0.9,
     });
     const buffer = Buffer.from(await mp3.arrayBuffer());
-    fs.writeFileSync(audioPath, buffer);
+    fs.writeFileSync(chunkPath, buffer);
+    chunkPaths.push(chunkPath);
+  }
+
+  if (chunkPaths.length === 1) {
+    fs.renameSync(chunkPaths[0], audioPath);
   } else {
-    const chunkPaths: string[] = [];
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkPath = path.join(TEMP_DIR, `${jobId}_chunk${i}.mp3`);
-      const mp3 = await openai.audio.speech.create({
-        model: "tts-1-hd",
-        voice: "nova",
-        input: chunks[i],
-        speed: 0.95,
-      });
-      const buffer = Buffer.from(await mp3.arrayBuffer());
-      fs.writeFileSync(chunkPath, buffer);
-      chunkPaths.push(chunkPath);
-    }
+    const silencePath = path.join(TEMP_DIR, `${jobId}_silence.mp3`);
+    execSync(`ffmpeg -y -f lavfi -i anullsrc=r=24000:cl=mono -t 0.8 -q:a 9 "${silencePath}"`, { timeout: 10000 });
 
     const listPath = path.join(TEMP_DIR, `${jobId}_list.txt`);
-    fs.writeFileSync(listPath, chunkPaths.map((p) => `file '${p}'`).join("\n"));
-    execSync(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -c copy "${audioPath}"`, { timeout: 60000 });
+    const listContent = chunkPaths.map((p, i) => {
+      if (i < chunkPaths.length - 1) {
+        return `file '${p}'\nfile '${silencePath}'`;
+      }
+      return `file '${p}'`;
+    }).join("\n");
+    fs.writeFileSync(listPath, listContent);
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -c copy "${audioPath}"`, { timeout: 120000 });
 
-    cleanupFiles(listPath, ...chunkPaths);
+    cleanupFiles(listPath, silencePath, ...chunkPaths);
   }
 
   return audioPath;
+}
+
+export async function generateThumbnail(title: string, jobId: string): Promise<string> {
+  ensureTempDir();
+  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.jpg`);
+
+  const shortTitle = title.length > 20 ? title.substring(0, 20) : title;
+  const titleLine2 = title.length > 20 ? title.substring(20) : "";
+
+  const escapedLine1 = shortTitle.replace(/'/g, "'\\''").replace(/:/g, "\\:");
+  const escapedLine2 = titleLine2.replace(/'/g, "'\\''").replace(/:/g, "\\:");
+  const escapedBrand = "トラマッチ公式".replace(/'/g, "'\\''");
+
+  let filterParts = [
+    `color=c=#0f766e:s=1280x720[bg]`,
+    `[bg]drawbox=x=0:y=0:w=1280:h=720:color=#0d9488@0.6:t=fill[bg2]`,
+    `[bg2]drawbox=x=40:y=40:w=1200:h=640:color=#0f766e@0.8:t=fill[bg3]`,
+    `[bg3]drawbox=x=40:y=40:w=1200:h=8:color=#fbbf24:t=fill[bg4]`,
+    `[bg4]drawtext=text='${escapedLine1}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2-50:font=Noto Sans CJK JP:borderw=3:bordercolor=black@0.5[t1]`,
+  ];
+
+  if (titleLine2) {
+    filterParts.push(
+      `[t1]drawtext=text='${escapedLine2}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2+40:font=Noto Sans CJK JP:borderw=3:bordercolor=black@0.5[t2]`,
+      `[t2]drawtext=text='${escapedBrand}':fontcolor=#fbbf24:fontsize=36:x=(w-text_w)/2:y=h-120:font=Noto Sans CJK JP:borderw=2:bordercolor=black@0.5`
+    );
+  } else {
+    filterParts.push(
+      `[t1]drawtext=text='${escapedBrand}':fontcolor=#fbbf24:fontsize=36:x=(w-text_w)/2:y=h-120:font=Noto Sans CJK JP:borderw=2:bordercolor=black@0.5`
+    );
+  }
+
+  const filterComplex = filterParts.join(";");
+  const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -frames:v 1 -q:v 2 "${thumbnailPath}" 2>&1`;
+
+  try {
+    execSync(cmd, { timeout: 30000 });
+  } catch (error: any) {
+    console.error("[YouTube Auto] Thumbnail generation error:", error?.message?.substring(0, 300));
+    return "";
+  }
+
+  return thumbnailPath;
 }
 
 export async function generateVideo(audioPath: string, title: string, jobId: string): Promise<string> {
@@ -169,7 +226,7 @@ export async function generateVideo(audioPath: string, title: string, jobId: str
 
   const escapedTitle = title.replace(/'/g, "'\\''").replace(/:/g, "\\:");
   const escapedBrand = "トラマッチ公式チャンネル".replace(/'/g, "'\\''");
-  const escapedCta = "詳しくは概要欄のリンクから".replace(/'/g, "'\\''");
+  const escapedCta = "チャンネル登録・概要欄のリンクもチェック！".replace(/'/g, "'\\''");
 
   const duration = getDuration(audioPath);
 
@@ -183,7 +240,7 @@ export async function generateVideo(audioPath: string, title: string, jobId: str
   const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -i "${audioPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}" 2>&1`;
 
   try {
-    execSync(cmd, { timeout: 300000 });
+    execSync(cmd, { timeout: 600000 });
   } catch (error: any) {
     console.error("ffmpeg error:", error?.message?.substring(0, 500));
     throw new Error("動画生成に失敗しました");
@@ -204,12 +261,7 @@ function getDuration(audioPath: string): number {
   }
 }
 
-export async function uploadToYoutube(
-  videoPath: string,
-  title: string,
-  description: string,
-  tags: string[]
-): Promise<string> {
+function getYoutubeClient() {
   const clientId = process.env.YOUTUBE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.YOUTUBE_OAUTH_CLIENT_SECRET;
   const refreshToken = process.env.YOUTUBE_OAUTH_REFRESH_TOKEN;
@@ -221,7 +273,16 @@ export async function uploadToYoutube(
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+  return google.youtube({ version: "v3", auth: oauth2Client });
+}
+
+export async function uploadToYoutube(
+  videoPath: string,
+  title: string,
+  description: string,
+  tags: string[]
+): Promise<string> {
+  const youtube = getYoutubeClient();
 
   const response = await youtube.videos.insert({
     part: ["snippet", "status"],
@@ -250,6 +311,24 @@ export async function uploadToYoutube(
   return videoId;
 }
 
+export async function uploadThumbnail(videoId: string, thumbnailPath: string): Promise<void> {
+  if (!thumbnailPath || !fs.existsSync(thumbnailPath)) return;
+
+  try {
+    const youtube = getYoutubeClient();
+    await youtube.thumbnails.set({
+      videoId,
+      media: {
+        mimeType: "image/jpeg",
+        body: fs.createReadStream(thumbnailPath),
+      },
+    });
+    console.log(`[YouTube Auto] Thumbnail uploaded for ${videoId}`);
+  } catch (error: any) {
+    console.error(`[YouTube Auto] Thumbnail upload failed: ${error?.message?.substring(0, 200)}`);
+  }
+}
+
 export async function processAutoPublishJob(jobId: string): Promise<void> {
   try {
     await updateJobStatus(jobId, "generating_script");
@@ -268,6 +347,12 @@ export async function processAutoPublishJob(jobId: string): Promise<void> {
     const audioPath = await generateAudio(scriptData.script, jobId);
     await updateJobFields(jobId, {
       audioUrl: audioPath,
+      status: "generating_thumbnail",
+    });
+
+    const thumbnailPath = await generateThumbnail(scriptData.title, jobId);
+
+    await updateJobFields(jobId, {
       status: "generating_video",
     });
 
@@ -283,6 +368,10 @@ export async function processAutoPublishJob(jobId: string): Promise<void> {
       scriptData.description,
       scriptData.tags
     );
+
+    if (thumbnailPath) {
+      await uploadThumbnail(youtubeVideoId, thumbnailPath);
+    }
 
     await updateJobFields(jobId, {
       youtubeVideoId,
@@ -302,7 +391,7 @@ export async function processAutoPublishJob(jobId: string): Promise<void> {
       isVisible: true,
     });
 
-    cleanupFiles(audioPath, videoPath);
+    cleanupFiles(audioPath, videoPath, thumbnailPath);
     console.log(`[YouTube Auto] Job ${jobId} completed: ${youtubeVideoId}`);
   } catch (error: any) {
     console.error(`[YouTube Auto] Job ${jobId} failed:`, error?.message);
