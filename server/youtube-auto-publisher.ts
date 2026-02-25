@@ -146,9 +146,9 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
     const chunkPath = path.join(TEMP_DIR, `${jobId}_chunk${i}.mp3`);
     const mp3 = await openai.audio.speech.create({
       model: "tts-1-hd",
-      voice: "shimmer",
+      voice: "nova",
       input: chunks[i],
-      speed: 0.9,
+      speed: 0.92,
     });
     const buffer = Buffer.from(await mp3.arrayBuffer());
     fs.writeFileSync(chunkPath, buffer);
