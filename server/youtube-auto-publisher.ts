@@ -179,48 +179,25 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
 
 export async function generateThumbnail(title: string, jobId: string): Promise<string> {
   ensureTempDir();
-  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.jpg`);
+  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.png`);
+  const logoPath = path.join(process.cwd(), "server", "assets", "thumbnail_base.png");
 
-  const shortTitle = title.length > 20 ? title.substring(0, 20) : title;
-  const titleLine2 = title.length > 20 ? title.substring(20) : "";
-
-  const escapedLine1 = shortTitle.replace(/'/g, "'\\''").replace(/:/g, "\\:");
-  const escapedLine2 = titleLine2.replace(/'/g, "'\\''").replace(/:/g, "\\:");
-  const escapedBrand = "トラマッチ公式".replace(/'/g, "'\\''");
-
-  let filterParts = [
-    `color=c=#0f766e:s=1280x720[bg]`,
-    `[bg]drawbox=x=0:y=0:w=1280:h=720:color=#0d9488@0.6:t=fill[bg2]`,
-    `[bg2]drawbox=x=40:y=40:w=1200:h=640:color=#0f766e@0.8:t=fill[bg3]`,
-    `[bg3]drawbox=x=40:y=40:w=1200:h=8:color=#fbbf24:t=fill[bg4]`,
-    `[bg4]drawtext=text='${escapedLine1}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2-50:font=Noto Sans CJK JP:borderw=3:bordercolor=black@0.5[t1]`,
-  ];
-
-  if (titleLine2) {
-    filterParts.push(
-      `[t1]drawtext=text='${escapedLine2}':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=(h-text_h)/2+40:font=Noto Sans CJK JP:borderw=3:bordercolor=black@0.5[t2]`,
-      `[t2]drawtext=text='${escapedBrand}':fontcolor=#fbbf24:fontsize=36:x=(w-text_w)/2:y=h-120:font=Noto Sans CJK JP:borderw=2:bordercolor=black@0.5`
-    );
-  } else {
-    filterParts.push(
-      `[t1]drawtext=text='${escapedBrand}':fontcolor=#fbbf24:fontsize=36:x=(w-text_w)/2:y=h-120:font=Noto Sans CJK JP:borderw=2:bordercolor=black@0.5`
-    );
+  if (!fs.existsSync(logoPath)) {
+    console.error("[YouTube Auto] Logo file not found:", logoPath);
+    return "";
   }
 
-  const filterComplex = filterParts.join(";");
-  const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -frames:v 1 -update 1 -q:v 2 "${thumbnailPath}" 2>&1`;
-
   try {
-    execSync(cmd, { timeout: 30000 });
+    fs.copyFileSync(logoPath, thumbnailPath);
     if (fs.existsSync(thumbnailPath)) {
       const size = fs.statSync(thumbnailPath).size;
-      console.log(`[YouTube Auto] Thumbnail generated: ${thumbnailPath} (${size} bytes)`);
+      console.log(`[YouTube Auto] Thumbnail ready: ${thumbnailPath} (${size} bytes)`);
     } else {
       console.error("[YouTube Auto] Thumbnail file not created");
       return "";
     }
   } catch (error: any) {
-    console.error("[YouTube Auto] Thumbnail generation error:", error?.message?.substring(0, 300));
+    console.error("[YouTube Auto] Thumbnail preparation error:", error?.message?.substring(0, 300));
     return "";
   }
 
