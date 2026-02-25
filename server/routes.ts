@@ -3747,9 +3747,10 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/email-leads/crawl", requireAdmin, async (req, res) => {
     try {
+      const count = req.body.count ? parseInt(req.body.count) : undefined;
       res.json({ message: "クロールを開始しました。バックグラウンドで実行中です。" });
       const { crawlLeadsWithAI } = await import("./lead-crawler");
-      crawlLeadsWithAI().catch(err => console.error("[Lead Crawler] Manual crawl failed:", err));
+      crawlLeadsWithAI(count).catch(err => console.error("[Lead Crawler] Manual crawl failed:", err));
     } catch (error) {
       res.status(500).json({ message: "クロールの開始に失敗しました" });
     }
