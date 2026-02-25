@@ -73,22 +73,32 @@ export async function generateVideoScript(topic: string): Promise<{ title: strin
       {
         role: "user",
         content: `以下のトピックでYouTube動画の台本を作成してください。
+YouTubeアルゴリズムで評価される8〜12分の動画に最適化してください。
 
 トピック: ${topic}
 
 以下のJSON形式で出力してください:
 {
-  "title": "YouTube動画のタイトル（30文字以内、興味を引くもの）",
-  "script": "ナレーション台本（800〜1200文字程度。導入→本題→まとめ→CTA の構成。自然な話し言葉で。「トラマッチ」への誘導を自然に含める）",
-  "description": "YouTube概要欄のテキスト（300〜500文字。動画の要約、タイムスタンプ風の章立て、トラマッチへのリンク・CTA含む）",
-  "tags": ["関連タグ5〜8個"]
+  "title": "YouTube動画のタイトル（30文字以内、検索されやすく興味を引くもの。数字や疑問形を活用）",
+  "script": "ナレーション台本（3000〜4000文字。以下の構成で:\n1. フック（最初の30秒で視聴者を引きつける問いかけや衝撃的な事実）\n2. チャンネル紹介（トラマッチ公式チャンネルです、と簡潔に）\n3. 本題（3〜5つのポイントに分けて詳しく解説。具体例や数字を交えて）\n4. 実践的なアドバイス（すぐに使える具体的なノウハウ）\n5. まとめ（要点を簡潔に振り返り）\n6. CTA（チャンネル登録・概要欄のトラマッチリンクへの誘導）\n自然な話し言葉で、「では」「さて」「ここで重要なのが」など接続詞を使って聞きやすく。「トラマッチ」への誘導は本題の中で2〜3回自然に含める）",
+  "description": "YouTube概要欄のテキスト（500〜800文字。動画の要約、タイムスタンプ（00:00形式で章立て）、関連キーワード、トラマッチへのリンク・CTA含む）",
+  "tags": ["関連タグ8〜12個。検索ボリュームを意識"]
 }
 
 概要欄には必ず以下を含めてください:
-- トラマッチ公式サイト: ${SITE_URL}
-- 無料会員登録: ${SITE_URL}/register
-- コラム記事: ${SITE_URL}/column
-- 求荷求車ガイド: ${SITE_URL}/guide/kyukakyusha-complete`,
+━━━━━━━━━━━━━━━━━
+▼ トラマッチ公式サイト
+${SITE_URL}
+
+▼ 無料会員登録はこちら
+${SITE_URL}/register
+
+▼ お役立ちコラム記事
+${SITE_URL}/column
+
+▼ 求荷求車完全ガイド
+${SITE_URL}/guide/kyukakyusha-complete
+━━━━━━━━━━━━━━━━━`,
       },
     ],
     response_format: { type: "json_object" },
@@ -105,15 +115,50 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
   ensureTempDir();
   const audioPath = path.join(TEMP_DIR, `${jobId}.mp3`);
 
-  const mp3 = await openai.audio.speech.create({
-    model: "tts-1-hd",
-    voice: "nova",
-    input: script,
-    speed: 1.0,
-  });
+  const chunks: string[] = [];
+  let remaining = script;
+  while (remaining.length > 0) {
+    if (remaining.length <= 4000) {
+      chunks.push(remaining);
+      break;
+    }
+    let splitAt = remaining.lastIndexOf("。", 4000);
+    if (splitAt === -1 || splitAt < 2000) splitAt = 4000;
+    else splitAt += 1;
+    chunks.push(remaining.substring(0, splitAt));
+    remaining = remaining.substring(splitAt);
+  }
 
-  const buffer = Buffer.from(await mp3.arrayBuffer());
-  fs.writeFileSync(audioPath, buffer);
+  if (chunks.length === 1) {
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1-hd",
+      voice: "nova",
+      input: chunks[0],
+      speed: 0.95,
+    });
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    fs.writeFileSync(audioPath, buffer);
+  } else {
+    const chunkPaths: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkPath = path.join(TEMP_DIR, `${jobId}_chunk${i}.mp3`);
+      const mp3 = await openai.audio.speech.create({
+        model: "tts-1-hd",
+        voice: "nova",
+        input: chunks[i],
+        speed: 0.95,
+      });
+      const buffer = Buffer.from(await mp3.arrayBuffer());
+      fs.writeFileSync(chunkPath, buffer);
+      chunkPaths.push(chunkPath);
+    }
+
+    const listPath = path.join(TEMP_DIR, `${jobId}_list.txt`);
+    fs.writeFileSync(listPath, chunkPaths.map((p) => `file '${p}'`).join("\n"));
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -c copy "${audioPath}"`, { timeout: 60000 });
+
+    cleanupFiles(listPath, ...chunkPaths);
+  }
 
   return audioPath;
 }
