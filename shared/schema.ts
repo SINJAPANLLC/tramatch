@@ -68,6 +68,7 @@ export const users = pgTable("users", {
   lastLoginIp: text("last_login_ip"),
   lastLoginLocation: text("last_login_location"),
   addedByUserId: varchar("added_by_user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const cargoListings = pgTable("cargo_listings", {
