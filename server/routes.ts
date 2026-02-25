@@ -3715,6 +3715,116 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  // Admin: Email Leads
+  app.get("/api/admin/email-leads", requireAdmin, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const leads = await storage.getEmailLeads(status || undefined, limit, offset);
+      const total = await storage.getEmailLeadCount(status || undefined);
+      const todaySent = await storage.getTodaySentLeadCount();
+      const newCount = await storage.getEmailLeadCount("new");
+      const sentCount = await storage.getEmailLeadCount("sent");
+      const failedCount = await storage.getEmailLeadCount("failed");
+      res.json({ leads, total, todaySent, newCount, sentCount, failedCount });
+    } catch (error) {
+      res.status(500).json({ message: "リードの取得に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/email-leads/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteEmailLead(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "リードの削除に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-leads/crawl", requireAdmin, async (req, res) => {
+    try {
+      res.json({ message: "クロールを開始しました。バックグラウンドで実行中です。" });
+      const { crawlLeadsWithAI } = await import("./lead-crawler");
+      crawlLeadsWithAI().catch(err => console.error("[Lead Crawler] Manual crawl failed:", err));
+    } catch (error) {
+      res.status(500).json({ message: "クロールの開始に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-leads/crawl-url", requireAdmin, async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url) return res.status(400).json({ message: "URLを入力してください" });
+      const { crawlLeadsFromUrl } = await import("./lead-crawler");
+      const found = await crawlLeadsFromUrl(url);
+      res.json({ message: `${found}件のリードを取得しました`, found });
+    } catch (error) {
+      res.status(500).json({ message: "URLクロールに失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-leads/send-now", requireAdmin, async (req, res) => {
+    try {
+      const { sendDailyLeadEmails } = await import("./lead-crawler");
+      res.json({ message: "メール送信を開始しました。バックグラウンドで実行中です。" });
+      sendDailyLeadEmails().catch(err => console.error("[Lead Email] Manual send failed:", err));
+    } catch (error) {
+      res.status(500).json({ message: "送信の開始に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-leads/import", requireAdmin, async (req, res) => {
+    try {
+      const { leads } = req.body;
+      if (!leads || !Array.isArray(leads) || leads.length === 0) {
+        return res.status(400).json({ message: "インポートデータがありません" });
+      }
+      let added = 0;
+      for (const lead of leads) {
+        if (!lead.email || !lead.companyName) continue;
+        const existing = await storage.getEmailLeadByEmail(lead.email);
+        if (existing) continue;
+        await storage.createEmailLead({
+          companyName: lead.companyName,
+          email: lead.email,
+          fax: lead.fax || null,
+          phone: lead.phone || null,
+          website: lead.website || null,
+          address: lead.address || null,
+          industry: lead.industry || "一般貨物/利用運送",
+          source: "manual_import",
+          status: "new",
+        });
+        added++;
+      }
+      res.json({ message: `${added}件のリードをインポートしました`, added });
+    } catch (error) {
+      res.status(500).json({ message: "インポートに失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/email-leads/settings", requireAdmin, async (req, res) => {
+    try {
+      const { subject, body } = req.body;
+      if (subject) await storage.setAdminSetting("lead_email_subject", subject);
+      if (body) await storage.setAdminSetting("lead_email_body", body);
+      res.json({ message: "設定を保存しました" });
+    } catch (error) {
+      res.status(500).json({ message: "設定の保存に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/email-leads/settings", requireAdmin, async (_req, res) => {
+    try {
+      const subject = await storage.getAdminSetting("lead_email_subject");
+      const body = await storage.getAdminSetting("lead_email_body");
+      res.json({ subject: subject || "", body: body || "" });
+    } catch (error) {
+      res.status(500).json({ message: "設定の取得に失敗しました" });
+    }
+  });
+
   app.post("/api/admin/email-campaigns/test-send", requireAdmin, async (req, res) => {
     try {
       const { to, subject, body } = req.body;

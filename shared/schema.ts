@@ -533,3 +533,23 @@ export const emailCampaigns = pgTable("email_campaigns", {
 export const insertEmailCampaignSchema = createInsertSchema(emailCampaigns).omit({ id: true, sentCount: true, failedCount: true, sentAt: true, createdAt: true });
 export type InsertEmailCampaign = z.infer<typeof insertEmailCampaignSchema>;
 export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+
+export const emailLeads = pgTable("email_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  email: text("email"),
+  fax: text("fax"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  industry: text("industry"),
+  source: text("source"),
+  status: text("status").notNull().default("new"),
+  sentAt: timestamp("sent_at"),
+  sentSubject: text("sent_subject"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEmailLeadSchema = createInsertSchema(emailLeads).omit({ id: true, sentAt: true, sentSubject: true, createdAt: true });
+export type InsertEmailLead = z.infer<typeof insertEmailLeadSchema>;
+export type EmailLead = typeof emailLeads.$inferSelect;
