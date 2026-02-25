@@ -20,10 +20,12 @@ import {
   type AiCorrectionLog, type InsertAiCorrectionLog,
   type YoutubeVideo, type InsertYoutubeVideo,
   type YoutubeAutoPublishJob,
+  type EmailCampaign, type InsertEmailCampaign,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
-  invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs
+  invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs,
+  emailCampaigns
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
@@ -199,6 +201,12 @@ export interface IStorage {
   updateYoutubeAutoPublishJob(id: string, fields: Record<string, any>): Promise<void>;
   completeYoutubeAutoPublishJob(id: string): Promise<void>;
   getRecentAutoPublishTopics(days: number): Promise<string[]>;
+
+  getEmailCampaigns(): Promise<EmailCampaign[]>;
+  getEmailCampaign(id: string): Promise<EmailCampaign | undefined>;
+  createEmailCampaign(data: InsertEmailCampaign): Promise<EmailCampaign>;
+  updateEmailCampaign(id: string, data: Partial<EmailCampaign>): Promise<EmailCampaign | undefined>;
+  deleteEmailCampaign(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1146,6 +1154,30 @@ export class DatabaseStorage implements IStorage {
       .from(youtubeAutoPublishJobs)
       .where(gte(youtubeAutoPublishJobs.createdAt, since));
     return jobs.map((j) => j.topic);
+  }
+
+  async getEmailCampaigns(): Promise<EmailCampaign[]> {
+    return db.select().from(emailCampaigns).orderBy(desc(emailCampaigns.createdAt));
+  }
+
+  async getEmailCampaign(id: string): Promise<EmailCampaign | undefined> {
+    const [campaign] = await db.select().from(emailCampaigns).where(eq(emailCampaigns.id, id));
+    return campaign;
+  }
+
+  async createEmailCampaign(data: InsertEmailCampaign): Promise<EmailCampaign> {
+    const [campaign] = await db.insert(emailCampaigns).values(data).returning();
+    return campaign;
+  }
+
+  async updateEmailCampaign(id: string, data: Partial<EmailCampaign>): Promise<EmailCampaign | undefined> {
+    const [campaign] = await db.update(emailCampaigns).set(data).where(eq(emailCampaigns.id, id)).returning();
+    return campaign;
+  }
+
+  async deleteEmailCampaign(id: string): Promise<boolean> {
+    const result = await db.delete(emailCampaigns).where(eq(emailCampaigns.id, id));
+    return true;
   }
 }
 
