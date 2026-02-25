@@ -207,24 +207,21 @@ export async function generateThumbnail(title: string, jobId: string): Promise<s
 export async function generateVideo(audioPath: string, title: string, jobId: string): Promise<string> {
   ensureTempDir();
   const videoPath = path.join(TEMP_DIR, `${jobId}.mp4`);
-
-  const escapedTitle = title.replace(/'/g, "'\\''").replace(/:/g, "\\:");
-  const escapedBrand = "トラマッチ公式チャンネル".replace(/'/g, "'\\''");
-  const escapedCta = "チャンネル登録・概要欄のリンクもチェック！".replace(/'/g, "'\\''");
+  const logoPath = path.join(process.cwd(), "server", "assets", "thumbnail_base.png");
 
   const duration = getDuration(audioPath);
 
-  const filterComplex = [
-    `color=c=#0d9488:s=1920x1080:d=${duration}[bg]`,
-    `[bg]drawtext=text='${escapedTitle}':fontcolor=white:fontsize=56:x=(w-text_w)/2:y=(h-text_h)/2-60:font=Noto Sans CJK JP[t1]`,
-    `[t1]drawtext=text='${escapedBrand}':fontcolor=#99f6e4:fontsize=32:x=(w-text_w)/2:y=(h-text_h)/2+40:font=Noto Sans CJK JP[t2]`,
-    `[t2]drawtext=text='${escapedCta}':fontcolor=#ccfbf1:fontsize=28:x=(w-text_w)/2:y=h-100:font=Noto Sans CJK JP`,
-  ].join(";");
-
-  const cmd = `ffmpeg -y -f lavfi -i "${filterComplex}" -i "${audioPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}" 2>&1`;
+  let cmd: string;
+  if (fs.existsSync(logoPath)) {
+    cmd = `ffmpeg -y -loop 1 -i "${logoPath}" -i "${audioPath}" -vf "scale=1920:1080" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest -t ${duration} "${videoPath}" 2>&1`;
+  } else {
+    console.warn("[YouTube Auto] Logo not found, using solid color background");
+    cmd = `ffmpeg -y -f lavfi -i "color=c=#0d9488:s=1920x1080:d=${duration}" -i "${audioPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}" 2>&1`;
+  }
 
   try {
     execSync(cmd, { timeout: 600000 });
+    console.log(`[YouTube Auto] Video generated: ${videoPath}`);
   } catch (error: any) {
     console.error("ffmpeg error:", error?.message?.substring(0, 500));
     throw new Error("動画生成に失敗しました");
