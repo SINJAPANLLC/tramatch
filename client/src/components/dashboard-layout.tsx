@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, Brain, Video } from "lucide-react";
+import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, Brain, Video, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ const adminMenuItems: MenuItem[] = [
   { href: "/admin/audit-logs", label: "操作ログ", icon: Activity },
   { href: "/admin/ai-training", label: "AI学習管理", icon: Brain },
   { href: "/admin/youtube", label: "YouTube管理", icon: Video },
+  { href: "/admin/email-marketing", label: "メール営業", icon: Mail },
   { href: "/admin/settings", label: "管理設定", icon: Wrench },
 ];
 
