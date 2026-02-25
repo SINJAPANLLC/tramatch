@@ -265,33 +265,36 @@ export async function registerRoutes(
       req.session.userId = user.id;
       req.session.role = user.role;
 
-      const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
-      const now = new Date().toISOString();
-      let locationStr = "";
-      try {
-        const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=status,country,regionName,city`);
-        const geo = await geoRes.json();
-        if (geo.status === "success") {
-          locationStr = [geo.country, geo.regionName, geo.city].filter(Boolean).join(" ");
-        }
-      } catch {}
-      storage.updateUserProfile(user.id, {
-        lastLoginAt: now,
-        lastLoginIp: clientIp,
-        lastLoginLocation: locationStr || undefined,
-      }).catch(() => {});
-
-      storage.createAuditLog({
-        userId: user.id,
-        userName: user.companyName || user.username,
-        action: "login",
-        targetType: "session",
-        details: `ログイン（IP: ${clientIp}${locationStr ? `, ${locationStr}` : ""}）`,
-        ipAddress: clientIp,
-      }).catch(() => {});
-
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
+
+      const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+      const now = new Date().toISOString();
+
+      (async () => {
+        let locationStr = "";
+        try {
+          const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=status,country,regionName,city`);
+          const geo = await geoRes.json();
+          if (geo.status === "success") {
+            locationStr = [geo.country, geo.regionName, geo.city].filter(Boolean).join(" ");
+          }
+        } catch {}
+        storage.updateUserProfile(user.id, {
+          lastLoginAt: now,
+          lastLoginIp: clientIp,
+          lastLoginLocation: locationStr || undefined,
+        }).catch(() => {});
+
+        storage.createAuditLog({
+          userId: user.id,
+          userName: user.companyName || user.username,
+          action: "login",
+          targetType: "session",
+          details: `ログイン（IP: ${clientIp}${locationStr ? `, ${locationStr}` : ""}）`,
+          ipAddress: clientIp,
+        }).catch(() => {});
+      })();
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "ログインに失敗しました" });
