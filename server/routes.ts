@@ -3606,6 +3606,130 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  // Admin: Email Campaigns
+  app.get("/api/admin/email-campaigns", requireAdmin, async (_req, res) => {
+    try {
+      const campaigns = await storage.getEmailCampaigns();
+      res.json(campaigns);
+    } catch (error) {
+      res.status(500).json({ message: "キャンペーンの取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
+    try {
+      const campaign = await storage.getEmailCampaign(req.params.id);
+      if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ message: "キャンペーンの取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-campaigns", requireAdmin, async (req, res) => {
+    try {
+      const { name, subject, body, recipients, totalCount } = req.body;
+      if (!name || !subject || !body || !recipients) {
+        return res.status(400).json({ message: "必須項目を入力してください" });
+      }
+      const recipientList = recipients.split("\n").map((e: string) => e.trim()).filter((e: string) => e && e.includes("@"));
+      const campaign = await storage.createEmailCampaign({
+        name,
+        subject,
+        body,
+        recipients,
+        totalCount: totalCount || recipientList.length,
+        status: "draft",
+      });
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ message: "キャンペーンの作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
+    try {
+      const campaign = await storage.updateEmailCampaign(req.params.id, req.body);
+      if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ message: "キャンペーンの更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteEmailCampaign(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "キャンペーンの削除に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-campaigns/:id/send", requireAdmin, async (req, res) => {
+    try {
+      const campaign = await storage.getEmailCampaign(req.params.id);
+      if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
+      if (campaign.status === "sending") return res.status(400).json({ message: "送信中です" });
+
+      const recipientList = campaign.recipients.split("\n").map(e => e.trim()).filter(e => e && e.includes("@"));
+      if (recipientList.length === 0) return res.status(400).json({ message: "送信先がありません" });
+
+      await storage.updateEmailCampaign(campaign.id, {
+        status: "sending",
+        totalCount: recipientList.length,
+        sentCount: 0,
+        failedCount: 0,
+        sentAt: new Date(),
+      });
+
+      res.json({ message: `${recipientList.length}件のメール送信を開始しました` });
+
+      (async () => {
+        let sentCount = 0;
+        let failedCount = 0;
+        for (const email of recipientList) {
+          try {
+            const result = await sendEmail(email, campaign.subject, campaign.body);
+            if (result.success) {
+              sentCount++;
+            } else {
+              failedCount++;
+              console.error(`Email failed to ${email}: ${result.error}`);
+            }
+          } catch (err) {
+            failedCount++;
+            console.error(`Email error to ${email}:`, err);
+          }
+          await storage.updateEmailCampaign(campaign.id, { sentCount, failedCount });
+          await new Promise(r => setTimeout(r, 500));
+        }
+        await storage.updateEmailCampaign(campaign.id, {
+          status: failedCount === recipientList.length ? "failed" : "completed",
+          sentCount,
+          failedCount,
+        });
+      })();
+    } catch (error) {
+      res.status(500).json({ message: "送信の開始に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/email-campaigns/test-send", requireAdmin, async (req, res) => {
+    try {
+      const { to, subject, body } = req.body;
+      if (!to || !subject || !body) return res.status(400).json({ message: "必須項目を入力してください" });
+      const result = await sendEmail(to, subject, body);
+      if (result.success) {
+        res.json({ message: "テストメールを送信しました" });
+      } else {
+        res.status(500).json({ message: result.error || "送信に失敗しました" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "テスト送信に失敗しました" });
+    }
+  });
+
   // Admin: SEO Articles
   app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
     try {
