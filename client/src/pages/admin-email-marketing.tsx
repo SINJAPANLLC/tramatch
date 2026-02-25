@@ -114,6 +114,7 @@ export default function AdminEmailMarketing() {
   const [leadFilter, setLeadFilter] = useState("");
   const [leadEmailSubject, setLeadEmailSubject] = useState("");
   const [leadEmailBody, setLeadEmailBody] = useState("");
+  const [templateMode, setTemplateMode] = useState<"edit" | "preview">("edit");
 
   const { data: campaigns, isLoading: campaignsLoading } = useQuery<EmailCampaign[]>({
     queryKey: ["/api/admin/email-campaigns"],
