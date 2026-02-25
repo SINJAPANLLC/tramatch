@@ -515,3 +515,21 @@ export const youtubeAutoPublishJobs = pgTable("youtube_auto_publish_jobs", {
 export const insertYoutubeAutoPublishJobSchema = createInsertSchema(youtubeAutoPublishJobs).omit({ id: true, createdAt: true, completedAt: true });
 export type InsertYoutubeAutoPublishJob = z.infer<typeof insertYoutubeAutoPublishJobSchema>;
 export type YoutubeAutoPublishJob = typeof youtubeAutoPublishJobs.$inferSelect;
+
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  recipients: text("recipients").notNull(),
+  totalCount: integer("total_count").notNull().default(0),
+  sentCount: integer("sent_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  status: text("status").notNull().default("draft"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEmailCampaignSchema = createInsertSchema(emailCampaigns).omit({ id: true, sentCount: true, failedCount: true, sentAt: true, createdAt: true });
+export type InsertEmailCampaign = z.infer<typeof insertEmailCampaignSchema>;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
