@@ -7,21 +7,21 @@ const SEND_INTERVAL_MS = 3000;
 const CRAWL_BATCH_SIZE = 50;
 
 const SEARCH_QUERIES = [
-  "一般貨物自動車運送事業 会社 メール",
-  "利用運送 会社 お問い合わせ メール",
-  "運送会社 一般貨物 メールアドレス",
-  "貨物運送 利用運送 会社概要",
-  "一般貨物 運送業者 連絡先",
-  "利用運送事業者 一覧 メール",
-  "運送会社 求車 メール",
-  "物流会社 一般貨物 お問い合わせ",
-  "トラック運送 会社 連絡先",
-  "貨物自動車運送事業 会社情報",
-  "引越し 運送会社 メール 連絡先",
-  "チャーター便 運送会社 メール",
-  "軽貨物 運送 会社 メールアドレス",
-  "冷凍冷蔵 運送 会社 連絡先",
-  "長距離 運送会社 メール お問い合わせ",
+  "一般貨物自動車運送事業 運送会社 会社概要",
+  "利用運送事業 運送会社 お問い合わせ",
+  "一般貨物運送 トラック 会社概要 連絡先",
+  "貨物自動車運送事業者 中小 会社情報",
+  "一般貨物 運送業 許可 会社概要",
+  "利用運送 貨物運送 事業者 連絡先",
+  "トラック運送会社 一般貨物 会社概要",
+  "一般貨物 運送会社 求車 お問い合わせ",
+  "チャーター便 運送会社 一般貨物 連絡先",
+  "長距離 一般貨物運送 会社概要",
+  "冷凍冷蔵 一般貨物 運送会社 連絡先",
+  "引越し運送 一般貨物 会社概要",
+  "軽貨物 運送会社 利用運送 お問い合わせ",
+  "特別積合せ 運送 会社 連絡先",
+  "地場配送 一般貨物 運送会社 会社概要",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -39,6 +39,49 @@ function isValidCompanyEmail(email: string): boolean {
   if (!domain) return false;
   if (EXCLUDED_EMAIL_DOMAINS.includes(domain)) return false;
   if (email.includes("noreply") || email.includes("no-reply") || email.includes("mailer-daemon")) return false;
+  return true;
+}
+
+const TRANSPORT_KEYWORDS = [
+  "運送", "運輸", "物流", "貨物", "トラック", "配送", "輸送", "ロジスティクス",
+  "logistics", "transport", "freight", "delivery", "cargo",
+  "一般貨物", "利用運送", "軽貨物", "引越", "倉庫運送", "陸運",
+  "特別積合", "宅配", "急便", "エクスプレス", "express",
+];
+
+const NON_TRANSPORT_KEYWORDS = [
+  "不動産", "マンション", "賃貸", "分譲", "戸建", "ホテル", "旅館",
+  "レストラン", "カフェ", "美容", "エステ", "クリニック", "病院",
+  "学校", "塾", "予備校", "保険", "証券", "銀行",
+  "セミナー", "イベント", "展示会", "内覧", "見学",
+];
+
+function isTransportCompany(html: string, url: string): boolean {
+  const textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .substring(0, 5000);
+
+  const lowerText = textContent.toLowerCase();
+  const lowerUrl = url.toLowerCase();
+
+  let transportScore = 0;
+  for (const kw of TRANSPORT_KEYWORDS) {
+    if (lowerText.includes(kw.toLowerCase()) || lowerUrl.includes(kw.toLowerCase())) {
+      transportScore++;
+    }
+  }
+
+  let nonTransportScore = 0;
+  for (const kw of NON_TRANSPORT_KEYWORDS) {
+    if (lowerText.includes(kw.toLowerCase())) {
+      nonTransportScore++;
+    }
+  }
+
+  if (transportScore === 0) return false;
+  if (nonTransportScore > transportScore) return false;
   return true;
 }
 
@@ -122,6 +165,11 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
   console.log(`[Lead Crawler] Crawling: ${url}`);
   const html = await fetchPageContent(url);
   if (!html) return 0;
+
+  if (!isTransportCompany(html, url)) {
+    console.log(`[Lead Crawler] Skipped (not transport): ${url}`);
+    return 0;
+  }
 
   let { emails, phones, faxes } = extractContactInfo(html);
   const companyName = extractCompanyName(html, url);
