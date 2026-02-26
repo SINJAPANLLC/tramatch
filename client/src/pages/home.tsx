@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X } from "lucide-react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
+import trapanImgPath from "@assets/トラパン_1772145814941.PNG";
 import { formatPrice, hasNumericPrice } from "@/lib/utils";
 
 const LOGO_WALL_IMAGES_ROW1 = [
@@ -727,17 +728,20 @@ function PromoBanner() {
         </button>
         <Link href="/register">
           <div className="cursor-pointer">
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  β版プレミアムプラン
-                </span>
+            <div className="px-4 py-3 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    β版プレミアムプラン
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold text-foreground">成約し放題</span>
+                  <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">今だけ無料でプレミアム機能が使える</p>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-foreground">成約し放題</span>
-                <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">今だけ無料でプレミアム機能が使える</p>
+              <img src={trapanImgPath} alt="トラパン" className="w-16 h-16 object-contain flex-shrink-0" />
             </div>
             <div className="bg-primary text-primary-foreground text-center py-2 text-xs font-bold rounded-b-md">
               新規登録はこちら <ChevronRight className="w-3.5 h-3.5 inline-block" />
