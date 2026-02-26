@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Loader2, Wand2, ExternalLink, ImagePlus, Send, Trash2, Zap, Clock, CheckCircle2, AlertCircle, Copy } from "lucide-react";
+import { Share2, Loader2, Wand2, ExternalLink, Send, Trash2, Zap, Clock, CheckCircle2, AlertCircle, Copy, PenLine } from "lucide-react";
 import { SiX, SiInstagram, SiFacebook, SiTiktok, SiLinkedin, SiLine } from "react-icons/si";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard-layout";
@@ -21,6 +21,16 @@ const snsServices = [
   { id: "linkedin", name: "LinkedIn", icon: SiLinkedin, color: "#0A66C2", darkColor: "#0A66C2", loginUrl: "https://www.linkedin.com/login", dashboardUrl: "https://www.linkedin.com/feed/" },
   { id: "line", name: "LINE公式アカウント", icon: SiLine, color: "#06C755", darkColor: "#06C755", loginUrl: "https://manager.line.biz/", dashboardUrl: "https://manager.line.biz/" },
 ];
+
+const DEFAULT_CHARACTER_PROMPT = `【トラパンのキャラクター設定】
+名前: トラパン（トラックパンダの略）
+種族: パンダ
+カラー: ターコイズ色
+所属: AI求荷求車マッチングサービス「トラマッチ」の公式キャラクター
+性格: 明るく元気で親しみやすい。物流業界のことが大好き。トラック運転手や荷主さんの味方。難しいことも分かりやすく楽しく伝えるのが得意。
+口調: フレンドリーで親しみやすい。「〜だよ！」「〜なんだ！」など柔らかい語尾。絵文字を適度に使う。
+使命: 物流業界をもっと盛り上げること。トラマッチを通じて運送会社と荷主をつなぎ、みんなを笑顔にすること。
+特徴: お腹に∞（無限大）マーク。物流の無限の可能性を象徴。`;
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -39,15 +49,15 @@ export default function AdminSns() {
   const [platform, setPlatform] = useState("x");
   const [prompt, setPrompt] = useState("");
   const [content, setContent] = useState("");
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["x"]);
+  const [characterPrompt, setCharacterPrompt] = useState(DEFAULT_CHARACTER_PROMPT);
 
   const postsQuery = useQuery<SnsAutoPost[]>({
     queryKey: ["/api/admin/sns-posts"],
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (data: { platform: string; topic: string }) => {
+    mutationFn: async (data: { platform: string; topic: string; characterPrompt: string }) => {
       const res = await apiRequest("POST", "/api/admin/sns/generate", data);
       return res.json();
     },
@@ -58,20 +68,8 @@ export default function AdminSns() {
     onError: () => toast({ title: "生成に失敗しました", variant: "destructive" }),
   });
 
-  const generateImageMutation = useMutation({
-    mutationFn: async (data: { topic: string; platform: string }) => {
-      const res = await apiRequest("POST", "/api/admin/sns/generate-image", data);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      setGeneratedImage(data.image || null);
-      toast({ title: "トラパン画像を生成しました" });
-    },
-    onError: () => toast({ title: "画像生成に失敗しました", variant: "destructive" }),
-  });
-
   const postSingleMutation = useMutation({
-    mutationFn: async (data: { platform: string; content: string; imageBase64?: string | null }) => {
+    mutationFn: async (data: { platform: string; content: string }) => {
       const res = await apiRequest("POST", "/api/admin/sns/post-single", data);
       return res.json();
     },
@@ -123,13 +121,14 @@ export default function AdminSns() {
               <Share2 className="w-6 h-6 text-primary" />
               SNS自動投稿管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">AIがトラパンと一緒にSNS投稿を自動生成・投稿します</p>
+            <p className="text-sm text-muted-foreground mt-1">トラパンがSNS投稿を自動生成・投稿します</p>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList data-testid="tabs-sns">
             <TabsTrigger value="accounts" data-testid="tab-accounts">SNSアカウント</TabsTrigger>
+            <TabsTrigger value="character" data-testid="tab-character">キャラ設定</TabsTrigger>
             <TabsTrigger value="create" data-testid="tab-create">投稿作成</TabsTrigger>
             <TabsTrigger value="auto" data-testid="tab-auto">自動投稿</TabsTrigger>
             <TabsTrigger value="history" data-testid="tab-history">投稿履歴</TabsTrigger>
@@ -172,6 +171,45 @@ export default function AdminSns() {
             </div>
           </TabsContent>
 
+          <TabsContent value="character" className="space-y-4 mt-4">
+            <Card>
+              <CardContent className="p-6 space-y-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <PenLine className="w-5 h-5 text-primary" />
+                  <h3 className="text-base font-bold text-foreground">トラパン キャラクター設定</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  トラパンの人格・口調・性格などを設定します。ここで設定した内容がAI投稿生成に反映されます。
+                </p>
+                <Textarea
+                  className="min-h-[300px] text-sm font-mono"
+                  value={characterPrompt}
+                  onChange={(e) => setCharacterPrompt(e.target.value)}
+                  placeholder="キャラクターの設定を入力..."
+                  data-testid="input-character-prompt"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setCharacterPrompt(DEFAULT_CHARACTER_PROMPT);
+                      toast({ title: "デフォルト設定に戻しました" });
+                    }}
+                    data-testid="button-reset-character"
+                  >
+                    デフォルトに戻す
+                  </Button>
+                  <Button
+                    onClick={() => toast({ title: "キャラクター設定を保存しました" })}
+                    data-testid="button-save-character"
+                  >
+                    設定を保存
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="create" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-6 space-y-5">
@@ -212,35 +250,15 @@ export default function AdminSns() {
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1"
-                    onClick={() => generateMutation.mutate({ platform, topic: prompt })}
-                    disabled={!prompt.trim() || generateMutation.isPending}
-                    data-testid="button-ai-generate"
-                  >
-                    {generateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
-                    AIで投稿文を生成
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => generateImageMutation.mutate({ topic: prompt || "トラマッチの紹介", platform })}
-                    disabled={generateImageMutation.isPending}
-                    data-testid="button-generate-image"
-                  >
-                    {generateImageMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImagePlus className="w-4 h-4 mr-2" />}
-                    トラパン画像生成
-                  </Button>
-                </div>
-
-                {generatedImage && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold text-foreground">生成されたトラパン画像</Label>
-                    <div className="border rounded-lg overflow-hidden max-w-sm">
-                      <img src={generatedImage} alt="トラパン" className="w-full" data-testid="img-generated-trapan" />
-                    </div>
-                  </div>
-                )}
+                <Button
+                  className="w-full"
+                  onClick={() => generateMutation.mutate({ platform, topic: prompt, characterPrompt })}
+                  disabled={!prompt.trim() || generateMutation.isPending}
+                  data-testid="button-ai-generate"
+                >
+                  {generateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                  トラパンとしてAIで投稿文を生成
+                </Button>
 
                 {content && (
                   <div className="space-y-3 border-t pt-4">
@@ -265,11 +283,7 @@ export default function AdminSns() {
                         コピー
                       </Button>
                       <Button
-                        onClick={() => postSingleMutation.mutate({
-                          platform,
-                          content,
-                          imageBase64: generatedImage,
-                        })}
+                        onClick={() => postSingleMutation.mutate({ platform, content })}
                         disabled={postSingleMutation.isPending}
                         data-testid="button-post-single"
                       >
@@ -300,7 +314,7 @@ export default function AdminSns() {
                 <div>
                   <h3 className="text-base font-bold text-foreground mb-2">AI自動投稿</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    AIがトラパンの画像付きで物流業界に関するSNS投稿を自動生成し、選択したプラットフォームに投稿します。
+                    トラパンが物流業界に関するSNS投稿を自動生成し、選択したプラットフォームに投稿します。
                   </p>
                 </div>
 
@@ -347,7 +361,7 @@ export default function AdminSns() {
                       <Badge variant="outline" className="text-xs" data-testid="status-li-api">環境変数で設定</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      ※ API未設定のプラットフォームは投稿文と画像の生成のみ行います。手動でコピー＆ペーストで投稿できます。
+                      ※ API未設定のプラットフォームは投稿文の生成のみ行います。手動でコピー＆ペーストで投稿できます。
                     </p>
                   </div>
                 </div>
@@ -411,9 +425,6 @@ export default function AdminSns() {
                               {getStatusBadge(post.status)}
                             </div>
                             <p className="text-sm text-foreground whitespace-pre-wrap line-clamp-3">{post.content}</p>
-                            {post.imageUrl && (
-                              <p className="text-xs text-muted-foreground mt-1">📷 画像付き</p>
-                            )}
                             {post.errorMessage && (
                               <p className="text-xs text-red-500 mt-1">{post.errorMessage}</p>
                             )}

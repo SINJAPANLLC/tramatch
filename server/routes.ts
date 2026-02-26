@@ -4755,9 +4755,9 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/sns/generate", requireAdmin, async (req, res) => {
     try {
-      const { platform, topic } = req.body || {};
+      const { platform, topic, characterPrompt } = req.body || {};
       const { generateSnsContent } = await import("./sns-auto-publisher");
-      const content = await generateSnsContent(platform || "x", topic || "トラマッチの紹介");
+      const content = await generateSnsContent(platform || "x", topic || "トラマッチの紹介", characterPrompt);
       res.json({ content });
     } catch (error: any) {
       console.error("[SNS Gen] Error:", error?.message || error);

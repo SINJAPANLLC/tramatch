@@ -41,7 +41,15 @@ const PLATFORM_CONFIG: Record<string, { maxChars: number; hashtagCount: number; 
   line: { maxChars: 2000, hashtagCount: 3, imageSize: "1024x1024" },
 };
 
-const TRAPAN_PROMPT_BASE = `かわいいターコイズ色のパンダのキャラクター「トラパン」。トラパンはトラック物流マッチングサービス「トラマッチ」のマスコットキャラクターです。丸っこくてかわいい姿で、お腹に∞マークがあります。背景は清潔感のある白またはライトカラー。`;
+const TRAPAN_CHARACTER = `【トラパンのキャラクター設定】
+名前: トラパン（トラックパンダの略）
+種族: パンダ
+カラー: ターコイズ色
+所属: AI求荷求車マッチングサービス「トラマッチ」の公式キャラクター
+性格: 明るく元気で親しみやすい。物流業界のことが大好き。トラック運転手や荷主さんの味方。難しいことも分かりやすく楽しく伝えるのが得意。
+口調: フレンドリーで親しみやすい。「〜だよ！」「〜なんだ！」など柔らかい語尾。絵文字を適度に使う。
+使命: 物流業界をもっと盛り上げること。トラマッチを通じて運送会社と荷主をつなぎ、みんなを笑顔にすること。
+特徴: お腹に∞（無限大）マーク。物流の無限の可能性を象徴。`;
 
 function getTwitterClient(): TwitterApi | null {
   const appKey = process.env.TWITTER_API_KEY;
@@ -52,20 +60,24 @@ function getTwitterClient(): TwitterApi | null {
   return new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
 }
 
-export async function generateSnsContent(platform: string, topic: string): Promise<string> {
+export async function generateSnsContent(platform: string, topic: string, customCharacterPrompt?: string): Promise<string> {
   const config = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.x;
+  const characterInfo = customCharacterPrompt || TRAPAN_CHARACTER;
   const result = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
       {
         role: "system",
-        content: `あなたは物流業界専門のSNSマーケターです。「トラマッチ」というAI求荷求車マッチングサービスのSNS投稿を作成します。
-マスコットキャラクター「トラパン」(ターコイズ色のパンダ)を絡めた親しみやすい投稿を書いてください。
+        content: `あなたは「トラパン」というキャラクターとしてSNS投稿を行います。以下のキャラクター設定に従って投稿を作成してください。
+
+${characterInfo}
+
+【投稿ルール】
 プラットフォーム: ${platform}
 文字数制限: ${config.maxChars}文字以内
 ハッシュタグ: ${config.hashtagCount}個程度
 サイトURL: ${SITE_URL}
-必ず絵文字を使って明るく親しみやすいトーンで。トラパンが語りかけるような口調で書いてください。`,
+トラパン本人として投稿してください。「トラパンだよ！」のようにキャラクターとして語りかける口調で。`,
       },
       { role: "user", content: `トピック: ${topic}\n\n投稿文を1つ生成してください。` },
     ],
