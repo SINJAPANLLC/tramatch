@@ -7,10 +7,12 @@ const dbConnectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE
 const pool = new pg.Pool({
   connectionString: dbConnectionString,
   max: 10,
-  min: 2,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  min: 1,
+  idleTimeoutMillis: 20000,
+  connectionTimeoutMillis: 10000,
   keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+  allowExitOnIdle: false,
 });
 
 pool.on('connect', (client) => {

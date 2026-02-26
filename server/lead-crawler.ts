@@ -147,7 +147,7 @@ function detectIndustry(html: string): string {
 async function fetchPageContent(url: string): Promise<string> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const timeout = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
@@ -362,7 +362,10 @@ async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
 
   try {
     const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=jp-jp`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(searchUrl, {
+      signal: controller.signal,
       headers: {
         "User-Agent": ua,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -373,6 +376,7 @@ async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
       },
       redirect: "follow",
     });
+    clearTimeout(timeout);
     if (!res.ok) {
       console.log(`[Lead Crawler] DuckDuckGo returned ${res.status} for "${query}"`);
     } else {
