@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Share2, Send, Clock, CheckCircle2, XCircle, Loader2, Wand2, Instagram, Twitter, Facebook, CalendarDays, BarChart3, TrendingUp, Eye, Heart, MessageCircle, Repeat2 } from "lucide-react";
+import { Share2, Send, Clock, CheckCircle2, Loader2, Wand2, ExternalLink, CalendarDays, BarChart3, TrendingUp, Eye, Heart } from "lucide-react";
+import { SiX, SiInstagram, SiFacebook, SiYoutube, SiTiktok, SiLinkedin, SiPinterest, SiThreads, SiLine } from "react-icons/si";
 import DashboardLayout from "@/components/dashboard-layout";
 
 type SnsPost = {
@@ -26,17 +27,17 @@ type SnsPost = {
   engagements: number;
 };
 
-const platformIcons: Record<string, React.ElementType> = {
-  twitter: Twitter,
-  instagram: Instagram,
-  facebook: Facebook,
-};
-
-const platformLabels: Record<string, string> = {
-  twitter: "X (Twitter)",
-  instagram: "Instagram",
-  facebook: "Facebook",
-};
+const snsServices = [
+  { id: "x", name: "X (Twitter)", icon: SiX, color: "#000000", darkColor: "#ffffff", loginUrl: "https://x.com/login", dashboardUrl: "https://x.com/home" },
+  { id: "instagram", name: "Instagram", icon: SiInstagram, color: "#E4405F", darkColor: "#E4405F", loginUrl: "https://www.instagram.com/accounts/login/", dashboardUrl: "https://www.instagram.com/" },
+  { id: "facebook", name: "Facebook", icon: SiFacebook, color: "#1877F2", darkColor: "#1877F2", loginUrl: "https://www.facebook.com/login/", dashboardUrl: "https://www.facebook.com/" },
+  { id: "youtube", name: "YouTube", icon: SiYoutube, color: "#FF0000", darkColor: "#FF0000", loginUrl: "https://accounts.google.com/ServiceLogin?service=youtube", dashboardUrl: "https://studio.youtube.com/" },
+  { id: "tiktok", name: "TikTok", icon: SiTiktok, color: "#000000", darkColor: "#ffffff", loginUrl: "https://www.tiktok.com/login", dashboardUrl: "https://www.tiktok.com/" },
+  { id: "linkedin", name: "LinkedIn", icon: SiLinkedin, color: "#0A66C2", darkColor: "#0A66C2", loginUrl: "https://www.linkedin.com/login", dashboardUrl: "https://www.linkedin.com/feed/" },
+  { id: "pinterest", name: "Pinterest", icon: SiPinterest, color: "#BD081C", darkColor: "#BD081C", loginUrl: "https://www.pinterest.com/login/", dashboardUrl: "https://www.pinterest.com/" },
+  { id: "threads", name: "Threads", icon: SiThreads, color: "#000000", darkColor: "#ffffff", loginUrl: "https://www.threads.net/login", dashboardUrl: "https://www.threads.net/" },
+  { id: "line", name: "LINE公式アカウント", icon: SiLine, color: "#06C755", darkColor: "#06C755", loginUrl: "https://manager.line.biz/", dashboardUrl: "https://manager.line.biz/" },
+];
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "下書き", variant: "secondary" },
@@ -47,13 +48,13 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
 
 export default function AdminSns() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("posts");
-  const [platform, setPlatform] = useState("twitter");
+  const [activeTab, setActiveTab] = useState("accounts");
+  const [platform, setPlatform] = useState("x");
   const [content, setContent] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: posts, isLoading } = useQuery<SnsPost[]>({
+  const { data: posts } = useQuery<SnsPost[]>({
     queryKey: ["/api/admin/sns-posts"],
+    enabled: activeTab === "posts",
   });
 
   const generateMutation = useMutation({
@@ -82,7 +83,7 @@ export default function AdminSns() {
   });
 
   const samplePosts: SnsPost[] = [
-    { id: "1", platform: "twitter", content: "🚚 本日の新着荷物情報！東京→大阪の冷凍案件が登録されました。#物流 #トラマッチ", mediaUrl: null, status: "published", scheduledAt: null, publishedAt: "2026-02-25T10:00:00Z", createdAt: "2026-02-25T09:00:00Z", impressions: 1250, engagements: 48 },
+    { id: "1", platform: "x", content: "🚚 本日の新着荷物情報！東京→大阪の冷凍案件が登録されました。#物流 #トラマッチ", mediaUrl: null, status: "published", scheduledAt: null, publishedAt: "2026-02-25T10:00:00Z", createdAt: "2026-02-25T09:00:00Z", impressions: 1250, engagements: 48 },
     { id: "2", platform: "instagram", content: "トラマッチで効率的な配車を実現！AIが最適なマッチングをサポートします。", mediaUrl: null, status: "scheduled", scheduledAt: "2026-02-27T12:00:00Z", publishedAt: null, createdAt: "2026-02-26T08:00:00Z", impressions: 0, engagements: 0 },
     { id: "3", platform: "facebook", content: "【お知らせ】トラマッチに新機能が追加されました。空車検索がさらに便利に！", mediaUrl: null, status: "draft", scheduledAt: null, publishedAt: null, createdAt: "2026-02-26T14:00:00Z", impressions: 0, engagements: 0 },
   ];
@@ -98,56 +99,47 @@ export default function AdminSns() {
               <Share2 className="w-6 h-6 text-primary" />
               SNS管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">SNS投稿の作成・予約・分析を管理します</p>
+            <p className="text-sm text-muted-foreground mt-1">各SNSへのアクセス・投稿の作成・分析を管理します</p>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList data-testid="tabs-sns">
-            <TabsTrigger value="posts" data-testid="tab-posts">投稿一覧</TabsTrigger>
-            <TabsTrigger value="create" data-testid="tab-create">新規作成</TabsTrigger>
+            <TabsTrigger value="accounts" data-testid="tab-accounts">SNSアカウント</TabsTrigger>
+            <TabsTrigger value="create" data-testid="tab-create">投稿作成</TabsTrigger>
+            <TabsTrigger value="posts" data-testid="tab-posts">投稿履歴</TabsTrigger>
             <TabsTrigger value="analytics" data-testid="tab-analytics">分析</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="posts" className="space-y-4 mt-4">
-            <div className="grid gap-4">
-              {displayPosts.map((post) => {
-                const PlatformIcon = platformIcons[post.platform] || Share2;
-                const status = statusLabels[post.status] || statusLabels.draft;
+          <TabsContent value="accounts" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {snsServices.map((sns) => {
+                const Icon = sns.icon;
                 return (
-                  <Card key={post.id} data-testid={`card-sns-post-${post.id}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <PlatformIcon className="w-5 h-5 text-primary" />
+                  <Card key={sns.id} className="hover:border-primary/50 transition-colors" data-testid={`card-sns-${sns.id}`}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${sns.color}15` }}>
+                          <Icon className="w-6 h-6" style={{ color: sns.color }} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-bold text-foreground">{platformLabels[post.platform]}</span>
-                            <Badge variant={status.variant} className="text-[10px]">{status.label}</Badge>
-                          </div>
-                          <p className="text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
-                          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                            {post.publishedAt && (
-                              <span className="flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" />
-                                {new Date(post.publishedAt).toLocaleString("ja-JP")}
-                              </span>
-                            )}
-                            {post.scheduledAt && post.status === "scheduled" && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                予約: {new Date(post.scheduledAt).toLocaleString("ja-JP")}
-                              </span>
-                            )}
-                            {post.status === "published" && (
-                              <>
-                                <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.impressions.toLocaleString()}</span>
-                                <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{post.engagements.toLocaleString()}</span>
-                              </>
-                            )}
-                          </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">{sns.name}</h3>
+                          <p className="text-xs text-muted-foreground">ログイン・管理画面</p>
                         </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <a href={sns.loginUrl} target="_blank" rel="noopener noreferrer" className="flex-1" data-testid={`link-login-${sns.id}`}>
+                          <Button variant="default" size="sm" className="w-full text-xs">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            ログイン
+                          </Button>
+                        </a>
+                        <a href={sns.dashboardUrl} target="_blank" rel="noopener noreferrer" className="flex-1" data-testid={`link-dashboard-${sns.id}`}>
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            管理画面
+                          </Button>
+                        </a>
                       </div>
                     </CardContent>
                   </Card>
@@ -166,9 +158,9 @@ export default function AdminSns() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="twitter">X (Twitter)</SelectItem>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                      <SelectItem value="facebook">Facebook</SelectItem>
+                      {snsServices.map((sns) => (
+                        <SelectItem key={sns.id} value={sns.id}>{sns.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -201,31 +193,62 @@ export default function AdminSns() {
                   <Button
                     onClick={() => postMutation.mutate({ platform, content })}
                     disabled={!content.trim() || postMutation.isPending}
-                    data-testid="button-post-now"
-                  >
-                    <Send className="w-4 h-4 mr-1" />
-                    今すぐ投稿
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => postMutation.mutate({ platform, content, scheduledAt: new Date(Date.now() + 86400000).toISOString() })}
-                    disabled={!content.trim() || postMutation.isPending}
-                    data-testid="button-schedule"
-                  >
-                    <CalendarDays className="w-4 h-4 mr-1" />
-                    予約投稿
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => postMutation.mutate({ platform, content })}
-                    disabled={!content.trim() || postMutation.isPending}
                     data-testid="button-save-draft"
                   >
+                    <Send className="w-4 h-4 mr-1" />
                     下書き保存
                   </Button>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="posts" className="space-y-4 mt-4">
+            <div className="grid gap-4">
+              {displayPosts.map((post) => {
+                const sns = snsServices.find(s => s.id === post.platform);
+                const Icon = sns?.icon || Share2;
+                const status = statusLabels[post.status] || statusLabels.draft;
+                return (
+                  <Card key={post.id} data-testid={`card-sns-post-${post.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `${sns?.color || '#666'}15` }}>
+                          <Icon className="w-5 h-5" style={{ color: sns?.color || '#666' }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-bold text-foreground">{sns?.name || post.platform}</span>
+                            <Badge variant={status.variant} className="text-[10px]">{status.label}</Badge>
+                          </div>
+                          <p className="text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
+                          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                            {post.publishedAt && (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                {new Date(post.publishedAt).toLocaleString("ja-JP")}
+                              </span>
+                            )}
+                            {post.scheduledAt && post.status === "scheduled" && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                予約: {new Date(post.scheduledAt).toLocaleString("ja-JP")}
+                              </span>
+                            )}
+                            {post.status === "published" && (
+                              <>
+                                <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.impressions.toLocaleString()}</span>
+                                <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{post.engagements.toLocaleString()}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4 mt-4">
