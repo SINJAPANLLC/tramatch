@@ -855,13 +855,13 @@ export default function CargoList() {
           <table className="w-full" data-testid="table-cargo">
             <thead>
               <tr className="border-b bg-muted/60">
-                <th className="text-center px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">形態</th>
                 <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
                 <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap min-w-[320px]">発着情報</th>
-                <th className="text-right px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
-                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">積合</th>
-                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">重量</th>
-                <th className="text-center px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車種</th>
+                <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
+                <th className="text-left px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">積合</th>
+                <th className="text-left px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">重量</th>
+                <th className="text-left px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">車種</th>
                 <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷種</th>
                 <th className="text-left px-1.5 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">作業</th>
                 <th className="text-left px-2 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">備考</th>
@@ -890,7 +890,7 @@ export default function CargoList() {
                   onClick={() => setSelectedCargoId(listing.id)}
                   data-testid={`row-cargo-${listing.id}`}
                 >
-                  <td className="px-2 py-3 text-center align-top">
+                  <td className="px-2 py-3 text-left align-top">
                     {listing.transportType ? (
                       <Badge variant="outline" className={`text-[10px] px-1 ${
                         listing.transportType === "スポット" ? "border-blue-300 text-blue-600" :
@@ -940,7 +940,7 @@ export default function CargoList() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-2 py-3 text-right align-top">
+                  <td className="px-2 py-3 text-left align-top">
                     <div className="font-bold text-[15px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
@@ -948,7 +948,7 @@ export default function CargoList() {
                       高速代: {listing.highwayFee || "未設定"}
                     </div>
                   </td>
-                  <td className="px-1.5 py-3 text-center align-top">
+                  <td className="px-1.5 py-3 text-left align-top">
                     {listing.consolidation === "可" ? (
                       <Badge variant="outline" className="text-[10px] border-primary/30 text-primary px-1">可</Badge>
                     ) : listing.consolidation === "不可" ? (
@@ -957,10 +957,10 @@ export default function CargoList() {
                       <span className="text-[12px] text-foreground font-bold">-</span>
                     )}
                   </td>
-                  <td className="px-1.5 py-3 text-center align-top">
+                  <td className="px-1.5 py-3 text-left align-top">
                     <span className="whitespace-nowrap text-[13px] text-foreground font-bold">{listing.weight}</span>
                   </td>
-                  <td className="px-1.5 py-3 text-center align-top">
+                  <td className="px-1.5 py-3 text-left align-top">
                     <div className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.vehicleType}</div>
                     {listing.bodyType && (
                       <div className="text-[11px] text-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
