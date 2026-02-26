@@ -777,7 +777,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   const [mobileTab, setMobileTab] = useState<"chat" | "form">("chat");
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full w-full flex-1 flex flex-col overflow-hidden">
       <div className="px-4 sm:px-6 pt-4 shrink-0">
         {tabBar(false)}
       </div>
