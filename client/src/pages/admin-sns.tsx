@@ -9,14 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Share2, Loader2, Wand2, ExternalLink } from "lucide-react";
-import { SiX, SiInstagram, SiFacebook, SiYoutube, SiTiktok, SiLinkedin, SiLine } from "react-icons/si";
+import { SiX, SiInstagram, SiFacebook, SiTiktok, SiLinkedin, SiLine } from "react-icons/si";
 import DashboardLayout from "@/components/dashboard-layout";
 
 const snsServices = [
   { id: "x", name: "X (Twitter)", icon: SiX, color: "#000000", darkColor: "#ffffff", loginUrl: "https://x.com/login", dashboardUrl: "https://x.com/home" },
   { id: "instagram", name: "Instagram", icon: SiInstagram, color: "#E4405F", darkColor: "#E4405F", loginUrl: "https://www.instagram.com/accounts/login/", dashboardUrl: "https://www.instagram.com/" },
   { id: "facebook", name: "Facebook", icon: SiFacebook, color: "#1877F2", darkColor: "#1877F2", loginUrl: "https://www.facebook.com/login/", dashboardUrl: "https://www.facebook.com/" },
-  { id: "youtube", name: "YouTube", icon: SiYoutube, color: "#FF0000", darkColor: "#FF0000", loginUrl: "https://accounts.google.com/ServiceLogin?service=youtube", dashboardUrl: "https://studio.youtube.com/" },
   { id: "tiktok", name: "TikTok", icon: SiTiktok, color: "#000000", darkColor: "#ffffff", loginUrl: "https://www.tiktok.com/login", dashboardUrl: "https://www.tiktok.com/" },
   { id: "linkedin", name: "LinkedIn", icon: SiLinkedin, color: "#0A66C2", darkColor: "#0A66C2", loginUrl: "https://www.linkedin.com/login", dashboardUrl: "https://www.linkedin.com/feed/" },
   { id: "line", name: "LINE公式アカウント", icon: SiLine, color: "#06C755", darkColor: "#06C755", loginUrl: "https://manager.line.biz/", dashboardUrl: "https://manager.line.biz/" },
