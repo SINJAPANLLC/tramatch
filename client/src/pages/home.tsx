@@ -401,26 +401,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <div className="bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-center gap-3 sm:gap-12 py-3 text-primary-foreground text-shadow flex-wrap">
-            <span className="text-xs sm:text-base font-medium tracking-wide hidden sm:inline">リアルタイム情報</span>
-            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
-              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="text-sm sm:text-lg font-bold">{cargoCount}件</span>
-              <span className="text-xs sm:text-sm">の荷物</span>
-              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
-            </Link>
-            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
-              <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="text-sm sm:text-lg font-bold">{truckCount}件</span>
-              <span className="text-xs sm:text-sm">の空車</span>
-              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <section className="bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto">
