@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X } from "lucide-react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
-import trapanImgPath from "@assets/トラパン_1772145814941.PNG";
+import trapanImgPath from "@assets/trapan.png";
 import { formatPrice, hasNumericPrice } from "@/lib/utils";
 
 const LOGO_WALL_IMAGES_ROW1 = [
