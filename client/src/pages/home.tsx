@@ -729,7 +729,7 @@ function PromoBanner() {
         <Link href="/register">
           <div className="cursor-pointer">
             <div className="px-4 py-3 flex items-center gap-1">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative z-10">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
                     β版プレミアムプラン
