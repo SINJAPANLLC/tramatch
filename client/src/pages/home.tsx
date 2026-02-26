@@ -509,16 +509,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg" data-testid="text-stats-title">
-            圧倒的な情報量
-          </h2>
-          <p className="text-base text-primary-foreground text-center mb-12 text-shadow">リアルタイムで更新される情報をご活用ください</p>
-          <StatsCounters cargoCount={cargoCount} truckCount={truckCount} />
-        </div>
-      </section>
-
       <section className="py-4 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 py-4">
