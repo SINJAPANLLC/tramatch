@@ -45,6 +45,9 @@ const pageImports = {
   adminAiTraining: () => import("@/pages/admin-ai-training"),
   adminYoutube: () => import("@/pages/admin-youtube"),
   adminEmailMarketing: () => import("@/pages/admin-email-marketing"),
+  adminSns: () => import("@/pages/admin-sns"),
+  adminMediaGen: () => import("@/pages/admin-media-gen"),
+  adminLpGen: () => import("@/pages/admin-lp-gen"),
   guide: () => import("@/pages/guide"),
   faq: () => import("@/pages/faq"),
   contact: () => import("@/pages/contact"),
@@ -97,6 +100,9 @@ const AdminAgents = lazy(pageImports.adminAgents);
 const AdminAiTraining = lazy(pageImports.adminAiTraining);
 const AdminYoutube = lazy(pageImports.adminYoutube);
 const AdminEmailMarketing = lazy(pageImports.adminEmailMarketing);
+const AdminSns = lazy(pageImports.adminSns);
+const AdminMediaGen = lazy(pageImports.adminMediaGen);
+const AdminLpGen = lazy(pageImports.adminLpGen);
 const Guide = lazy(pageImports.guide);
 const Faq = lazy(pageImports.faq);
 const Contact = lazy(pageImports.contact);
@@ -154,7 +160,7 @@ const DASHBOARD_PATHS = [
   "/my-cargo", "/completed-cargo", "/cancelled-cargo", "/companies", "/partners",
   "/transport-ledger", "/payment", "/services", "/settings",
   "/admin", "/admin/applications", "/admin/users", "/admin/revenue", "/admin/invoices",
-  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs", "/admin/agents", "/admin/ai-training", "/admin/youtube", "/admin/email-marketing",
+  "/admin/notifications", "/admin/announcements", "/admin/listings", "/admin/seo", "/admin/settings", "/admin/contact-inquiries", "/admin/audit-logs", "/admin/agents", "/admin/ai-training", "/admin/youtube", "/admin/email-marketing", "/admin/sns", "/admin/media-gen", "/admin/lp-gen",
 ];
 
 function Router() {
@@ -200,6 +206,9 @@ function Router() {
         <Route path="/admin/ai-training">{() => <AdminRoute component={AdminAiTraining} />}</Route>
         <Route path="/admin/youtube">{() => <AdminRoute component={AdminYoutube} />}</Route>
         <Route path="/admin/email-marketing">{() => <AdminRoute component={AdminEmailMarketing} />}</Route>
+        <Route path="/admin/sns">{() => <AdminRoute component={AdminSns} />}</Route>
+        <Route path="/admin/media-gen">{() => <AdminRoute component={AdminMediaGen} />}</Route>
+        <Route path="/admin/lp-gen">{() => <AdminRoute component={AdminLpGen} />}</Route>
         <Route path="/admin">{() => <AdminRoute component={AdminDashboard} />}</Route>
         <Route path="/guide" component={Guide} />
         <Route path="/faq" component={Faq} />
