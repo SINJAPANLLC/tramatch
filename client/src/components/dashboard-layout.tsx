@@ -10,6 +10,11 @@ type MenuItem = {
   icon: React.ElementType;
 };
 
+type AdminMenuGroup = {
+  groupLabel: string;
+  items: MenuItem[];
+};
+
 const userMenuItems: MenuItem[] = [
   { href: "/cargo", label: "AI荷物検索", icon: Sparkles },
   { href: "/cargo/new", label: "AI荷物登録", icon: Plus },
@@ -25,26 +30,56 @@ const userMenuItems: MenuItem[] = [
 
 const agentMenuItem: MenuItem = { href: "/admin/agents", label: "エージェント", icon: Building };
 
-const adminMenuItems: MenuItem[] = [
-  { href: "/admin", label: "管理画面", icon: Shield },
-  { href: "/admin/applications", label: "申請管理", icon: ClipboardList },
-  { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
-  { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
-  { href: "/admin/invoices", label: "請求書発行", icon: FileText },
-  { href: "/admin/notifications", label: "通知管理", icon: Bell },
-  { href: "/admin/announcements", label: "お知らせ", icon: Megaphone },
-  { href: "/admin/seo", label: "SEO記事生成", icon: PenTool },
-  { href: "/admin/listings", label: "掲載管理", icon: Package },
-  { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
-  { href: "/admin/audit-logs", label: "操作ログ", icon: Activity },
-  { href: "/admin/ai-training", label: "AI学習管理", icon: Brain },
-  { href: "/admin/youtube", label: "YouTube管理", icon: Video },
-  { href: "/admin/email-marketing", label: "メール営業", icon: Mail },
-  { href: "/admin/sns", label: "SNS管理", icon: Share2 },
-  { href: "/admin/media-gen", label: "画像・動画生成", icon: ImageIcon },
-  { href: "/admin/lp-gen", label: "LP生成", icon: Layout },
-  { href: "/admin/design", label: "設計ページ", icon: Lightbulb },
-  { href: "/admin/settings", label: "管理設定", icon: Wrench },
+const adminMenuGroups: AdminMenuGroup[] = [
+  {
+    groupLabel: "ダッシュボード",
+    items: [
+      { href: "/admin", label: "管理画面", icon: Shield },
+      { href: "/admin/design", label: "設計ページ", icon: Lightbulb },
+    ],
+  },
+  {
+    groupLabel: "ユーザー・売上",
+    items: [
+      { href: "/admin/applications", label: "申請管理", icon: ClipboardList },
+      { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
+      { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
+      { href: "/admin/invoices", label: "請求書発行", icon: FileText },
+    ],
+  },
+  {
+    groupLabel: "コンテンツ管理",
+    items: [
+      { href: "/admin/listings", label: "掲載管理", icon: Package },
+      { href: "/admin/announcements", label: "お知らせ", icon: Megaphone },
+      { href: "/admin/notifications", label: "通知管理", icon: Bell },
+      { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
+    ],
+  },
+  {
+    groupLabel: "マーケティング",
+    items: [
+      { href: "/admin/seo", label: "SEO記事生成", icon: PenTool },
+      { href: "/admin/email-marketing", label: "メール営業", icon: Mail },
+      { href: "/admin/sns", label: "SNS管理", icon: Share2 },
+      { href: "/admin/youtube", label: "YouTube管理", icon: Video },
+      { href: "/admin/lp-gen", label: "LP生成", icon: Layout },
+    ],
+  },
+  {
+    groupLabel: "AI・制作ツール",
+    items: [
+      { href: "/admin/ai-training", label: "AI学習管理", icon: Brain },
+      { href: "/admin/media-gen", label: "画像・動画生成", icon: ImageIcon },
+    ],
+  },
+  {
+    groupLabel: "システム",
+    items: [
+      { href: "/admin/audit-logs", label: "操作ログ", icon: Activity },
+      { href: "/admin/settings", label: "管理設定", icon: Wrench },
+    ],
+  },
 ];
 
 function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: () => void }) {
@@ -101,7 +136,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               <ChevronRight className="w-3.5 h-3.5" />
             )}
           </button>
-          {adminMenuOpen && <SidebarMenu items={adminMenuItems} onNavigate={onNavigate} />}
+          {adminMenuOpen && (
+            <div className="space-y-3 mt-1">
+              {adminMenuGroups.map((group) => (
+                <div key={group.groupLabel}>
+                  <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider">{group.groupLabel}</p>
+                  <SidebarMenu items={group.items} onNavigate={onNavigate} />
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
