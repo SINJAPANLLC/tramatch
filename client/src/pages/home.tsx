@@ -34,44 +34,6 @@ const LOGO_WALL_IMAGES_BOTTOM = [
   "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1412ad40-d994-013e-82c6-0a58a9feac02/tmp-75613e906c3e5ab6ea00c4f39150e44f-cff486a9ddccba3a97b5c4297fb3c057.jpg",
 ];
 
-function useCountUp(target: number, duration = 1500) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (!ref.current || hasAnimated.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true;
-          const startTime = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setCount(Math.round(eased * target));
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [target, duration]);
-
-  useEffect(() => {
-    if (hasAnimated.current) {
-      setCount(target);
-    }
-  }, [target]);
-
-  return { count, ref };
-}
 
 function CargoCard({ listing }: { listing: CargoListing }) {
   return (
@@ -141,37 +103,6 @@ function TruckCard({ listing }: { listing: TruckListing }) {
   );
 }
 
-function StatsCounters({ cargoCount, truckCount }: { cargoCount: number; truckCount: number }) {
-  const cargo = useCountUp(cargoCount);
-  const truck = useCountUp(truckCount);
-  const support = useCountUp(24);
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8" ref={cargo.ref}>
-      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow">
-        <p className="text-base text-primary-foreground mb-2">荷物情報数</p>
-        <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{cargo.count}</span>
-          <span className="text-lg font-medium text-primary-foreground">件</span>
-        </div>
-      </div>
-      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow" ref={truck.ref}>
-        <p className="text-base text-primary-foreground mb-2">空きトラック情報数</p>
-        <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{truck.count}</span>
-          <span className="text-lg font-medium text-primary-foreground">件</span>
-        </div>
-      </div>
-      <div className="bg-primary-foreground/15 rounded-md p-6 sm:p-8 text-center text-shadow" ref={support.ref}>
-        <p className="text-base text-primary-foreground mb-2">サポート対応</p>
-        <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl sm:text-5xl font-bold text-primary-foreground text-shadow-lg">{support.count}</span>
-          <span className="text-lg font-medium text-primary-foreground">時間</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ListingSkeleton() {
   return (
@@ -509,30 +440,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg" data-testid="text-stats-title">
-            圧倒的な情報量
-          </h2>
-          <p className="text-base text-primary-foreground text-center mb-12 text-shadow">リアルタイムで更新される情報をご活用ください</p>
-          <StatsCounters cargoCount={cargoCount} truckCount={truckCount} />
-        </div>
-      </section>
-
-      <section className="py-4 bg-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 py-4">
-            <p className="text-primary-foreground font-bold text-lg sm:text-xl text-shadow">TRA MATCH AIを使って業務をラクにしませんか？</p>
-            <div className="flex items-center gap-3">
-              <Link href="/register">
-                <Button variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground" data-testid="button-mid-cta-register">
-                  無料会員登録
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
