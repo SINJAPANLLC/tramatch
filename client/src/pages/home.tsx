@@ -509,21 +509,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-4 bg-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 py-4">
-            <p className="text-primary-foreground font-bold text-lg sm:text-xl text-shadow">TRA MATCH AIを使って業務をラクにしませんか？</p>
-            <div className="flex items-center gap-3">
-              <Link href="/register">
-                <Button variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground" data-testid="button-mid-cta-register">
-                  無料会員登録
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg">料金比較</h2>
