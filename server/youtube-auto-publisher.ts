@@ -234,9 +234,33 @@ function createFallbackSlide(jobId: string, index: number): string {
   return imagePath;
 }
 
+function compressToJpeg(inputPath: string, outputPath: string, maxSizeBytes = 2000000): string {
+  let quality = 90;
+  while (quality >= 30) {
+    try {
+      execSync(`ffmpeg -y -i "${inputPath}" -q:v ${Math.round((100 - quality) / 3 + 2)} "${outputPath}" 2>/dev/null`, { timeout: 15000 });
+      const size = fs.statSync(outputPath).size;
+      if (size <= maxSizeBytes) {
+        console.log(`[YouTube Auto] Compressed thumbnail: ${(size / 1024).toFixed(0)}KB (q=${quality})`);
+        return outputPath;
+      }
+      quality -= 15;
+    } catch {
+      break;
+    }
+  }
+  try {
+    execSync(`ffmpeg -y -i "${inputPath}" -vf "scale=1280:720" -q:v 8 "${outputPath}" 2>/dev/null`, { timeout: 15000 });
+    return outputPath;
+  } catch {
+    return inputPath;
+  }
+}
+
 export async function generateThumbnail(title: string, jobId: string, thumbnailPrompt?: string): Promise<string> {
   ensureTempDir();
-  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.png`);
+  const thumbnailPng = path.join(TEMP_DIR, `${jobId}_thumb.png`);
+  const thumbnailJpg = path.join(TEMP_DIR, `${jobId}_thumb.jpg`);
 
   if (thumbnailPrompt) {
     try {
@@ -250,8 +274,8 @@ export async function generateThumbnail(title: string, jobId: string, thumbnailP
 
       const imageData = result.data?.[0]?.b64_json;
       if (imageData) {
-        fs.writeFileSync(thumbnailPath, Buffer.from(imageData, "base64"));
-        console.log(`[YouTube Auto] AI Thumbnail generated: ${thumbnailPath}`);
+        fs.writeFileSync(thumbnailPng, Buffer.from(imageData, "base64"));
+        console.log(`[YouTube Auto] AI Thumbnail generated`);
 
         const fontPath = findJapaneseFont();
         if (fontPath) {
@@ -260,14 +284,16 @@ export async function generateThumbnail(title: string, jobId: string, thumbnailP
           const escapedTitle = shortTitle.replace(/'/g, "'\\''").replace(/:/g, "\\:");
           try {
             execSync(
-              `ffmpeg -y -i "${thumbnailPath}" -vf "drawtext=fontfile='${fontPath}':text='${escapedTitle}':fontsize=72:fontcolor=white:borderw=4:bordercolor=black:x=(w-text_w)/2:y=(h-text_h)/2:box=1:boxcolor=black@0.4:boxborderw=20" "${thumbWithText}" 2>/dev/null`,
+              `ffmpeg -y -i "${thumbnailPng}" -vf "drawtext=fontfile='${fontPath}':text='${escapedTitle}':fontsize=72:fontcolor=white:borderw=4:bordercolor=black:x=(w-text_w)/2:y=(h-text_h)/2:box=1:boxcolor=black@0.4:boxborderw=20" "${thumbWithText}" 2>/dev/null`,
               { timeout: 15000 }
             );
-            fs.renameSync(thumbWithText, thumbnailPath);
+            fs.renameSync(thumbWithText, thumbnailPng);
           } catch {}
         }
 
-        return thumbnailPath;
+        const finalPath = compressToJpeg(thumbnailPng, thumbnailJpg);
+        cleanupFiles(thumbnailPng);
+        return finalPath;
       }
     } catch (error: any) {
       console.error(`[YouTube Auto] AI Thumbnail failed: ${error?.message?.substring(0, 200)}`);
@@ -276,8 +302,8 @@ export async function generateThumbnail(title: string, jobId: string, thumbnailP
 
   const logoPath = path.join(process.cwd(), "server", "assets", "thumbnail_base.png");
   if (fs.existsSync(logoPath)) {
-    fs.copyFileSync(logoPath, thumbnailPath);
-    return thumbnailPath;
+    fs.copyFileSync(logoPath, thumbnailJpg);
+    return thumbnailJpg;
   }
 
   return "";
@@ -564,7 +590,7 @@ export async function uploadThumbnail(videoId: string, thumbnailPath: string): P
     await youtube.thumbnails.set({
       videoId,
       media: {
-        mimeType: "image/png",
+        mimeType: "image/jpeg",
         body: fs.createReadStream(thumbnailPath),
       },
     });
