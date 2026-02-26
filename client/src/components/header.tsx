@@ -266,16 +266,6 @@ export default function Header() {
               <Link href="/home" className="flex items-center shrink-0" data-testid="text-logo">
                 <img src={logoImage} alt="TRA MATCH" className="h-6 w-auto" />
               </Link>
-              <div className="hidden sm:flex items-center gap-2">
-                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-cargo">
-                  <Package className="w-3 h-3" />
-                  荷物数 {cargoListings?.length ?? 0}
-                </Badge>
-                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-trucks">
-                  <Truck className="w-3 h-3" />
-                  空車数 {truckListings?.length ?? 0}
-                </Badge>
-              </div>
             </div>
 
             <div className="flex items-center gap-2">
