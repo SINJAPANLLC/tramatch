@@ -422,14 +422,51 @@ async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
   if (urls.length < 5) {
     try {
       await new Promise(r => setTimeout(r, 1000));
+      const googleUrl = `https://www.google.co.jp/search?q=${encodeURIComponent(query)}&hl=ja&gl=jp&num=20`;
+      const gc = new AbortController();
+      const gt = setTimeout(() => gc.abort(), 20000);
+      const googleRes = await fetch(googleUrl, {
+        signal: gc.signal,
+        headers: {
+          "User-Agent": ua,
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "ja,en;q=0.5",
+        },
+      });
+      clearTimeout(gt);
+      if (googleRes.ok) {
+        const googleHtml = await googleRes.text();
+        let match;
+        const googleLinkPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
+        while ((match = googleLinkPattern.exec(googleHtml)) !== null) {
+          try { addUniqueUrl(urls, match[1], true); } catch {}
+        }
+        const googleUrlPattern = /url\?q=(https?:\/\/[^&"]+)/gi;
+        while ((match = googleUrlPattern.exec(googleHtml)) !== null) {
+          try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
+        }
+        if (urls.length > 0) console.log(`[Lead Crawler] Google added URLs, total now: ${urls.length}`);
+      }
+    } catch (err: any) {
+      console.log(`[Lead Crawler] Google search failed: ${err?.message || err}`);
+    }
+  }
+
+  if (urls.length < 5) {
+    try {
+      await new Promise(r => setTimeout(r, 1000));
       const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&cc=jp&setlang=ja`;
+      const bc = new AbortController();
+      const bt = setTimeout(() => bc.abort(), 20000);
       const bingRes = await fetch(bingUrl, {
+        signal: bc.signal,
         headers: {
           "User-Agent": ua,
           "Accept": "text/html,application/xhtml+xml",
           "Accept-Language": "ja,en;q=0.5",
         },
       });
+      clearTimeout(bt);
       if (bingRes.ok) {
         const bingHtml = await bingRes.text();
         let match;
