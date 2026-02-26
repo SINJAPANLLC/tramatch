@@ -528,8 +528,74 @@ async function composeSlideVideo(
     cleanupFiles(concatListPath, ...segmentPaths);
   }
 
+  const bgmPath = generateBGM(jobId, getDuration(videoPath));
+  if (bgmPath) {
+    const videoWithBgm = path.join(TEMP_DIR, `${jobId}_bgm.mp4`);
+    try {
+      execSync(
+        `ffmpeg -y -i "${videoPath}" -i "${bgmPath}" ` +
+        `-filter_complex "[1:a]volume=0.08[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=3[aout]" ` +
+        `-map 0:v -map "[aout]" -c:v copy -c:a aac -b:a 192k "${videoWithBgm}" 2>/dev/null`,
+        { timeout: 300000 }
+      );
+      fs.renameSync(videoWithBgm, videoPath);
+      console.log(`[YouTube Auto] BGM mixed into video`);
+    } catch (err: any) {
+      console.error(`[YouTube Auto] BGM mix failed: ${err?.message?.substring(0, 200)}`);
+      cleanupFiles(videoWithBgm);
+    }
+    cleanupFiles(bgmPath);
+  }
+
   console.log(`[YouTube Auto] Slide video composed: ${videoPath}`);
   return videoPath;
+}
+
+function generateBGM(jobId: string, durationSec: number): string | null {
+  const bgmPath = path.join(TEMP_DIR, `${jobId}_bgm.mp3`);
+  try {
+    const dur = durationSec + 2;
+    execSync(
+      `ffmpeg -y -f lavfi -i "` +
+      `sine=frequency=220:duration=${dur},` +
+      `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,` +
+      `volume=0.15,` +
+      `afade=t=in:st=0:d=3,` +
+      `afade=t=out:st=${dur - 3}:d=3" ` +
+      `"${bgmPath}" 2>/dev/null`,
+      { timeout: 30000 }
+    );
+
+    const altBgmPath = path.join(TEMP_DIR, `${jobId}_bgm2.mp3`);
+    execSync(
+      `ffmpeg -y -f lavfi -i "` +
+      `sine=frequency=330:duration=${dur},` +
+      `aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,` +
+      `volume=0.08,` +
+      `afade=t=in:st=0:d=3,` +
+      `afade=t=out:st=${dur - 3}:d=3" ` +
+      `"${altBgmPath}" 2>/dev/null`,
+      { timeout: 30000 }
+    );
+
+    const mixedBgm = path.join(TEMP_DIR, `${jobId}_bgm_mix.mp3`);
+    execSync(
+      `ffmpeg -y -i "${bgmPath}" -i "${altBgmPath}" ` +
+      `-filter_complex "[0:a][1:a]amix=inputs=2:duration=first[aout]" ` +
+      `-map "[aout]" "${mixedBgm}" 2>/dev/null`,
+      { timeout: 30000 }
+    );
+
+    cleanupFiles(bgmPath, altBgmPath);
+    fs.renameSync(mixedBgm, bgmPath);
+
+    console.log(`[YouTube Auto] BGM generated: ${durationSec}s`);
+    return bgmPath;
+  } catch (err: any) {
+    console.error(`[YouTube Auto] BGM generation failed: ${err?.message?.substring(0, 200)}`);
+    cleanupFiles(bgmPath);
+    return null;
+  }
 }
 
 function getYoutubeClient() {
