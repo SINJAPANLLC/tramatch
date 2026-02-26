@@ -897,7 +897,7 @@ export default function CargoList() {
                         listing.transportType === "定期" ? "border-primary/30 text-primary" : ""
                       }`}>{listing.transportType}</Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground font-bold">-</span>
+                      <span className="text-xs text-foreground font-bold">-</span>
                     )}
                     {listing.createdAt && (Date.now() - new Date(listing.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
                       <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 animate-pulse mt-0.5" data-testid={`badge-new-cargo-${listing.id}`}>New</span>
@@ -905,7 +905,7 @@ export default function CargoList() {
                   </td>
                   <td className="px-2 py-3 align-top max-w-[120px]">
                     <div className="font-bold text-foreground text-[13px] leading-tight truncate">{listing.companyName}</div>
-                    <div className="text-[11px] text-foreground/70 mt-0.5 font-bold truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</div>
+                    <div className="text-[11px] text-foreground mt-0.5 font-bold truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</div>
                   </td>
                   <td className="px-2 py-3 align-top">
                     <div className="flex items-center gap-2">
@@ -915,10 +915,10 @@ export default function CargoList() {
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
                             {listing.departureAddress && (
-                              <span className="text-[12px] text-foreground/70 font-bold">{listing.departureAddress}</span>
+                              <span className="text-[12px] text-foreground font-bold">{listing.departureAddress}</span>
                             )}
                           </div>
-                          <div className="text-[12px] text-foreground/70 font-bold">
+                          <div className="text-[12px] text-foreground font-bold">
                             {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
@@ -930,10 +930,10 @@ export default function CargoList() {
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
                             {listing.arrivalAddress && (
-                              <span className="text-[12px] text-foreground/70 font-bold">{listing.arrivalAddress}</span>
+                              <span className="text-[12px] text-foreground font-bold">{listing.arrivalAddress}</span>
                             )}
                           </div>
-                          <div className="text-[12px] text-foreground/70 font-bold">
+                          <div className="text-[12px] text-foreground font-bold">
                             {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                           </div>
                         </div>
@@ -944,7 +944,7 @@ export default function CargoList() {
                     <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
-                    <div className="text-[11px] text-foreground/70 whitespace-nowrap mt-0.5 font-bold">
+                    <div className="text-[11px] text-foreground whitespace-nowrap mt-0.5 font-bold">
                       高速代: {listing.highwayFee || "未設定"}
                     </div>
                   </td>
@@ -963,7 +963,7 @@ export default function CargoList() {
                   <td className="px-1.5 py-3 text-center align-top">
                     <div className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.vehicleType}</div>
                     {listing.bodyType && (
-                      <div className="text-[11px] text-foreground/70 whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
+                      <div className="text-[11px] text-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
                     )}
                   </td>
                   <td className="px-2 py-3 align-top">
@@ -978,7 +978,7 @@ export default function CargoList() {
                     <span className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
                   </td>
                   <td className="px-2 py-3 align-top">
-                    <span className="text-foreground/80 text-[12px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
+                    <span className="text-foreground text-[12px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
                       {listing.description || "-"}
                     </span>
                   </td>
