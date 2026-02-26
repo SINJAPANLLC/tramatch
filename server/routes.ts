@@ -862,9 +862,14 @@ export async function registerRoutes(
     }
   });
 
-  async function expireOldCargoListings(listings: any[]) {
+  function getJSTDateString(): string {
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    return `${jst.getUTCFullYear()}-${String(jst.getUTCMonth() + 1).padStart(2, "0")}-${String(jst.getUTCDate()).padStart(2, "0")}`;
+  }
+
+  async function expireOldCargoListings(listings: any[]) {
+    const todayStr = getJSTDateString();
     const expirePromises: Promise<any>[] = [];
     for (const listing of listings) {
       if (listing.status !== "active") continue;
