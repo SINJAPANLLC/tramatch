@@ -315,10 +315,6 @@ function YouTubePreviewSection() {
 }
 
 export default function Home() {
-  const { data: publicCounts } = useQuery<{ cargoCount: number; truckCount: number }>({
-    queryKey: ["/api/public/counts"],
-  });
-
   const { data: cargoListings } = useQuery<CargoListing[]>({
     queryKey: ["/api/cargo"],
   });
@@ -326,9 +322,6 @@ export default function Home() {
   const { data: truckListings } = useQuery<TruckListing[]>({
     queryKey: ["/api/trucks"],
   });
-
-  const cargoCount = publicCounts?.cargoCount || 0;
-  const truckCount = publicCounts?.truckCount || 0;
 
   return (
     <div className="min-h-screen">
@@ -568,7 +561,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">最新の荷物情報</h2>
-            <p className="mt-2 text-primary-foreground text-shadow">現在 <span className="font-bold text-xl">{cargoCount}件</span> の荷物情報が登録されています</p>
           </div>
         </div>
         {cargoListings && cargoListings.length > 0 && (
@@ -621,7 +613,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">最新の車両情報</h2>
-            <p className="mt-2 text-primary-foreground text-shadow">現在 <span className="font-bold text-xl">{truckCount}件</span> の空車情報が登録されています</p>
           </div>
         </div>
         {truckListings && truckListings.length > 0 && (
