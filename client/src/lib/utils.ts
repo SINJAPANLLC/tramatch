@@ -8,6 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 export function formatPrice(value: string | null | undefined): string {
   if (!value) return "";
   const num = value.replace(/[^0-9]/g, "");
-  if (!num) return value;
+  if (!num) return "";
   return Number(num).toLocaleString("ja-JP");
+}
+
+export function hasNumericPrice(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /[0-9]/.test(value);
 }

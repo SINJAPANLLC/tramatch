@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, hasNumericPrice } from "@/lib/utils";
 
 interface OnboardingProgress {
   profileComplete: boolean;
@@ -249,7 +249,7 @@ export default function Dashboard() {
                             <span className="font-medium truncate">{listing.arrivalArea}</span>
                           </div>
                           <div className="w-[80px] text-right">
-                            {listing.price ? (
+                            {hasNumericPrice(listing.price) ? (
                               <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
                               <span className="text-xs font-bold text-primary">要相談</span>
@@ -298,7 +298,7 @@ export default function Dashboard() {
                             <span className="font-medium truncate">{listing.destinationArea}</span>
                           </div>
                           <div className="w-[80px] text-right">
-                            {listing.price ? (
+                            {hasNumericPrice(listing.price) ? (
                               <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
                               <span className="text-xs font-bold text-primary">要相談</span>
