@@ -1039,20 +1039,22 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                         </FormItem>
                       )} />
                     </div>
-                    <FormField control={form.control} name="currentAddress" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">空車地 詳細住所</FormLabel>
-                        <FormControl><Input className="h-8 text-xs" placeholder="例: 名古屋市中村区" {...field} value={field.value || ""} data-testid="input-current-address" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="destinationAddress" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">行先地 詳細住所</FormLabel>
-                        <FormControl><Input className="h-8 text-xs" placeholder="例: 大阪市北区" {...field} value={field.value || ""} data-testid="input-destination-address" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField control={form.control} name="currentAddress" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">空車地 詳細住所</FormLabel>
+                          <FormControl><Input className="h-8 text-xs" placeholder="例: 名古屋市中村区" {...field} value={field.value || ""} data-testid="input-current-address" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="destinationAddress" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">行先地 詳細住所</FormLabel>
+                          <FormControl><Input className="h-8 text-xs" placeholder="例: 大阪市北区" {...field} value={field.value || ""} data-testid="input-destination-address" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
                   </div>
                 </div>
 
@@ -1301,13 +1303,15 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
             </Select>
           </div>
         </div>
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">空車地 詳細住所</label>
-          <Input value={editFields.currentAddress} onChange={e => handleChange("currentAddress", e.target.value)} placeholder="例: 名古屋市中村区" data-testid="input-edit-currentAddress" />
-        </div>
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">行先地 詳細住所</label>
-          <Input value={editFields.destinationAddress} onChange={e => handleChange("destinationAddress", e.target.value)} placeholder="例: 大阪市北区" data-testid="input-edit-destinationAddress" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">空車地 詳細住所</label>
+            <Input value={editFields.currentAddress} onChange={e => handleChange("currentAddress", e.target.value)} placeholder="例: 名古屋市中村区" data-testid="input-edit-currentAddress" />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">行先地 詳細住所</label>
+            <Input value={editFields.destinationAddress} onChange={e => handleChange("destinationAddress", e.target.value)} placeholder="例: 大阪市北区" data-testid="input-edit-destinationAddress" />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
