@@ -556,3 +556,17 @@ export const emailLeads = pgTable("email_leads", {
 export const insertEmailLeadSchema = createInsertSchema(emailLeads).omit({ id: true, sentAt: true, sentSubject: true, createdAt: true });
 export type InsertEmailLead = z.infer<typeof insertEmailLeadSchema>;
 export type EmailLead = typeof emailLeads.$inferSelect;
+
+export const landingPages = pgTable("landing_pages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  html: text("html").notNull(),
+  published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLandingPageSchema = createInsertSchema(landingPages).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertLandingPage = z.infer<typeof insertLandingPageSchema>;
+export type LandingPage = typeof landingPages.$inferSelect;
