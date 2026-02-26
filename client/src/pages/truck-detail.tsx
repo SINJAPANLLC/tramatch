@@ -91,6 +91,7 @@ export default function TruckDetail() {
                 <div>
                   <div className="text-xs text-muted-foreground">現在地</div>
                   <div className="font-medium text-foreground">{listing.currentArea}</div>
+                  {listing.currentAddress && <div className="text-xs text-foreground mt-0.5">{listing.currentAddress}</div>}
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-md bg-muted/50">
@@ -98,6 +99,7 @@ export default function TruckDetail() {
                 <div>
                   <div className="text-xs text-muted-foreground">行き先エリア</div>
                   <div className="font-medium text-foreground">{listing.destinationArea}</div>
+                  {listing.destinationAddress && <div className="text-xs text-foreground mt-0.5">{listing.destinationAddress}</div>}
                 </div>
               </div>
             </div>
