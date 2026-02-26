@@ -739,10 +739,10 @@ function PromoBanner() {
                   <span className="text-sm font-bold text-foreground">成約し放題</span>
                   <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">今だけ無料でプレミアム機能が使える</p>
               </div>
-              <img src={trapanImgPath} alt="トラパン" className="w-14 h-14 object-contain flex-shrink-0" />
+              <img src={trapanImgPath} alt="トラパン" className="w-20 h-20 object-contain flex-shrink-0" />
             </div>
+            <p className="text-[10px] text-muted-foreground px-4 pb-2 -mt-1">今だけ無料でプレミアム機能が使える</p>
             <div className="bg-primary text-primary-foreground text-center py-2 text-xs font-bold rounded-b-md">
               新規登録はこちら <ChevronRight className="w-3.5 h-3.5 inline-block" />
             </div>
