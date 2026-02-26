@@ -38,12 +38,18 @@ app.use(express.urlencoded({ extended: false }));
 
 const PgStore = connectPgSimple(session);
 
+const pgStore = new PgStore({
+  pool: dbPool,
+  createTableIfMissing: true,
+  pruneSessionInterval: 600,
+  errorLog: (err: Error) => {
+    console.error('Session store error:', err.message);
+  },
+});
+
 app.use(
   session({
-    store: new PgStore({
-      pool: dbPool,
-      createTableIfMissing: true,
-    }),
+    store: pgStore,
     secret: process.env.SESSION_SECRET || "tramatch-secret-key",
     resave: false,
     saveUninitialized: false,
