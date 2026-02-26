@@ -262,15 +262,112 @@ export default function AdminSns() {
 
                 {content && (
                   <div className="space-y-3 border-t pt-4">
-                    <Label className="text-sm font-bold text-foreground">3. 生成された投稿文</Label>
-                    <Textarea
-                      className="min-h-[150px] text-sm"
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      data-testid="input-sns-content"
-                    />
-                    <p className="text-xs text-muted-foreground">{content.length} 文字 ・ 内容は自由に編集できます</p>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold text-foreground">3. 投稿文を編集</Label>
+                        <Textarea
+                          className="min-h-[200px] text-sm"
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          data-testid="input-sns-content"
+                        />
+                        <p className="text-xs text-muted-foreground">{content.length} 文字 ・ 内容は自由に編集できます</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold text-foreground">プレビュー</Label>
+                        {(() => {
+                          const sns = snsServices.find(s => s.id === platform);
+                          const Icon = sns?.icon;
+                          if (platform === "x") {
+                            return (
+                              <div className="border rounded-xl p-4 bg-white dark:bg-zinc-900" data-testid="preview-x">
+                                <div className="flex gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-lg">🐼</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-bold text-foreground">トラパン</span>
+                                      <span className="text-xs text-muted-foreground">@tramatch_ai</span>
+                                    </div>
+                                    <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">{content}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (platform === "instagram") {
+                            return (
+                              <div className="border rounded-xl overflow-hidden bg-white dark:bg-zinc-900" data-testid="preview-instagram">
+                                <div className="flex items-center gap-2 p-3 border-b">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center">
+                                    <span className="text-sm">🐼</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-foreground">tramatch_ai</span>
+                                </div>
+                                <div className="aspect-square bg-primary/10 flex items-center justify-center">
+                                  <span className="text-6xl">🐼</span>
+                                </div>
+                                <div className="p-3">
+                                  <p className="text-sm text-foreground whitespace-pre-wrap"><span className="font-bold mr-1">tramatch_ai</span>{content}</p>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (platform === "facebook") {
+                            return (
+                              <div className="border rounded-xl bg-white dark:bg-zinc-900" data-testid="preview-facebook">
+                                <div className="flex items-center gap-2 p-3">
+                                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-lg">🐼</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-sm font-bold text-foreground block">トラパン / TRA MATCH</span>
+                                    <span className="text-xs text-muted-foreground">たった今</span>
+                                  </div>
+                                </div>
+                                <div className="px-3 pb-3">
+                                  <p className="text-sm text-foreground whitespace-pre-wrap">{content}</p>
+                                </div>
+                                <div className="border-t px-3 py-2 flex gap-6 text-xs text-muted-foreground">
+                                  <span>👍 いいね！</span><span>💬 コメント</span><span>↗ シェア</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (platform === "linkedin") {
+                            return (
+                              <div className="border rounded-xl bg-white dark:bg-zinc-900" data-testid="preview-linkedin">
+                                <div className="flex items-center gap-2 p-3">
+                                  <div className="w-10 h-10 rounded-full bg-blue-600/10 flex items-center justify-center">
+                                    <span className="text-lg">🐼</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-sm font-bold text-foreground block">トラパン / TRA MATCH AI</span>
+                                    <span className="text-xs text-muted-foreground">合同会社SIN JAPAN ・ たった今</span>
+                                  </div>
+                                </div>
+                                <div className="px-3 pb-3">
+                                  <p className="text-sm text-foreground whitespace-pre-wrap">{content}</p>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="border rounded-xl p-4 bg-white dark:bg-zinc-900" data-testid="preview-generic">
+                              <div className="flex items-center gap-2 mb-3">
+                                {Icon && <Icon className="w-5 h-5" style={{ color: sns?.color }} />}
+                                <span className="text-sm font-bold text-foreground">{sns?.name}</span>
+                              </div>
+                              <p className="text-sm text-foreground whitespace-pre-wrap">{content}</p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 flex-wrap pt-2">
                       <Button
                         variant="outline"
                         onClick={() => {
