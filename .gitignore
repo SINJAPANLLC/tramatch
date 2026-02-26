@@ -4,4 +4,10 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
-attached_assets/*.txt
+attached_assets/*.txt.local/
+node_modules/
+dist/
+uploads/
+*.bin
+.replit
+replit.nix

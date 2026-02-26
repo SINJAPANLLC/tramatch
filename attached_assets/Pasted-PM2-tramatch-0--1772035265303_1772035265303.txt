@@ -1,0 +1,47 @@
+PM2] [tramatch](0) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 18.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/tramatch# pm2 logs tramatch --lines 10
+[TAILING] Tailing last 10 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-error.log last 10 lines:
+0|tramatch |     at new Rt (/var/www/tramatch/dist/index.cjs:133:56309)
+0|tramatch |     at Object.<anonymous> (/var/www/tramatch/dist/index.cjs:587:2878)
+0|tramatch |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|tramatch |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|tramatch |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|tramatch |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|tramatch |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+0|tramatch |     at node:internal/main/run_main_module:28:49
+0|tramatch | 
+0|tramatch | Node.js v20.20.0
+
+/root/.pm2/logs/tramatch-out.log last 10 lines:
+0|tramatch | 
+0|tramatch | > rest-express@1.0.0 start
+0|tramatch | > NODE_ENV=production node dist/index.cjs
+0|tramatch | 
+0|tramatch | Database already has users, skipping seed.
+0|tramatch | [YouTube Auto] Next auto-publish scheduled in 480 minutes (2026-02-26T09:00:00.000Z)
+0|tramatch | [Lead Crawler] Scheduled: crawl in ~6h (07:00 JST), send in ~9h (10:00 JST)
+0|tramatch | 4:00:03 PM [express] serving on port 5050
+0|tramatch | [Auto Article] Today's 10 articles already generated, skipping.
+0|tramatch | 4:00:10 PM [express] GET /api/user 401 in 2ms :: {"message":"未認証"}
+
+^C
+root@srv1087935:/var/www/tramatch# pm2 list
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/tramatch# 

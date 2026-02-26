@@ -1,0 +1,35 @@
+┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/worknow# pm2 logs tramatch --lines 30 --nostream | grep -i "crawl\|lead\|リード"
+0|tramatch | [Lead Crawler] Crawling: https://www.lcgroup.co.jp/
+0|tramatch | [Lead Crawler] Crawling: https://www.rakuhai.co.jp/
+0|tramatch | [Lead Crawler] Crawling: https://www.zenrin.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.nittsu.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.sagawa-exp.co.jp/contact/
+0|tramatch | [Lead Crawler] Crawling: https://www.kuronekoyamato.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.sonpo.or.jp/what/transport/
+0|tramatch | [Lead Crawler] Crawling: https://www.gogotransport.co.jp/overview/
+0|tramatch | [Lead Crawler] Crawling: https://www.nagoya-syuppan.co.jp/contact/
+0|tramatch | [Lead Crawler] Crawling: https://www.taiheiyogroup.com/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.kyujin-net.com/company/
+0|tramatch | 4:04:51 PM [express] GET /api/admin/email-leads 200 in 1823ms :: {leads":[{"id":"5e1190d3-5223-43ca-b5af-bd9cf86f0ef6","companyName":"事業用貸倉庫なら群馬県の株式会社新和","email":"info@shinwa-transport.co.jp","fax":"0276-86-2063","phone":"0276-86-2048","website":"https://www.shinwa-transport.co.jp/","address":null,"industry":"一般貨物/利用運送","source":"https://www.shinwa-transport.co.jp/","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T02:58:02.154Z"}],"total":1,"todaySent":0,"newCount":1,"sentCount":0,"failedCount":0}
+0|tramatch | [Lead Crawler] Crawling: https://www.fujitransport.co.jp/overview/
+0|tramatch | [Lead Crawler] Crawling: https://www.kanagawa-t.co.jp/about/
+0|tramatch | [Lead Crawler] Crawling: https://www.tanaka-group.co.jp/contact/
+0|tramatch | [Lead Crawler] Crawling: https://www.katsuura-logistics.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.ynexpress.co.jp/about/
+0|tramatch | [Lead Crawler] Crawling: https://www.earthlogistics.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.sagawa-exp.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.nittsu.co.jp/corporate/
+0|tramatch | [Lead Crawler] Crawling: https://www.yamato-hd.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.senko-group.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.kuronekoyamato.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.seino.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.hoover.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.matsushita-logistics.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.ryuukyu-logi.co.jp/about/
+0|tramatch | [Lead Crawler] Crawling: https://www.nipponexpress.com/ja/about/
+0|tramatch | [Lead Crawler] Crawling: https://www.gi-logistics.co.jp/company/
+0|tramatch | [Lead Crawler] Crawling: https://www.taiheiyo-logi.com/company/
+root@srv1087935:/var/www/worknow# 

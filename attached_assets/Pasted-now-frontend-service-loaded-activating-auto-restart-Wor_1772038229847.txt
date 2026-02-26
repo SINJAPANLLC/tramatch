@@ -1,0 +1,52 @@
+now-frontend.service                       loaded activating auto-restart Work Now Frontend (React + Vite)
+---
+(venv) root@srv1087935:/var/www/worknow# pm2 delete worknow && pm2 save && echo "---" && systemctl status worknow-backend --no-pager && echo "---" && systemctl status worknow-frontend --no-pager
+[PM2] Applying action deleteProcessId on app [worknow](ids: [ 15 ])
+[PM2] [worknow](15) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.9mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.5mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.1mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.8mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+---
+● worknow-backend.service - Work Now Backend (FastAPI)
+     Loaded: loaded (/etc/systemd/system/worknow-backend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:49:40 UTC; 45s ago
+   Main PID: 1061736 (gunicorn)
+      Tasks: 5 (limit: 19144)
+     Memory: 278.1M (peak: 278.5M)
+        CPU: 7.807s
+     CGroup: /system.slice/worknow-backend.service
+             ├─1061736 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061737 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061738 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061739 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             └─1061740 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+
+Feb 25 16:49:42 srv1087935 gunicorn[1061737]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…39]
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…38]
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…40]
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…te.
+Hint: Some lines were ellipsized, use -l to show in full.
+---
+● worknow-frontend.service - Work Now Frontend (React + Vite)
+     Loaded: loaded (/etc/systemd/system/worknow-frontend.service; enabled; preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Wed 2026-02-25 16:50:20 UTC; 4s ago
+    Process: 1061802 ExecStart=/usr/bin/node /var/www/worknow/frontend/dist-server/server.cjs (code=exited, status=203/EXEC)
+   Main PID: 1061802 (code=exited, status=203/EXEC)
+        CPU: 1ms
+(venv) root@srv1087935:/var/www/worknow# 

@@ -1,0 +1,52 @@
+tarting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 19.6mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 56.9mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.2mb   │
+│ 2  │ poker              │ fork     │ 17   │ errored   │ 0%       │ 0b       │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 57.8mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+│ 7  │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/aiagent# ls /var/www/worknow/
+DEPLOYMENT.md    deploy      frontend_flutter_backup  pyproject.toml
+README.md        deployment  main.py                  replit.md
+attached_assets  docs        package-lock.json        uv.lock
+backend          frontend    package.json             venv
+root@srv1087935:/var/www/aiagent# cd /var/www/poker && pm2 delete poker && pm2 start "npx next start -p 5001" --name poker && pm2 save
+[PM2] Applying action deleteProcessId on app [poker](ids: [ 2 ])
+[PM2] [poker](2) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.0mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.2mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.6mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 57.8mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 56.9mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.1mb   │
+│ 7  │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /usr/bin/bash in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.0mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.2mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.6mb   │
+│ 10 │ poker              │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 57.3mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 56.9mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.1mb   │
+│ 7  │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/poker# 

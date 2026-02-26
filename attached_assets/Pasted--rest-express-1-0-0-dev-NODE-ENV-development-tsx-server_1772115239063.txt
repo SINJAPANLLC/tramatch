@@ -1,0 +1,22 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+Database already has users, skipping seed.
+[YouTube Auto] Next auto-publish scheduled in 587 minutes (2026-02-27T09:00:00.000Z)
+[Auto Article] Today's 10 articles already generated, skipping.
+[Lead Crawler] Scheduled: crawl in ~8h (07:00 JST), send in ~11h (10:00 JST)
+2:12:52 PM [express] serving on port 5000
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+2:12:56 PM [express] GET /api/user 304 in 104ms :: {"id":"8524e6bc-44ec-4980-bd54-3f5b63d38c28","username":"info@sinjapan.jp","companyName":"SIN JAPAN LLC","address":"神奈川県愛甲郡愛川町中津7287","contactName":null,"phone":"046-212-2325","fax":"046-212-2326","em...
+2:12:57 PM [express] GET /api/announcements 304 in 43ms :: [{"id":"2daf412d-8ae1-49d7-87c4-4063d9c32fae","title":"AI アップデート","content":"AIの精度やデザインをアップデートしました","category":"update","isPublished":true,"createdAt":"2026-02-24T13:38:21.350Z","updatedAt":"2026-02-2...
+2:12:57 PM [express] GET /api/youtube-videos 304 in 43ms :: [{"id":"67a77612-fd69-4b3f-acb1-55dd6088fdb0","videoId":"26FAPSUyGoU","title":"運送契約の基礎と注意点3選","description":"運送契約の基礎知識と注意点を解説します。契約書の確認、保険の適用条件、コミュニケーションの重要性について詳しく説明。実践的なアドバイスも提供します。\n\n00:00 運送契約の重要...
+2:12:57 PM [express] GET /api/trucks 304 in 42ms
+2:12:57 PM [express] GET /api/cargo 304 in 62ms
+2:12:57 PM [express] GET /api/columns 304 in 136ms
+2:12:57 PM [express] GET /api/public/counts 304 in 191ms :: {"cargoCount":7,"truckCount":8}
+2:13:19 PM [express] GET /api/notifications 304 in 62ms
+2:13:19 PM [express] GET /api/notifications/unread-count 304 in 62ms :: {"count":34}
+2:13:19 PM [express] GET /api/admin/users 304 in 89ms
+2:13:34 PM [express] GET /api/notifications/unread-count 304 in 62ms :: {"count":34}
+2:13:39 PM [express] GET /api/companies/151f6013-7498-441d-a935-3e65d05979c5 200 in 53ms :: {"companyName":"合同会社SIN JAPAN","address":null,"contactName":"茨木","phone":"046-212-2325","fax":"046-212-2326","email":"k.ibaragi@sinjapan.jp","truckCount":null,"userType":"both","paymentTerms":null,"bu...

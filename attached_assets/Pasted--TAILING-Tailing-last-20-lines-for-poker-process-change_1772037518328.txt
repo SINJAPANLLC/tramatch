@@ -1,0 +1,86 @@
+---
+[TAILING] Tailing last 20 lines for [poker] process (change the value with --lines option)
+/root/.pm2/logs/poker-out.log last 20 lines:
+2|poker    | 
+2|poker    | > sin-japan-poker@1.0.0 start
+2|poker    | > next start -p 5000
+2|poker    | 
+2|poker    | 
+2|poker    | > sin-japan-poker@1.0.0 start
+2|poker    | > next start -p 5000
+2|poker    | 
+2|poker    | 
+2|poker    | > sin-japan-poker@1.0.0 start
+2|poker    | > next start -p 5000
+2|poker    | 
+2|poker    | 
+2|poker    | > sin-japan-poker@1.0.0 start
+2|poker    | > next start -p 5000
+2|poker    | 
+2|poker    | 
+2|poker    | > sin-japan-poker@1.0.0 start
+2|poker    | > next start -p 5000
+2|poker    | 
+
+/root/.pm2/logs/poker-error.log last 20 lines:
+2|poker    | npm warn config `--include=optional` to include them.
+2|poker    | npm warn config
+2|poker    | npm warn config       Default value does install optional deps unless otherwise omitted.
+2|poker    |  ⚠ You are using a non-standard "NODE_ENV" value in your environment. This creates inconsistencies in the project and is strongly advised against. Read more: https://nextjs.org/docs/messages/non-standard-node-env
+2|poker    |  ⨯ Failed to start server
+2|poker    | Error: listen EADDRINUSE: address already in use :::5000
+2|poker    |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2|poker    |     at listenInCluster (node:net:1965:12)
+2|poker    |     at Server.listen (node:net:2067:7)
+2|poker    |     at /var/www/poker/node_modules/next/dist/server/lib/start-server.js:280:16
+2|poker    |     at new Promise (<anonymous>)
+2|poker    |     at startServer (/var/www/poker/node_modules/next/dist/server/lib/start-server.js:191:11)
+2|poker    |     at Module.nextStart (/var/www/poker/node_modules/next/dist/cli/next-start.js:25:40)
+2|poker    |     at /var/www/poker/node_modules/next/dist/bin/next:105:856 {
+2|poker    |   code: 'EADDRINUSE',
+2|poker    |   errno: -98,
+2|poker    |   syscall: 'listen',
+2|poker    |   address: '::',
+2|poker    |   port: 5000
+2|poker    | }
+
+---
+[TAILING] Tailing last 20 lines for [worknow] process (change the value with --lines option)
+/root/.pm2/logs/worknow-out.log last 20 lines:
+/root/.pm2/logs/worknow-error.log last 20 lines:
+7|worknow  | npm error   npm run
+7|worknow  | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-25T16_02_15_055Z-debug-0.log
+7|worknow  | npm error Missing script: "start"
+7|worknow  | npm error
+7|worknow  | npm error Did you mean one of these?
+7|worknow  | npm error   npm star # Mark your favorite packages
+7|worknow  | npm error   npm stars # View packages marked as favorites
+7|worknow  | npm error
+7|worknow  | npm error To see a list of scripts, run:
+7|worknow  | npm error   npm run
+7|worknow  | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-25T16_02_15_367Z-debug-0.log
+7|worknow  | npm error Missing script: "start"
+7|worknow  | npm error
+7|worknow  | npm error Did you mean one of these?
+7|worknow  | npm error   npm star # Mark your favorite packages
+7|worknow  | npm error   npm stars # View packages marked as favorites
+7|worknow  | npm error
+7|worknow  | npm error To see a list of scripts, run:
+7|worknow  | npm error   npm run
+7|worknow  | npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-25T16_02_15_633Z-debug-0.log
+
+root@srv1087935:/var/www/tramatch# cat /var/www/aiagent/package.json | grep -A 5 '"scripts"' && echo "---" && cat /var/www/worknow/package.json | grep -A 5 '"scripts"'
+  "scripts": {
+    "dev-frontend": "npm run dev --prefix frontend",
+    "dev-backend": "npm run dev --prefix backend",
+    "dev": "concurrently \"npm run dev-frontend\" \"npm run dev-backend\""
+  },
+  "devDependencies": {
+---
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+root@srv1087935:/var/www/tramatch# 

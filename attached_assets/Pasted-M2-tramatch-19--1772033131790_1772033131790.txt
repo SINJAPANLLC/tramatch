@@ -1,0 +1,64 @@
+M2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1025627  │ 0s     │ 57   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % ssh root@212.85.24.206 "source /root/.nvm/nvm.sh && cd /var/www/tramatch && pm2 logs tramatch --lines 20 --nostream && echo '--- ENV CHECK ---' && grep -c '=' .env && echo 'ENV KEYS:' && grep '=' .env | cut -d= -f1"
+root@212.85.24.206's password: 
+[TAILING] Tailing last 20 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-error.log last 20 lines:
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | /var/www/tramatch/dist/index.cjs:280
+19|tramatc |           const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=status,country,regionName,city`);
+19|tramatc |                                       ^^^^
+19|tramatc | 
+19|tramatc | SyntaxError: Unexpected identifier 'http'
+19|tramatc |     at wrapSafe (node:internal/modules/cjs/loader:1464:18)
+19|tramatc |     at Module._compile (node:internal/modules/cjs/loader:1495:20)
+19|tramatc |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+19|tramatc |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+19|tramatc |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+19|tramatc |     at cjsLoader (node:internal/modules/esm/translators:298:15)
+19|tramatc |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:240:7)
+19|tramatc |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+19|tramatc |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+19|tramatc |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+
+/root/.pm2/logs/tramatch-out.log last 20 lines:
+19|tramatc | �るメリット\n\n求荷求車マッチングサービスを活用することにより、多くのメリットが期待できます。主な利点は以下の通りです。\n\n- **輸送コストの削減**: トラマッチを活用すると、適切な車両を迅速に見つけることができるため、空車の状態を減少させ、コストを抑えることが可能です。\n- **効率的なマッチング**: 利用者同士の情報が豊富であるため、必要な輸送手段を迅速に見つけられます。\n- **時間の節約**: オンラインで簡単に利用できるため、従来の方法よりも時間が大幅に短縮できます。\n\n## H2: トラマッチの特徴と活用法\n\n### H3: 特徴1: ユーザーフレンドリーなインターフェース\n\nトラマッチは、同期的な情報更新が可能なプラットフォームです。ユーザーは画面を通じて、豊富な情報にアクセスでき、自分に合ったマッチングを実現できます。特にスマートフォンからもアクセスできるため、出先での利用も可能です。\n\n### H3: 特徴2: 正確な情報提供\n\nトラマッチでは、ユーザーが求める情報がカテゴリー別に整理されており、簡単に検索できます。これにより、希望する運送条件や地域での需要に応じたマッチングがスムーズに行えるのです。\n\n### H3: 特徴3: 多彩な業種への対応\n\nトラマッチは、飲料、食品、建材、機械など多様な業種にわたって活用されています。実際のデータによれば、トラマッチを通じて運搬された貨物の中で、食品関係の輸送案件は年々増加傾向にあります。\n\n## H2: 求荷求車マッチングの成功事例\n\n### H3: 事例1: 小規模運送会社の活用\n\nある小規模運送会社がトラマッチを導入したところ、平均45%の運送コスト削減を実現しました。この会社は、トラマッチを通じて適切な輸送依頼を受けて、新たなクライアントを獲得した結果、売上も約30%増加しました。\n\n### H3: 事例2: 繁忙期における需要と供給の調整\n\n繁忙期の物流ニーズは変動が激しいですが、トラマッチによって需要と供給のバランスを把握することができ、スムーズな運送を実現しています。このデータを基に、運送会社は柔軟な対応が可能となり、顧客満足度の向上にも寄与しています。\n\n## H2: トラマッチを利用するためのステップ\n\n### H3: ステップ1: アカウント登録\n\nまずはトラマッチの公式ウェブサイトよりアカウントを登録します。登録は簡単で、必要な情報を入力するだけで完了します。\n\n### H3: ステップ2: 求荷または求車の掲載\n\n次に、求荷または求車の情報を掲載します。必要な条件や地域を明確に提示することで、より適切なマッチングが期待できます。\n\n### H3: ステップ3: 成果の確認と評価\n\n最後に、マッチング結果を確認し、自らのニーズに合った最適な運送パートナーを見つけます。利用後は評価を行うことで、より良いサービスの向上に貢献できます。\n\n## まとめ\n\n求荷求車マッチングサービスは、物流業界に新たな風を吹き込んでいます。トラマッチは、その使いやすさと高いマッチング精度から、多くの運送業者や荷主に支持されています。利用することで、コスト削減や時間の効率化が可能となります。求荷求車の効果を最大限に引き出すためにも、トラマッチの活用をぜひ検討してみてください。","status":"published","autoGenerated":true,"category":"kyukakyusha","viewCount":1,"wordCount":1808,"faq":null,"createdAt":"2026-02-18T05:22:24.422Z"}]
+
+--- ENV CHECK ---
+21
+ENV KEYS:
+NEON_DATABASE_URL
+SESSION_SECRET
+OPENAI_API_KEY
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASS
+SMTP_FROM
+SQUARE_ACCESS_TOKEN
+SQUARE_LOCATION_ID
+SQUARE_ENVIRONMENT
+VITE_SQUARE_APP_ID
+VITE_SQUARE_LOCATION_ID
+VITE_SQUARE_ENVIRONMENT
+PORT
+NODE_ENV
+YOUTUBE_API_KEY
+YOUTUBE_CHANNEL_ID
+YOUTUBE_OAUTH_CLIENT_ID
+YOUTUBE_OAUTH_CLIENT_SECRET
+YOUTUBE_OAUTH_REFRESH_TOKEN
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

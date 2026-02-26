@@ -1,0 +1,24 @@
+YOUTUBE_API_KEY=AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc
+YOUTUBE_CHANNEL_ID=UCWXDTsh_-YDUGrT24LIjrUg
+YOUTUBE_OAUTH_CLIENT_ID=4578726576-8010lnmh3kqjgvfnufhve7nj34jg75ca.apps.googleusercontent.com
+YOUTUBE_OAUTH_CLIENT_SECRET=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
+YOUTUBE_OAUTH_REFRESH_TOKEN=1//04kxof3Ozywv2CgYIARAAGAQSNwF-L9IrPoBk9sOIoAYCigKPhoFohUWIMLJaNcxcGSynS7BJHB79kBUb3hBOubBtq8_YWvkTKS8
+EOF"
+
+root@212.85.24.206's password: 
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % ssh root@212.85.24.206 "source /root/.nvm/nvm.sh && cd /var/www/tramatch && pm2 restart tramatch"
+root@212.85.24.206's password: 
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 19 ])
+[PM2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1023984  │ 0s     │ 54   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

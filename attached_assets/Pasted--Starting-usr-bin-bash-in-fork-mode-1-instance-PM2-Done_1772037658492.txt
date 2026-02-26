@@ -1,0 +1,428 @@
+] Starting /usr/bin/bash in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 57.1mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.6mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.9mb   │
+│ 10 │ poker              │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.1mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.3mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+│ 12 │ worknow            │ fork     │ 0    │ online    │ 0%       │ 4.3mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/worknow# cd /var/www/poker && pm2 delete poker && npx next build && pm2 start "npx next start -p 5001" --name poker && pm2 save
+[PM2] Applying action deleteProcessId on app [poker](ids: [ 10 ])
+[PM2] [poker](10) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 57.2mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.9mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.1mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.7mb   │
+│ 12 │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+npm warn config optional Use `--omit=optional` to exclude optional dependencies, or
+npm warn config `--include=optional` to include them.
+npm warn config
+npm warn config       Default value does install optional deps unless otherwise omitted.
+  ▲ Next.js 14.2.33
+  - Environments: .env
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully
+
+./app/admin/games/page.tsx
+57:6  Warning: React Hook useEffect has a missing dependency: 'fetchGames'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/kyc/page.tsx
+43:6  Warning: React Hook useEffect has a missing dependency: 'fetchVerifications'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+235:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+239:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+243:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/admin/monitor/page.tsx
+160:6  Warning: React Hook useEffect has a missing dependency: 'fetchGames'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+181:6  Warning: React Hook useEffect has missing dependencies: 'fetchGames' and 'refreshInterval'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/settings/page.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'fetchSettings'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/admin/tournaments/page.tsx
+53:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournaments'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/auth/login/page.tsx
+74:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+79:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+84:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+89:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+94:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+99:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+104:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+109:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+114:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+118:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+122:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+126:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+139:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/auth/register/page.tsx
+92:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+97:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+102:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+107:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+112:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+117:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+122:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+127:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+132:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+136:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+140:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+144:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+157:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+315:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/career/page.tsx
+65:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/clubs/page.tsx
+44:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/forum/[id]/page.tsx
+139:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/forum/page.tsx
+48:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+124:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/game/active/page.tsx
+304:6  Warning: React Hook useEffect has a missing dependency: 'gameState'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+497:6  Warning: React Hook useCallback has an unnecessary dependency: 'currency'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/game/practice/page.tsx
+61:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/kyc/page.tsx
+73:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+109:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+143:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/lobby/page.tsx
+151:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournaments'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+396:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+409:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+548:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/payment/success/PaymentVerification.tsx
+89:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/profile/edit/page.tsx
+159:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/profile/page.tsx
+373:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+390:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+420:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+436:21  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+633:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/shop/page.tsx
+109:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+122:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+165:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+192:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/tournament/[id]/page.tsx
+43:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournament'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/tournament/page.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournaments'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/tournaments/[id]/page.tsx
+42:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournament'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/tournaments/page.tsx
+32:6  Warning: React Hook useEffect has a missing dependency: 'fetchTournaments'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/PokerTable.tsx
+72:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+74:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+ ✓ Linting and checking validity of types    
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+ ✓ Collecting page data    
+   Generating static pages (11/87)  [==  ]Hand history error: B [Error]: Dynamic server usage: Route /api/hand-history couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at V (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+    at Object.get (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+    at d (/var/www/poker/.next/server/app/api/hand-history/route.js:1:1375)
+    at /var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+    at /var/www/poker/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+    at NoopContextManager.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+    at ContextAPI.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+    at NoopTracer.startActiveSpan (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+    at ProxyTracer.startActiveSpan (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+    at /var/www/poker/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+  description: "Route /api/hand-history couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+ゲーム統計取得エラー: n [Error]: Failed query: select count(*) from "games"
+params: 
+    at p.queryWithCache (/var/www/poker/.next/server/chunks/5740.js:19:13398)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async p.execute (/var/www/poker/.next/server/chunks/3501.js:33:1642)
+    at async c (/var/www/poker/.next/server/app/api/games/stats/route.js:1:1191)
+    at async /var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async exportAppRoute (/var/www/poker/node_modules/next/dist/export/routes/app-route.js:77:26)
+    at async exportPageImpl (/var/www/poker/node_modules/next/dist/export/worker.js:175:20)
+    at async Span.traceAsyncFn (/var/www/poker/node_modules/next/dist/trace/trace.js:154:20) {
+  query: 'select count(*) from "games"',
+  params: [],
+  cause: ErrorEvent {
+    [Symbol(kTarget)]: WebSocket {
+      _events: [Object: null prototype],
+      _eventsCount: 4,
+      _maxListeners: undefined,
+      _binaryType: 'arraybuffer',
+      _closeCode: 1006,
+      _closeFrameReceived: false,
+      _closeFrameSent: false,
+      _closeMessage: <Buffer >,
+      _closeTimer: null,
+      _errorEmitted: true,
+      _extensions: {},
+      _paused: false,
+      _protocol: '',
+      _readyState: 3,
+      _receiver: null,
+      _sender: null,
+      _socket: null,
+      _bufferedAmount: 0,
+      _isServer: false,
+      _redirects: 0,
+      _autoPong: true,
+      _url: 'wss://localhost/v2',
+      _req: null,
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false
+    },
+    [Symbol(kType)]: 'error',
+    [Symbol(kError)]: Error [ERR_TLS_CERT_ALTNAME_INVALID]: Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.sinjapan-manager.com, DNS:sinjapan-manager.com
+        at Object.checkServerIdentity (node:tls:316:12)
+        at TLSSocket.onConnectSecure (node:_tls_wrap:1705:27)
+        at TLSSocket.emit (node:events:524:28)
+        at TLSSocket._finishInit (node:_tls_wrap:1093:8)
+        at ssl.onhandshakedone (node:_tls_wrap:879:12)
+        at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+      code: 'ERR_TLS_CERT_ALTNAME_INVALID',
+      reason: "Host: localhost. is not in the cert's altnames: DNS:*.sinjapan-manager.com, DNS:sinjapan-manager.com",
+      host: 'localhost',
+      cert: [Object]
+    },
+    [Symbol(kMessage)]: "Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.sinjapan-manager.com, DNS:sinjapan-manager.com"
+  }
+}
+User stats error: B [Error]: Dynamic server usage: Route /api/user/stats couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at V (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+    at Object.get (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+    at l (/var/www/poker/.next/server/app/api/user/stats/route.js:1:1354)
+    at /var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+    at /var/www/poker/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+    at NoopContextManager.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+    at ContextAPI.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+    at NoopTracer.startActiveSpan (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+    at ProxyTracer.startActiveSpan (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854)
+    at /var/www/poker/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+  description: "Route /api/user/stats couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+決済データ取得エラー: B [Error]: Dynamic server usage: Route /api/admin/payments couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at V (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+    at Object.get (/var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+    at /var/www/poker/.next/server/app/api/admin/grant-currency/route.js:1:3890
+    at n (/var/www/poker/.next/server/app/api/admin/grant-currency/route.js:1:4180)
+    at d (/var/www/poker/.next/server/app/api/admin/payments/route.js:1:1380)
+    at /var/www/poker/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+    at /var/www/poker/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+    at NoopContextManager.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+    at ContextAPI.with (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+    at NoopTracer.startActiveSpan (/var/www/poker/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093) {
+  description: "Route /api/admin/payments couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (19/87)  [=== ][DEPRECATED] `getStorage`, `serialize` and `deserialize` options are deprecated. Use `storage` option instead.
+ ✓ Generating static pages (87/87)
+ ✓ Collecting build traces    
+ ✓ Finalizing page optimization    
+
+Route (app)                               Size     First Load JS
+┌ ○ /                                     4.59 kB         107 kB
+├ ○ /_not-found                           879 B          88.4 kB
+├ ○ /admin                                717 B          88.2 kB
+├ ○ /admin/analytics                      4.58 kB         110 kB
+├ ○ /admin/currency                       4.86 kB          95 kB
+├ ○ /admin/dashboard                      7.77 kB        97.9 kB
+├ ○ /admin/games                          3.87 kB         144 kB
+├ ○ /admin/kyc                            4.3 kB         94.4 kB
+├ ○ /admin/login                          3.11 kB        93.2 kB
+├ ○ /admin/monitor                        6.74 kB         103 kB
+├ ○ /admin/payment                        7.01 kB        97.1 kB
+├ ○ /admin/realmoney                      7.77 kB        97.9 kB
+├ ○ /admin/revenue                        4.46 kB        94.6 kB
+├ ○ /admin/settings                       5.02 kB        95.1 kB
+├ ○ /admin/tables                         6.52 kB        96.6 kB
+├ ○ /admin/tables/create                  5.39 kB        95.5 kB
+├ ○ /admin/tournaments                    5.5 kB         95.6 kB
+├ ○ /admin/tournaments/create             5.32 kB        95.4 kB
+├ ○ /admin/users                          6.55 kB        96.7 kB
+├ ○ /age-verification                     2.75 kB          99 kB
+├ ○ /aml                                  2.97 kB        99.3 kB
+├ ƒ /api/admin/analytics                  0 B                0 B
+├ ƒ /api/admin/games                      0 B                0 B
+├ ƒ /api/admin/grant-currency             0 B                0 B
+├ ƒ /api/admin/kyc                        0 B                0 B
+├ ƒ /api/admin/login                      0 B                0 B
+├ ƒ /api/admin/payments                   0 B                0 B
+├ ƒ /api/admin/revenue                    0 B                0 B
+├ ƒ /api/admin/settings                   0 B                0 B
+├ ƒ /api/admin/stats                      0 B                0 B
+├ ƒ /api/admin/tables                     0 B                0 B
+├ ƒ /api/admin/tournaments                0 B                0 B
+├ ƒ /api/admin/users                      0 B                0 B
+├ ƒ /api/admin/withdrawals                0 B                0 B
+├ ƒ /api/feedback                         0 B                0 B
+├ ƒ /api/game/join                        0 B                0 B
+├ ƒ /api/game/rebuy                       0 B                0 B
+├ ƒ /api/games                            0 B                0 B
+├ ƒ /api/games/[id]                       0 B                0 B
+├ ƒ /api/games/stats                      0 B                0 B
+├ ƒ /api/hand-history                     0 B                0 B
+├ ƒ /api/tables                           0 B                0 B
+├ ƒ /api/tournament                       0 B                0 B
+├ ƒ /api/tournament/[id]                  0 B                0 B
+├ ƒ /api/user/[id]                        0 B                0 B
+├ ƒ /api/user/[id]/chips                  0 B                0 B
+├ ƒ /api/user/stats                       0 B                0 B
+├ ○ /auth/login                           3.19 kB         124 kB
+├ ○ /auth/register                        4.3 kB          125 kB
+├ ○ /career                               5.39 kB         110 kB
+├ ○ /clubs                                3.93 kB         109 kB
+├ ƒ /clubs/[id]                           3.98 kB         109 kB
+├ ƒ /clubs/[id]/revenue                   4.23 kB         109 kB
+├ ○ /clubs/create                         3.04 kB         108 kB
+├ ○ /clubs/join                           2.35 kB         120 kB
+├ ○ /company                              2.74 kB         108 kB
+├ ○ /compliance                           2.63 kB         108 kB
+├ ○ /cooling-off                          2.71 kB          99 kB
+├ ○ /deposit-limits                       2.6 kB         98.9 kB
+├ ○ /faq                                  3.5 kB         99.8 kB
+├ ○ /feedback                             2.64 kB         108 kB
+├ ○ /forum                                5.37 kB         104 kB
+├ ƒ /forum/[id]                           4.38 kB         103 kB
+├ ○ /forum/create                         5.38 kB        95.5 kB
+├ ƒ /game/[id]                            2.13 kB         107 kB
+├ ƒ /game/active                          18.6 kB         164 kB
+├ ○ /game/create                          2.8 kB          102 kB
+├ ○ /game/practice                        4.06 kB         103 kB
+├ ○ /game/quick                           3.07 kB         102 kB
+├ ƒ /game/room/[id]                       5.04 kB         101 kB
+├ ○ /history                              4.2 kB          103 kB
+├ ○ /invite                               2.36 kB         101 kB
+├ ○ /kyc                                  2.97 kB         108 kB
+├ ○ /lobby                                13.3 kB         161 kB
+├ ○ /password/change                      4.95 kB         104 kB
+├ ○ /payment/bank                         3.81 kB         103 kB
+├ ○ /payment/cancel                       1.83 kB        89.4 kB
+├ ○ /payment/card                         3.37 kB         102 kB
+├ ○ /payment/crypto                       4.68 kB         109 kB
+├ ○ /payment/success                      3.47 kB        93.6 kB
+├ ○ /pet                                  3.4 kB          122 kB
+├ ○ /privacy                              3.8 kB          100 kB
+├ ○ /problem-gambling                     2.81 kB        99.1 kB
+├ ○ /profile                              12.8 kB         112 kB
+├ ○ /profile/edit                         5.45 kB         104 kB
+├ ○ /profile/enhanced                     4.54 kB         112 kB
+├ ○ /purchase                             5.55 kB         104 kB
+├ ○ /responsible-gaming                   3.33 kB        99.6 kB
+├ ○ /risk-disclosure                      3.03 kB        99.3 kB
+├ ○ /self-exclusion                       2.45 kB        98.7 kB
+├ ○ /settings                             5.08 kB         104 kB
+├ ○ /shop                                 6.31 kB         111 kB
+├ ○ /spinup                               3.39 kB         102 kB
+├ ○ /stats                                2.54 kB         114 kB
+├ ○ /terms                                4.03 kB         100 kB
+├ ○ /terms-of-use                         3.01 kB        99.3 kB
+├ ○ /tournament                           1.91 kB        98.2 kB
+├ ƒ /tournament/[id]                      2.85 kB         102 kB
+├ ○ /tournament/create                    2.29 kB         101 kB
+├ ○ /tournaments                          3.46 kB         108 kB
+├ ƒ /tournaments/[id]                     5.08 kB         104 kB
+├ ○ /transactions                         3.39 kB         108 kB
+└ ○ /vip                                  4.25 kB         109 kB
++ First Load JS shared by all             87.5 kB
+  ├ chunks/5030-703d6c4ef73c9d7b.js       31.9 kB
+  ├ chunks/fd9d1056-5d413751b706560e.js   53.6 kB
+  └ other shared chunks (total)           1.98 kB
+
+Route (pages)                             Size     First Load JS
+┌ ƒ /api/achievements/user                0 B            81.6 kB
+├ ƒ /api/auth/login                       0 B            81.6 kB
+├ ƒ /api/auth/register                    0 B            81.6 kB
+├ ƒ /api/clubs                            0 B            81.6 kB
+├ ƒ /api/clubs/[id]                       0 B            81.6 kB
+├ ƒ /api/clubs/[id]/revenue               0 B            81.6 kB
+├ ƒ /api/currency/add-points              0 B            81.6 kB
+├ ƒ /api/currency/balance                 0 B            81.6 kB
+├ ƒ /api/currency/purchase                0 B            81.6 kB
+├ ƒ /api/currency/transactions            0 B            81.6 kB
+├ ƒ /api/forum/posts                      0 B            81.6 kB
+├ ƒ /api/kyc/status                       0 B            81.6 kB
+├ ƒ /api/kyc/submit                       0 B            81.6 kB
+├ ƒ /api/payment/crypto/check-status      0 B            81.6 kB
+├ ƒ /api/payment/crypto/create-invoice    0 B            81.6 kB
+├ ƒ /api/payment/crypto/history           0 B            81.6 kB
+├ ƒ /api/payment/crypto/rates             0 B            81.6 kB
+├ ƒ /api/payment/crypto/webhook           0 B            81.6 kB
+├ ƒ /api/stats/seed-test-data             0 B            81.6 kB
+├ ƒ /api/stats/user                       0 B            81.6 kB
+├ ƒ /api/stripe/create-checkout-session   0 B            81.6 kB
+├ ƒ /api/stripe/create-payment-link       0 B            81.6 kB
+├ ƒ /api/stripe/verify-session            0 B            81.6 kB
+├ ƒ /api/users                            0 B            81.6 kB
+├ ƒ /api/users/add-chips                  0 B            81.6 kB
+├ ƒ /api/withdraw/list                    0 B            81.6 kB
+└ ƒ /api/withdraw/submit                  0 B            81.6 kB
++ First Load JS shared by all             81.6 kB
+  ├ chunks/framework-8e0e0f4a6b83a956.js  44.9 kB
+  ├ chunks/main-b83402cde2ee316f.js       34.8 kB
+  └ other shared chunks (total)           1.93 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[PM2] Starting /usr/bin/bash in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.0mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.0mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 384.0kb  │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 57.7mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.6mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.6mb   │
+│ 12 │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/poker# 

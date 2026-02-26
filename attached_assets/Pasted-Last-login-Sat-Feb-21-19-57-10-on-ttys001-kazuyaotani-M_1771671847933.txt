@@ -1,0 +1,285 @@
+Last login: Sat Feb 21 19:57:10 on ttys001
+kazuyaotani@Mac ~ % ssh root@212.85.24.206
+root@212.85.24.206's password: 
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sat Feb 21 10:58:10 UTC 2026
+
+  System load:  0.04               Processes:             161
+  Usage of /:   9.4% of 192.69GB   Users logged in:       0
+  Memory usage: 20%                IPv4 address for eth0: 212.85.24.206
+  Swap usage:   0%                 IPv6 address for eth0: 2a02:4780:59:cc86::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+58 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+1 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+*** System restart required ***
+Last login: Sat Feb 21 10:56:11 2026 from 59.132.65.212
+root@srv1087935:~# cd /var/www/tramatch
+git fetch origin
+git reset --hard origin/main
+npm install
+npm run build
+pm2 restart tramatch
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (2/2), done.
+remote: Total 3 (delta 2), reused 2 (delta 2), pack-reused 1 (from 1)
+Unpacking objects: 100% (3/3), 493 bytes | 246.00 KiB/s, done.
+From github.com:SINJAPANLLC/tramatch
+   e5b71dc..6fda5f4  main       -> origin/main
+HEAD is now at 6fda5f4 画像ファイル復元・gitignore修正
+
+up to date, audited 580 packages in 2s
+
+92 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (1 low, 1 moderate, 4 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming (6) ../vite/preload-helper.js
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2720 modules transformed.
+../dist/public/index.html                                    4.08 kB │ gzip:   1.42 kB
+../dist/public/assets/tra_match_logo_white-ZjAReWwH.jpg     28.88 kB
+../dist/public/assets/IMG_0046_1771206816410-ClwqCtPN.jpg   29.02 kB
+../dist/public/assets/index-CPkCIXte.css                   114.43 kB │ gzip:  17.85 kB
+../dist/public/assets/IMG_0046_1771226022407-Oxg-gFb7.js     0.07 kB │ gzip:   0.09 kB
+../dist/public/assets/chevron-down-DvJ-ANzr.js               0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-up-CzP8lu_E.js                 0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-left-CDIaA7NR.js               0.13 kB │ gzip:   0.14 kB
+../dist/public/assets/circle-BTYjVFb0.js                     0.13 kB │ gzip:   0.13 kB
+../dist/public/assets/loader-circle-LJ616Dwd.js              0.14 kB │ gzip:   0.15 kB
+../dist/public/assets/navigation-DSJKdfLJ.js                 0.15 kB │ gzip:   0.15 kB
+../dist/public/assets/arrow-right-B-xnz8RN.js                0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/arrow-left-DDFnpCWH.js                 0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/search-DCMHpTWJ.js                     0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/skeleton-BP37DzoY.js                   0.17 kB │ gzip:   0.16 kB
+../dist/public/assets/circle-check-B4BRaq7T.js               0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-dot-DYGJk5MV.js                 0.18 kB │ gzip:   0.15 kB
+../dist/public/assets/clock-D_j4IzWh.js                      0.18 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-check-big-CkQbN0hX.js           0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/smartphone-DJOH0dCb.js                 0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/trending-up-CCFoD6BI.js                0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/circle-x-qpiPykkr.js                   0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/mail-HVrTWf_Y.js                       0.21 kB │ gzip:   0.20 kB
+../dist/public/assets/dollar-sign-B6blxIxZ.js                0.22 kB │ gzip:   0.19 kB
+../dist/public/assets/index-elUSCYKb.js                      0.23 kB │ gzip:   0.17 kB
+../dist/public/assets/copy-Bc7mxHu5.js                       0.23 kB │ gzip:   0.21 kB
+../dist/public/assets/globe-OA-eZ_BS.js                      0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/arrow-up-down-Db5sq5GH.js              0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/banknote-4Xc4Zw_a.js                   0.24 kB │ gzip:   0.21 kB
+../dist/public/assets/external-link-CaqKXOjw.js              0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/chart-column-Z3dkQbob.js               0.25 kB │ gzip:   0.19 kB
+../dist/public/assets/user-check-BaTlcBI6.js                 0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/eye-B2_LwRGX.js                        0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/upload-BNXv5TPD.js                     0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/calendar-C0zz6qnW.js                   0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/download-BaPLJRhJ.js                   0.26 kB │ gzip:   0.22 kB
+../dist/public/assets/pencil-BY6xJrgr.js                     0.27 kB │ gzip:   0.22 kB
+../dist/public/assets/send-CzEfHvf-.js                       0.29 kB │ gzip:   0.23 kB
+../dist/public/assets/users-zsmXpY_c.js                      0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/user-x-Bv-ObA8-.js                     0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/shield-check-CdDeRTNx.js               0.32 kB │ gzip:   0.25 kB
+../dist/public/assets/save-B0f7QFlV.js                       0.32 kB │ gzip:   0.23 kB
+../dist/public/assets/bot-Bju7enE7.js                        0.33 kB │ gzip:   0.23 kB
+../dist/public/assets/file-text-CAtbuW_h.js                  0.33 kB │ gzip:   0.21 kB
+../dist/public/assets/shield-8bn5I_hk.js                     0.35 kB │ gzip:   0.26 kB
+../dist/public/assets/key-round-BXUytJMi.js                  0.35 kB │ gzip:   0.26 kB
+../dist/public/assets/crown-CIoJDo6n.js                      0.36 kB │ gzip:   0.26 kB
+../dist/public/assets/eye-off-D557ylkr.js                    0.43 kB │ gzip:   0.27 kB
+../dist/public/assets/handshake-CPcjjFxp.js                  0.44 kB │ gzip:   0.28 kB
+../dist/public/assets/textarea-CKOhy6tF.js                   0.50 kB │ gzip:   0.32 kB
+../dist/public/assets/label-BH4jUVaY.js                      0.52 kB │ gzip:   0.36 kB
+../dist/public/assets/triangle-alert-Cp1kHIZk.js             0.53 kB │ gzip:   0.32 kB
+../dist/public/assets/input-DRgtJSmA.js                      0.58 kB │ gzip:   0.35 kB
+../dist/public/assets/mic-BMlD4ixn.js                        0.64 kB │ gzip:   0.33 kB
+../dist/public/assets/not-found-PvKC8XgL.js                  0.81 kB │ gzip:   0.45 kB
+../dist/public/assets/card-CKs1oFUG.js                       1.02 kB │ gzip:   0.38 kB
+../dist/public/assets/partners-CNUXAuNZ.js                   2.19 kB │ gzip:   1.09 kB
+../dist/public/assets/switch-CKu64aK_.js                     2.37 kB │ gzip:   1.20 kB
+../dist/public/assets/login-Cx-VEfe_.js                      2.57 kB │ gzip:   1.22 kB
+../dist/public/assets/guide-F5rmtZYp.js                      3.06 kB │ gzip:   1.51 kB
+../dist/public/assets/forgot-password-C_shjeQ8.js            3.12 kB │ gzip:   1.41 kB
+../dist/public/assets/company-info-oD3rhwki.js               3.34 kB │ gzip:   1.49 kB
+../dist/public/assets/transport-ledger-BLW65Azd.js           3.63 kB │ gzip:   1.59 kB
+../dist/public/assets/columns-DpFy_GeA.js                    3.70 kB │ gzip:   1.64 kB
+../dist/public/assets/reset-password-BBxBnpm-.js             4.03 kB │ gzip:   1.59 kB
+../dist/public/assets/faq-DZ6J-Y15.js                        4.21 kB │ gzip:   1.93 kB
+../dist/public/assets/services-DeOqNw6Y.js                   4.68 kB │ gzip:   2.14 kB
+../dist/public/assets/admin-audit-logs-ip-SHYFd.js           4.91 kB │ gzip:   1.76 kB
+../dist/public/assets/column-detail-DFV1fM5l.js              5.21 kB │ gzip:   2.01 kB
+../dist/public/assets/my-trucks-VfkhAGgm.js                  5.74 kB │ gzip:   2.14 kB
+../dist/public/assets/truck-detail-CNwXY6Kd.js               5.81 kB │ gzip:   1.65 kB
+../dist/public/assets/contact-CzkH4v9b.js                    5.83 kB │ gzip:   2.06 kB
+../dist/public/assets/admin-contact-inquiries-CLLhq_nz.js    6.26 kB │ gzip:   2.26 kB
+../dist/public/assets/register-CmdQo8SG.js                   6.70 kB │ gzip:   2.52 kB
+../dist/public/assets/dialog-D3PG7rwv.js                     7.02 kB │ gzip:   2.56 kB
+../dist/public/assets/dashboard-DV27OV0j.js                  7.52 kB │ gzip:   2.44 kB
+../dist/public/assets/admin-announcements-DlRjo_3V.js        7.92 kB │ gzip:   2.75 kB
+../dist/public/assets/truck-form-DaneDFEZ.js                 7.95 kB │ gzip:   3.05 kB
+../dist/public/assets/cargo-detail-BIvhYAa7.js               8.01 kB │ gzip:   2.36 kB
+../dist/public/assets/checkbox-CwHerLEf.js                   8.57 kB │ gzip:   3.40 kB
+../dist/public/assets/dashboard-layout-BBqNbt6U.js           9.03 kB │ gzip:   3.48 kB
+../dist/public/assets/payment-DWdjT6Cl.js                    9.62 kB │ gzip:   1.85 kB
+../dist/public/assets/admin-invoices-CsC7CFa8.js            11.07 kB │ gzip:   3.19 kB
+../dist/public/assets/admin-seo-DpO_fcpo.js                 11.55 kB │ gzip:   3.89 kB
+../dist/public/assets/privacy-BYXRvTMH.js                   13.06 kB │ gzip:   3.55 kB
+../dist/public/assets/companies-DlWRHq1e.js                 14.31 kB │ gzip:   4.32 kB
+../dist/public/assets/admin-dashboard-DMWHmTXJ.js           15.20 kB │ gzip:   3.46 kB
+../dist/public/assets/admin-listings-BKFCBwSd.js            17.82 kB │ gzip:   3.52 kB
+../dist/public/assets/admin-revenue-BYvx4ZYj.js             18.45 kB │ gzip:   3.87 kB
+../dist/public/assets/terms-CNLB5Ens.js                     20.36 kB │ gzip:   6.20 kB
+../dist/public/assets/select-Chm4Ofdq.js                    20.89 kB │ gzip:   7.26 kB
+../dist/public/assets/cancelled-cargo-BvHbLpw1.js           21.53 kB │ gzip:   6.32 kB
+../dist/public/assets/admin-applications-lv1Vgv-1.js        23.22 kB │ gzip:   5.48 kB
+../dist/public/assets/admin-settings-D7P026Wn.js            23.32 kB │ gzip:   6.09 kB
+../dist/public/assets/admin-notifications-Bv5c8pbJ.js       25.41 kB │ gzip:   6.95 kB
+../dist/public/assets/admin-users-DJdaJdu7.js               30.66 kB │ gzip:   7.60 kB
+../dist/public/assets/home-DQAceoKt.js                      33.11 kB │ gzip:   6.71 kB
+../dist/public/assets/admin-agents-DRPKqoqJ.js              36.31 kB │ gzip:   8.13 kB
+../dist/public/assets/my-cargo-CBMslEdj.js                  36.44 kB │ gzip:   9.91 kB
+../dist/public/assets/cargo-list-DVowPPRE.js                47.99 kB │ gzip:  12.48 kB
+../dist/public/assets/completed-cargo-D3nDkJ0l.js           51.14 kB │ gzip:  10.77 kB
+../dist/public/assets/user-settings-tsnmTGFo.js             59.91 kB │ gzip:  13.38 kB
+../dist/public/assets/truck-list-DhQpkoPF.js                62.46 kB │ gzip:  16.16 kB
+../dist/public/assets/cargo-form-l6N-pKzL.js               118.68 kB │ gzip:  31.92 kB
+../dist/public/assets/schema-DkFQOW2T.js                   134.35 kB │ gzip:  35.90 kB
+../dist/public/assets/index-CB--KDxt.js                    319.96 kB │ gzip: 103.95 kB
+✓ built in 6.32s
+injecting splash screen...
+building server...
+
+  dist/index.cjs  3.0mb ⚠️
+
+⚡ Done in 258ms
+Use --update-env to update environment variables
+[PM2][ERROR] Process or Namespace tramatch not found
+root@srv1087935:/var/www/tramatch# pm2 start dist/index.cjs --name tramatch
+pm2 save
+[PM2] Starting /var/www/tramatch/dist/index.cjs in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 2  │ logimatch          │ fork     │ 0    │ online    │ 0%       │ 76.5mb   │
+│ 4  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 154.0mb  │
+│ 0  │ only-u             │ cluster  │ 0    │ online    │ 0%       │ 107.1mb  │
+│ 5  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 54.5mb   │
+│ 1  │ sinjapan-poker     │ fork     │ 0    │ online    │ 0%       │ 815.3mb  │
+│ 3  │ sinjapan-school    │ fork     │ 0    │ online    │ 0%       │ 99.6mb   │
+│ 10 │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/tramatch# pm2 logs tramatch --lines 50
+[TAILING] Tailing last 50 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-out.log last 50 lines:
+10|tramatc | �係の輸送案件は年々増加傾向にあります。\n\n## H2: 求荷求車マッチングの成功事例\n\n### H3: 事例1: 小規模運送会社の活用\n\nある小規模運送会社がトラマッチを導入したところ、平均45%の運送コスト削減を実現しました。この会社は、トラマッチを通じて適切な輸送依頼を受けて、新たなクライアントを獲得した結果、売上も約30%増加しました。\n\n### H3: 事例2: 繁忙期における需要と供給の調整\n\n繁忙期の物流ニーズは変動が激しいですが、トラマッチによって需要と供給のバランスを把握することができ、スムーズな運送を実現しています。このデータを基に、運送会社は柔軟な対応が可能となり、顧客満足度の向上にも寄与しています。\n\n## H2: トラマッチを利用するためのステップ\n\n### H3: ステップ1: アカウント登録\n\nまずはトラマッチの公式ウェブサイトよりアカウントを登録します。登録は簡単で、必要な情報を入力するだけで完了します。\n\n### H3: ステップ2: 求荷または求車の掲載\n\n次に、求荷または求車の情報を掲載します。必要な条件や地域を明確に提示することで、より適切なマッチングが期待できます。\n\n### H3: ステップ3: 成果の確認と評価\n\n最後に、マッチング結果を確認し、自らのニーズに合った最適な運送パートナーを見つけます。利用後は評価を行うことで、より良いサービスの向上に貢献できます。\n\n## まとめ\n\n求荷求車マッチングサービスは、物流業界に新たな風を吹き込んでいます。トラマッチは、その使いやすさと高いマッチング精度から、多くの運送業者や荷主に支持されています。利用することで、コスト削減や時間の効率化が可能となります。求荷求車の効果を最大限に引き出すためにも、トラマッチの活用をぜひ検討してみてください。","status":"published","autoGenerated":true,"createdAt":"2026-02-18T05:22:24.422Z"}]
+10|tramatc | 10:36:28 AM [express] GET /api/public/counts 304 in 261ms :: {"cargoCount":3,"truckCount":0}
+10|tramatc | 10:36:32 AM [express] POST /api/login 200 in 843ms :: {"id":"a05805bf-de0e-4e2e-b943-077adf7cd0dc","username":"aaa@aaa.com","companyName":"サンプル","address":null,"contactName":"a","phone":"a","fax":null,"email":"aaa@aaa.com","truckCount":null,"permitFile":null,"userType":"both","role":"user","approved":true,"paymentTerms":null,"businessDescription":null,"companyNameKana":null,"postalCode":null,"websiteUrl":null,"invoiceRegistrationNumber":null,"registrationDate":null,"representative":null,"establishedDate":null,"capital":null,"employeeCount":null,"officeLocations":null,"annualRevenue":null,"bankInfo":null,"majorClients":null,"closingDay":null,"paymentMonth":null,"businessArea":null,"autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":null,"notifySystem":true,"notifyEmail":true,"notifyLine":false,"closingMonth":null,"paymentDay":null,"bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":null,"accountingContactEmail":null,"accountingContactPhone":null,"accountingContactFax":null,"addedByUserId":null}
+10|tramatc | 10:36:33 AM [express] GET /api/user 200 in 527ms :: {"id":"a05805bf-de0e-4e2e-b943-077adf7cd0dc","username":"aaa@aaa.com","companyName":"サンプル","address":null,"contactName":"a","phone":"a","fax":null,"email":"aaa@aaa.com","truckCount":null,"permitFile":null,"userType":"both","role":"user","approved":true,"paymentTerms":null,"businessDescription":null,"companyNameKana":null,"postalCode":null,"websiteUrl":null,"invoiceRegistrationNumber":null,"registrationDate":null,"representative":null,"establishedDate":null,"capital":null,"employeeCount":null,"officeLocations":null,"annualRevenue":null,"bankInfo":null,"majorClients":null,"closingDay":null,"paymentMonth":null,"businessArea":null,"autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":null,"notifySystem":true,"notifyEmail":true,"notifyLine":false,"closingMonth":null,"paymentDay":null,"bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":null,"accountingContactEmail":null,"accountingContactPhone":null,"accountingContactFax":null,"addedByUserId":null}
+10|tramatc | 10:36:34 AM [express] GET /api/cargo 304 in 489ms :: [{"id":"6372dd8a-9367-4e95-9f6a-a4ee8ed4e16e","cargoNumber":7891252,"title":"埼玉→千葉 引っ越し案件 4t車","departureArea":"埼玉","departureAddress":"熊谷市","departureTime":"","arrivalArea":"千葉","arrivalAddress":"香取市","arrivalTime":"","cargoType":"","weight":"","desiredDate":"2026/02/24","arrivalDate":"2026/02/25","vehicleType":"4t車","bodyType":"","temperatureControl":"","price":"50000","highwayFee":"","transportType":"スポット","consolidation":"","driverWork":"","packageCount":"","loadingMethod":"","description":"","urgency":"","movingJob":"引っ越し案件","vehicleSpec":"","equipment":"","loadingTime":"","unloadingTime":"","paymentDate":null,"contactPerson":"茨木","truckCount":"","taxType":null,"companyName":"SIN JAPAN LLC","contactPhone":"046-212-2325","contactEmail":"info@sinjapan.jp","status":"active","listingType":"own","userId":"8524e6bc-44ec-4980-bd54-3f5b63d38c28","viewCount":4,"createdAt":"2026-02-20T06:59:24.295Z"},{"id":"5abae852-7962-4ef9-966a-b5b258c86eba","cargoNumber":7891249,"title":"新横浜　引越し２ｔ","departureArea":"神奈川","departureAddress":"新横浜","departureTime":"07:00","arrivalArea":"神奈川","arrivalAddress":"横浜指定エリア","arrivalTime":"16:00","cargoType":"引越し","weight":"","desiredDate":"2026/02/22","arrivalDate":"2026/02/22","vehicleType":"2t車","bodyType":"箱車","temperatureControl":"","price":"30000","highwayFee":"","transportType":"スポット","consolidation":"不可","driverWork":"作業なし","packageCount":"","loadingMethod":"","description":"残業代有り　付帯作業なし　「引越し案件」とお問い合わせください","urgency":"通常","movingJob":"引っ越し案件","vehicleSpec":"","equipment":"","loadingTime":"","unloadingTime":"","paymentDate":null,"contactPerson":"大谷","truckCount":null,"taxType":null,"companyName":"SIN JAPAN LLC","contactPhone":"046-212-2325","contactEmail":"info@sinjapan.jp","status":"active","listingType":"own","userId":"8524e6bc-44ec-4980-bd54-3f5b63d38c28","viewCount":2,"createdAt":"2026-02-19T04:54:33.096Z"},{"id":"289348d8-2e0f-40f1-afac-df6f1a4023f4","cargoNumber":7891248,"title":"新横浜　引越し２ｔ","departureArea":"神奈川","departureAddress":"新横浜","departureTime":"07:00","arrivalArea":"神奈川","arrivalAddress":"横浜市内指定エリア","arrivalTime":"16:00","cargoType":"引越し","weight":"","desiredDate":"2026/02/21","arrivalDate":"2026/02/21","vehicleType":"2t車","bodyType":"箱車","temperatureControl":"","price":"30000","highwayFee":"","transportType":"スポット","consolidation":"不可","driverWork":"作業なし","packageCount":"","loadingMethod":"","description":"残業代有り　付帯作業なし「引越し案件」とお問い合わせください","urgency":"通常","movingJob":"引っ越し案件","vehicleSpec":"","equipment":"","loadingTime":"","unloadingTime":"","paymentDate":null,"contactPerson":"大谷","truckCount":null,"taxType":null,"companyName":"SIN JAPAN LLC","contactPhone":"046-212-2325","contactEmail":"info@sinjapan.jp","status":"active","listingType":"own","userId":"8524e6bc-44ec-4980-bd54-3f5b63d38c28","viewCount":0,"createdAt":"2026-02-19T04:23:38.242Z"}]
+10|tramatc | 10:36:34 AM [express] GET /api/trucks 304 in 491ms :: []
+10|tramatc | 10:36:34 AM [express] GET /api/notifications/unread-count 200 in 503ms :: {"count":0}
+10|tramatc | 10:36:34 AM [express] GET /api/notifications 200 in 525ms :: []
+10|tramatc | 10:36:36 AM [express] GET /api/onboarding-progress 200 in 2257ms :: {"profileComplete":false,"cargoCount":0,"truckCount":0,"partnerCount":0,"notificationSettingDone":true}
+10|tramatc | 10:36:39 AM [express] GET /api/my-cargo 200 in 494ms :: []
+10|tramatc | 10:36:41 AM [express] GET /api/my-trucks 304 in 493ms :: []
+10|tramatc | 10:36:51 AM [express] GET /api/notifications/unread-count 304 in 968ms :: {"count":0}
+10|tramatc | 10:36:52 AM [express] GET /api/plan-change-requests/pending 304 in 495ms :: {"pending":false,"request":null}
+10|tramatc | 10:38:54 AM [express] GET /api/notifications/unread-count 304 in 487ms :: {"count":0}
+10|tramatc | 10:41:37 AM [express] GET /api/notifications/unread-count 304 in 487ms :: {"count":0}
+10|tramatc | 10:41:39 AM [express] GET /api/notifications 304 in 491ms :: []
+10|tramatc | 10:46:05 AM [express] GET /api/user 401 in 0ms :: {"message":"未認証"}
+10|tramatc | 10:46:05 AM [express] GET /api/announcements 304 in 244ms :: [{"id":"f031eea6-d35c-431d-92c4-757d05508cf9","title":"TRA MATCH β版をリリースしました","content":"プレミアムプランを0円でご利用いただけます。荷物や空車の情報を簡単にAI掲載・AI検索できるようになりました。","category":"update","isPublished":true,"createdAt":"2026-02-16T10:00:00.000Z","updatedAt":"2026-02-19T03:44:40.982Z"}]
+10|tramatc | Database already has users, skipping seed.
+10|tramatc | 10:48:26 AM [express] serving on port 5050
+10|tramatc | [Auto Article] Today's 10 articles already generated, skipping.
+10|tramatc | Database already has users, skipping seed.
+10|tramatc | 10:49:06 AM [express] serving on port 5050
+10|tramatc | [Auto Article] Today's 10 articles already generated, skipping.
+
+/root/.pm2/logs/tramatch-error.log last 50 lines:
+10|tramatc |     at process.processTimers (node:internal/timers:519:7)
+10|tramatc |     at async r._asyncQuery (/var/www/tramatch/dist/index.cjs:74:30088)
+10|tramatc | Internal Server Error: Error: timeout exceeded when trying to connect
+10|tramatc |     at /var/www/tramatch/dist/index.cjs:74:13356
+10|tramatc |     at async r._asyncQuery (/var/www/tramatch/dist/index.cjs:74:30088)
+10|tramatc | Error: timeout exceeded when trying to connect
+10|tramatc |     at /var/www/tramatch/dist/index.cjs:74:13356
+10|tramatc |     at async r._asyncQuery (/var/www/tramatch/dist/index.cjs:74:30088)
+10|tramatc | Error: timeout exceeded when trying to connect
+10|tramatc |     at /var/www/tramatch/dist/index.cjs:74:13356
+10|tramatc |     at async r._asyncQuery (/var/www/tramatch/dist/index.cjs:74:30088)
+10|tramatc | Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/www/tramatch/dist/index.cjs' imported from /usr/lib/node_modules/pm2/lib/ProcessContainerFork.js
+10|tramatc |     at finalizeResolution (node:internal/modules/esm/resolve:283:11)
+10|tramatc |     at moduleResolve (node:internal/modules/esm/resolve:952:10)
+10|tramatc |     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+10|tramatc |     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:708:12)
+10|tramatc |     at #cachedDefaultResolve (node:internal/modules/esm/loader:657:25)
+10|tramatc |     at ModuleLoader.resolve (node:internal/modules/esm/loader:640:38)
+10|tramatc |     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:264:38)
+10|tramatc |     at ModuleLoader.import (node:internal/modules/esm/loader:605:34)
+10|tramatc |     at defaultImportModuleDynamicallyForScript (node:internal/modules/esm/utils:234:31)
+10|tramatc |     at importModuleDynamicallyCallback (node:internal/modules/esm/utils:256:12) {
+10|tramatc |   code: 'ERR_MODULE_NOT_FOUND',
+10|tramatc |   url: 'file:///var/www/tramatch/dist/index.cjs'
+10|tramatc | }
+10|tramatc | Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/www/tramatch/dist/index.cjs' imported from /usr/lib/node_modules/pm2/lib/ProcessContainerFork.js
+10|tramatc |     at finalizeResolution (node:internal/modules/esm/resolve:283:11)
+10|tramatc |     at moduleResolve (node:internal/modules/esm/resolve:952:10)
+10|tramatc |     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+10|tramatc |     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:708:12)
+10|tramatc |     at #cachedDefaultResolve (node:internal/modules/esm/loader:657:25)
+10|tramatc |     at ModuleLoader.resolve (node:internal/modules/esm/loader:640:38)
+10|tramatc |     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:264:38)
+10|tramatc |     at ModuleLoader.import (node:internal/modules/esm/loader:605:34)
+10|tramatc |     at defaultImportModuleDynamicallyForScript (node:internal/modules/esm/utils:234:31)
+10|tramatc |     at importModuleDynamicallyCallback (node:internal/modules/esm/utils:256:12) {
+10|tramatc |   code: 'ERR_MODULE_NOT_FOUND',
+10|tramatc |   url: 'file:///var/www/tramatch/dist/index.cjs'
+10|tramatc | }
+10|tramatc | ht [Error]: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+10|tramatc |     at new Dt (/var/www/tramatch/dist/index.cjs:133:56309)
+10|tramatc |     at Object.<anonymous> (/var/www/tramatch/dist/index.cjs:425:2846)
+10|tramatc |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+10|tramatc |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+10|tramatc |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+10|tramatc |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+10|tramatc |     at cjsLoader (node:internal/modules/esm/translators:298:15)
+10|tramatc |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:240:7)
+10|tramatc |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+10|tramatc |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+

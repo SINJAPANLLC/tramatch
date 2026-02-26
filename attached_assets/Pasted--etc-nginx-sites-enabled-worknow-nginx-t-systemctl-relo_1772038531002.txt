@@ -1,0 +1,32 @@
+/etc/nginx/sites-enabled/worknow && nginx -t && systemctl reload nginx
+2026/02/25 16:54:23 [warn] 1062008#1062008: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/worknow:8
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+(venv) root@srv1087935:/var/www/worknow# pm2 list && echo "---" && systemctl status worknow-backend --no-pager -l | head -5 && echo "---" && systemctl status worknow-frontend --no-pager -l | head -5 && echo "---" && ls /etc/nginx/sites-enabled/
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.7mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.2mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.3mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.5mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 57.2mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+---
+● worknow-backend.service - Work Now Backend (FastAPI)
+     Loaded: loaded (/etc/systemd/system/worknow-backend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:49:40 UTC; 5min ago
+   Main PID: 1061736 (gunicorn)
+      Tasks: 5 (limit: 19144)
+---
+● worknow-frontend.service - Work Now Frontend (React + Vite)
+     Loaded: loaded (/etc/systemd/system/worknow-frontend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:51:53 UTC; 3min 30s ago
+   Main PID: 1061965 (node)
+      Tasks: 11 (limit: 19144)
+---
+ad-aiagent       sinjapan-manager           tramatch
+menz-esthe-town  sinjapan-onlineschool.com  worknow
+(venv) root@srv1087935:/var/www/worknow# 

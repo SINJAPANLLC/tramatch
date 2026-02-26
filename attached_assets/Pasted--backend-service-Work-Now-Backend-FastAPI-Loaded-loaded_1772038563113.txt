@@ -1,0 +1,36 @@
+-backend.service - Work Now Backend (FastAPI)
+     Loaded: loaded (/etc/systemd/system/worknow-backend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:49:40 UTC; 5min ago
+   Main PID: 1061736 (gunicorn)
+      Tasks: 5 (limit: 19144)
+---
+● worknow-frontend.service - Work Now Frontend (React + Vite)
+     Loaded: loaded (/etc/systemd/system/worknow-frontend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:51:53 UTC; 3min 30s ago
+   Main PID: 1061965 (node)
+      Tasks: 11 (limit: 19144)
+---
+ad-aiagent       sinjapan-manager           tramatch
+menz-esthe-town  sinjapan-onlineschool.com  worknow
+(venv) root@srv1087935:/var/www/worknow# grep "server_name" /etc/nginx/sites-enabled/ad-aiagent && echo "---" && grep "server_name" /etc/nginx/sites-enabled/menz-esthe-town && echo "---" && grep "server_name" /etc/nginx/sites-enabled/sinjapan-manager && echo "---" && grep "server_name" /etc/nginx/sites-enabled/sinjapan-onlineschool.com && echo "---" && grep "server_name" /etc/nginx/sites-enabled/tramatch && echo "---" && grep "server_name" /etc/nginx/sites-enabled/worknow && echo "---" && grep "proxy_pass" /etc/nginx/sites-enabled/ad-aiagent | head -1
+    server_name ad-aiagent.site www.ad-aiagent.site;
+    server_name ad-aiagent.site www.ad-aiagent.site;
+---
+    server_name menz-esthe-town.com 212.85.24.206;
+    server_name menz-esthe-town.com ;
+---
+server_name *.sinjapan-manager.com sinjapan-manager.com www.sinjapan-manager.com;
+    server_name *.sinjapan-manager.com sinjapan-manager.com www.sinjapan-manager.com;
+---
+    server_name sinjapan-onlineschool.com www.sinjapan-onlineschool.com;
+    server_name sinjapan-onlineschool.com www.sinjapan-onlineschool.com;
+---
+    server_name tramatch-sinjapan.com www.tramatch-sinjapan.com;
+    server_name tramatch-sinjapan.com www.tramatch-sinjapan.com;
+---
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+    return 301 https://$server_name$request_uri;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+---
+        proxy_pass http://127.0.0.1:5051/api/;
+(venv) root@srv1087935:/var/www/worknow# 

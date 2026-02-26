@@ -1,0 +1,77 @@
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/tramatch# pm2 logs tramatch --lines 10
+[TAILING] Tailing last 10 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-out.log last 10 lines:
+11|tramatc | 10:48:26 AM [express] serving on port 5050
+11|tramatc | [Auto Article] Today's 10 articles already generated, skipping.
+11|tramatc | Database already has users, skipping seed.
+11|tramatc | 10:49:06 AM [express] serving on port 5050
+11|tramatc | [Auto Article] Today's 10 articles already generated, skipping.
+11|tramatc | Database already has users, skipping seed.
+11|tramatc | Database already has users, skipping seed.
+11|tramatc | Database already has users, skipping seed.
+11|tramatc | Database already has users, skipping seed.
+11|tramatc | Database already has users, skipping seed.
+
+/root/.pm2/logs/tramatch-error.log last 10 lines:
+11|tramatc |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+11|tramatc |     at listenInCluster (node:net:1965:12)
+11|tramatc |     at doListen (node:net:2139:7)
+11|tramatc |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+11|tramatc |   code: 'EADDRINUSE',
+11|tramatc |   errno: -98,
+11|tramatc |   syscall: 'listen',
+11|tramatc |   address: '0.0.0.0',
+11|tramatc |   port: 5000
+11|tramatc | }
+
+11|tramatch  | Database already has users, skipping seed.
+11|tramatch  | Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+11|tramatch  |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+11|tramatch  |     at listenInCluster (node:net:1965:12)
+11|tramatch  |     at doListen (node:net:2139:7)
+11|tramatch  |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+11|tramatch  |   code: 'EADDRINUSE',
+11|tramatch  |   errno: -98,
+11|tramatch  |   syscall: 'listen',
+11|tramatch  |   address: '0.0.0.0',
+11|tramatch  |   port: 5000
+11|tramatch  | }
+11|tramatch  | Database already has users, skipping seed.
+11|tramatch  | Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+11|tramatch  |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+11|tramatch  |     at listenInCluster (node:net:1965:12)
+11|tramatch  |     at doListen (node:net:2139:7)
+11|tramatch  |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+11|tramatch  |   code: 'EADDRINUSE',
+11|tramatch  |   errno: -98,
+11|tramatch  |   syscall: 'listen',
+11|tramatch  |   address: '0.0.0.0',
+11|tramatch  |   port: 5000
+11|tramatch  | }
+11|tramatch  | Database already has users, skipping seed.
+11|tramatch  | Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+11|tramatch  |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+11|tramatch  |     at listenInCluster (node:net:1965:12)
+11|tramatch  |     at doListen (node:net:2139:7)
+11|tramatch  |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+11|tramatch  |   code: 'EADDRINUSE',
+11|tramatch  |   errno: -98,
+11|tramatch  |   syscall: 'listen',
+11|tramatch  |   address: '0.0.0.0',
+11|tramatch  |   port: 5000
+11|tramatch  | }
+11|tramatch  | Database already has users, skipping seed.
+11|tramatch  | Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+11|tramatch  |     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+11|tramatch  |     at listenInCluster (node:net:1965:12)
+11|tramatch  |     at doListen (node:net:2139:7)
+11|tramatch  |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+11|tramatch  |   code: 'EADDRINUSE',
+11|tramatch  |   errno: -98,
+11|tramatch  |   syscall: 'listen',
+11|tramatch  |   address: '0.0.0.0',
+11|tramatch  |   port: 5000
+11|tramatch  | }
+

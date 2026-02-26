@@ -1,0 +1,37 @@
+MTP_PASS=@Kazuya8008
+SMTP_FROM=info@tramatch-sinjapan.com
+
+# Square Payment
+SQUARE_ACCESS_TOKEN=EAAAl6njOsBNQU0kLNsEwP_-50GrmF-Nta9TVi0kFTPEVbZ9snQNXkjiorXI_TTy
+SQUARE_LOCATION_ID=LD95R63AEZZRH
+SQUARE_ENVIRONMENT=production
+VITE_SQUARE_APP_ID=sq0idp-JLcsaievW9J9bC8OXbRr5g
+VITE_SQUARE_LOCATION_ID=LD95R63AEZZRH
+VITE_SQUARE_ENVIRONMENT=production
+
+# Server
+PORT=5050
+NODE_ENV=production
+
+# YouTube
+YOUTUBE_API_KEY=AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc
+YOUTUBE_CHANNEL_ID=UCWXDTsh_-YDUGrT24LIjrUg
+YOUTUBE_OAUTH_CLIENT_ID=4578726576-8010lnmh3kqjgvfnufhve7nj34jg75ca.apps.googleusercontent.com
+YOUTUBE_OAUTH_CLIENT_SECRET=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
+YOUTUBE_OAUTH_REFRESH_TOKEN=1//04kxof3Ozywv2CgYIARAAGAQSNwF-L9IrPoBk9sOIoAYCigKPhoFohUWIMLJaNcxcGSynS7BJHB79kBUb3hBOubBtq8_YWvkTKS8
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % ssh root@212.85.24.206 "source /root/.nvm/nvm.sh && cd /var/www/tramatch && sed -i '271,299c\      const { password: _, ...safeUser } = user;\n      res.json(safeUser);\n\n      const clientIp = (req.headers[\"x-forwarded-for\"] as string)?.split(\",\")[0]?.trim() || req.ip || \"unknown\";\n      const now = new Date().toISOString();\n\n      (async () => {\n        let locationStr = \"\";\n        try {\n          const geoRes = await fetch(\`http://ip-api.com/json/\${clientIp}?lang=ja\&fields=status,country,regionName,city\`);\n          const geo = await geoRes.json();\n          if (geo.status === \"success\") {\n            locationStr = [geo.country, geo.regionName, geo.city].filter(Boolean).join(\" \");\n          }\n        } catch {}\n        storage.updateUserProfile(user.id, {\n          lastLoginAt: now,\n          lastLoginIp: clientIp,\n          lastLoginLocation: locationStr || undefined,\n        }).catch(() => {});\n\n        storage.createAuditLog({\n          userId: user.id,\n          userName: user.companyName || user.username,\n          action: \"login\",\n          targetType: \"session\",\n          details: \`ログイン（IP: \${clientIp}\${locationStr ? \`, \${locationStr}\` : \"\"}）\`,\n          ipAddress: clientIp,\n        }).catch(() => {});\n      })();' dist/index.cjs && pm2 restart tramatch"
+root@212.85.24.206's password: 
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 19 ])
+[PM2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1024417  │ 0s     │ 55   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

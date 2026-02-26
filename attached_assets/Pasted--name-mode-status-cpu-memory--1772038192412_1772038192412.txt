@@ -1,0 +1,32 @@
+│ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.7mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.3mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.2mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.4mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.8mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.9mb   │
+│ 15 │ worknow            │ fork     │ 43   │ online    │ 0%       │ 7.8mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+(venv) root@srv1087935:/var/www/worknow# pm2 logs worknow --lines 5 --nostream && echo "---" && ss -tlnp | grep 8008
+[TAILING] Tailing last 5 lines for [worknow] process (change the value with --lines option)
+/root/.pm2/logs/worknow-out.log last 5 lines:
+15|worknow | Hello from repl-nix-workspace!
+15|worknow | Hello from repl-nix-workspace!
+15|worknow | Hello from repl-nix-workspace!
+15|worknow | Hello from repl-nix-workspace!
+15|worknow | Hello from repl-nix-workspace!
+
+/root/.pm2/logs/worknow-error.log last 5 lines:
+15|worknow | /var/www/worknow/venv/lib/python3.12/site-packages/pydantic/main.py:464: UserWarning: Pydantic serializer warnings:
+15|worknow |   PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='CORS_ORIGINS', input_value=['https://sinjapan-workno...w.sinjapan-worknow.com'], input_type=list])
+15|worknow |   return self.__pydantic_serializer__.to_python(
+15|worknow | INFO:     Will watch for changes in these directories: ['/var/www/worknow/backend']
+15|worknow | ERROR:    [Errno 98] Address already in use
+
+---
+LISTEN 0      2048         0.0.0.0:8008       0.0.0.0:*    users:(("gunicorn",pid=1061740,fd=5),("gunicorn",pid=1061739,fd=5),("gunicorn",pid=1061738,fd=5),("gunicorn",pid=1061737,fd=5),("gunicorn",pid=1061736,fd=5))
+(venv) root@srv1087935:/var/www/worknow# 

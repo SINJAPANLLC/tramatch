@@ -1,0 +1,32 @@
+                                                 
+(venv) root@srv1087935:/var/www/worknow# pm2 delete worknow && cd /var/www/worknow && pm2 start /var/www/worknow/venv/bin/python --name worknow --cwd /var/www/worknow/backend -- main.py && pm2 save
+[PM2] Applying action deleteProcessId on app [worknow](ids: [ 14 ])
+[PM2] [worknow](14) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.1mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.7mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.2mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.8mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /var/www/worknow/venv/bin/python in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.1mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.7mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.2mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.8mb   │
+│ 15 │ worknow            │ fork     │ 0    │ online    │ 0%       │ 7.1mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+(venv) root@srv1087935:/var/www/worknow# 

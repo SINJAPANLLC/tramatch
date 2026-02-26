@@ -1,0 +1,66 @@
+  │ poker              │ fork     │ 0    │ online    │ 0%       │ 17.3mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 1    │ online    │ 50%      │ 46.6mb   │
+│ 2  │ poker              │ fork     │ 0    │ online    │ 100%     │ 58.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 19.6mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 1    │ online    │ 100%     │ 69.0mb   │
+│ 2  │ poker              │ fork     │ 0    │ online    │ 0%       │ 61.3mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 62.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 19.6mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 2    │ online    │ 133.3%   │ 56.9mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 19.5mb   │
+│ 2  │ poker              │ fork     │ 0    │ online    │ 0%       │ 61.3mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 62.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 33.3%    │ 61.7mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 3    │ online    │ 25%      │ 47.1mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 61.1mb   │
+│ 6  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+│ 2  │ poker              │ fork     │ 1    │ online    │ 25%      │ 54.4mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 62.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 61.7mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 3    │ online    │ 50%      │ 69.8mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 61.1mb   │
+│ 6  │ onlyu              │ fork     │ 0    │ online    │ 25%      │ 57.8mb   │
+│ 2  │ poker              │ fork     │ 1    │ online    │ 0%       │ 61.3mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 62.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 61.7mb   │
+│ 0  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.5mb   │
+│ 7  │ worknow            │ fork     │ 0    │ online    │ 0%       │ 20.3mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/worknow# 

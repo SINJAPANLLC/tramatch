@@ -1,0 +1,54 @@
+B
+../dist/public/assets/cancelled-cargo-BSmZdqjK.js           21.60 kB │ gzip:   6.34 kB
+../dist/public/assets/admin-email-marketing-sVTuGd5q.js     21.91 kB │ gzip:   5.76 kB
+../dist/public/assets/admin-applications-BL-6Oblj.js        23.28 kB │ gzip:   5.51 kB
+../dist/public/assets/admin-settings-CiXINENP.js            23.46 kB │ gzip:   6.14 kB
+../dist/public/assets/admin-notifications-ClVjNhuZ.js       29.48 kB │ gzip:   7.76 kB
+../dist/public/assets/home-bmD-DQr_.js                      35.55 kB │ gzip:   7.24 kB
+../dist/public/assets/admin-agents-DC-C71Bp.js              36.37 kB │ gzip:   8.16 kB
+../dist/public/assets/my-cargo-CpijlJ-D.js                  36.52 kB │ gzip:   9.92 kB
+../dist/public/assets/admin-users-nFXQT3oR.js               38.97 kB │ gzip:   9.51 kB
+../dist/public/assets/completed-cargo-Xdyy_Cg5.js           51.20 kB │ gzip:  10.80 kB
+../dist/public/assets/cargo-list-CvHei7Sz.js                52.52 kB │ gzip:  13.27 kB
+../dist/public/assets/user-settings-i7I19tTf.js             61.53 kB │ gzip:  13.95 kB
+../dist/public/assets/truck-list-Dia1595L.js                63.65 kB │ gzip:  16.51 kB
+../dist/public/assets/cargo-form-Dt1fru5J.js               120.61 kB │ gzip:  32.64 kB
+../dist/public/assets/schema-CKbtcfvn.js                   137.64 kB │ gzip:  36.56 kB
+../dist/public/assets/index-DgPxaQoU.js                    322.96 kB │ gzip: 104.77 kB
+✓ built in 6.10s
+copying splash logo...
+building server...
+
+  dist/index.cjs  3.1mb ⚠️
+
+⚡ Done in 298ms
+[PM2] Applying action deleteProcessId on app [tramatch](ids: [ 0 ])
+[PM2] [tramatch](0) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.8mb   │
+│ 2  │ poker              │ fork     │ 17   │ errored   │ 0%       │ 0b       │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.7mb   │
+│ 7  │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /root/.nvm/versions/node/v20.20.0/bin/npm in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 1  │ aiagent            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.8mb   │
+│ 2  │ poker              │ fork     │ 17   │ errored   │ 0%       │ 0b       │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 57.5mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.7mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+│ 7  │ worknow            │ fork     │ 15   │ errored   │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/tramatch# 

@@ -1,0 +1,169 @@
+2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+---
+● worknow-backend.service - Work Now Backend (FastAPI)
+     Loaded: loaded (/etc/systemd/system/worknow-backend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:49:40 UTC; 45s ago
+   Main PID: 1061736 (gunicorn)
+      Tasks: 5 (limit: 19144)
+     Memory: 278.1M (peak: 278.5M)
+        CPU: 7.807s
+     CGroup: /system.slice/worknow-backend.service
+             ├─1061736 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061737 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061738 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             ├─1061739 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+             └─1061740 /var/www/worknow/venv/bin/python3 /var/www/worknow/venv/…
+
+Feb 25 16:49:42 srv1087935 gunicorn[1061737]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…39]
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061739]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…38]
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061738]: [2026-02-25 16:49:42 +0000] [1…te.
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…40]
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…up.
+Feb 25 16:49:42 srv1087935 gunicorn[1061740]: [2026-02-25 16:49:42 +0000] [1…te.
+Hint: Some lines were ellipsized, use -l to show in full.
+---
+● worknow-frontend.service - Work Now Frontend (React + Vite)
+     Loaded: loaded (/etc/systemd/system/worknow-frontend.service; enabled; preset: enabled)
+     Active: activating (auto-restart) (Result: exit-code) since Wed 2026-02-25 16:50:20 UTC; 4s ago
+    Process: 1061802 ExecStart=/usr/bin/node /var/www/worknow/frontend/dist-server/server.cjs (code=exited, status=203/EXEC)
+   Main PID: 1061802 (code=exited, status=203/EXEC)
+        CPU: 1ms
+(venv) root@srv1087935:/var/www/worknow# cat /etc/nginx/sites-available/*worknow* 2>/dev/null || ls /etc/nginx/sites-available/ && echo "---" && journalctl -u worknow-frontend --lines 10 --no-pager
+server {
+    listen 80;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+
+    ssl_certificate /etc/letsencrypt/live/sinjapan-worknow.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sinjapan-worknow.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # バックエンドAPI（すべてのAPIエンドポイント）
+    location ~ ^/(auth|jobs|applications|assignments|payments|reviews|notifications|admin|client|files|phone|favorites|job-notifications|qr|penalties|workers|activities|messages|health) {
+        proxy_pass http://localhost:8008;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # アップロードファイルの静的配信
+    location /uploads/ {
+        alias /var/www/worknow/backend/uploads/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # フロントエンド（その他すべて）
+    location / {
+        proxy_pass http://localhost:20000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    client_max_body_size 10M;
+    access_log /var/log/nginx/worknow_access.log;
+    error_log /var/log/nginx/worknow_error.log;
+}
+server {
+    listen 80;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+
+    # SSL証明書の設定（Let's Encrypt使用）
+    ssl_certificate /etc/letsencrypt/live/sinjapan-worknow.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sinjapan-worknow.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # セキュリティヘッダー
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # フロントエンド（React + Vite）
+    location / {
+        proxy_pass http://localhost:20000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # バックエンドAPI（FastAPI）
+    location /api {
+        proxy_pass http://localhost:8008;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # アップロードファイルの静的配信
+    location /uploads/ {
+        alias /var/www/worknow/backend/uploads/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # クライアントの最大ボディサイズ（ファイルアップロード用）
+    client_max_body_size 10M;
+
+    # ログ設定
+    access_log /var/log/nginx/worknow_access.log;
+    error_log /var/log/nginx/worknow_error.log;
+}
+---
+Feb 25 16:50:20 srv1087935 systemd[1]: worknow-frontend.service: Main process exited, code=exited, status=203/EXEC
+Feb 25 16:50:20 srv1087935 systemd[1]: worknow-frontend.service: Failed with result 'exit-code'.
+Feb 25 16:50:30 srv1087935 systemd[1]: worknow-frontend.service: Scheduled restart job, restart counter is at 312.
+Feb 25 16:50:30 srv1087935 systemd[1]: Started worknow-frontend.service - Work Now Frontend (React + Vite).
+Feb 25 16:50:30 srv1087935 systemd[1]: worknow-frontend.service: Main process exited, code=exited, status=203/EXEC
+Feb 25 16:50:30 srv1087935 systemd[1]: worknow-frontend.service: Failed with result 'exit-code'.
+Feb 25 16:50:41 srv1087935 systemd[1]: worknow-frontend.service: Scheduled restart job, restart counter is at 313.
+Feb 25 16:50:41 srv1087935 systemd[1]: Started worknow-frontend.service - Work Now Frontend (React + Vite).
+Feb 25 16:50:41 srv1087935 systemd[1]: worknow-frontend.service: Main process exited, code=exited, status=203/EXEC
+Feb 25 16:50:41 srv1087935 systemd[1]: worknow-frontend.service: Failed with result 'exit-code'.
+(venv) root@srv1087935:/var/www/worknow# 

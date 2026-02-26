@@ -1,0 +1,95 @@
+──┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 57.4mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.7mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 58.2mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.3mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.5mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 57.2mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+---
+● worknow-backend.service - Work Now Backend (FastAPI)
+     Loaded: loaded (/etc/systemd/system/worknow-backend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:49:40 UTC; 5min ago
+   Main PID: 1061736 (gunicorn)
+      Tasks: 5 (limit: 19144)
+---
+● worknow-frontend.service - Work Now Frontend (React + Vite)
+     Loaded: loaded (/etc/systemd/system/worknow-frontend.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-02-25 16:51:53 UTC; 3min 30s ago
+   Main PID: 1061965 (node)
+      Tasks: 11 (limit: 19144)
+---
+ad-aiagent       sinjapan-manager           tramatch
+menz-esthe-town  sinjapan-onlineschool.com  worknow
+(venv) root@srv1087935:/var/www/worknow# grep "server_name" /etc/nginx/sites-enabled/ad-aiagent && echo "---" && grep "server_name" /etc/nginx/sites-enabled/menz-esthe-town && echo "---" && grep "server_name" /etc/nginx/sites-enabled/sinjapan-manager && echo "---" && grep "server_name" /etc/nginx/sites-enabled/sinjapan-onlineschool.com && echo "---" && grep "server_name" /etc/nginx/sites-enabled/tramatch && echo "---" && grep "server_name" /etc/nginx/sites-enabled/worknow && echo "---" && grep "proxy_pass" /etc/nginx/sites-enabled/ad-aiagent | head -1
+    server_name ad-aiagent.site www.ad-aiagent.site;
+    server_name ad-aiagent.site www.ad-aiagent.site;
+---
+    server_name menz-esthe-town.com 212.85.24.206;
+    server_name menz-esthe-town.com ;
+---
+server_name *.sinjapan-manager.com sinjapan-manager.com www.sinjapan-manager.com;
+    server_name *.sinjapan-manager.com sinjapan-manager.com www.sinjapan-manager.com;
+---
+    server_name sinjapan-onlineschool.com www.sinjapan-onlineschool.com;
+    server_name sinjapan-onlineschool.com www.sinjapan-onlineschool.com;
+---
+    server_name tramatch-sinjapan.com www.tramatch-sinjapan.com;
+    server_name tramatch-sinjapan.com www.tramatch-sinjapan.com;
+---
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+    return 301 https://$server_name$request_uri;
+    server_name sinjapan-worknow.com www.sinjapan-worknow.com;
+---
+        proxy_pass http://127.0.0.1:5051/api/;
+(venv) root@srv1087935:/var/www/worknow# pm2 logs tramatch --lines 30 --nostream && echo "===ENV===" && cat /var/www/tramatch/.env | grep -v "^#" | grep -v "^$" | sed 's/=.*/=***/'
+[TAILING] Tailing last 30 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-error.log last 30 lines:
+8|tramatch | s._client.delete(Ce`/vector_stores/${e}`,{...t,headers:Qe([{"OpenAI-Beta":"assistants=v2"},t?.headers])})}search(e,t,r){return this._client.getAPIList(Ce`/vector_stores/${e}/search`,zs,{body:t,method:"post",...r,headers:Qe([{"OpenAI-Beta":"assistants=v2"},r?.headers])})}};jo.Files=Hf;jo.FileBatches=zf});var Eu,Dk=ee(()=>{Ft();Pr();qr();za();fr();Eu=class extends Le{create(e,t){return this._client.post("/videos",Fo({body:e,...t},this._client))}retrieve(e,t){return this._client.get(Ce`/videos/${e}`,t)}list(e={},t){return this._client.getAPIList("/videos",To,{query:e,...t})}delete(e,t){return this._client.delete(Ce`/videos/${e}`,t)}downloadContent(e,t={},r){return this._client.get(Ce`/videos/${e}/content`,{query:t,...r,headers:Qe([{Accept:"application/binary"},r?.headers]),__binaryResponse:!0})}remix(e,t,r){return this._client.post(Ce`/videos/${e}/remix`,Fo({body:t,...r},this._client))}}});var Wf,x$,b1,Au,Rk=ee(()=>{$a();ns();Ft();qr();Au=class extends Le{constructor(){super(...arguments),Wf.add(this)}async unwrap(e,t,r=this._client.webhookSecret,a=300){return await this.verifySignature(e,t,r,a),JSON.parse(e)}async verifySignature(e,t,r=this._client.webhookSecret,a=300){if(typeof crypto>"u"||typeof crypto.subtle.importKey!="function"||typeof crypto.subtle.verify!="function")throw new Error("Webhook signature verification is only supported when the `crypto` global is defined");ye(this,Wf,"m",x$).call(this,r);let c=Qe([t]).values,p=ye(this,Wf,"m",b1).call(this,c,"webhook-signature"),f=ye(this,Wf,"m",b1).call(this,c,"webhook-timestamp"),v=ye(this,Wf,"m",b1).call(this,c,"webhook-id"),b=parseInt(f,10);if(isNaN(b))throw new Ms("Invalid webhook timestamp format");let m=Math.floor(Date.now()/1e3);if(m-b>a)throw new Ms("Webhook timestamp is too old");if(b>m+a)throw new Ms("Webhook timestamp is too new");let h=p.split(" ").map(S=>S.startsWith("v1,")?S.substring(3):S),g=r.startsWith("whsec_")?Buffer.from(r.replace("whsec_",""),"base64"):Buffer.from(r,"utf-8"),_=v?`${v}.${f}.${e}`:`${f}.${e}`,C=await crypto.subtle.importKey("raw",g,{name:"HMAC",hash:"SHA-256"},!1,["verify"]);for(let S of h)try{let I=Buffer.from(S,"base64");if(await crypto.subtle.verify("HMAC",C,I,new TextEncoder().encode(_)))return}catch{continue}throw new Ms("The given webhook signature does not match the expected signature")}};Wf=new WeakSet,x$=function(e){if(typeof e!="string"||e.length===0)throw new Error("The webhook secret must either be set using the env var, OPENAI_WEBHOOK_SECRET, on the client class, OpenAI({ webhookSecret: '123' }), or passed to this function")},b1=function(e,t){if(!e)throw new Error("Headers are required");let r=e.get(t);if(r==null)throw new Error(`Missing required header: ${t}`);return r}});var v$=ee(()=>{Rk()});var y$=ee(()=>{v$()});var b$=ee(()=>{Yq();Jq();IC();PC();VC();GC();XC();JC();ZC();rk();ik();pk();dk();mk();hk();gk();yk();Ak();Tk();Ik();Ok();Dk();y$()});var Lk,jk,w1,w$,Rt,_1=ee(()=>{$a();RS();Co();cf();qv();BS();dm();xq();Cq();MS();Bs();Pr();nC();b$();Yv();PC();GC();ZC();ik();mk();hk();gk();Dk();IC();VC();CC();XC();JC();rk();pk();dk();yk();Ak();Tk();Ik();Ok();Rk();BS();qr();qC();hm();Co();Rt=class{constructor({baseURL:e=Nc("OPENAI_BASE_URL"),apiKey:t=Nc("OPENAI_API_KEY"),organization:r=Nc("OPENAI_ORG_ID")??null,project:a=Nc("OPENAI_PROJECT_ID")??null,webhookSecret:c=Nc("OPENAI_WEBHOOK_SECRET")??null,...p}={}){if(Lk.add(this),w1.set(this,void 0),this.completions=new pu(this),this.chat=new Fc(this),this.embeddings=new du(this),this.files=new hu(this),this.images=new yu(this),this.audio=new Hs(this),this.moderations=new wu(this),this.models=new bu(this),this.fineTuning=new os(this),this.graders=new jc(this),this.vectorStores=new jo(this),this.webhooks=new Au(this),this.beta=new ss(this),this.batches=new su(this),this.uploads=new Bc(this),this.responses=new Ro(this),this.realtime=new Do(this),this.conversations=new Rc(this),this.evals=new Lc(this),this.containers=new Dc(this),this.skills=new Lo(this),this.videos=new Eu(this),t===void 0)throw new yt("Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.");let f={apiKey:t,organization:r,project:a,webhookSecret:c,...p,baseURL:e||"https://api.openai.com/v1"};if(!f.dangerouslyAllowBrowser&&fq())throw new yt(`It looks like you're running in a browser-like environment.
+8|tramatch |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+8|tramatch | 
+8|tramatch | yt [Error]: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+8|tramatch |     at new Rt (/var/www/tramatch/dist/index.cjs:133:56309)
+8|tramatch |     at Object.<anonymous> (/var/www/tramatch/dist/index.cjs:587:2878)
+8|tramatch |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+8|tramatch |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+8|tramatch |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+8|tramatch |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+8|tramatch |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+8|tramatch |     at node:internal/main/run_main_module:28:49
+8|tramatch | 
+8|tramatch | Node.js v20.20.0
+
+/root/.pm2/logs/tramatch-out.log last 30 lines:
+8|tramatch | px;font-weight:700;margin-right:8px;\">STEP1</span>無料会員登録（最短1分）\n</td>\n</tr>\n<tr>\n<td style=\"padding:6px 0;font-size:13px;color:#475569;line-height:1.6;\">\n<span style=\"display:inline-block;background-color:#0d9488;color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:8px;\">STEP2</span>空車情報・荷物情報を登録\n</td>\n</tr>\n<tr>\n<td style=\"padding:6px 0;font-size:13px;color:#475569;line-height:1.6;\">\n<span style=\"display:inline-block;background-color:#0d9488;color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:8px;\">STEP3</span>条件が合えば成約\n</td>\n</tr>\n</table>\n</td>\n</tr>\n</table>\n\n<p style=\"margin:0 0 8px;font-size:14px;line-height:1.8;color:#334155;\">まずは無料登録で、どのような荷物情報があるかご覧ください。<br>ご不明な点がございましたら、お気軽にお問い合わせください。</p>\n\n<p style=\"margin:0;font-size:14px;line-height:1.8;color:#334155;\">今後とも何卒よろしくお願い申し上げます。</p>\n\n</td>\n</tr>\n\n<!-- Footer -->\n<tr>\n<td style=\"background-color:#1e293b;padding:24px 28px;border-radius:0 0 12px 12px;\">\n<p style=\"margin:0 0 4px;font-size:14px;font-weight:700;color:#ffffff;\">トラマッチ運営事務局</p>\n<p style=\"margin:0 0 12px;font-size:13px;color:#94a3b8;\">合同会社SIN JAPAN</p>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr>\n<td style=\"padding:2px 0;font-size:12px;color:#94a3b8;\">URL：<a href=\"https://tramatch-sinjapan.com\" style=\"color:#5eead4;text-decoration:none;\">https://tramatch-sinjapan.com</a></td>\n</tr>\n<tr>\n<td style=\"padding:2px 0;font-size:12px;color:#94a3b8;\">Mail：<a href=\"mailto:info@sinjapan.jp\" style=\"color:#5eead4;text-decoration:none;\">info@sinjapan.jp</a></td>\n</tr>\n</table>\n<hr style=\"border:none;border-top:1px solid #334155;margin:16px 0;\">\n<p style=\"margin:0;font-size:11px;color:#64748b;line-height:1.6;\">※本メールは、貴社ウェブサイトに公開されている連絡先情報をもとにお送りしております。<br>※配信停止をご希望の場合は、本メールにその旨ご返信ください。</p>\n</td>\n</tr>\n\n</table>\n\n</td></tr>\n</table>\n</body>\n</html>"}
+8|tramatch | 4:38:07 PM [express] GET /api/admin/email-leads 200 in 1884ms :: {"leads":[{"id":"f9bc2010-cee8-41a2-896f-0bf5aa4b28c8","companyName":"会社概要","email":"info@kuraun-fukui.com","fax":"0778-52-5327","phone":"0778-52-5360","website":"https://www.kuraun-fukui.com/company","address":null,"industry":"一般貨物/利用運送","source":"https://www.kuraun-fukui.com/company","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:24:29.452Z"},{"id":"b2197667-b5b5-4aa5-874f-f1f1272847f8","companyName":"福井トナミ運輸株式会社","email":"f-tonami@juno.ocn.ne.jp","fax":"0770-23-2199","phone":"0770-22-2448","website":"http://www.f-tonami.co.jp/","address":null,"industry":"一般貨物/利用運送","source":"http://www.f-tonami.co.jp/","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:20:30.073Z"},{"id":"d3faa7d0-a2aa-49c2-b100-4603ea09f4e4","companyName":"mflp-nairan.resv.jp","email":"may-shimizu@mitsuifudosan.co.jp","fax":null,"phone":"070-4403-8764","website":"https://mflp-nairan.resv.jp","address":null,"industry":"一般貨物/利用運送","source":"https://mflp-nairan.resv.jp","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:17:41.622Z"},{"id":"5e1190d3-5223-43ca-b5af-bd9cf86f0ef6","companyName":"事業用貸倉庫なら群馬県の株式会社新和","email":"info@shinwa-transport.co.jp","fax":"0276-86-2063","phone":"0276-86-2048","website":"https://www.shinwa-transport.co.jp/","address":null,"industry":"一般貨物/利用運送","source":"https://www.shinwa-transport.co.jp/","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T02:58:02.154Z"}],"total":4,"todaySent":0,"newCount":4,"sentCount":0,"failedCount":0}
+8|tramatch | 4:55:03 PM [express] GET /api/admin/email-campaigns 304 in 537ms :: []
+8|tramatch | 4:55:03 PM [express] GET /api/notifications/unread-count 304 in 814ms :: {"count":33}
+8|tramatch | 4:55:04 PM [express] GET /api/admin/email-leads 304 in 1805ms :: {"leads":[{"id":"f9bc2010-cee8-41a2-896f-0bf5aa4b28c8","companyName":"会社概要","email":"info@kuraun-fukui.com","fax":"0778-52-5327","phone":"0778-52-5360","website":"https://www.kuraun-fukui.com/company","address":null,"industry":"一般貨物/利用運送","source":"https://www.kuraun-fukui.com/company","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:24:29.452Z"},{"id":"b2197667-b5b5-4aa5-874f-f1f1272847f8","companyName":"福井トナミ運輸株式会社","email":"f-tonami@juno.ocn.ne.jp","fax":"0770-23-2199","phone":"0770-22-2448","website":"http://www.f-tonami.co.jp/","address":null,"industry":"一般貨物/利用運送","source":"http://www.f-tonami.co.jp/","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:20:30.073Z"},{"id":"d3faa7d0-a2aa-49c2-b100-4603ea09f4e4","companyName":"mflp-nairan.resv.jp","email":"may-shimizu@mitsuifudosan.co.jp","fax":null,"phone":"070-4403-8764","website":"https://mflp-nairan.resv.jp","address":null,"industry":"一般貨物/利用運送","source":"https://mflp-nairan.resv.jp","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T16:17:41.622Z"},{"id":"5e1190d3-5223-43ca-b5af-bd9cf86f0ef6","companyName":"事業用貸倉庫なら群馬県の株式会社新和","email":"info@shinwa-transport.co.jp","fax":"0276-86-2063","phone":"0276-86-2048","website":"https://www.shinwa-transport.co.jp/","address":null,"industry":"一般貨物/利用運送","source":"https://www.shinwa-transport.co.jp/","status":"new","sentAt":null,"sentSubject":null,"createdAt":"2026-02-25T02:58:02.154Z"}],"total":4,"todaySent":0,"newCount":4,"sentCount":0,"failedCount":0}
+
+===ENV===
+NEON_DATABASE_URL=***
+SESSION_SECRET=***
+OPENAI_API_KEY=***
+SMTP_HOST=***
+SMTP_PORT=***
+SMTP_USER=***
+SMTP_PASS=***
+SMTP_FROM=***
+SQUARE_ACCESS_TOKEN=***
+SQUARE_LOCATION_ID=***
+SQUARE_ENVIRONMENT=***
+VITE_SQUARE_APP_ID=***
+VITE_SQUARE_LOCATION_ID=***
+VITE_SQUARE_ENVIRONMENT=***
+PORT=***
+NODE_ENV=***
+YOUTUBE_API_KEY=***
+YOUTUBE_CHANNEL_ID=***
+YOUTUBE_OAUTH_CLIENT_ID=***
+YOUTUBE_OAUTH_CLIENT_SECRET=***
+YOUTUBE_OAUTH_REFRESH_TOKEN=***
+(venv) root@srv1087935:/var/www/worknow# 

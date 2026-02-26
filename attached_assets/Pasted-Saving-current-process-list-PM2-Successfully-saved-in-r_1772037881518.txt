@@ -1,0 +1,42 @@
+Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/poker# pm2 list
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 9  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 56.8mb   │
+│ 5  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 57.1mb   │
+│ 6  │ onlyu              │ fork     │ 1    │ online    │ 0%       │ 57.8mb   │
+│ 13 │ poker              │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 3  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 58.0mb   │
+│ 4  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 57.0mb   │
+│ 8  │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 56.5mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:/var/www/poker# cd /var/www/worknow && git remote set-url origin https://github.com/SINJAPANLLC/sinjapan-worknow-ver1.git && git fetch origin && git reset --hard origin/main
+fatal: detected dubious ownership in repository at '/var/www/worknow'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /var/www/worknow
+root@srv1087935:/var/www/worknow# git config --global --add safe.directory /var/www/worknow && cd /var/www/worknow && git remote set-url origin https://github.com/SINJAPANLLC/sinjapan-worknow-ver1.git && git fetch origin && git reset --hard origin/main
+remote: Enumerating objects: 124, done.
+remote: Counting objects: 100% (124/124), done.
+remote: Compressing objects: 100% (38/38), done.
+remote: Total 117 (delta 84), reused 112 (delta 79), pack-reused 0 (from 0)
+Receiving objects: 100% (117/117), 1.11 MiB | 12.22 MiB/s, done.
+Resolving deltas: 100% (84/84), completed with 7 local objects.
+From https://github.com/SINJAPANLLC/sinjapan-worknow-ver1
+   319d55d..d8ed484  main       -> origin/main
+HEAD is now at d8ed484 Update frontend deployment to include new assets and configurations
+root@srv1087935:/var/www/worknow# cat /var/www/worknow/package.json | grep -A 10 '"scripts"'
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "@types/leaflet": "^1.9.21",
+    "@types/leaflet-routing-machine": "^3.2.9",
+root@srv1087935:/var/www/worknow# 

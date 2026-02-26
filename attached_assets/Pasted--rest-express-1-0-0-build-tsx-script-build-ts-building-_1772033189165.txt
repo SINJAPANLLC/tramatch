@@ -1,0 +1,155 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2739 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                                    3.01 kB │ gzip:   1.16 kB
+../dist/public/assets/tra_match_logo_white-ZjAReWwH.jpg     28.88 kB
+../dist/public/assets/IMG_0046_1771206816410-ClwqCtPN.jpg   29.02 kB
+../dist/public/assets/index-BfmIKNTe.css                   117.54 kB │ gzip:  18.27 kB
+../dist/public/assets/IMG_0046_1771226022407-Oxg-gFb7.js     0.07 kB │ gzip:   0.09 kB
+../dist/public/assets/chevron-down-Dy9YPP8W.js               0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-up-CAAMPOSX.js                 0.12 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-right-CSIgEuH3.js              0.13 kB │ gzip:   0.14 kB
+../dist/public/assets/chevron-left-B9LwwfYj.js               0.13 kB │ gzip:   0.14 kB
+../dist/public/assets/circle-BPfXkjxk.js                     0.13 kB │ gzip:   0.13 kB
+../dist/public/assets/play-BQTdUz1G.js                       0.13 kB │ gzip:   0.15 kB
+../dist/public/assets/loader-circle-DUnhoQ_E.js              0.14 kB │ gzip:   0.15 kB
+../dist/public/assets/index-6YOVoIat.js                      0.14 kB │ gzip:   0.14 kB
+../dist/public/assets/navigation-Cdp8uDKB.js                 0.15 kB │ gzip:   0.15 kB
+../dist/public/assets/arrow-right-DVbOG8E0.js                0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/arrow-left-DQmpknIM.js                 0.16 kB │ gzip:   0.16 kB
+../dist/public/assets/search-ZHsC44T-.js                     0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/skeleton-CmSxH2XO.js                   0.17 kB │ gzip:   0.16 kB
+../dist/public/assets/circle-check-BLqpVowc.js               0.17 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-dot-Bm7RsL9a.js                 0.18 kB │ gzip:   0.15 kB
+../dist/public/assets/clock-Cp189KDy.js                      0.18 kB │ gzip:   0.17 kB
+../dist/public/assets/circle-check-big-BInxZM8X.js           0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/smartphone-BgHXpbQ8.js                 0.19 kB │ gzip:   0.18 kB
+../dist/public/assets/trending-up-Dui0syUm.js                0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/circle-x-BF5Ve_lC.js                   0.20 kB │ gzip:   0.18 kB
+../dist/public/assets/mail-BhM0JkdT.js                       0.21 kB │ gzip:   0.20 kB
+../dist/public/assets/dollar-sign-Cb9JVBLv.js                0.22 kB │ gzip:   0.19 kB
+../dist/public/assets/index-rTPULctO.js                      0.23 kB │ gzip:   0.17 kB
+../dist/public/assets/copy-DqHJ34SJ.js                       0.23 kB │ gzip:   0.21 kB
+../dist/public/assets/circle-help-d2CKEcMX.js                0.24 kB │ gzip:   0.20 kB
+../dist/public/assets/globe-FVxs8MQm.js                      0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/arrow-up-down-CpFo-UGI.js              0.24 kB │ gzip:   0.19 kB
+../dist/public/assets/banknote-CMVcILDo.js                   0.24 kB │ gzip:   0.21 kB
+../dist/public/assets/chart-column-ABGPVla0.js               0.25 kB │ gzip:   0.19 kB
+../dist/public/assets/external-link-9PrSB4k-.js              0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/user-check-T_nDUnUM.js                 0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/eye-DfsZHp4e.js                        0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/upload-BtWGbIXk.js                     0.25 kB │ gzip:   0.22 kB
+../dist/public/assets/calendar-CPW6lz4i.js                   0.25 kB │ gzip:   0.20 kB
+../dist/public/assets/download-Cguqz9BT.js                   0.26 kB │ gzip:   0.22 kB
+../dist/public/assets/triangle-alert-NV1kzhJG.js             0.26 kB │ gzip:   0.21 kB
+../dist/public/assets/shield-BI_d4yN7.js                     0.27 kB │ gzip:   0.22 kB
+../dist/public/assets/pencil-3jKLPV2j.js                     0.27 kB │ gzip:   0.23 kB
+../dist/public/assets/send-DY_4l_Zy.js                       0.29 kB │ gzip:   0.23 kB
+../dist/public/assets/users-DmZKBnIy.js                      0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/user-x-BE2PUgl4.js                     0.30 kB │ gzip:   0.23 kB
+../dist/public/assets/shield-check-DL2zC2uz.js               0.32 kB │ gzip:   0.25 kB
+../dist/public/assets/refresh-cw-x_zPQ2g9.js                 0.32 kB │ gzip:   0.23 kB
+../dist/public/assets/save-LxD19Gvd.js                       0.32 kB │ gzip:   0.22 kB
+../dist/public/assets/bot-CCm-o--9.js                        0.33 kB │ gzip:   0.23 kB
+../dist/public/assets/file-text-CM3Q2oUN.js                  0.33 kB │ gzip:   0.21 kB
+../dist/public/assets/key-round-BnnbwV_C.js                  0.35 kB │ gzip:   0.26 kB
+../dist/public/assets/crown-DDfN8uVz.js                      0.36 kB │ gzip:   0.26 kB
+../dist/public/assets/eye-off-DqV17cN2.js                    0.43 kB │ gzip:   0.27 kB
+../dist/public/assets/handshake-Co1txxfc.js                  0.44 kB │ gzip:   0.28 kB
+../dist/public/assets/textarea-DevCtOg7.js                   0.50 kB │ gzip:   0.33 kB
+../dist/public/assets/label-Bp7rUgZJ.js                      0.52 kB │ gzip:   0.36 kB
+../dist/public/assets/input-Dl6iCrV6.js                      0.58 kB │ gzip:   0.36 kB
+../dist/public/assets/mic-a6kaOQya.js                        0.64 kB │ gzip:   0.33 kB
+../dist/public/assets/not-found-CGxTBx2J.js                  0.81 kB │ gzip:   0.45 kB
+../dist/public/assets/card-DlDlc37h.js                       1.02 kB │ gzip:   0.38 kB
+../dist/public/assets/table-of-contents-aHoNsyMz.js          1.19 kB │ gzip:   0.69 kB
+../dist/public/assets/faq-block-omlezS-m.js                  1.48 kB │ gzip:   0.78 kB
+../dist/public/assets/partners-gutJn3gZ.js                   2.23 kB │ gzip:   1.10 kB
+../dist/public/assets/switch-BKPQsKXq.js                     2.37 kB │ gzip:   1.20 kB
+../dist/public/assets/login-aIsqmWk7.js                      2.57 kB │ gzip:   1.23 kB
+../dist/public/assets/guide-BOpFrocR.js                      2.92 kB │ gzip:   1.41 kB
+../dist/public/assets/forgot-password-DfDxQ-0V.js            3.12 kB │ gzip:   1.41 kB
+../dist/public/assets/company-info-lSHN_-5i.js               3.34 kB │ gzip:   1.49 kB
+../dist/public/assets/transport-ledger-CWBmm3G1.js           3.72 kB │ gzip:   1.63 kB
+../dist/public/assets/reset-password-D0KysBwn.js             4.03 kB │ gzip:   1.59 kB
+../dist/public/assets/faq-CnQ52god.js                        4.21 kB │ gzip:   1.93 kB
+../dist/public/assets/services-EpsxM_gc.js                   4.74 kB │ gzip:   2.16 kB
+../dist/public/assets/my-trucks-DDjrjIQJ.js                  5.80 kB │ gzip:   2.17 kB
+../dist/public/assets/truck-detail-CoRZBjXj.js               5.81 kB │ gzip:   1.65 kB
+../dist/public/assets/contact-BgQfthvT.js                    5.86 kB │ gzip:   2.07 kB
+../dist/public/assets/cta-block-DX982-4w.js                  6.13 kB │ gzip:   2.64 kB
+../dist/public/assets/admin-contact-inquiries-D5ow88AJ.js    6.33 kB │ gzip:   2.29 kB
+../dist/public/assets/tabs-DuwGj2eG.js                       6.45 kB │ gzip:   2.56 kB
+../dist/public/assets/register-B7TXuiig.js                   6.70 kB │ gzip:   2.52 kB
+../dist/public/assets/dialog-D6ky5Qds.js                     7.04 kB │ gzip:   2.57 kB
+../dist/public/assets/cargo-detail-D0nI5-Z7.js               8.01 kB │ gzip:   2.36 kB
+../dist/public/assets/admin-announcements-OO5V31nr.js        8.01 kB │ gzip:   2.79 kB
+../dist/public/assets/admin-audit-logs-D9DaV4uj.js           8.13 kB │ gzip:   2.79 kB
+../dist/public/assets/truck-form-BYfYN9hW.js                 8.38 kB │ gzip:   3.16 kB
+../dist/public/assets/column-detail-Dy2eac4k.js              8.50 kB │ gzip:   3.14 kB
+../dist/public/assets/checkbox-Bhu0DTFD.js                   8.56 kB │ gzip:   3.40 kB
+../dist/public/assets/compare-sites-CkmeBrMG.js              9.12 kB │ gzip:   3.17 kB
+../dist/public/assets/columns-0zBSTIhe.js                    9.63 kB │ gzip:   2.90 kB
+../dist/public/assets/payment-EF5teDhm.js                    9.68 kB │ gzip:   1.88 kB
+../dist/public/assets/dashboard-Cuh04azD.js                  9.75 kB │ gzip:   2.87 kB
+../dist/public/assets/dashboard-layout-DEsonZ9G.js          10.16 kB │ gzip:   3.90 kB
+../dist/public/assets/alternative-trabox-DSJxXcKS.js        10.81 kB │ gzip:   3.42 kB
+../dist/public/assets/admin-invoices-8lkoHB0Q.js            11.17 kB │ gzip:   3.24 kB
+../dist/public/assets/column-category-LMmkj_MA.js           11.60 kB │ gzip:   4.44 kB
+../dist/public/assets/privacy-S5LfFrM6.js                   13.06 kB │ gzip:   3.55 kB
+../dist/public/assets/admin-seo-DjFveVOY.js                 14.05 kB │ gzip:   4.60 kB
+../dist/public/assets/companies-BkHOM8Pq.js                 14.37 kB │ gzip:   4.35 kB
+../dist/public/assets/admin-youtube-CBiaBDkE.js             14.50 kB │ gzip:   4.10 kB
+../dist/public/assets/admin-ai-training-C-JRtqc_.js         15.11 kB │ gzip:   4.19 kB
+../dist/public/assets/admin-dashboard-DPK-BdN3.js           15.26 kB │ gzip:   3.49 kB
+../dist/public/assets/guide-kyukakyusha-B_hPL9vh.js         16.67 kB │ gzip:   6.11 kB
+../dist/public/assets/admin-listings-CXvE7Wd9.js            17.89 kB │ gzip:   3.55 kB
+../dist/public/assets/admin-revenue-CaDdW5Rf.js             18.52 kB │ gzip:   3.90 kB
+../dist/public/assets/terms-CYBCbGcr.js                     20.36 kB │ gzip:   6.21 kB
+../dist/public/assets/select-D1_IWzS8.js                    20.84 kB │ gzip:   7.24 kB
+../dist/public/assets/cancelled-cargo-8VJowCAR.js           21.60 kB │ gzip:   6.35 kB
+../dist/public/assets/admin-email-marketing-Cvbvnkgo.js     21.91 kB │ gzip:   5.77 kB
+../dist/public/assets/admin-applications-Dm9iRwLw.js        23.28 kB │ gzip:   5.51 kB
+../dist/public/assets/admin-settings-B6QGWS0A.js            23.45 kB │ gzip:   6.14 kB
+../dist/public/assets/admin-notifications-B1tYcMr1.js       29.48 kB │ gzip:   7.76 kB
+../dist/public/assets/home-BOX1d8Kx.js                      35.55 kB │ gzip:   7.24 kB
+../dist/public/assets/admin-agents-BQUxzSso.js              36.37 kB │ gzip:   8.15 kB
+../dist/public/assets/my-cargo-fwgeEdpf.js                  36.52 kB │ gzip:   9.93 kB
+../dist/public/assets/admin-users-l6BG170y.js               38.97 kB │ gzip:   9.52 kB
+../dist/public/assets/completed-cargo-7K75gxH8.js           51.20 kB │ gzip:  10.80 kB
+../dist/public/assets/cargo-list-DJfJ2X2q.js                52.52 kB │ gzip:  13.28 kB
+../dist/public/assets/user-settings-Cj8A3UXI.js             60.36 kB │ gzip:  13.52 kB
+../dist/public/assets/truck-list-Bi_BZaUa.js                63.65 kB │ gzip:  16.53 kB
+../dist/public/assets/cargo-form-Dim9YnS6.js               120.61 kB │ gzip:  32.65 kB
+../dist/public/assets/schema-AkT19u_f.js                   137.64 kB │ gzip:  36.56 kB
+../dist/public/assets/index-Z6-VfDYF.js                    322.96 kB │ gzip: 104.77 kB
+✓ built in 6.52s
+copying splash logo...
+building server...
+
+  dist/index.cjs  3.1mb ⚠️
+
+⚡ Done in 229ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 19 ])
+[PM2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1026396  │ 0s     │ 58   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

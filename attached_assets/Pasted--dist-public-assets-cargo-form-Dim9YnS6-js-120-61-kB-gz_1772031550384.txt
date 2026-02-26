@@ -1,0 +1,24 @@
+../dist/public/assets/cargo-form-Dim9YnS6.js               120.61 kB │ gzip:  32.65 kB
+../dist/public/assets/schema-AkT19u_f.js                   137.64 kB │ gzip:  36.56 kB
+../dist/public/assets/index-Z6-VfDYF.js                    322.96 kB │ gzip: 104.77 kB
+✓ built in 6.78s
+copying splash logo...
+building server...
+
+  dist/index.cjs  3.1mb ⚠️
+
+⚡ Done in 272ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 19 ])
+[PM2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1025087  │ 0s     │ 56   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

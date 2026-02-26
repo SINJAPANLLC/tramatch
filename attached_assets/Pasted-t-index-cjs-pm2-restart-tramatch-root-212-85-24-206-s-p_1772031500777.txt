@@ -1,0 +1,54 @@
+t/index.cjs && pm2 restart tramatch"
+root@212.85.24.206's password: 
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [tramatch](ids: [ 19 ])
+[PM2] [tramatch](19) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 25 │ aiagent-api        │ default     │ 0.0.0   │ fork    │ 1001638  │ 45h    │ 1    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 2  │ logimatch          │ default     │ N/A     │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 4  │ menz-esthe-town    │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 1  │ sinjapan-poker     │ default     │ 1.0.0   │ fork    │ N/A      │ 2D     │ 6    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 18 │ sinjapan-school    │ default     │ 1.0.0   │ fork    │ 998098   │ 47h    │ 0    │ online    │ 0%       │ 0b       │ root     │ disabled │
+│ 19 │ tramatch           │ default     │ 1.0.0   │ fork    │ 1024417  │ 0s     │ 55   │ online    │ 0%       │ 0b       │ root     │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % ssh root@212.85.24.206 "source /root/.nvm/nvm.sh && cd /var/www/tramatch && pm2 logs tramatch --lines 30 --nostream"
+root@212.85.24.206's password: 
+[TAILING] Tailing last 30 lines for [tramatch] process (change the value with --lines option)
+/root/.pm2/logs/tramatch-out.log last 30 lines:
+19|tramatc | �巻市明神南５番地１","contactName":"阿部","phone":"0225-96-9150","fax":"0225-24-8084","email":"k-abe@ys-service.co.jp","truckCount":"6台","permitFile":"","userType":"carrier","role":"user","approved":true,"paymentTerms":null,"businessDescription":"","companyNameKana":null,"postalCode":"9860881","websiteUrl":"","invoiceRegistrationNumber":"T2370301003076","registrationDate":null,"representative":"安田 茂","establishedDate":"","capital":"","employeeCount":"","officeLocations":"","annualRevenue":"","bankInfo":"石巻信用金庫","majorClients":"","closingDay":"末日","paymentMonth":"翌月","businessArea":"","autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":"ys-marumo0615","notifySystem":true,"notifyEmail":true,"notifyLine":true,"closingMonth":"当月","paymentDay":"末日","bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":"阿部","accountingContactEmail":"k-abe@ys-service.co.jp","accountingContactPhone":"0225-96-9150","accountingContactFax":"0225-24-8084","adminMemo":null,"lastLoginAt":null,"lastLoginIp":null,"lastLoginLocation":null,"addedByUserId":null,"createdAt":"2026-02-25T03:11:30.901Z"},{"id":"660501a1-d1b4-4ce4-852b-b21e02a8e64b","username":"minami@firstlink.me","companyName":"FIRST.LINK株式会社","address":"埼玉県新座市道場１－１３－４５","contactName":"南　賢次","phone":"0484583251","fax":"0484583255","email":"minami@firstlink.me","truckCount":"30","permitFile":"/uploads/permit_1771991426450.pdf","userType":"carrier","role":"user","approved":true,"paymentTerms":null,"businessDescription":null,"companyNameKana":null,"postalCode":null,"websiteUrl":null,"invoiceRegistrationNumber":null,"registrationDate":null,"representative":null,"establishedDate":null,"capital":null,"employeeCount":null,"officeLocations":null,"annualRevenue":null,"bankInfo":null,"majorClients":null,"closingDay":null,"paymentMonth":null,"businessArea":null,"autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":null,"notifySystem":true,"notifyEmail":true,"notifyLine":false,"closingMonth":null,"paymentDay":null,"bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":null,"accountingContactEmail":null,"accountingContactPhone":null,"accountingContactFax":null,"adminMemo":null,"lastLoginAt":null,"lastLoginIp":null,"lastLoginLocation":null,"addedByUserId":null,"createdAt":"2026-02-25T03:50:51.110Z"},{"id":"35000ad5-2ab8-4cd5-af6c-17be295ddb38","username":"contact@yamashin-express.com","companyName":"有限会社山眞産業","address":"熊本県玉名郡和水町和仁23-1","contactName":"山﨑","phone":"0968419961","fax":"0968419962","email":"contact@yamashin-express.com","truckCount":"10","permitFile":"/uploads/permit_1771994000348.pdf","userType":"carrier","role":"user","approved":true,"paymentTerms":null,"businessDescription":null,"companyNameKana":null,"postalCode":null,"websiteUrl":null,"invoiceRegistrationNumber":null,"registrationDate":null,"representative":null,"establishedDate":null,"capital":null,"employeeCount":null,"officeLocations":null,"annualRevenue":null,"bankInfo":null,"majorClients":null,"closingDay":null,"paymentMonth":null,"businessArea":null,"autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":null,"notifySystem":true,"notifyEmail":true,"notifyLine":false,"closingMonth":null,"paymentDay":null,"bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":null,"accountingContactEmail":null,"accountingContactPhone":null,"accountingContactFax":null,"adminMemo":null,"lastLoginAt":null,"lastLoginIp":null,"lastLoginLocation":null,"addedByUserId":null,"createdAt":"2026-02-25T04:33:25.288Z"},{"id":"78cfd407-b3ab-47b5-8a87-7db78a51c1c9","username":"inoue_frontal@yahoo.co.jp","companyName":"フロンタ株式会社","address":"福岡県糟屋郡須恵町佐谷495-1","contactName":"井上優樹","phone":"0926928202","fax":"0926928206","email":"inoue_frontal@yahoo.co.jp","truckCount":"50","permitFile":"/uploads/permit_1772007956682.pdf","userType":"carrier","role":"user","approved":true,"paymentTerms":null,"businessDescription":null,"companyNameKana":null,"postalCode":null,"websiteUrl":null,"invoiceRegistrationNumber":null,"registrationDate":null,"representative":null,"establishedDate":null,"capital":null,"employeeCount":null,"officeLocations":null,"annualRevenue":null,"bankInfo":null,"majorClients":null,"closingDay":null,"paymentMonth":null,"businessArea":null,"autoInvoiceAcceptance":null,"memberOrganization":null,"transportLicenseNumber":null,"digitalTachographCount":null,"gpsCount":null,"safetyExcellenceCert":null,"greenManagementCert":null,"iso9000":null,"iso14000":null,"iso39001":null,"cargoInsurance":null,"plan":"premium","lineUserId":null,"notifySystem":true,"notifyEmail":true,"notifyLine":false,"closingMonth":null,"paymentDay":null,"bankName":null,"bankBranch":null,"accountType":null,"accountNumber":null,"accountHolderKana":null,"accountingContactName":null,"accountingContactEmail":null,"accountingContactPhone":null,"accountingContactFax":null,"adminMemo":null,"lastLoginAt":null,"lastLoginIp":null,"lastLoginLocation":null,"addedByUserId":null,"createdAt":"2026-02-25T08:26:04.356Z"}]
+
+/root/.pm2/logs/tramatch-error.log last 30 lines:
+19|tramatc |     at async r._asyncQuery (/var/www/tramatch/dist/index.cjs:74:30088) {
+19|tramatc |   [cause]: Error: Connection terminated unexpectedly
+19|tramatc |       at c_.<anonymous> (/var/www/tramatch/dist/index.cjs:74:4627)
+19|tramatc |       at Object.onceWrapper (node:events:638:28)
+19|tramatc |       at c_.emit (node:events:524:28)
+19|tramatc |       at Socket.<anonymous> (/var/www/tramatch/dist/index.cjs:73:54063)
+19|tramatc |       at Socket.emit (node:events:536:35)
+19|tramatc |       at TCP.<anonymous> (node:net:343:12)
+19|tramatc | }
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | Unexpected database pool error: Connection terminated unexpectedly
+19|tramatc | /var/www/tramatch/dist/index.cjs:280
+19|tramatc |           const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=status,country,regionName,city`);
+19|tramatc |                                       ^^^^
+19|tramatc | 
+19|tramatc | SyntaxError: Unexpected identifier 'http'
+19|tramatc |     at wrapSafe (node:internal/modules/cjs/loader:1464:18)
+19|tramatc |     at Module._compile (node:internal/modules/cjs/loader:1495:20)
+19|tramatc |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+19|tramatc |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+19|tramatc |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+19|tramatc |     at cjsLoader (node:internal/modules/esm/translators:298:15)
+19|tramatc |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:240:7)
+19|tramatc |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+19|tramatc |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+19|tramatc |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+
+kazuyaotani@Mac toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 
