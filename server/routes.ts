@@ -4173,7 +4173,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!parsed.success) {
         return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
       }
-      const agent = await storage.updateAgent(req.params.id, parsed.data);
+      const agent = await storage.updateAgent(req.params.id as string, parsed.data);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
 
       if (agent.userId) {
@@ -4182,7 +4182,6 @@ JSON形式で以下を返してください（日本語で）:
         if (parsed.data.contactName !== undefined) userUpdate.contactName = parsed.data.contactName;
         if (parsed.data.phone !== undefined) userUpdate.phone = parsed.data.phone;
         if (parsed.data.address !== undefined) userUpdate.address = parsed.data.address;
-        if (parsed.data.fax !== undefined) userUpdate.fax = parsed.data.fax;
         if (Object.keys(userUpdate).length > 0) {
           await storage.updateUserProfile(agent.userId, userUpdate);
         }
@@ -4207,13 +4206,13 @@ JSON形式で以下を返してください（日本語で）:
     try {
       const agent = await storage.getAgent(req.params.id);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
-      await storage.deleteAgent(req.params.id);
+      await storage.deleteAgent(req.params.id as string);
       await storage.createAuditLog({
         userId: (req as any).user?.id,
         userName: (req as any).user?.contactName || (req as any).user?.companyName,
         action: "delete",
         targetType: "agent",
-        targetId: req.params.id,
+        targetId: req.params.id as string,
         details: `代理店「${agent.companyName}」(${agent.prefecture})を削除`,
         ipAddress: req.ip,
       });
@@ -4225,7 +4224,8 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/agents/:id/create-account", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.getAgent(req.params.id);
+      const agentId = req.params.id as string;
+      const agent = await storage.getAgent(agentId);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
 
@@ -4271,7 +4271,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/agents/:id/reset-password", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.getAgent(req.params.id);
+      const agent = await storage.getAgent(req.params.id as string);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       if (!agent.userId) return res.status(400).json({ message: "この代理店にはアカウントがありません" });
 
@@ -4743,12 +4743,13 @@ JSON形式で以下を返してください（日本語で）:
         prompt: `${style ? style + " style: " : ""}${prompt}`,
         size: size || "1024x1024",
       });
-      const b64 = result.data[0]?.b64_json;
+      const imageData = result.data?.[0];
+      const b64 = imageData?.b64_json;
       if (b64) {
         const dataUrl = `data:image/png;base64,${b64}`;
         res.json({ url: dataUrl });
-      } else if (result.data[0]?.url) {
-        res.json({ url: result.data[0].url });
+      } else if (imageData?.url) {
+        res.json({ url: imageData.url });
       } else {
         res.status(500).json({ message: "画像の生成結果がありません" });
       }
@@ -4827,7 +4828,8 @@ JSON形式で以下を返してください（日本語で）:
   app.patch("/api/admin/lp/:id/publish", requireAdmin, async (req, res) => {
     try {
       const { published } = req.body;
-      const updated = await db.update(landingPages).set({ published, updatedAt: new Date() }).where(eq(landingPages.id, req.params.id)).returning();
+      const lpId = req.params.id as string;
+      const updated = await db.update(landingPages).set({ published, updatedAt: new Date() }).where(eq(landingPages.id, lpId)).returning();
       if (updated.length === 0) return res.status(404).json({ message: "LPが見つかりません" });
       res.json(updated[0]);
     } catch (error) {
@@ -4837,7 +4839,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/lp/:id", requireAdmin, async (req, res) => {
     try {
-      await db.delete(landingPages).where(eq(landingPages.id, req.params.id));
+      await db.delete(landingPages).where(eq(landingPages.id, req.params.id as string));
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "LP削除に失敗しました" });
@@ -4847,7 +4849,7 @@ JSON形式で以下を返してください（日本語で）:
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {
-      const result = await db.select().from(landingPages).where(eq(landingPages.slug, req.params.slug));
+      const result = await db.select().from(landingPages).where(eq(landingPages.slug, req.params.slug as string));
       if (result.length === 0 || !result[0].published) {
         return res.status(404).send("<html><body><h1>ページが見つかりません</h1></body></html>");
       }
