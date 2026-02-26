@@ -41,7 +41,7 @@ export interface IStorage {
   approveUser(id: string): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
 
-  getCargoListings(): Promise<CargoListing[]>;
+  getCargoListings(options?: { status?: string; limit?: number; offset?: number }): Promise<CargoListing[]>;
   getCargoListingsByUserId(userId: string): Promise<CargoListing[]>;
   getCargoListing(id: string): Promise<CargoListing | undefined>;
   createCargoListing(listing: InsertCargoListing, userId?: string): Promise<CargoListing>;
@@ -49,7 +49,7 @@ export interface IStorage {
   getTotalCargoCount(): Promise<number>;
   getCargoCountByUserId(userId: string): Promise<number>;
 
-  getTruckListings(): Promise<TruckListing[]>;
+  getTruckListings(options?: { status?: string; limit?: number; offset?: number }): Promise<TruckListing[]>;
   getTruckListingsByUserId(userId: string): Promise<TruckListing[]>;
   getTruckListing(id: string): Promise<TruckListing | undefined>;
   createTruckListing(listing: InsertTruckListing, userId?: string): Promise<TruckListing>;
@@ -295,8 +295,17 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  async getCargoListings(): Promise<CargoListing[]> {
-    return db.select().from(cargoListings).orderBy(desc(cargoListings.createdAt));
+  async getCargoListings(options?: { status?: string; limit?: number; offset?: number }): Promise<CargoListing[]> {
+    const conditions = options?.status ? [eq(cargoListings.status, options.status)] : [];
+    const query = db.select().from(cargoListings);
+    const withWhere = conditions.length > 0 ? query.where(and(...conditions)) : query;
+    const withOrder = withWhere.orderBy(desc(cargoListings.createdAt));
+    if (options?.limit) {
+      const withLimit = withOrder.limit(options.limit);
+      if (options?.offset) return withLimit.offset(options.offset);
+      return withLimit;
+    }
+    return withOrder;
   }
 
   async getCargoListingsByUserId(userId: string): Promise<CargoListing[]> {
@@ -345,8 +354,17 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getTruckListings(): Promise<TruckListing[]> {
-    return db.select().from(truckListings).orderBy(desc(truckListings.createdAt));
+  async getTruckListings(options?: { status?: string; limit?: number; offset?: number }): Promise<TruckListing[]> {
+    const conditions = options?.status ? [eq(truckListings.status, options.status)] : [];
+    const query = db.select().from(truckListings);
+    const withWhere = conditions.length > 0 ? query.where(and(...conditions)) : query;
+    const withOrder = withWhere.orderBy(desc(truckListings.createdAt));
+    if (options?.limit) {
+      const withLimit = withOrder.limit(options.limit);
+      if (options?.offset) return withLimit.offset(options.offset);
+      return withLimit;
+    }
+    return withOrder;
   }
 
   async getTruckListingsByUserId(userId: string): Promise<TruckListing[]> {

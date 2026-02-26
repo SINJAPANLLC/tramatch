@@ -919,9 +919,28 @@ export async function registerRoutes(
     }
   }
 
+  async function expireOldTruckListings(listings: any[]) {
+    const todayStr = getJSTDateString();
+    const expirePromises: Promise<any>[] = [];
+    for (const listing of listings) {
+      if (listing.status !== "active") continue;
+      const dateStr = listing.availableDate;
+      if (!dateStr) continue;
+      const cleaned = dateStr.replace(/\//g, "-").replace(/[^\d-]/g, "").slice(0, 10);
+      if (cleaned.length < 10) continue;
+      if (cleaned < todayStr) {
+        listing.status = "cancelled";
+        expirePromises.push(storage.updateTruckListing(listing.id, { status: "cancelled" }));
+      }
+    }
+    if (expirePromises.length > 0) {
+      await Promise.all(expirePromises);
+    }
+  }
+
   app.get("/api/cargo", async (_req, res) => {
     try {
-      const listings = await storage.getCargoListings();
+      const listings = await storage.getCargoListings({ status: "active" });
       await expireOldCargoListings(listings);
       const activeListings = listings.filter(l => l.status === "active").map(({ privateNote, ...rest }) => rest);
       res.json(activeListings);
@@ -1337,6 +1356,7 @@ export async function registerRoutes(
   app.get("/api/my-trucks", requireAuth, async (req, res) => {
     try {
       const listings = await storage.getTruckListingsByUserId(req.session.userId as string);
+      await expireOldTruckListings(listings);
       res.json(listings);
     } catch (error) {
       res.status(500).json({ message: "空車一覧の取得に失敗しました" });
@@ -1345,8 +1365,10 @@ export async function registerRoutes(
 
   app.get("/api/trucks", async (_req, res) => {
     try {
-      const listings = await storage.getTruckListings();
-      res.json(listings);
+      const listings = await storage.getTruckListings({ status: "active" });
+      await expireOldTruckListings(listings);
+      const activeListings = listings.filter(l => l.status === "active");
+      res.json(activeListings);
     } catch (error) {
       console.error("Failed to fetch truck listings:", error);
       res.status(500).json({ message: "空車一覧の取得に失敗しました" });

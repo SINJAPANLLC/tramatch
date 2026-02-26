@@ -39,6 +39,12 @@ Ensure all UI/UX changes align with the established design system (turquoise/tea
 
 **Design System**: The platform adheres to a consistent design theme featuring turquoise/teal colors on a white background, primarily using shadcn/ui components.
 
+**Scalability & Performance**:
+- **Database Indexes**: Composite indexes on `cargo_listings(status, created_at)`, `truck_listings(status, created_at)`, `notifications(user_id, is_read)`, `audit_logs(created_at)`, `dispatch_requests(cargo_id)`, `seo_articles(status, created_at)`, `announcements(is_published, created_at)`, and individual indexes on `user_id` columns.
+- **Optimized Queries**: Public listing APIs (`/api/cargo`, `/api/trucks`) filter by `status='active'` at the database level using indexed columns instead of fetching all records and filtering in JavaScript.
+- **Auto-Expiration**: Both cargo and truck listings are automatically expired when their date passes (JST timezone). Cargo checks `arrivalDate`/`desiredDate`, trucks check `availableDate`.
+- **Pagination Support**: Storage layer supports optional `{ status, limit, offset }` parameters for cargo and truck listings. Audit logs and email leads have full pagination with total counts.
+
 ## External Dependencies
 - **PostgreSQL**: Primary database for all application data, user sessions, and Drizzle ORM integration.
 - **Square Web Payments SDK**: For processing card payments securely.
