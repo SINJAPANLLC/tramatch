@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Share2, Loader2, Wand2, ExternalLink } from "lucide-react";
-import { SiX, SiInstagram, SiFacebook, SiYoutube, SiTiktok, SiLinkedin, SiPinterest, SiThreads, SiLine } from "react-icons/si";
+import { SiX, SiInstagram, SiFacebook, SiYoutube, SiTiktok, SiLinkedin, SiLine } from "react-icons/si";
 import DashboardLayout from "@/components/dashboard-layout";
 
 const snsServices = [
@@ -19,8 +19,6 @@ const snsServices = [
   { id: "youtube", name: "YouTube", icon: SiYoutube, color: "#FF0000", darkColor: "#FF0000", loginUrl: "https://accounts.google.com/ServiceLogin?service=youtube", dashboardUrl: "https://studio.youtube.com/" },
   { id: "tiktok", name: "TikTok", icon: SiTiktok, color: "#000000", darkColor: "#ffffff", loginUrl: "https://www.tiktok.com/login", dashboardUrl: "https://www.tiktok.com/" },
   { id: "linkedin", name: "LinkedIn", icon: SiLinkedin, color: "#0A66C2", darkColor: "#0A66C2", loginUrl: "https://www.linkedin.com/login", dashboardUrl: "https://www.linkedin.com/feed/" },
-  { id: "pinterest", name: "Pinterest", icon: SiPinterest, color: "#BD081C", darkColor: "#BD081C", loginUrl: "https://www.pinterest.com/login/", dashboardUrl: "https://www.pinterest.com/" },
-  { id: "threads", name: "Threads", icon: SiThreads, color: "#000000", darkColor: "#ffffff", loginUrl: "https://www.threads.net/login", dashboardUrl: "https://www.threads.net/" },
   { id: "line", name: "LINE公式アカウント", icon: SiLine, color: "#06C755", darkColor: "#06C755", loginUrl: "https://manager.line.biz/", dashboardUrl: "https://manager.line.biz/" },
 ];
 
