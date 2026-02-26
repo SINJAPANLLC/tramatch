@@ -14,11 +14,11 @@ import fs from "fs";
 import crypto from "crypto";
 import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 import { pingGoogleSitemap } from "./auto-article-generator";
+import OpenAI from "openai";
 
-let _openai: any = null;
-function getOpenAI() {
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
   if (!_openai) {
-    const OpenAI = require("openai").default;
     _openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
       ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
@@ -4726,8 +4726,9 @@ JSON形式で以下を返してください（日本語で）:
         max_tokens: 300,
       });
       res.json({ content: result.choices[0]?.message?.content || "" });
-    } catch (error) {
-      res.status(500).json({ message: "生成に失敗しました" });
+    } catch (error: any) {
+      console.error("[SNS Gen] Error:", error?.message || error);
+      res.status(500).json({ message: "生成に失敗しました: " + (error?.message || "不明なエラー") });
     }
   });
 
@@ -4737,14 +4738,22 @@ JSON形式で以下を返してください（日本語で）:
       const { prompt, style, size } = req.body;
       const openai = getOpenAI();
       const result = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: `${style} style: ${prompt}`,
-        n: 1,
+        model: "gpt-image-1",
+        prompt: `${style ? style + " style: " : ""}${prompt}`,
         size: size || "1024x1024",
       });
-      res.json({ url: result.data[0]?.url || "" });
-    } catch (error) {
-      res.status(500).json({ message: "画像生成に失敗しました" });
+      const b64 = result.data[0]?.b64_json;
+      if (b64) {
+        const dataUrl = `data:image/png;base64,${b64}`;
+        res.json({ url: dataUrl });
+      } else if (result.data[0]?.url) {
+        res.json({ url: result.data[0].url });
+      } else {
+        res.status(500).json({ message: "画像の生成結果がありません" });
+      }
+    } catch (error: any) {
+      console.error("[Media Gen] Image generation error:", error?.message || error);
+      res.status(500).json({ message: "画像生成に失敗しました: " + (error?.message || "不明なエラー") });
     }
   });
 
@@ -4777,8 +4786,9 @@ JSON形式で以下を返してください（日本語で）:
       });
       const html = (result.choices[0]?.message?.content || "").replace(/```html\n?/g, "").replace(/```\n?/g, "");
       res.json({ html });
-    } catch (error) {
-      res.status(500).json({ message: "LP生成に失敗しました" });
+    } catch (error: any) {
+      console.error("[LP Gen] Error:", error?.message || error);
+      res.status(500).json({ message: "LP生成に失敗しました: " + (error?.message || "不明なエラー") });
     }
   });
 
