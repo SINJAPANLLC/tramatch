@@ -13,12 +13,20 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import OpenAI from "openai";
-import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
-import { SquareClient, SquareEnvironment, SquareError } from "square";
 import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 import { pingGoogleSitemap } from "./auto-article-generator";
-import * as XLSX from "xlsx";
+
+let _openai: any = null;
+function getOpenAI() {
+  if (!_openai) {
+    const OpenAI = require("openai").default;
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
+    });
+  }
+  return _openai;
+}
 
 async function resolveEmailTemplate(
   triggerEvent: string,
@@ -53,9 +61,10 @@ function isAgentAutoEmail(email: string): boolean {
   return /^agent-[a-z]+@tramatch/.test(email);
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
+const openai = new Proxy({} as any, {
+  get(_target, prop) {
+    return getOpenAI()[prop];
+  }
 });
 
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -1895,6 +1904,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "音声ファイルが必要です" });
       }
       const rawBuffer = Buffer.from(req.file.buffer);
+      const { ensureCompatibleFormat, speechToText } = await import("./replit_integrations/audio/client");
       const { buffer: audioBuffer, format } = await ensureCompatibleFormat(rawBuffer);
       const transcript = await speechToText(audioBuffer, format);
       res.json({ text: transcript });
