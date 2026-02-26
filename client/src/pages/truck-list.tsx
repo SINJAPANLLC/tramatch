@@ -1932,51 +1932,51 @@ export default function TruckList() {
               {!isLoading && paginated.map((listing, index) => (
                 <tr
                   key={listing.id}
-                  className={`hover-elevate cursor-pointer transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedTruckId === listing.id ? "bg-primary/10" : ""}`}
+                  className={`cursor-pointer transition-colors hover:bg-primary/20 ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedTruckId === listing.id ? "bg-primary/25" : ""}`}
                   onClick={() => setSelectedTruckId(listing.id)}
                   data-testid={`row-truck-${listing.id}`}
                 >
                   <td className="px-2 py-3 align-top max-w-[120px]">
-                    <div className="font-bold text-foreground text-[12px] leading-tight truncate">{listing.companyName}</div>
+                    <div className="font-bold text-foreground text-[13px] leading-tight truncate">{listing.companyName}</div>
                     {listing.createdAt && (Date.now() - new Date(listing.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
                       <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold border bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300 animate-pulse mt-0.5" data-testid={`badge-new-truck-${listing.id}`}>New</span>
                     )}
-                    <div className="text-[10px] text-muted-foreground mt-0.5 font-bold truncate">{listing.title}</div>
+                    <div className="text-[11px] text-foreground mt-0.5 font-bold truncate">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</div>
                   </td>
                   <td className="px-2 py-3 align-top">
                     <div className="flex items-center gap-2">
                       <div className="flex items-start gap-1 min-w-0 w-[120px] shrink-0">
                         <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                          <div className="font-bold text-[12px] text-foreground">{listing.availableDate}</div>
-                          <div className="text-[11px] text-muted-foreground font-bold">{listing.currentArea}</div>
+                          <div className="font-bold text-[14px] text-foreground">{listing.availableDate}</div>
+                          <div className="text-[13px] text-foreground font-bold">{listing.currentArea}</div>
                         </div>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
                       <div className="flex items-start gap-1 min-w-0">
                         <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
                         <div className="min-w-0">
-                          <div className="text-[11px] text-muted-foreground font-bold">{listing.destinationArea}</div>
+                          <div className="text-[13px] text-foreground font-bold">{listing.destinationArea}</div>
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-2 py-3 text-right align-top">
-                    <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
+                    <div className="font-bold text-[15px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
-                    <span className="whitespace-nowrap text-[12px] font-bold">{listing.maxWeight || "-"}</span>
+                    <span className="whitespace-nowrap text-[13px] text-foreground font-bold">{listing.maxWeight || "-"}</span>
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
-                    <div className="text-[12px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                    <div className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.vehicleType}</div>
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
-                    <div className="text-[11px] whitespace-nowrap text-muted-foreground">{listing.bodyType || "-"}</div>
+                    <div className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.bodyType || "-"}</div>
                   </td>
                   <td className="px-2 py-3 align-top">
-                    <span className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
+                    <span className="text-foreground text-[12px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
                       {listing.description || "-"}
                     </span>
                   </td>
