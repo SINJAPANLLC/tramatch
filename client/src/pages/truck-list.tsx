@@ -1017,39 +1017,39 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                 <div className="border-t border-border pt-3">
                   <h3 className="text-xs font-bold text-muted-foreground mb-2">ルート情報</h3>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-[auto_1fr] gap-2 items-end">
                       <FormField control={form.control} name="currentArea" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">空車地</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-current-area"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="h-8 text-xs w-[90px]" data-testid="select-current-area"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
                             <SelectContent>{PREFECTURES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )} />
-                      <FormField control={form.control} name="destinationArea" render={({ field }) => (
+                      <FormField control={form.control} name="currentAddress" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">行先地</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-8 text-xs" data-testid="select-destination"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
-                            <SelectContent>{PREFECTURES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
-                          </Select>
+                          <FormLabel className="text-xs">詳細住所</FormLabel>
+                          <FormControl><Input className="h-8 text-xs" placeholder="例: 名古屋市中村区" {...field} value={field.value || ""} data-testid="input-current-address" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <FormField control={form.control} name="currentAddress" render={({ field }) => (
+                    <div className="grid grid-cols-[auto_1fr] gap-2 items-end">
+                      <FormField control={form.control} name="destinationArea" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">空車地 詳細住所</FormLabel>
-                          <FormControl><Input className="h-8 text-xs" placeholder="例: 名古屋市中村区" {...field} value={field.value || ""} data-testid="input-current-address" /></FormControl>
+                          <FormLabel className="text-xs">行先地</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-8 text-xs w-[90px]" data-testid="select-destination"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                            <SelectContent>{PREFECTURES.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="destinationAddress" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">行先地 詳細住所</FormLabel>
+                          <FormLabel className="text-xs">詳細住所</FormLabel>
                           <FormControl><Input className="h-8 text-xs" placeholder="例: 大阪市北区" {...field} value={field.value || ""} data-testid="input-destination-address" /></FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1287,29 +1287,29 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
           <Input value={editFields.title} onChange={e => handleChange("title", e.target.value)} data-testid="input-edit-title" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-[auto_1fr] gap-2 items-end">
           <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">現在地</label>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">空車地</label>
             <Select value={editFields.currentArea} onValueChange={v => handleChange("currentArea", v)}>
-              <SelectTrigger data-testid="select-edit-currentArea"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[90px]" data-testid="select-edit-currentArea"><SelectValue /></SelectTrigger>
               <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">行き先</label>
-            <Select value={editFields.destinationArea} onValueChange={v => handleChange("destinationArea", v)}>
-              <SelectTrigger data-testid="select-edit-destinationArea"><SelectValue /></SelectTrigger>
-              <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">空車地 詳細住所</label>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">詳細住所</label>
             <Input value={editFields.currentAddress} onChange={e => handleChange("currentAddress", e.target.value)} placeholder="例: 名古屋市中村区" data-testid="input-edit-currentAddress" />
           </div>
+        </div>
+        <div className="grid grid-cols-[auto_1fr] gap-2 items-end">
           <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">行先地 詳細住所</label>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">行先地</label>
+            <Select value={editFields.destinationArea} onValueChange={v => handleChange("destinationArea", v)}>
+              <SelectTrigger className="w-[90px]" data-testid="select-edit-destinationArea"><SelectValue /></SelectTrigger>
+              <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1 block">詳細住所</label>
             <Input value={editFields.destinationAddress} onChange={e => handleChange("destinationAddress", e.target.value)} placeholder="例: 大阪市北区" data-testid="input-edit-destinationAddress" />
           </div>
         </div>
