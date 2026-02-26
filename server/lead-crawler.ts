@@ -171,9 +171,11 @@ function extractContactInfo(html: string): { emails: string[]; phones: string[];
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
-  const emails = [...new Set((textContent.match(EMAIL_REGEX) || []).filter(isValidCompanyEmail))];
+  const emailSet = new Set((textContent.match(EMAIL_REGEX) || []).filter(isValidCompanyEmail));
+  const emails = Array.from(emailSet);
 
-  const phones = [...new Set(textContent.match(PHONE_REGEX) || [])];
+  const phoneSet = new Set(textContent.match(PHONE_REGEX) || []);
+  const phones = Array.from(phoneSet);
 
   const faxes: string[] = [];
   let faxMatch;
@@ -181,8 +183,9 @@ function extractContactInfo(html: string): { emails: string[]; phones: string[];
   while ((faxMatch = faxRegex.exec(textContent)) !== null) {
     faxes.push(faxMatch[1].trim());
   }
+  const faxSet = new Set(faxes);
 
-  return { emails: emails.slice(0, 5), phones: phones.slice(0, 3), faxes: [...new Set(faxes)].slice(0, 3) };
+  return { emails: emails.slice(0, 5), phones: phones.slice(0, 3), faxes: Array.from(faxSet).slice(0, 3) };
 }
 
 function extractCompanyName(html: string, url: string): string {
