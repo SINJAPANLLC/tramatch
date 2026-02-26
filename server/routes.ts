@@ -1,7 +1,6 @@
 import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
-import compression from "compression";
-import { createServer, type Server } from "http";
+import type { Server } from "http";
 import { storage } from "./storage";
 import { db, dbPool } from "./db";
 import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates } from "@shared/schema";
@@ -196,7 +195,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.use(compression());
   app.use("/uploads", express.static(uploadDir));
 
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
@@ -2956,6 +2954,7 @@ statusの意味:
         "備考": r.notes || "",
       }));
 
+      const XLSX = await import("xlsx");
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "実運送体制管理簿");
@@ -4328,6 +4327,7 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(500).json({ message: "Square決済の設定が完了していません" });
       }
 
+      const { SquareClient, SquareEnvironment } = await import("square");
       const squareClient = new SquareClient({
         token: accessToken,
         environment: process.env.SQUARE_ENVIRONMENT === "production"
@@ -4369,6 +4369,7 @@ JSON形式で以下を返してください（日本語で）:
       });
     } catch (error: any) {
       console.error("Square payment error:", error);
+      const { SquareError } = await import("square");
       if (error instanceof SquareError) {
         const errorCode = error.errors?.[0]?.code || "";
         const japaneseMessages: Record<string, string> = {
