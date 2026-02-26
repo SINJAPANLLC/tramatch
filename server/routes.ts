@@ -241,6 +241,37 @@ export async function registerRoutes(
       }
 
       res.status(201).json({ ...safeUser, message: "登録が完了しました。管理者の承認後にログインできます。" });
+
+      const host = req.get("host") || "";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const appBaseUrl = `${protocol}://${host}`;
+      setImmediate(async () => {
+        try {
+          const resolved = await resolveEmailTemplate(
+            "user_welcome",
+            {
+              companyName: parsed.data.companyName || "",
+              username: parsed.data.email || "",
+              appBaseUrl,
+            },
+            "【トラマッチ】会員登録ありがとうございます",
+            `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<h2 style="color: #333;">会員登録ありがとうございます</h2>
+<p>{{companyName}} 様</p>
+<p>トラマッチへの会員登録ありがとうございます。</p>
+<p>現在、管理者による承認手続きを行っております。<br>承認が完了次第、ログインしてサービスをご利用いただけます。</p>
+<p>承認までしばらくお待ちください。</p>
+<hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+<p style="font-size: 12px; color: #888;">このメールはトラマッチから自動送信されています。<br><a href="{{appBaseUrl}}">{{appBaseUrl}}</a></p>
+</div>`
+          );
+          if (resolved) {
+            await sendEmail(parsed.data.email, resolved.subject, resolved.body);
+          }
+        } catch (err) {
+          console.error("Welcome email failed:", err);
+        }
+      });
     } catch (error) {
       res.status(500).json({ message: "登録に失敗しました" });
     }
@@ -3172,6 +3203,16 @@ statusの意味:
           { key: "vehicleType", label: "車両タイプ" },
           { key: "maxWeight", label: "積載量" },
           { key: "companyName", label: "登録会社名" },
+          { key: "appBaseUrl", label: "サイトURL" },
+        ],
+      },
+      {
+        triggerEvent: "user_welcome",
+        name: "会員登録完了",
+        description: "新規会員登録時に送信されるウェルカムメール（承認待ちのご案内）",
+        variables: [
+          { key: "companyName", label: "会社名" },
+          { key: "username", label: "ユーザー名" },
           { key: "appBaseUrl", label: "サイトURL" },
         ],
       },
