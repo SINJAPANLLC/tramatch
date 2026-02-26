@@ -7,6 +7,21 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { dbPool } from "./db";
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
+process.on('SIGTERM', () => {
+  console.error('SIGTERM received');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.error('SIGINT received');
+  process.exit(0);
+});
+
 const app = express();
 app.set("trust proxy", 1);
 const httpServer = createServer(app);
@@ -74,7 +89,9 @@ app.use((req, res, next) => {
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
+    if (!Array.isArray(bodyJson) || bodyJson.length <= 5) {
+      capturedJsonResponse = bodyJson;
+    }
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
