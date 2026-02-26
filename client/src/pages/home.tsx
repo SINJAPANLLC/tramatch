@@ -728,20 +728,20 @@ function PromoBanner() {
         </button>
         <Link href="/register">
           <div className="cursor-pointer">
-            <div className="px-4 py-3 flex items-center gap-2">
+            <div className="px-4 py-3 flex items-center gap-1">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
                     β版プレミアムプラン
                   </span>
                 </div>
-                <div className="flex items-baseline gap-1">
+                <div className="flex items-baseline gap-1 whitespace-nowrap">
                   <span className="text-sm font-bold text-foreground">成約し放題</span>
                   <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1">今だけ無料でプレミアム機能が使える</p>
               </div>
-              <img src={trapanImgPath} alt="トラパン" className="w-16 h-16 object-contain flex-shrink-0" />
+              <img src={trapanImgPath} alt="トラパン" className="w-14 h-14 object-contain flex-shrink-0" />
             </div>
             <div className="bg-primary text-primary-foreground text-center py-2 text-xs font-bold rounded-b-md">
               新規登録はこちら <ChevronRight className="w-3.5 h-3.5 inline-block" />
