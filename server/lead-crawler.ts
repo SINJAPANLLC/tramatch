@@ -6,24 +6,24 @@ const SEND_INTERVAL_MS = 3000;
 const CRAWL_BATCH_SIZE = 50;
 
 const SEARCH_QUERIES = [
-  "運送会社 会社概要",
-  "運送会社 お問い合わせ",
-  "トラック運送 連絡先",
-  "貨物運送 会社情報",
-  "利用運送 会社概要",
-  "運輸 物流 連絡先",
-  "一般貨物 運送業",
-  "配送会社 問い合わせ",
-  "チャーター便 運送",
-  "長距離運送 会社",
-  "冷凍運送 会社概要",
-  "引越し 運送会社",
-  "軽貨物 運送",
-  "倉庫運送 物流",
-  "陸運 会社概要",
-  "運送 求車 求荷",
-  "物流会社 一覧",
-  "トラック 運輸 株式会社",
+  "一般貨物自動車運送事業 会社概要",
+  "一般貨物 運送会社 お問い合わせ",
+  "貨物利用運送事業 会社",
+  "利用運送 株式会社 連絡先",
+  "トラック運送 株式会社",
+  "運輸株式会社 会社概要",
+  "運送株式会社 お問い合わせ",
+  "一般貨物 チャーター便",
+  "長距離 運送会社 株式会社",
+  "冷凍冷蔵 運送 株式会社",
+  "物流会社 倉庫 運送",
+  "陸運 株式会社 会社概要",
+  "求車 求荷 運送会社",
+  "トラック 運輸 会社概要",
+  "貨物運送 許可 事業者",
+  "運送会社 配車 お問い合わせ",
+  "3PL 物流 株式会社",
+  "特別積合せ 運送 株式会社",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -44,11 +44,21 @@ function isValidCompanyEmail(email: string): boolean {
   return true;
 }
 
+const STRONG_TRANSPORT_KEYWORDS = [
+  "一般貨物自動車運送事業", "一般貨物運送", "特定貨物自動車運送",
+  "貨物利用運送事業", "利用運送", "第一種利用運送", "第二種利用運送",
+  "貨物自動車運送事業法", "運送事業許可", "運送業許可",
+  "国土交通省認可", "関東運輸局", "近畿運輸局", "中部運輸局",
+  "求車", "求荷", "帰り便", "混載", "チャーター便",
+];
+
 const TRANSPORT_KEYWORDS = [
   "運送", "運輸", "物流", "貨物", "トラック", "配送", "輸送", "ロジスティクス",
-  "logistics", "transport", "freight", "delivery", "cargo",
-  "一般貨物", "利用運送", "軽貨物", "引越", "倉庫運送", "陸運",
-  "特別積合", "宅配", "急便", "エクスプレス", "express",
+  "logistics", "transport", "freight", "cargo",
+  "軽貨物", "引越", "倉庫", "陸運", "3PL",
+  "特別積合", "宅配", "急便", "エクスプレス",
+  "トレーラー", "ウイング車", "平ボディ", "冷凍車", "冷蔵車",
+  "4t", "10t", "大型車", "中型車", "配車",
 ];
 
 const NON_TRANSPORT_KEYWORDS = [
@@ -56,17 +66,47 @@ const NON_TRANSPORT_KEYWORDS = [
   "レストラン", "カフェ", "美容", "エステ", "クリニック", "病院",
   "学校", "塾", "予備校", "保険", "証券", "銀行",
   "セミナー", "イベント", "展示会", "内覧", "見学",
+  "弁護士", "税理士", "行政書士事務所", "司法書士",
+  "プログラミング", "IT企業", "ソフトウェア開発",
+  "飲食店", "居酒屋", "寿司", "ラーメン",
 ];
 
-function isTransportCompany(html: string, url: string): boolean {
-  const textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+const PORTAL_DOMAINS = [
+  "imitsu.jp", "baseconnect.in", "biz.ne.jp", "houjin.jp",
+  "clearworks.co.jp", "job-gear.jp", "townwork.net",
+  "navit-j.com", "mapion.co.jp", "ekiten.jp", "itp.ne.jp",
+  "ashita-office.com", "freee.co.jp", "minkabu.jp",
+];
+
+function isPortalSite(url: string): boolean {
+  try {
+    const domain = new URL(url).hostname;
+    return PORTAL_DOMAINS.some(d => domain.includes(d));
+  } catch { return false; }
+}
+
+function getTextContent(html: string): string {
+  return html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
-    .substring(0, 5000);
+    .substring(0, 8000);
+}
 
+function isTransportCompany(html: string, url: string): boolean {
+  if (isPortalSite(url)) return false;
+
+  const textContent = getTextContent(html);
   const lowerText = textContent.toLowerCase();
   const lowerUrl = url.toLowerCase();
+
+  let strongScore = 0;
+  for (const kw of STRONG_TRANSPORT_KEYWORDS) {
+    if (lowerText.includes(kw.toLowerCase()) || lowerUrl.includes(kw.toLowerCase())) {
+      strongScore++;
+    }
+  }
+  if (strongScore >= 1) return true;
 
   let transportScore = 0;
   for (const kw of TRANSPORT_KEYWORDS) {
@@ -82,9 +122,26 @@ function isTransportCompany(html: string, url: string): boolean {
     }
   }
 
-  if (transportScore === 0) return false;
-  if (nonTransportScore > transportScore) return false;
+  if (transportScore < 2) return false;
+  if (nonTransportScore >= transportScore) return false;
   return true;
+}
+
+function detectIndustry(html: string): string {
+  const text = getTextContent(html).toLowerCase();
+  if (text.includes("一般貨物自動車運送") || text.includes("一般貨物運送")) {
+    if (text.includes("利用運送")) return "一般貨物/利用運送";
+    return "一般貨物自動車運送事業";
+  }
+  if (text.includes("利用運送") || text.includes("貨物利用運送")) return "貨物利用運送事業";
+  if (text.includes("特別積合")) return "特別積合せ貨物運送";
+  if (text.includes("軽貨物")) return "軽貨物運送";
+  if (text.includes("引越")) return "引越運送";
+  if (text.includes("冷凍") || text.includes("冷蔵")) return "冷凍冷蔵運送";
+  if (text.includes("倉庫") && text.includes("物流")) return "倉庫/物流";
+  if (text.includes("3pl") || text.includes("ロジスティクス") || text.includes("logistics")) return "3PL/ロジスティクス";
+  if (text.includes("運送") || text.includes("運輸")) return "一般貨物/利用運送";
+  return "物流関連";
 }
 
 async function fetchPageContent(url: string): Promise<string> {
@@ -193,6 +250,7 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
     if (existing) continue;
 
     try {
+      const industry = detectIndustry(html);
       await storage.createEmailLead({
         companyName,
         email,
@@ -200,7 +258,7 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
         phone: phones[0] || null,
         website: url,
         address: null,
-        industry: "一般貨物/利用運送",
+        industry,
         source: url,
         status: "new",
       });
@@ -264,6 +322,9 @@ const EXCLUDED_DOMAINS = [
   "instagram", "linkedin", "tiktok", "reddit", "naver", "rakuten", "goo.ne.jp",
   "baseconnect.in", "clearworks.co.jp", "wantedly", "en-gage", "hellowork",
   "mlit.go.jp", "freee.co.jp", "crowdworks", "lancers", "coconala",
+  "imitsu.jp", "houjin.jp", "biz.ne.jp", "townwork.net", "ekiten.jp",
+  "itp.ne.jp", "mapion.co.jp", "navit-j.com", "minkabu.jp",
+  "gyouseisyosi", "job-gear.jp", "ashita-office.com",
 ];
 
 function isExcludedDomain(domain: string): boolean {
