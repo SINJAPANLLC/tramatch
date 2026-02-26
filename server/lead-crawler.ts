@@ -1,27 +1,29 @@
 import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
-import OpenAI from "openai";
 
 const DAILY_SEND_LIMIT = 300;
 const SEND_INTERVAL_MS = 3000;
 const CRAWL_BATCH_SIZE = 50;
 
 const SEARCH_QUERIES = [
-  "一般貨物自動車運送事業 運送会社 会社概要",
-  "利用運送事業 運送会社 お問い合わせ",
-  "一般貨物運送 トラック 会社概要 連絡先",
-  "貨物自動車運送事業者 中小 会社情報",
-  "一般貨物 運送業 許可 会社概要",
-  "利用運送 貨物運送 事業者 連絡先",
-  "トラック運送会社 一般貨物 会社概要",
-  "一般貨物 運送会社 求車 お問い合わせ",
-  "チャーター便 運送会社 一般貨物 連絡先",
-  "長距離 一般貨物運送 会社概要",
-  "冷凍冷蔵 一般貨物 運送会社 連絡先",
-  "引越し運送 一般貨物 会社概要",
-  "軽貨物 運送会社 利用運送 お問い合わせ",
-  "特別積合せ 運送 会社 連絡先",
-  "地場配送 一般貨物 運送会社 会社概要",
+  "運送会社 会社概要",
+  "運送会社 お問い合わせ",
+  "トラック運送 連絡先",
+  "貨物運送 会社情報",
+  "利用運送 会社概要",
+  "運輸 物流 連絡先",
+  "一般貨物 運送業",
+  "配送会社 問い合わせ",
+  "チャーター便 運送",
+  "長距離運送 会社",
+  "冷凍運送 会社概要",
+  "引越し 運送会社",
+  "軽貨物 運送",
+  "倉庫運送 物流",
+  "陸運 会社概要",
+  "運送 求車 求荷",
+  "物流会社 一覧",
+  "トラック 運輸 株式会社",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -216,6 +218,11 @@ const DIRECTORY_SOURCES = [
   "https://www.logi-today.com/company-list",
   "https://transport-guide.jp/company/",
   "https://www.trabox.ne.jp/company/",
+  "https://www.butsuryu.or.jp/member/",
+  "https://www.nittsu.co.jp/",
+  "https://lnews.jp/logistics-company/",
+  "https://www.e-logit.com/companylist/",
+  "https://www.logistics.jp/company/",
 ];
 
 const PREFECTURES = [
@@ -240,68 +247,139 @@ function extractExternalUrls(html: string, baseUrl: string): string[] {
     try {
       const domain = new URL(url).hostname;
       if (domain === baseDomain) continue;
-      if (domain.includes("google") || domain.includes("facebook") || domain.includes("twitter") ||
-          domain.includes("youtube") || domain.includes("instagram") || domain.includes("line.me") ||
-          domain.includes("amazon") || domain.includes("apple") || domain.includes("microsoft")) continue;
-      if ((domain.endsWith(".co.jp") || domain.endsWith(".jp")) && !urls.some(u => u.includes(domain))) {
-        urls.push(url);
+      if (isExcludedDomain(domain)) continue;
+      if (domain.endsWith(".co.jp") || domain.endsWith(".jp") || domain.endsWith(".com")) {
+        if (!urls.some(u => { try { return new URL(u).hostname === domain; } catch { return false; } })) {
+          urls.push(url);
+        }
       }
     } catch {}
   }
   return urls;
 }
 
-async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
+const EXCLUDED_DOMAINS = [
+  "duckduckgo", "google", "youtube", "wikipedia", "yahoo", "bing",
+  "indeed", "recruit", "mynavi", "doda", "tramatch", "amazon", "facebook", "twitter",
+  "instagram", "linkedin", "tiktok", "reddit", "naver", "rakuten", "goo.ne.jp",
+  "baseconnect.in", "clearworks.co.jp", "wantedly", "en-gage", "hellowork",
+  "mlit.go.jp", "freee.co.jp", "crowdworks", "lancers", "coconala",
+];
+
+function isExcludedDomain(domain: string): boolean {
+  return EXCLUDED_DOMAINS.some(d => domain.includes(d));
+}
+
+function isJapaneseDomain(domain: string): boolean {
+  if (domain.endsWith(".jp") || domain.endsWith(".co.jp") || domain.endsWith(".ne.jp") || domain.endsWith(".or.jp")) return true;
+  return false;
+}
+
+function addUniqueUrl(urls: string[], newUrl: string, japanOnly = false): boolean {
   try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const domain = new URL(newUrl).hostname;
+    if (isExcludedDomain(domain)) return false;
+    if (japanOnly && !isJapaneseDomain(domain)) return false;
+    if (urls.some(u => { try { return new URL(u).hostname === domain; } catch { return false; } })) return false;
+    urls.push(newUrl);
+    return true;
+  } catch { return false; }
+}
+
+async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
+  const urls: string[] = [];
+
+  const userAgents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+  ];
+  const ua = userAgents[Math.floor(Math.random() * userAgents.length)];
+
+  try {
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=jp-jp`;
     const res = await fetch(searchUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "ja,en;q=0.9",
+        "User-Agent": ua,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate",
+        "Referer": "https://duckduckgo.com/",
+        "DNT": "1",
       },
+      redirect: "follow",
     });
-    if (!res.ok) return [];
-    const html = await res.text();
+    if (!res.ok) {
+      console.log(`[Lead Crawler] DuckDuckGo returned ${res.status} for "${query}"`);
+    } else {
+      const html = await res.text();
 
-    const urls: string[] = [];
-    const EXCLUDED_DOMAINS = ["duckduckgo", "google", "youtube", "wikipedia", "yahoo", "bing",
-      "indeed", "recruit", "mynavi", "doda", "tramatch", "amazon", "facebook", "twitter",
-      "instagram", "linkedin", "tiktok", "reddit", "naver", "rakuten", "goo.ne.jp"];
+      let match;
+      const uddgPattern = /uddg=(https?%3A%2F%2F[^&"']+)/gi;
+      while ((match = uddgPattern.exec(html)) !== null) {
+        try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
+      }
 
-    const linkPattern = /uddg=(https?[^&"]+)/gi;
-    let match;
-    while ((match = linkPattern.exec(html)) !== null) {
-      try {
-        const url = decodeURIComponent(match[1]);
-        const domain = new URL(url).hostname;
-        if (EXCLUDED_DOMAINS.some(d => domain.includes(d))) continue;
-        if (!urls.some(u => { try { return new URL(u).hostname === domain; } catch { return false; } })) {
-          urls.push(url);
-        }
-      } catch {}
-    }
-
-    if (urls.length === 0) {
-      const hrefPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|jp|com)[^"]*?)"/gi;
-      while ((match = hrefPattern.exec(html)) !== null) {
+      const resultLinkPattern = /class="result__a"[^>]*href="([^"]+)"/gi;
+      while ((match = resultLinkPattern.exec(html)) !== null) {
         try {
-          const url = match[1];
-          const domain = new URL(url).hostname;
-          if (EXCLUDED_DOMAINS.some(d => domain.includes(d))) continue;
-          if (!urls.some(u => { try { return new URL(u).hostname === domain; } catch { return false; } })) {
-            urls.push(url);
+          let href = match[1];
+          if (href.includes("uddg=")) {
+            const u = new URL(href, "https://duckduckgo.com").searchParams.get("uddg");
+            if (u) href = u;
           }
+          addUniqueUrl(urls, href, true);
         } catch {}
       }
-    }
 
-    console.log(`[Lead Crawler] DuckDuckGo found ${urls.length} URLs for "${query}"`);
-    return urls.slice(0, 15);
+      const snippetUrlPattern = /class="result__url"[^>]*>([^<]+)</gi;
+      while ((match = snippetUrlPattern.exec(html)) !== null) {
+        try {
+          let domain = match[1].trim().replace(/\s/g, "");
+          if (!domain.startsWith("http")) domain = "https://" + domain;
+          const cleanUrl = new URL(domain).origin;
+          addUniqueUrl(urls, cleanUrl, true);
+        } catch {}
+      }
+
+      const hrefPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
+      while ((match = hrefPattern.exec(html)) !== null) {
+        try { addUniqueUrl(urls, match[1], true); } catch {}
+      }
+    }
   } catch (err) {
     console.error(`[Lead Crawler] DuckDuckGo search failed:`, err);
-    return [];
   }
+
+  if (urls.length < 5) {
+    try {
+      await new Promise(r => setTimeout(r, 1000));
+      const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&cc=jp&setlang=ja`;
+      const bingRes = await fetch(bingUrl, {
+        headers: {
+          "User-Agent": ua,
+          "Accept": "text/html,application/xhtml+xml",
+          "Accept-Language": "ja,en;q=0.5",
+        },
+      });
+      if (bingRes.ok) {
+        const bingHtml = await bingRes.text();
+        let match;
+        const bingLinkPattern = /<a[^>]*href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"[^>]*>/gi;
+        while ((match = bingLinkPattern.exec(bingHtml)) !== null) {
+          try { addUniqueUrl(urls, match[1], true); } catch {}
+        }
+        const citeLinkPattern = /<cite[^>]*>(https?:\/\/[^<]+)<\/cite>/gi;
+        while ((match = citeLinkPattern.exec(bingHtml)) !== null) {
+          try { addUniqueUrl(urls, match[1].replace(/<[^>]+>/g, "").trim(), true); } catch {}
+        }
+        if (urls.length > 0) console.log(`[Lead Crawler] Bing added URLs, total now: ${urls.length}`);
+      }
+    } catch {}
+  }
+
+  console.log(`[Lead Crawler] Search found ${urls.length} URLs for "${query}"`);
+  return urls.slice(0, 20);
 }
 
 export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: number; found: number }> {
@@ -309,60 +387,70 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   let totalSearched = 0;
   const limit = maxCount || CRAWL_BATCH_SIZE;
 
-  const queryIndex = Math.floor(Date.now() / 86400000) % SEARCH_QUERIES.length;
-  const todaysQueries = [
-    SEARCH_QUERIES[queryIndex],
-    SEARCH_QUERIES[(queryIndex + 1) % SEARCH_QUERIES.length],
-    SEARCH_QUERIES[(queryIndex + 2) % SEARCH_QUERIES.length],
+  const shuffled = [...SEARCH_QUERIES].sort(() => Math.random() - 0.5);
+  const todaysQueries = shuffled.slice(0, 5);
+
+  const prefStart = Math.floor(Math.random() * PREFECTURES.length);
+  const todaysPrefectures = [
+    PREFECTURES[prefStart % PREFECTURES.length],
+    PREFECTURES[(prefStart + 1) % PREFECTURES.length],
+    PREFECTURES[(prefStart + 2) % PREFECTURES.length],
   ];
 
   for (const query of todaysQueries) {
     if (totalFound >= limit) break;
-    try {
-      const prefIdx = (Math.floor(Date.now() / 86400000) + todaysQueries.indexOf(query)) % PREFECTURES.length;
-      const prefecture = PREFECTURES[prefIdx];
-      const fullQuery = `${prefecture} ${query}`;
-      console.log(`[Lead Crawler] Searching: "${fullQuery}"`);
-      const urls = await searchDuckDuckGoForUrls(fullQuery);
+    for (const prefecture of todaysPrefectures) {
+      if (totalFound >= limit) break;
+      try {
+        const fullQuery = `${prefecture} ${query}`;
+        console.log(`[Lead Crawler] Searching: "${fullQuery}"`);
+        const urls = await searchDuckDuckGoForUrls(fullQuery);
 
-      if (urls.length === 0) {
-        const altQuery = `${prefecture} 一般貨物 運送会社 会社概要 メール`;
-        console.log(`[Lead Crawler] Trying alt: "${altQuery}"`);
-        const altUrls = await searchDuckDuckGoForUrls(altQuery);
-        urls.push(...altUrls);
-      }
-
-      for (const url of urls) {
-        if (totalFound >= limit) break;
-        totalSearched++;
-        const found = await crawlLeadsFromUrl(url);
-        totalFound += found;
-        if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${url}`);
-        await new Promise(r => setTimeout(r, 2000));
-      }
-
-      if (totalFound < limit) {
-        for (const dirUrl of DIRECTORY_SOURCES) {
-          if (totalFound >= limit) break;
-          console.log(`[Lead Crawler] Checking directory: ${dirUrl}`);
-          const dirHtml = await fetchPageContent(dirUrl);
-          if (!dirHtml) continue;
-          const companyUrls = extractExternalUrls(dirHtml, dirUrl);
-          console.log(`[Lead Crawler] Found ${companyUrls.length} company links from directory`);
-          for (const compUrl of companyUrls.slice(0, 10)) {
-            if (totalFound >= limit) break;
-            totalSearched++;
-            const found = await crawlLeadsFromUrl(compUrl);
-            totalFound += found;
-            if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${compUrl}`);
-            await new Promise(r => setTimeout(r, 2000));
-          }
+        if (urls.length === 0) {
+          const simpleQuery = `"${prefecture}" 運送 株式会社 連絡先`;
+          console.log(`[Lead Crawler] Trying simple: "${simpleQuery}"`);
+          const altUrls = await searchDuckDuckGoForUrls(simpleQuery);
+          urls.push(...altUrls);
         }
-      }
 
-      await new Promise(r => setTimeout(r, 3000));
-    } catch (err) {
-      console.error(`[Lead Crawler] Search failed for "${query}":`, err);
+        for (const url of urls) {
+          if (totalFound >= limit) break;
+          totalSearched++;
+          const found = await crawlLeadsFromUrl(url);
+          totalFound += found;
+          if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${url}`);
+          await new Promise(r => setTimeout(r, 1500));
+        }
+
+        await new Promise(r => setTimeout(r, 2000));
+      } catch (err) {
+        console.error(`[Lead Crawler] Search failed for "${query}":`, err);
+      }
+    }
+  }
+
+  if (totalFound < limit) {
+    const shuffledDirs = [...DIRECTORY_SOURCES].sort(() => Math.random() - 0.5);
+    for (const dirUrl of shuffledDirs) {
+      if (totalFound >= limit) break;
+      try {
+        console.log(`[Lead Crawler] Checking directory: ${dirUrl}`);
+        const dirHtml = await fetchPageContent(dirUrl);
+        if (!dirHtml) continue;
+        const companyUrls = extractExternalUrls(dirHtml, dirUrl);
+        console.log(`[Lead Crawler] Found ${companyUrls.length} company links from directory`);
+        const shuffledCompanies = companyUrls.sort(() => Math.random() - 0.5).slice(0, 15);
+        for (const compUrl of shuffledCompanies) {
+          if (totalFound >= limit) break;
+          totalSearched++;
+          const found = await crawlLeadsFromUrl(compUrl);
+          totalFound += found;
+          if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${compUrl}`);
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      } catch (err) {
+        console.error(`[Lead Crawler] Directory crawl failed:`, err);
+      }
     }
   }
 
