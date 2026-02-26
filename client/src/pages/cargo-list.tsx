@@ -886,7 +886,7 @@ export default function CargoList() {
               {!isLoading && paginated.map((listing, index) => (
                 <tr
                   key={listing.id}
-                  className={`cursor-pointer transition-colors hover:bg-primary/10 ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedCargoId === listing.id ? "bg-primary/15" : ""}`}
+                  className={`cursor-pointer transition-colors hover:bg-primary/20 ${index % 2 === 1 ? "bg-muted/20" : ""} ${selectedCargoId === listing.id ? "bg-primary/25" : ""}`}
                   onClick={() => setSelectedCargoId(listing.id)}
                   data-testid={`row-cargo-${listing.id}`}
                 >
