@@ -44,11 +44,11 @@ export default function Footer() {
           </div>
         </div>
         <div className="flex justify-center gap-5 mt-8">
-          <a href="https://x.com/tramatch_ai" target="_blank" rel="noopener noreferrer" data-testid="link-sns-x" className="text-primary-foreground hover:opacity-80 transition-opacity"><SiX className="w-6 h-6" /></a>
-          <a href="https://www.instagram.com/tramatch_ai/" target="_blank" rel="noopener noreferrer" data-testid="link-sns-instagram" className="text-primary-foreground hover:opacity-80 transition-opacity"><SiInstagram className="w-6 h-6" /></a>
-          <a href="https://www.youtube.com/@tramatch" target="_blank" rel="noopener noreferrer" data-testid="link-sns-youtube" className="text-primary-foreground hover:opacity-80 transition-opacity"><SiYoutube className="w-6 h-6" /></a>
-          <a href="https://www.tiktok.com/@tramatch_ai" target="_blank" rel="noopener noreferrer" data-testid="link-sns-tiktok" className="text-primary-foreground hover:opacity-80 transition-opacity"><SiTiktok className="w-6 h-6" /></a>
-          <a href="https://www.facebook.com/tramatch.ai" target="_blank" rel="noopener noreferrer" data-testid="link-sns-facebook" className="text-primary-foreground hover:opacity-80 transition-opacity"><SiFacebook className="w-6 h-6" /></a>
+          <span data-testid="icon-sns-x" className="text-primary-foreground"><SiX className="w-6 h-6" /></span>
+          <span data-testid="icon-sns-instagram" className="text-primary-foreground"><SiInstagram className="w-6 h-6" /></span>
+          <span data-testid="icon-sns-youtube" className="text-primary-foreground"><SiYoutube className="w-6 h-6" /></span>
+          <span data-testid="icon-sns-tiktok" className="text-primary-foreground"><SiTiktok className="w-6 h-6" /></span>
+          <span data-testid="icon-sns-facebook" className="text-primary-foreground"><SiFacebook className="w-6 h-6" /></span>
         </div>
         <div className="mt-6 pt-6 border-t border-primary-foreground/30 text-center text-base text-primary-foreground">
           &copy; 2026 SIN JAPAN LLC All rights reserved.
