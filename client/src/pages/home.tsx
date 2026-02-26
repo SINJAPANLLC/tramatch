@@ -41,7 +41,7 @@ function CargoCard({ listing }: { listing: CargoListing }) {
       <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-cargo-${listing.id}`}>
         <CardContent className="p-4 flex flex-col h-full">
           <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
-            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
+            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</h3>
             <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
           </div>
           <div className="flex items-center gap-2 text-sm mb-2">
@@ -80,7 +80,7 @@ function TruckCard({ listing }: { listing: TruckListing }) {
       <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-truck-${listing.id}`}>
         <CardContent className="p-4 flex flex-col h-full">
           <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
-            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
+            <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</h3>
             <Badge variant="secondary" className="shrink-0 text-xs">{listing.vehicleType}</Badge>
           </div>
           <div className="flex items-center gap-2 text-sm mb-2">
@@ -96,6 +96,10 @@ function TruckCard({ listing }: { listing: TruckListing }) {
           <div className="text-sm mb-2">
             <span className="text-muted-foreground">車種：</span>
             <span className="font-semibold text-foreground">{listing.vehicleType}</span>
+          </div>
+          <div className="mt-auto pt-2">
+            <p className="text-xs text-muted-foreground">運賃</p>
+            <p className="font-bold text-primary text-lg">{listing.price ? `${formatPrice(listing.price)}円` : "要相談"}</p>
           </div>
         </CardContent>
       </Card>
@@ -582,7 +586,7 @@ export default function Home() {
                     <div key={`cargo-lp-${loop}-${i}`} className="listing-card-lp">
                       <div className="bg-white rounded-md p-4 border border-gray-200 shadow-sm flex flex-col" style={{ height: '120px' }}>
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title}</h3>
+                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</h3>
                           <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
@@ -590,7 +594,7 @@ export default function Home() {
                           <span className="truncate">{listing.departureArea} → {listing.arrivalArea}</span>
                         </div>
                         <div className="mt-auto text-sm text-foreground font-bold">
-                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談円"}
+                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談"}
                         </div>
                       </div>
                     </div>
@@ -624,7 +628,7 @@ export default function Home() {
                     <div key={`truck-lp-${loop}-${i}`} className="listing-card-lp">
                       <div className="bg-white rounded-md p-4 border border-gray-200 shadow-sm flex flex-col" style={{ height: '120px' }}>
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title}</h3>
+                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</h3>
                           <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
@@ -632,7 +636,7 @@ export default function Home() {
                           <span className="truncate">{listing.currentArea} → {listing.destinationArea}</span>
                         </div>
                         <div className="mt-auto text-sm text-foreground font-bold">
-                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談円"}
+                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談"}
                         </div>
                       </div>
                     </div>
