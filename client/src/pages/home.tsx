@@ -580,18 +580,18 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   cargoListings.slice(0, 20).map((listing, i) => (
                     <div key={`cargo-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white rounded-md p-4 h-full border border-gray-200 shadow-sm">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-                          <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
+                      <div className="bg-white rounded-md p-4 border border-gray-200 shadow-sm flex flex-col" style={{ height: '120px' }}>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title}</h3>
+                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                          <span>{listing.departureArea} → {listing.arrivalArea}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                          <span className="truncate">{listing.departureArea} → {listing.arrivalArea}</span>
                         </div>
-                        {listing.price && (
-                          <div className="text-sm text-foreground font-bold">{formatPrice(listing.price)}円</div>
-                        )}
+                        <div className="mt-auto text-sm text-foreground font-bold">
+                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談円"}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -622,18 +622,18 @@ export default function Home() {
                 {[...Array(2)].map((_, loop) =>
                   truckListings.slice(0, 20).map((listing, i) => (
                     <div key={`truck-lp-${loop}-${i}`} className="listing-card-lp">
-                      <div className="bg-white rounded-md p-4 h-full border border-gray-200 shadow-sm">
-                        <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-                          <h3 className="font-bold text-foreground text-base line-clamp-1">{listing.title}</h3>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
+                      <div className="bg-white rounded-md p-4 border border-gray-200 shadow-sm flex flex-col" style={{ height: '120px' }}>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold text-foreground text-sm line-clamp-1 flex-1 min-w-0">{listing.title}</h3>
+                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0 font-bold">{listing.vehicleType}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
-                          <span>{listing.currentArea} → {listing.destinationArea}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+                          <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                          <span className="truncate">{listing.currentArea} → {listing.destinationArea}</span>
                         </div>
-                        {listing.price && (
-                          <div className="text-sm text-foreground font-bold">{formatPrice(listing.price)}円</div>
-                        )}
+                        <div className="mt-auto text-sm text-foreground font-bold">
+                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談円"}
+                        </div>
                       </div>
                     </div>
                   ))
