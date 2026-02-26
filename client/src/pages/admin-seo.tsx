@@ -413,7 +413,7 @@ export default function AdminSeo() {
                           )}
                           <div
                             className="prose prose-sm dark:prose-invert max-w-none text-foreground"
-                            dangerouslySetInnerHTML={{ __html: renderMarkdown(article.content) }}
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(article.content || article.contentPreview || '') }}
                             data-testid={`text-article-content-${article.id}`}
                           />
                         </div>

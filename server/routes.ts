@@ -3433,7 +3433,8 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/columns", async (_req, res) => {
     try {
       const articles = await storage.getPublishedSeoArticles();
-      res.json(articles);
+      const light = articles.map(({ content, ...rest }) => rest);
+      res.json(light);
     } catch (error) {
       res.status(500).json({ message: "記事の取得に失敗しました" });
     }
@@ -3443,7 +3444,8 @@ JSON形式で以下を返してください（日本語で）:
     try {
       const limit = parseInt(_req.query.limit as string) || 10;
       const articles = await storage.getPopularSeoArticles(limit);
-      res.json(articles);
+      const light = articles.map(({ content, ...rest }) => rest);
+      res.json(light);
     } catch (error) {
       res.status(500).json({ message: "人気記事の取得に失敗しました" });
     }
@@ -3452,7 +3454,8 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/columns/category/:category", async (req, res) => {
     try {
       const articles = await storage.getSeoArticlesByCategory(req.params.category);
-      res.json(articles);
+      const light = articles.map(({ content, ...rest }) => rest);
+      res.json(light);
     } catch (error) {
       res.status(500).json({ message: "カテゴリ記事の取得に失敗しました" });
     }
@@ -3477,7 +3480,8 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(404).json({ message: "記事が見つかりません" });
       }
       const related = await storage.getRelatedSeoArticles(article.id, article.category || "kyukakyusha", 5);
-      res.json(related);
+      const light = related.map(({ content, ...rest }) => rest);
+      res.json(light);
     } catch (error) {
       res.status(500).json({ message: "関連記事の取得に失敗しました" });
     }
@@ -3848,7 +3852,8 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
     try {
       const articles = await storage.getSeoArticles();
-      res.json(articles);
+      const light = articles.map(({ content, ...rest }) => ({ ...rest, contentPreview: content?.substring(0, 200) || '' }));
+      res.json(light);
     } catch (error) {
       res.status(500).json({ message: "記事の取得に失敗しました" });
     }
