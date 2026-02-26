@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Truck,
@@ -11,7 +11,7 @@ import {
   Code,
   Handshake,
   Megaphone,
-  Clock,
+  Mail,
 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -61,25 +61,28 @@ const serviceItems: ServiceItem[] = [
 
 function ServiceCard({ service, index }: { service: ServiceItem; index: number }) {
   return (
-    <Card data-testid={`card-service-${index}`}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-            <service.icon className="w-5 h-5 text-muted-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
-              <Badge variant="secondary" className="text-xs shrink-0 no-default-hover-elevate no-default-active-elevate">
-                <Clock className="w-3 h-3 mr-1" />
-                準備中
-              </Badge>
+    <Link href="/contact">
+      <Card className="cursor-pointer hover:bg-primary/10 transition-colors" data-testid={`card-service-${index}`}>
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+              <service.icon className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+              <div className="flex items-center gap-1 mt-2 text-primary text-xs font-medium">
+                <Mail className="w-3 h-3" />
+                お問い合わせ
+                <ArrowRight className="w-3 h-3" />
+              </div>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
