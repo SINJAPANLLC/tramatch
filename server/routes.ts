@@ -42,9 +42,10 @@ async function resolveEmailTemplate(
     if (allTemplates.length > 0) {
       const active = allTemplates.find(t => t.isActive);
       if (!active) return null;
+      const bodyContent = active.htmlBody || active.body;
       return {
         subject: replaceTemplateVariables(active.subject || defaultSubject, variables),
-        body: replaceTemplateVariables(active.body, variables),
+        body: replaceTemplateVariables(bodyContent, variables),
       };
     }
   } catch (err) {
