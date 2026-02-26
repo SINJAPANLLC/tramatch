@@ -3,8 +3,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { db, dbPool } from "./db";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates, landingPages } from "@shared/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import bcrypt from "bcrypt";
@@ -4779,6 +4779,68 @@ JSON形式で以下を返してください（日本語で）:
       res.json({ html });
     } catch (error) {
       res.status(500).json({ message: "LP生成に失敗しました" });
+    }
+  });
+
+  // Admin: LP CRUD
+  app.get("/api/admin/lp/list", requireAdmin, async (_req, res) => {
+    try {
+      const result = await db.select().from(landingPages).orderBy(sql`created_at DESC`);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "LP一覧の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/lp/save", requireAdmin, async (req, res) => {
+    try {
+      const { title, slug, html, published } = req.body;
+      if (!title || !slug || !html) {
+        return res.status(400).json({ message: "タイトル、スラッグ、HTMLは必須です" });
+      }
+      const safeSlug = slug.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+      const existing = await db.select().from(landingPages).where(eq(landingPages.slug, safeSlug));
+      if (existing.length > 0) {
+        const updated = await db.update(landingPages).set({ title, html, published: published ?? false, updatedAt: new Date() }).where(eq(landingPages.slug, safeSlug)).returning();
+        return res.json(updated[0]);
+      }
+      const inserted = await db.insert(landingPages).values({ title, slug: safeSlug, html, published: published ?? false }).returning();
+      res.json(inserted[0]);
+    } catch (error) {
+      res.status(500).json({ message: "LP保存に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/lp/:id/publish", requireAdmin, async (req, res) => {
+    try {
+      const { published } = req.body;
+      const updated = await db.update(landingPages).set({ published, updatedAt: new Date() }).where(eq(landingPages.id, req.params.id)).returning();
+      if (updated.length === 0) return res.status(404).json({ message: "LPが見つかりません" });
+      res.json(updated[0]);
+    } catch (error) {
+      res.status(500).json({ message: "公開状態の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/lp/:id", requireAdmin, async (req, res) => {
+    try {
+      await db.delete(landingPages).where(eq(landingPages.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "LP削除に失敗しました" });
+    }
+  });
+
+  // Public: serve published LP by slug
+  app.get("/lp/:slug", async (req, res) => {
+    try {
+      const result = await db.select().from(landingPages).where(eq(landingPages.slug, req.params.slug));
+      if (result.length === 0 || !result[0].published) {
+        return res.status(404).send("<html><body><h1>ページが見つかりません</h1></body></html>");
+      }
+      res.type("html").send(result[0].html);
+    } catch (error) {
+      res.status(500).send("<html><body><h1>エラーが発生しました</h1></body></html>");
     }
   });
 
