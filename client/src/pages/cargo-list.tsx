@@ -1297,8 +1297,8 @@ ${row("荷物保険", companyInfo?.cargoInsurance)}
                 </div>
               </div>
               <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
-              <div className="flex-1 text-right">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground justify-end">
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
                   <span>{formatDateWithDay(listing.arrivalDate)}</span>
                   <span>{listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}</span>
                 </div>
