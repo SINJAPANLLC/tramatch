@@ -918,7 +918,7 @@ export default function CargoList() {
                               <span className="text-[12px] text-foreground font-bold">{listing.departureAddress}</span>
                             )}
                           </div>
-                          <div className="text-[12px] text-foreground font-bold">
+                          <div className="text-[13px] text-foreground font-bold">
                             {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
@@ -933,7 +933,7 @@ export default function CargoList() {
                               <span className="text-[12px] text-foreground font-bold">{listing.arrivalAddress}</span>
                             )}
                           </div>
-                          <div className="text-[12px] text-foreground font-bold">
+                          <div className="text-[13px] text-foreground font-bold">
                             {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                           </div>
                         </div>
