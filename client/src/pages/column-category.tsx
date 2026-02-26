@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,9 +78,8 @@ function formatDate(dateVal: string | Date) {
 }
 
 export default function ColumnCategory() {
-  const [location] = useLocation();
-  const category = location.replace(/\/+$/, "").split("/").pop() || "";
-  const config = CATEGORY_CONFIG[category];
+  const { category } = useParams<{ category: string }>();
+  const config = CATEGORY_CONFIG[category || ""];
 
   const { data: articles, isLoading } = useQuery<SeoArticle[]>({
     queryKey: ["/api/columns/category", category],

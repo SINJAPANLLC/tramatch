@@ -7,42 +7,6 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { dbPool } from "./db";
 
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION:', err);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('UNHANDLED REJECTION:', reason);
-});
-process.on('SIGTERM', () => {
-  console.error('SIGTERM received');
-  process.exit(0);
-});
-process.on('SIGINT', () => {
-  console.error('SIGINT received');
-  process.exit(0);
-});
-process.on('SIGHUP', () => {
-  console.error('SIGHUP received');
-});
-process.on('SIGUSR1', () => {
-  console.error('SIGUSR1 received');
-});
-process.on('SIGUSR2', () => {
-  console.error('SIGUSR2 received');
-});
-process.on('beforeExit', (code) => {
-  console.error('beforeExit with code:', code);
-});
-process.on('exit', (code) => {
-  console.error('exit with code:', code);
-});
-
-if (global.gc) {
-  setInterval(() => {
-    global.gc!();
-  }, 60000);
-}
-
 const app = express();
 app.set("trust proxy", 1);
 const httpServer = createServer(app);
@@ -65,9 +29,7 @@ declare module "express-session" {
 app.use(
   express.json({
     verify: (req, _res, buf) => {
-      if (req.url?.includes('/square') || req.url?.includes('/webhook')) {
-        req.rawBody = buf;
-      }
+      req.rawBody = buf;
     },
   }),
 );
@@ -108,11 +70,24 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        const responseStr = JSON.stringify(capturedJsonResponse);
+        logLine += ` :: ${responseStr.length > 200 ? responseStr.substring(0, 200) + '...' : responseStr}`;
+      }
+
+      log(logLine);
     }
   });
 
@@ -129,22 +104,14 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
 
-  if (process.env.NODE_ENV === "production") {
-    setTimeout(async () => {
-      try {
-        const { scheduleAutoArticleGeneration } = await import("./auto-article-generator");
-        scheduleAutoArticleGeneration();
-        const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
-        scheduleAutoPublish();
-        const { scheduleLeadCrawler } = await import("./lead-crawler");
-        scheduleLeadCrawler();
-      } catch (e) {
-        console.error("Scheduler init error:", e);
-      }
-    }, 10000);
-  } else {
-    console.log("[Dev] Skipping scheduled tasks (article/youtube/crawler) in dev mode");
-  }
+  const { scheduleAutoArticleGeneration } = await import("./auto-article-generator");
+  scheduleAutoArticleGeneration();
+
+  const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
+  scheduleAutoPublish();
+
+  const { scheduleLeadCrawler } = await import("./lead-crawler");
+  scheduleLeadCrawler();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -162,15 +129,6 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const originalExit = process.exit;
-    process.exit = ((code?: number) => {
-      if (code === 1) {
-        console.error('[Vite] process.exit(1) intercepted - keeping server alive');
-        return undefined as never;
-      }
-      return originalExit(code as any);
-    }) as any;
-
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }

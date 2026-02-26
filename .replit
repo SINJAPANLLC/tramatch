@@ -4,7 +4,6 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["psmisc"]
 
 [[ports]]
 localPort = 5000
@@ -35,12 +34,9 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "NODE_OPTIONS='--max-old-space-size=512 --expose-gc' npm run dev"
+args = "npm run dev"
 waitForPort = 5000
 
 [agent]

@@ -226,6 +226,7 @@ export default function Dashboard() {
                 <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
                   最新の荷物情報
+                  <Badge variant="outline" className="text-[10px] ml-1">{cargoListings?.length || 0}件</Badge>
                 </h2>
                 <Link href="/cargo">
                   <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-cargo">
@@ -238,25 +239,25 @@ export default function Dashboard() {
                   ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
                   : cargoListings?.slice(0, 5).map((listing) => (
                       <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-cargo-${listing.id}`}>
-                        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title || "\u00A0"}</h3>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title}</h3>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
                             <MapPin className="w-3 h-3 text-primary" />
                             <span className="font-medium">{listing.departureArea}</span>
                             <ArrowRight className="w-2.5 h-2.5 text-muted-foreground/50" />
                             <span className="font-medium">{listing.arrivalArea}</span>
                           </div>
-                          <div className="text-right min-w-[70px]">
+                          <div className="shrink-0 text-right min-w-[70px]">
                             {listing.price ? (
                               <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
-                              <span className="text-xs text-muted-foreground">要相談円</span>
+                              <span className="text-xs text-muted-foreground">要相談</span>
                             )}
                           </div>
-                          <Badge variant="secondary" className="text-[10px] font-bold">{listing.vehicleType}</Badge>
-                          <span className="text-[11px] text-muted-foreground min-w-[72px] text-right">{listing.desiredDate}</span>
+                          <Badge variant="secondary" className="text-[10px] shrink-0 font-bold">{listing.vehicleType}</Badge>
+                          <span className="text-[11px] text-muted-foreground shrink-0 min-w-[72px] text-right">{listing.desiredDate}</span>
                         </div>
                       </div>
                     ))}
@@ -273,6 +274,7 @@ export default function Dashboard() {
                 <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Truck className="w-4 h-4 text-primary" />
                   最新の車両情報
+                  <Badge variant="outline" className="text-[10px] ml-1">{truckListings?.length || 0}件</Badge>
                 </h2>
                 <Link href="/trucks">
                   <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-trucks">
@@ -285,25 +287,25 @@ export default function Dashboard() {
                   ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
                   : truckListings?.slice(0, 5).map((listing) => (
                       <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-truck-${listing.id}`}>
-                        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title || "\u00A0"}</h3>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title}</h3>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
                             <MapPin className="w-3 h-3 text-primary" />
                             <span className="font-medium">{listing.currentArea}</span>
                             <ArrowRight className="w-2.5 h-2.5 text-muted-foreground/50" />
                             <span className="font-medium">{listing.destinationArea}</span>
                           </div>
-                          <div className="text-right min-w-[70px]">
+                          <div className="shrink-0 text-right min-w-[70px]">
                             {listing.price ? (
                               <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
                               <span className="text-xs text-muted-foreground">要相談</span>
                             )}
                           </div>
-                          <Badge variant="secondary" className="text-[10px] font-bold">{listing.vehicleType}</Badge>
-                          <span className="text-[11px] text-muted-foreground min-w-[72px] text-right">{listing.availableDate}</span>
+                          <Badge variant="secondary" className="text-[10px] shrink-0 font-bold">{listing.vehicleType}</Badge>
+                          <span className="text-[11px] text-muted-foreground shrink-0 min-w-[72px] text-right">{listing.availableDate}</span>
                         </div>
                       </div>
                     ))}
