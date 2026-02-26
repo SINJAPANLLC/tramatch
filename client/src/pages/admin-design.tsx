@@ -18,11 +18,14 @@ type KTFItem = { id: string; factor: string; description: string; status: "not_s
 
 type DesignData = {
   designThinking: {
-    empathize: string;
-    define: string;
-    ideate: string;
-    prototype: string;
-    test: string;
+    purpose: string;
+    customerProblem: string;
+    solution: string;
+    alternatives: string;
+    numbers: string;
+    team: string;
+    afterExecution: string;
+    operationLoop: string;
   };
   kgiItems: KGIItem[];
   kpiItems: KPIItem[];
@@ -32,7 +35,7 @@ type DesignData = {
 };
 
 const defaultData: DesignData = {
-  designThinking: { empathize: "", define: "", ideate: "", prototype: "", test: "" },
+  designThinking: { purpose: "", customerProblem: "", solution: "", alternatives: "", numbers: "", team: "", afterExecution: "", operationLoop: "" },
   kgiItems: [],
   kpiItems: [],
   ktfItems: [],
@@ -110,11 +113,14 @@ export default function AdminDesign() {
   }
 
   const dtSteps = [
-    { key: "empathize" as const, label: "共感 (Empathize)", desc: "ユーザーのニーズ・課題を理解する", color: "bg-rose-50 border-rose-200" },
-    { key: "define" as const, label: "定義 (Define)", desc: "解決すべき問題を明確にする", color: "bg-amber-50 border-amber-200" },
-    { key: "ideate" as const, label: "発想 (Ideate)", desc: "解決策のアイデアを出す", color: "bg-emerald-50 border-emerald-200" },
-    { key: "prototype" as const, label: "試作 (Prototype)", desc: "アイデアを形にする", color: "bg-sky-50 border-sky-200" },
-    { key: "test" as const, label: "検証 (Test)", desc: "ユーザーからフィードバックを得る", color: "bg-violet-50 border-violet-200" },
+    { key: "purpose" as const, label: "目的", desc: "なぜやるか", color: "bg-rose-50 border-rose-200", placeholder: "このプロジェクト・施策をなぜやるのか？\n背景・動機・ビジョンを記載..." },
+    { key: "customerProblem" as const, label: "顧客課題", desc: "困りごと", color: "bg-amber-50 border-amber-200", placeholder: "顧客が抱えている課題・困りごとは何か？\nペインポイント・未充足ニーズを整理..." },
+    { key: "solution" as const, label: "解決策", desc: "差別化/戦略/マーケ/どう解くか", color: "bg-emerald-50 border-emerald-200", placeholder: "どう解決するか？\n差別化ポイント・戦略・マーケティング方針・具体的な解き方..." },
+    { key: "alternatives" as const, label: "代替案と却下理由", desc: "他案/なぜ捨てるか", color: "bg-teal-50 border-teal-200", placeholder: "検討した他の案は？\nなぜその案を採用しなかったか（却下理由）..." },
+    { key: "numbers" as const, label: "数字", desc: "モデル・KGI逆算・コスト・利益・リスク・拡大・CF", color: "bg-sky-50 border-sky-200", placeholder: "ビジネスモデル・収益構造...\nKGIからの逆算...\nコスト・利益試算...\nリスク分析...\nスケール計画...\nキャッシュフロー..." },
+    { key: "team" as const, label: "責任者/チーム/セル生産/割り振り", desc: "役割設計", color: "bg-indigo-50 border-indigo-200", placeholder: "責任者は誰か？\nチーム構成・役割分担...\nセル生産体制...\nタスクの割り振り..." },
+    { key: "afterExecution" as const, label: "実行後の世界", desc: "成功/失敗の線引き", color: "bg-violet-50 border-violet-200", placeholder: "成功した場合の世界像...\n失敗した場合の撤退ライン...\n成功/失敗の判断基準（数値・期限）..." },
+    { key: "operationLoop" as const, label: "到達思考→行動→継続→改善", desc: "運用ループ・逆説", color: "bg-fuchsia-50 border-fuchsia-200", placeholder: "ゴールから逆算した行動計画...\n継続の仕組み...\n改善サイクル（PDCA）...\n逆説的に考えると何が見えるか..." },
   ];
 
   const priorityColors = { high: "destructive", medium: "default", low: "secondary" } as const;
@@ -175,10 +181,10 @@ export default function AdminDesign() {
                       <span className="text-xs text-muted-foreground ml-1">— {step.desc}</span>
                     </div>
                     <Textarea
-                      className="min-h-[100px] text-sm bg-white/80"
+                      className="min-h-[120px] text-sm bg-white/80"
                       value={data.designThinking[step.key]}
                       onChange={(e) => updateDesignThinking(step.key, e.target.value)}
-                      placeholder={`${step.label}の内容を入力...`}
+                      placeholder={step.placeholder}
                       data-testid={`input-dt-${step.key}`}
                     />
                   </CardContent>
