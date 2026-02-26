@@ -737,7 +737,7 @@ function PromoBanner() {
                 </div>
                 <div className="flex items-baseline gap-1 whitespace-nowrap">
                   <span className="text-sm font-bold text-foreground">成約し放題</span>
-                  <span className="text-3xl font-extrabold text-primary leading-none">¥0</span>
+                  <span className="text-4xl font-extrabold text-primary leading-none">¥0</span>
                 </div>
               </div>
               <img src={trapanImgPath} alt="トラパン" className="w-20 h-20 object-contain flex-shrink-0" />
