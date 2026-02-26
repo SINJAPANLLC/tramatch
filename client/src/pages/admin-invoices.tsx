@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   FileText, Send, Mail, CheckCircle, Clock, AlertTriangle,
-  XCircle, Loader2, Trash2, RefreshCw, Users, Building2
+  XCircle, Loader2, Trash2, RefreshCw, Users, Building2, Eye, Printer, X
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -57,6 +57,7 @@ export default function AdminInvoices() {
   });
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const { data: invoices, isLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/admin/invoices"],
@@ -158,8 +159,146 @@ export default function AdminInvoices() {
     setSelectedIds(unsent.map((i) => i.id));
   };
 
+  function generateInvoiceHtml(inv: Invoice) {
+    const statusLabel = inv.status === "paid" ? "入金済み" : inv.status === "overdue" ? "期限超過" : inv.status === "cancelled" ? "取消" : "未入金";
+    const statusColor = inv.status === "paid" ? "#16a34a" : inv.status === "overdue" ? "#dc2626" : "#f59e0b";
+    const planLabel = inv.planType === "premium" ? "プレミアムプラン" : inv.planType === "standard" ? "スタンダードプラン" : inv.planType;
+    const descLines = inv.description ? inv.description.split("\n").filter(l => l.trim()) : [planLabel + " 月額利用料"];
+    return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>請求書 ${inv.invoiceNumber}</title>
+<style>
+@media print { body { margin: 0; } .no-print { display: none !important; } }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif; color: #1a1a1a; background: #f5f5f5; }
+.invoice-wrap { max-width: 800px; margin: 0 auto; background: white; }
+.header { background: linear-gradient(135deg, #0d9488, #14b8a6); padding: 32px 40px; color: white; display: flex; justify-content: space-between; align-items: flex-start; }
+.header-left h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; }
+.header-left p { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.header-right { text-align: right; }
+.header-right .inv-num { font-size: 13px; opacity: 0.9; }
+.header-right .inv-date { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; color: white; margin-top: 8px; }
+.body { padding: 32px 40px; }
+.parties { display: flex; justify-content: space-between; gap: 32px; margin-bottom: 32px; }
+.party { flex: 1; }
+.party-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #0d9488; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid #0d9488; padding-bottom: 4px; }
+.party-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.party-detail { font-size: 12px; color: #666; line-height: 1.7; }
+.table-wrap { margin-bottom: 24px; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: #f0fdfa; color: #0d9488; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 10px 12px; text-align: left; border-bottom: 2px solid #0d9488; }
+thead th:last-child { text-align: right; }
+tbody td { padding: 12px; font-size: 13px; border-bottom: 1px solid #e5e7eb; }
+tbody td:last-child { text-align: right; font-family: 'SF Mono', 'Consolas', monospace; }
+.totals { display: flex; justify-content: flex-end; }
+.totals-table { width: 280px; }
+.totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #e5e7eb; }
+.totals-row.grand { border-top: 2px solid #0d9488; border-bottom: 2px solid #0d9488; font-size: 18px; font-weight: 800; color: #0d9488; padding: 12px 0; margin-top: 4px; }
+.totals-row span:last-child { font-family: 'SF Mono', 'Consolas', monospace; }
+.payment-info { margin-top: 32px; padding: 20px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #0d9488; }
+.payment-info h3 { font-size: 13px; font-weight: 700; color: #0d9488; margin-bottom: 8px; }
+.payment-info p { font-size: 12px; color: #666; line-height: 1.7; }
+.footer { background: #1f2937; color: #9ca3af; padding: 20px 40px; text-align: center; font-size: 11px; }
+.footer .brand { color: #14b8a6; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="invoice-wrap">
+  <div class="header">
+    <div class="header-left">
+      <h1>請 求 書</h1>
+      <p>INVOICE</p>
+    </div>
+    <div class="header-right">
+      <div class="inv-num">請求書番号: ${inv.invoiceNumber}</div>
+      <div class="inv-date">発行日: ${new Date(inv.createdAt).toLocaleDateString("ja-JP")}</div>
+      <div class="status-badge" style="background:${statusColor}">${statusLabel}</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="parties">
+      <div class="party">
+        <div class="party-label">請求先</div>
+        <div class="party-name">${inv.companyName} 御中</div>
+        <div class="party-detail">${inv.email}</div>
+      </div>
+      <div class="party">
+        <div class="party-label">発行元</div>
+        <div class="party-name">TRA MATCH</div>
+        <div class="party-detail">トラマッチ運営事務局<br>info@tra-match.com</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>項目</th><th>請求月</th><th style="text-align:right">金額</th></tr>
+        </thead>
+        <tbody>
+          ${descLines.map(line => `<tr><td>${line}</td><td>${inv.billingMonth}</td><td>¥${inv.amount.toLocaleString()}</td></tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+    <div class="totals">
+      <div class="totals-table">
+        <div class="totals-row"><span>小計</span><span>¥${inv.amount.toLocaleString()}</span></div>
+        <div class="totals-row"><span>消費税（10%）</span><span>¥${inv.tax.toLocaleString()}</span></div>
+        <div class="totals-row grand"><span>合計（税込）</span><span>¥${inv.totalAmount.toLocaleString()}</span></div>
+      </div>
+    </div>
+    <div class="payment-info">
+      <h3>お支払い情報</h3>
+      <p>お支払い期限: <strong>${inv.dueDate}</strong></p>
+      <p>お支払い方法: クレジットカード決済 または 銀行振込</p>
+      <p style="margin-top:8px">ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+    </div>
+  </div>
+  <div class="footer">
+    <span class="brand">TRA MATCH</span> — 物流マッチングプラットフォーム | &copy; ${new Date().getFullYear()} All Rights Reserved.
+  </div>
+</div>
+</body>
+</html>`;
+  }
+
+  function handlePrintInvoice(inv: Invoice) {
+    const html = generateInvoiceHtml(inv);
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    }
+  }
+
   return (
     <DashboardLayout>
+      {previewInvoice && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center overflow-y-auto p-4" onClick={() => setPreviewInvoice(null)} data-testid="modal-invoice-preview">
+          <div className="relative w-full max-w-[850px] my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 z-10 flex items-center justify-between bg-white dark:bg-gray-900 rounded-t-lg px-4 py-3 border-b">
+              <span className="text-sm font-bold text-foreground">請求書プレビュー — {previewInvoice.invoiceNumber}</span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => handlePrintInvoice(previewInvoice)} data-testid="button-print-invoice">
+                  <Printer className="w-3 h-3 mr-1" />印刷 / PDF
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setPreviewInvoice(null)} data-testid="button-close-preview">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <iframe
+              srcDoc={generateInvoiceHtml(previewInvoice)}
+              className="w-full bg-white rounded-b-lg border-0"
+              style={{ minHeight: "700px" }}
+              title="Invoice Preview"
+              data-testid="iframe-invoice-preview"
+            />
+          </div>
+        </div>
+      )}
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-6" data-testid="admin-invoices-page">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
@@ -375,6 +514,14 @@ export default function AdminInvoices() {
                           <SelectItem value="cancelled">取消</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Button
+                        variant="outline"
+                        onClick={() => setPreviewInvoice(inv)}
+                        data-testid={`button-preview-${inv.id}`}
+                      >
+                        <Eye className="w-4 h-4 mr-1.5" />
+                        プレビュー
+                      </Button>
                       <Button
                         variant="outline"
                         onClick={() => sendMutation.mutate(inv.id)}
