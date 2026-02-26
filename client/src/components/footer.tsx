@@ -1,6 +1,6 @@
 import logoImage from "@assets/tra_match_logo_white.jpg";
 import { Link } from "wouter";
-import { SiX, SiInstagram, SiYoutube, SiTiktok, SiFacebook, SiLine } from "react-icons/si";
+import { SiX, SiInstagram, SiYoutube, SiTiktok, SiFacebook, SiLine, SiLinkedin } from "react-icons/si";
 
 export default function Footer() {
   return (
@@ -50,6 +50,7 @@ export default function Footer() {
           <span data-testid="icon-sns-tiktok" className="text-primary-foreground"><SiTiktok className="w-6 h-6" /></span>
           <span data-testid="icon-sns-facebook" className="text-primary-foreground"><SiFacebook className="w-6 h-6" /></span>
           <span data-testid="icon-sns-line" className="text-primary-foreground"><SiLine className="w-6 h-6" /></span>
+          <span data-testid="icon-sns-linkedin" className="text-primary-foreground"><SiLinkedin className="w-6 h-6" /></span>
         </div>
         <div className="mt-6 pt-6 border-t border-primary-foreground/30 text-center text-base text-primary-foreground">
           &copy; 2026 SIN JAPAN LLC All rights reserved.
