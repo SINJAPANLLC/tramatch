@@ -11,6 +11,7 @@ const openai = new OpenAI({
 });
 
 const TEMP_DIR = "/tmp/youtube-auto";
+const SITE_URL = "https://tramatch-sinjapan.com";
 
 const VIDEO_TOPICS = [
   "求荷求車マッチングサービスとは？仕組みとメリットを解説",
@@ -45,7 +46,20 @@ const VIDEO_TOPICS = [
   "運送業界の労働環境改善に向けた取り組み",
 ];
 
-const SITE_URL = "https://tramatch-sinjapan.com";
+interface VideoSection {
+  title: string;
+  narration: string;
+  keyPoint: string;
+  imagePrompt: string;
+}
+
+interface EnhancedVideoScript {
+  title: string;
+  sections: VideoSection[];
+  description: string;
+  tags: string[];
+  thumbnailPrompt: string;
+}
 
 function ensureTempDir() {
   if (!fs.existsSync(TEMP_DIR)) {
@@ -55,11 +69,45 @@ function ensureTempDir() {
 
 function cleanupFiles(...files: string[]) {
   for (const f of files) {
-    try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch {}
+    try { if (f && fs.existsSync(f)) fs.unlinkSync(f); } catch {}
   }
 }
 
-export async function generateVideoScript(topic: string): Promise<{ title: string; script: string; description: string; tags: string[] }> {
+function getDuration(audioPath: string): number {
+  try {
+    const result = execSync(
+      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
+      { timeout: 10000 }
+    ).toString().trim();
+    return Math.ceil(parseFloat(result));
+  } catch {
+    return 120;
+  }
+}
+
+function findJapaneseFont(): string | null {
+  const candidates = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/google-noto-cjk/NotoSansCJKjp-Regular.otf",
+    "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+    "/usr/share/fonts/truetype/takao-gothic/TakaoGothic.ttf",
+    "/usr/share/fonts/truetype/vlgothic/VL-Gothic-Regular.ttf",
+    "/usr/share/fonts/OTF/NotoSansCJKjp-Bold.otf",
+    "/usr/share/fonts/TTF/NotoSansCJKjp-Bold.ttf",
+  ];
+  for (const f of candidates) {
+    if (fs.existsSync(f)) return f;
+  }
+  try {
+    const result = execSync("fc-list :lang=ja -f '%{file}\\n' 2>/dev/null | head -1", { timeout: 5000 }).toString().trim();
+    if (result && fs.existsSync(result)) return result;
+  } catch {}
+  return null;
+}
+
+export async function generateVideoScript(topic: string): Promise<EnhancedVideoScript> {
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
@@ -70,30 +118,46 @@ export async function generateVideoScript(topic: string): Promise<{ title: strin
 トラマッチは求荷求車マッチングプラットフォームで、荷主と運送会社を効率的にマッチングするサービスです。
 サイトURL: ${SITE_URL}
 
-【重要：音声読み上げ最適化ルール】
-台本は音声合成（TTS）で読み上げられます。以下のルールを厳守してください：
-- 句読点を適切に使い、文を短くする（1文30文字以内が理想）
-- 「、」で適度に息継ぎポイントを作る
-- 段落の区切りには「。　」（句点＋全角スペース）を入れて間を作る
-- 数字は漢数字ではなく算用数字で書く（例：「3つ」「10パーセント」）
-- 難読漢字にはカッコでよみがなを入れる
-- 「えー」「まあ」などのフィラーは入れない
-- 専門用語の初出時は簡単な説明を添える`,
+【重要：構造化された台本ルール】
+- 動画は5つのセクションで構成する（オープニング含む）
+- 各セクションは独立したスライド画像と共に表示される
+- 各セクションのナレーションは600〜800文字程度
+- 台本は音声合成（TTS）で読み上げられるため：
+  - 句読点を適切に使い、文を短くする
+  - 「、」で適度に息継ぎポイントを作る
+  - 数字は算用数字で書く
+  - フィラーは入れない
+  - 自然で落ち着いた話し言葉で`,
       },
       {
         role: "user",
-        content: `以下のトピックでYouTube動画の台本を作成してください。
-YouTubeアルゴリズムで評価される8〜12分の動画に最適化してください。
+        content: `以下のトピックでYouTube動画の構造化された台本を作成してください。
+8〜12分の動画に最適化してください。
 
 トピック: ${topic}
 
 以下のJSON形式で出力してください:
 {
-  "title": "YouTube動画のタイトル（30文字以内、検索されやすく興味を引くもの。数字や疑問形を活用）",
-  "script": "ナレーション台本（3000〜4000文字。以下の構成で:\n1. フック（最初の30秒で視聴者を引きつける問いかけや衝撃的な事実）\n2. チャンネル紹介（トラマッチ公式チャンネルです、と簡潔に）\n3. 本題（3〜5つのポイントに分けて詳しく解説。具体例や数字を交えて）\n4. 実践的なアドバイス（すぐに使える具体的なノウハウ）\n5. まとめ（要点を簡潔に振り返り）\n6. CTA（チャンネル登録・概要欄のトラマッチリンクへの誘導）\n自然で落ち着いた話し言葉で。「では」「さて」「ここで重要なのが」など接続詞を使って流れを作る。「トラマッチ」への誘導は本題の中で2〜3回自然に含める。段落間には間を置くため改行を入れる）",
-  "description": "YouTube概要欄のテキスト（500〜800文字。動画の要約、タイムスタンプ（00:00形式で章立て）、関連キーワード、トラマッチへのリンク・CTA含む）",
-  "tags": ["関連タグ8〜12個。検索ボリュームを意識"]
+  "title": "YouTube動画のタイトル（30文字以内、数字や疑問形で興味を引く）",
+  "sections": [
+    {
+      "title": "セクションタイトル（例: オープニング）",
+      "narration": "このセクションのナレーション台本（600〜800文字）",
+      "keyPoint": "画面に表示するキーポイント（20文字以内の短いフレーズ）",
+      "imagePrompt": "このセクションの背景画像を生成するための英語プロンプト。物流・トラック・倉庫・ビジネスに関連する、プロフェッショナルで高品質な写真風イメージ。テキストは含めない。例: Professional photo of modern logistics warehouse with trucks loading at dock, warm lighting, clean composition"
+    }
+  ],
+  "description": "YouTube概要欄（500〜800文字。動画要約、タイムスタンプ00:00形式、トラマッチリンク含む）",
+  "tags": ["関連タグ8〜12個"],
+  "thumbnailPrompt": "サムネイル画像の英語プロンプト。目を引く、インパクトのある物流関連の画像。テキストは含めない。例: Dramatic aerial view of highway interchange with trucks, golden hour lighting, cinematic composition"
 }
+
+セクション構成ガイド:
+1. オープニング - 視聴者を引きつけるフック、衝撃的な事実や問いかけ
+2. 課題提起 - 業界の課題や問題点を具体的な数字で説明
+3. 解決策 - 具体的な解決方法やテクニック（トラマッチの活用も含む）
+4. 実践例 - 実際の活用事例やケーススタディ
+5. まとめ＆CTA - 要点整理、チャンネル登録・トラマッチ誘導
 
 概要欄には必ず以下を含めてください:
 ━━━━━━━━━━━━━━━━━
@@ -118,7 +182,105 @@ ${SITE_URL}/guide/kyukakyusha-complete
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error("GPTからの応答がありません");
 
-  return JSON.parse(content);
+  const parsed = JSON.parse(content);
+
+  if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length < 3) {
+    throw new Error("セクション構造が不正です");
+  }
+
+  return parsed as EnhancedVideoScript;
+}
+
+async function generateSlideImage(prompt: string, jobId: string, index: number): Promise<string> {
+  ensureTempDir();
+  const imagePath = path.join(TEMP_DIR, `${jobId}_slide_${index}.png`);
+
+  try {
+    const result = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: `${prompt}. High quality, 16:9 landscape format, professional photography style, no text or watermarks.`,
+      n: 1,
+      size: "1536x1024",
+      quality: "medium",
+    });
+
+    const imageData = result.data?.[0]?.b64_json;
+    if (!imageData) throw new Error("画像データなし");
+
+    fs.writeFileSync(imagePath, Buffer.from(imageData, "base64"));
+    console.log(`[YouTube Auto] Slide ${index} generated: ${imagePath}`);
+    return imagePath;
+  } catch (error: any) {
+    console.error(`[YouTube Auto] Slide ${index} generation failed: ${error?.message?.substring(0, 200)}`);
+    return createFallbackSlide(jobId, index);
+  }
+}
+
+function createFallbackSlide(jobId: string, index: number): string {
+  const imagePath = path.join(TEMP_DIR, `${jobId}_slide_${index}.png`);
+  const colors = ["#0d9488", "#0891b2", "#0e7490", "#0369a1", "#1d4ed8"];
+  const color = colors[index % colors.length];
+  try {
+    execSync(
+      `ffmpeg -y -f lavfi -i "color=c='${color}':s=1920x1080:d=1" -frames:v 1 "${imagePath}" 2>/dev/null`,
+      { timeout: 10000 }
+    );
+  } catch {
+    execSync(
+      `ffmpeg -y -f lavfi -i "color=c=0x0d9488:s=1920x1080:d=1" -frames:v 1 "${imagePath}" 2>/dev/null`,
+      { timeout: 10000 }
+    );
+  }
+  return imagePath;
+}
+
+export async function generateThumbnail(title: string, jobId: string, thumbnailPrompt?: string): Promise<string> {
+  ensureTempDir();
+  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.png`);
+
+  if (thumbnailPrompt) {
+    try {
+      const result = await openai.images.generate({
+        model: "gpt-image-1",
+        prompt: `YouTube thumbnail image: ${thumbnailPrompt}. Vibrant colors, high contrast, eye-catching, cinematic, professional quality, 16:9 landscape, no text.`,
+        n: 1,
+        size: "1536x1024",
+        quality: "medium",
+      });
+
+      const imageData = result.data?.[0]?.b64_json;
+      if (imageData) {
+        fs.writeFileSync(thumbnailPath, Buffer.from(imageData, "base64"));
+        console.log(`[YouTube Auto] AI Thumbnail generated: ${thumbnailPath}`);
+
+        const fontPath = findJapaneseFont();
+        if (fontPath) {
+          const thumbWithText = path.join(TEMP_DIR, `${jobId}_thumb_text.png`);
+          const shortTitle = title.length > 20 ? title.substring(0, 20) : title;
+          const escapedTitle = shortTitle.replace(/'/g, "'\\''").replace(/:/g, "\\:");
+          try {
+            execSync(
+              `ffmpeg -y -i "${thumbnailPath}" -vf "drawtext=fontfile='${fontPath}':text='${escapedTitle}':fontsize=72:fontcolor=white:borderw=4:bordercolor=black:x=(w-text_w)/2:y=(h-text_h)/2:box=1:boxcolor=black@0.4:boxborderw=20" "${thumbWithText}" 2>/dev/null`,
+              { timeout: 15000 }
+            );
+            fs.renameSync(thumbWithText, thumbnailPath);
+          } catch {}
+        }
+
+        return thumbnailPath;
+      }
+    } catch (error: any) {
+      console.error(`[YouTube Auto] AI Thumbnail failed: ${error?.message?.substring(0, 200)}`);
+    }
+  }
+
+  const logoPath = path.join(process.cwd(), "server", "assets", "thumbnail_base.png");
+  if (fs.existsSync(logoPath)) {
+    fs.copyFileSync(logoPath, thumbnailPath);
+    return thumbnailPath;
+  }
+
+  return "";
 }
 
 export async function generateAudio(script: string, jobId: string): Promise<string> {
@@ -138,7 +300,6 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
     }
   }
   if (current.trim()) chunks.push(current.trim());
-
   if (chunks.length === 0) chunks.push(script);
 
   const chunkPaths: string[] = [];
@@ -177,31 +338,66 @@ export async function generateAudio(script: string, jobId: string): Promise<stri
   return audioPath;
 }
 
-export async function generateThumbnail(title: string, jobId: string): Promise<string> {
-  ensureTempDir();
-  const thumbnailPath = path.join(TEMP_DIR, `${jobId}_thumb.png`);
-  const logoPath = path.join(process.cwd(), "server", "assets", "thumbnail_base.png");
+async function generateSectionAudios(sections: VideoSection[], jobId: string): Promise<{ paths: string[]; durations: number[] }> {
+  const paths: string[] = [];
+  const durations: number[] = [];
 
-  if (!fs.existsSync(logoPath)) {
-    console.error("[YouTube Auto] Logo file not found:", logoPath);
-    return "";
+  for (let i = 0; i < sections.length; i++) {
+    const sectionAudioPath = path.join(TEMP_DIR, `${jobId}_sec_audio_${i}.mp3`);
+    const narration = sections[i].narration;
+
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1-hd",
+      voice: "nova",
+      input: narration,
+      speed: 0.92,
+    });
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    fs.writeFileSync(sectionAudioPath, buffer);
+
+    const duration = getDuration(sectionAudioPath);
+    paths.push(sectionAudioPath);
+    durations.push(duration);
+    console.log(`[YouTube Auto] Section ${i} audio: ${duration}s`);
   }
+
+  return { paths, durations };
+}
+
+async function generateAllSlideImages(sections: VideoSection[], jobId: string): Promise<string[]> {
+  const imagePaths: string[] = [];
+
+  for (let i = 0; i < sections.length; i++) {
+    console.log(`[YouTube Auto] Generating slide ${i + 1}/${sections.length}...`);
+    const imagePath = await generateSlideImage(sections[i].imagePrompt, jobId, i);
+    imagePaths.push(imagePath);
+    if (i < sections.length - 1) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  return imagePaths;
+}
+
+function addTextOverlay(inputPath: string, outputPath: string, keyPoint: string, sectionTitle: string): boolean {
+  const fontPath = findJapaneseFont();
+  if (!fontPath) return false;
 
   try {
-    fs.copyFileSync(logoPath, thumbnailPath);
-    if (fs.existsSync(thumbnailPath)) {
-      const size = fs.statSync(thumbnailPath).size;
-      console.log(`[YouTube Auto] Thumbnail ready: ${thumbnailPath} (${size} bytes)`);
-    } else {
-      console.error("[YouTube Auto] Thumbnail file not created");
-      return "";
-    }
-  } catch (error: any) {
-    console.error("[YouTube Auto] Thumbnail preparation error:", error?.message?.substring(0, 300));
-    return "";
-  }
+    const escapedPoint = keyPoint.replace(/'/g, "'\\''").replace(/:/g, "\\:");
+    const escapedTitle = sectionTitle.replace(/'/g, "'\\''").replace(/:/g, "\\:");
 
-  return thumbnailPath;
+    execSync(
+      `ffmpeg -y -i "${inputPath}" -vf "` +
+      `drawtext=fontfile='${fontPath}':text='${escapedTitle}':fontsize=36:fontcolor=white@0.9:x=60:y=40:box=1:boxcolor=black@0.5:boxborderw=12,` +
+      `drawtext=fontfile='${fontPath}':text='${escapedPoint}':fontsize=56:fontcolor=white:borderw=3:bordercolor=black:x=(w-text_w)/2:y=h-120:box=1:boxcolor=black@0.6:boxborderw=16` +
+      `" "${outputPath}" 2>/dev/null`,
+      { timeout: 15000 }
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function generateVideo(audioPath: string, title: string, jobId: string): Promise<string> {
@@ -215,13 +411,11 @@ export async function generateVideo(audioPath: string, title: string, jobId: str
   if (fs.existsSync(logoPath)) {
     cmd = `ffmpeg -y -loop 1 -i "${logoPath}" -i "${audioPath}" -vf "scale=1920:1080" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest -t ${duration} "${videoPath}" 2>&1`;
   } else {
-    console.warn("[YouTube Auto] Logo not found, using solid color background");
     cmd = `ffmpeg -y -f lavfi -i "color=c=#0d9488:s=1920x1080:d=${duration}" -i "${audioPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}" 2>&1`;
   }
 
   try {
     execSync(cmd, { timeout: 600000 });
-    console.log(`[YouTube Auto] Video generated: ${videoPath}`);
   } catch (error: any) {
     console.error("ffmpeg error:", error?.message?.substring(0, 500));
     throw new Error("動画生成に失敗しました");
@@ -230,16 +424,86 @@ export async function generateVideo(audioPath: string, title: string, jobId: str
   return videoPath;
 }
 
-function getDuration(audioPath: string): number {
-  try {
-    const result = execSync(
-      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
-      { timeout: 10000 }
-    ).toString().trim();
-    return Math.ceil(parseFloat(result));
-  } catch {
-    return 120;
+async function composeSlideVideo(
+  imagePaths: string[],
+  audioPaths: string[],
+  durations: number[],
+  sections: VideoSection[],
+  jobId: string
+): Promise<string> {
+  ensureTempDir();
+  const videoPath = path.join(TEMP_DIR, `${jobId}.mp4`);
+  const segmentPaths: string[] = [];
+
+  for (let i = 0; i < imagePaths.length; i++) {
+    const segPath = path.join(TEMP_DIR, `${jobId}_seg_${i}.mp4`);
+    let slidePath = imagePaths[i];
+
+    const textSlidePath = path.join(TEMP_DIR, `${jobId}_textslide_${i}.png`);
+    const hasText = addTextOverlay(slidePath, textSlidePath, sections[i].keyPoint, sections[i].title);
+    if (hasText && fs.existsSync(textSlidePath)) {
+      slidePath = textSlidePath;
+    }
+
+    const dur = durations[i] + 1;
+
+    try {
+      execSync(
+        `ffmpeg -y -loop 1 -i "${slidePath}" -i "${audioPaths[i]}" ` +
+        `-vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,` +
+        `fade=t=in:st=0:d=0.5,fade=t=out:st=${dur - 0.5}:d=0.5" ` +
+        `-c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p ` +
+        `-shortest -t ${dur} "${segPath}" 2>/dev/null`,
+        { timeout: 300000 }
+      );
+      segmentPaths.push(segPath);
+    } catch (error: any) {
+      console.error(`[YouTube Auto] Segment ${i} compose failed: ${error?.message?.substring(0, 200)}`);
+      try {
+        execSync(
+          `ffmpeg -y -loop 1 -i "${imagePaths[i]}" -i "${audioPaths[i]}" ` +
+          `-vf "scale=1920:1080" ` +
+          `-c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -pix_fmt yuv420p ` +
+          `-shortest -t ${dur} "${segPath}" 2>/dev/null`,
+          { timeout: 300000 }
+        );
+        segmentPaths.push(segPath);
+      } catch {
+        console.error(`[YouTube Auto] Segment ${i} fallback also failed`);
+      }
+    }
+
+    if (hasText) cleanupFiles(textSlidePath);
   }
+
+  if (segmentPaths.length === 0) {
+    throw new Error("セグメント動画の生成に失敗しました");
+  }
+
+  if (segmentPaths.length === 1) {
+    fs.renameSync(segmentPaths[0], videoPath);
+  } else {
+    const concatListPath = path.join(TEMP_DIR, `${jobId}_concat.txt`);
+    const concatContent = segmentPaths.map(p => `file '${p}'`).join("\n");
+    fs.writeFileSync(concatListPath, concatContent);
+
+    try {
+      execSync(
+        `ffmpeg -y -f concat -safe 0 -i "${concatListPath}" -c copy "${videoPath}" 2>/dev/null`,
+        { timeout: 300000 }
+      );
+    } catch {
+      execSync(
+        `ffmpeg -y -f concat -safe 0 -i "${concatListPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k "${videoPath}" 2>/dev/null`,
+        { timeout: 600000 }
+      );
+    }
+
+    cleanupFiles(concatListPath, ...segmentPaths);
+  }
+
+  console.log(`[YouTube Auto] Slide video composed: ${videoPath}`);
+  return videoPath;
 }
 
 function getYoutubeClient() {
@@ -248,7 +512,7 @@ function getYoutubeClient() {
   const refreshToken = process.env.YOUTUBE_OAUTH_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error("YouTube OAuth認証情報が設定されていません（YOUTUBE_OAUTH_CLIENT_ID, YOUTUBE_OAUTH_CLIENT_SECRET, YOUTUBE_OAUTH_REFRESH_TOKEN）");
+    throw new Error("YouTube OAuth認証情報が設定されていません");
   }
 
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
@@ -300,7 +564,7 @@ export async function uploadThumbnail(videoId: string, thumbnailPath: string): P
     await youtube.thumbnails.set({
       videoId,
       media: {
-        mimeType: "image/jpeg",
+        mimeType: "image/png",
         body: fs.createReadStream(thumbnailPath),
       },
     });
@@ -311,38 +575,50 @@ export async function uploadThumbnail(videoId: string, thumbnailPath: string): P
 }
 
 export async function processAutoPublishJob(jobId: string): Promise<void> {
+  const filesToCleanup: string[] = [];
+
   try {
     await updateJobStatus(jobId, "generating_script");
 
     const job = await storage.getYoutubeAutoPublishJob(jobId);
     if (!job) throw new Error("ジョブが見つかりません");
 
+    console.log(`[YouTube Auto] Job ${jobId}: Generating enhanced script for "${job.topic}"...`);
     const scriptData = await generateVideoScript(job.topic);
+
+    const fullScript = scriptData.sections.map(s => s.narration).join("\n\n");
     await updateJobFields(jobId, {
-      script: scriptData.script,
+      script: fullScript,
       youtubeTitle: scriptData.title,
       youtubeDescription: scriptData.description,
-      status: "generating_audio",
+      status: "generating_images",
     });
 
-    const audioPath = await generateAudio(scriptData.script, jobId);
-    await updateJobFields(jobId, {
-      audioUrl: audioPath,
-      status: "generating_thumbnail",
-    });
+    console.log(`[YouTube Auto] Job ${jobId}: Generating ${scriptData.sections.length} slide images...`);
+    const slideImages = await generateAllSlideImages(scriptData.sections, jobId);
+    filesToCleanup.push(...slideImages);
 
-    const thumbnailPath = await generateThumbnail(scriptData.title, jobId);
+    console.log(`[YouTube Auto] Job ${jobId}: Generating section audios...`);
+    await updateJobStatus(jobId, "generating_audio");
+    const { paths: audioPaths, durations } = await generateSectionAudios(scriptData.sections, jobId);
+    filesToCleanup.push(...audioPaths);
 
-    await updateJobFields(jobId, {
-      status: "generating_video",
-    });
+    console.log(`[YouTube Auto] Job ${jobId}: Generating AI thumbnail...`);
+    await updateJobStatus(jobId, "generating_thumbnail");
+    const thumbnailPath = await generateThumbnail(scriptData.title, jobId, scriptData.thumbnailPrompt);
+    if (thumbnailPath) filesToCleanup.push(thumbnailPath);
 
-    const videoPath = await generateVideo(audioPath, scriptData.title, jobId);
+    console.log(`[YouTube Auto] Job ${jobId}: Composing slide video...`);
+    await updateJobStatus(jobId, "generating_video");
+    const videoPath = await composeSlideVideo(slideImages, audioPaths, durations, scriptData.sections, jobId);
+    filesToCleanup.push(videoPath);
+
     await updateJobFields(jobId, {
       videoUrl: videoPath,
       status: "uploading",
     });
 
+    console.log(`[YouTube Auto] Job ${jobId}: Uploading to YouTube...`);
     const youtubeVideoId = await uploadToYoutube(
       videoPath,
       scriptData.title,
@@ -372,14 +648,15 @@ export async function processAutoPublishJob(jobId: string): Promise<void> {
       isVisible: true,
     });
 
-    cleanupFiles(audioPath, videoPath, thumbnailPath);
-    console.log(`[YouTube Auto] Job ${jobId} completed: ${youtubeVideoId}`);
+    console.log(`[YouTube Auto] Job ${jobId} completed successfully: https://youtu.be/${youtubeVideoId}`);
   } catch (error: any) {
     console.error(`[YouTube Auto] Job ${jobId} failed:`, error?.message);
     await updateJobFields(jobId, {
       status: "failed",
       errorMessage: error?.message || "不明なエラー",
     });
+  } finally {
+    cleanupFiles(...filesToCleanup);
   }
 }
 
@@ -400,7 +677,7 @@ export async function runDailyAutoPublish(): Promise<{ started: number; topics: 
     return { started: 0, topics: [] };
   }
 
-  const todayTopics = availableTopics.slice(0, 3);
+  const todayTopics = availableTopics.slice(0, 2);
   const jobIds: string[] = [];
 
   for (const topic of todayTopics) {
@@ -412,6 +689,7 @@ export async function runDailyAutoPublish(): Promise<{ started: number; topics: 
     processAutoPublishJob(jobId).catch((err) =>
       console.error(`[YouTube Auto] Background job ${jobId} error:`, err?.message)
     );
+    await new Promise(r => setTimeout(r, 5000));
   }
 
   return { started: todayTopics.length, topics: todayTopics };
@@ -419,7 +697,7 @@ export async function runDailyAutoPublish(): Promise<{ started: number; topics: 
 
 export function scheduleAutoPublish() {
   const runAt = 9;
-  
+
   function scheduleNext() {
     const now = new Date();
     const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));

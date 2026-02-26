@@ -45,7 +45,7 @@ function statusBadge(status: string) {
     case "pending":
       return <Badge variant="secondary" className="text-xs"><Clock className="w-3 h-3 mr-1" />待機中</Badge>;
     default:
-      return <Badge variant="outline" className="text-xs"><Loader2 className="w-3 h-3 mr-1 animate-spin" />{status === "generating_script" ? "原稿生成中" : status === "generating_audio" ? "音声生成中" : status === "generating_video" ? "動画生成中" : status === "uploading" ? "アップロード中" : status}</Badge>;
+      return <Badge variant="outline" className="text-xs"><Loader2 className="w-3 h-3 mr-1 animate-spin" />{status === "generating_script" ? "原稿生成中" : status === "generating_images" ? "画像生成中" : status === "generating_audio" ? "音声生成中" : status === "generating_thumbnail" ? "サムネ生成中" : status === "generating_video" ? "動画合成中" : status === "uploading" ? "アップロード中" : status}</Badge>;
   }
 }
 
