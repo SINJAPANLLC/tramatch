@@ -425,11 +425,9 @@ export default function CargoList() {
     if (filterExcludeMoving) {
       result = result.filter((item) => item.movingJob !== "引越し");
     }
-    if (filterCargoNumber) {
-      const num = parseInt(filterCargoNumber);
-      if (!isNaN(num)) {
-        result = result.filter((item) => item.cargoNumber === num);
-      }
+    if (filterCargoNumber.trim()) {
+      const q = filterCargoNumber.trim();
+      result = result.filter((item) => item.cargoNumber && String(item.cargoNumber).includes(q));
     }
 
     result = [...result].sort((a, b) => {
