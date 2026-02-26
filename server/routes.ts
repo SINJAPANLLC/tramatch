@@ -1,3 +1,4 @@
+import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
@@ -194,7 +195,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.use(compression());
   app.use("/uploads", express.static(uploadDir));
 
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
