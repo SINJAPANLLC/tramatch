@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin } from "lucide-react";
+import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin, Home } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -294,14 +294,22 @@ export default function Header() {
 
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                onClick={() => logout.mutate()}
-                data-testid="button-logout"
-              >
-                <LogOut className="w-4 h-4 mr-1.5" />
-                ログアウト
-              </Button>
+              <>
+                <Link href="/home">
+                  <Button variant="ghost" data-testid="button-header-home">
+                    <Home className="w-4 h-4 mr-1.5" />
+                    ホーム
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={() => logout.mutate()}
+                  data-testid="button-logout"
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  ログアウト
+                </Button>
+              </>
             ) : (
               <>
                 <Link href="/login">
@@ -346,14 +354,22 @@ export default function Header() {
           ))}
           <div className="pt-2 border-t border-border space-y-2">
             {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => { logout.mutate(); setMobileMenuOpen(false); }}
-              >
-                <LogOut className="w-4 h-4 mr-1.5" />
-                ログアウト
-              </Button>
+              <>
+                <Link href="/home" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Home className="w-4 h-4 mr-1.5" />
+                    ホーム
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => { logout.mutate(); setMobileMenuOpen(false); }}
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  ログアウト
+                </Button>
+              </>
             ) : (
               <>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
