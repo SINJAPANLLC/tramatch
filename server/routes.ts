@@ -3803,12 +3803,13 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/email-leads/crawl", requireAdmin, async (req, res) => {
     try {
-      const count = req.body.count ? parseInt(req.body.count) : undefined;
-      res.json({ message: "クロールを開始しました。バックグラウンドで実行中です。" });
+      const count = req.body?.count ? parseInt(req.body.count) : undefined;
       const { crawlLeadsWithAI } = await import("./lead-crawler");
+      res.json({ message: "クロールを開始しました。バックグラウンドで実行中です。" });
       crawlLeadsWithAI(count).catch(err => console.error("[Lead Crawler] Manual crawl failed:", err));
-    } catch (error) {
-      res.status(500).json({ message: "クロールの開始に失敗しました" });
+    } catch (error: any) {
+      console.error("[Lead Crawler] Crawl endpoint error:", error?.message || error, error?.stack);
+      res.status(500).json({ message: "クロールの開始に失敗しました: " + (error?.message || "不明なエラー") });
     }
   });
 
@@ -4797,14 +4798,15 @@ JSON形式で以下を返してください（日本語で）:
     try {
       const result = await db.select().from(landingPages).orderBy(sql`created_at DESC`);
       res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: "LP一覧の取得に失敗しました" });
+    } catch (error: any) {
+      console.error("[LP] List error:", error?.message || error);
+      res.status(500).json({ message: "LP一覧の取得に失敗しました: " + (error?.message || "不明") });
     }
   });
 
   app.post("/api/admin/lp/save", requireAdmin, async (req, res) => {
     try {
-      const { title, slug, html, published } = req.body;
+      const { title, slug, html, published } = req.body || {};
       if (!title || !slug || !html) {
         return res.status(400).json({ message: "タイトル、スラッグ、HTMLは必須です" });
       }
@@ -4816,8 +4818,9 @@ JSON形式で以下を返してください（日本語で）:
       }
       const inserted = await db.insert(landingPages).values({ title, slug: safeSlug, html, published: published ?? false }).returning();
       res.json(inserted[0]);
-    } catch (error) {
-      res.status(500).json({ message: "LP保存に失敗しました" });
+    } catch (error: any) {
+      console.error("[LP] Save error:", error?.message || error);
+      res.status(500).json({ message: "LP保存に失敗しました: " + (error?.message || "不明") });
     }
   });
 
