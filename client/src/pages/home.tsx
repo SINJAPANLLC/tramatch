@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X } from "lucide-react";
 import logoImage from "@assets/tra_match_logo_white.jpg";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, hasNumericPrice } from "@/lib/utils";
 
 const LOGO_WALL_IMAGES_ROW1 = [
   "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/47db33b0-d7f4-013e-9799-0a58a9feac02/%E3%82%BF%E3%82%99%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%88%E3%82%99%20(1).jpeg",
@@ -66,7 +66,7 @@ function CargoCard({ listing }: { listing: CargoListing }) {
           </div>
           <div className="mt-auto pt-2">
             <p className="text-xs text-muted-foreground">運賃</p>
-            <p className="font-bold text-primary text-lg">{listing.price ? `${formatPrice(listing.price)}円` : "要相談"}</p>
+            <p className="font-bold text-primary text-lg">{hasNumericPrice(listing.price) ? `${formatPrice(listing.price)}円` : "要相談"}</p>
           </div>
         </CardContent>
       </Card>
@@ -99,7 +99,7 @@ function TruckCard({ listing }: { listing: TruckListing }) {
           </div>
           <div className="mt-auto pt-2">
             <p className="text-xs text-muted-foreground">運賃</p>
-            <p className="font-bold text-primary text-lg">{listing.price ? `${formatPrice(listing.price)}円` : "要相談"}</p>
+            <p className="font-bold text-primary text-lg">{hasNumericPrice(listing.price) ? `${formatPrice(listing.price)}円` : "要相談"}</p>
           </div>
         </CardContent>
       </Card>
@@ -594,7 +594,7 @@ export default function Home() {
                           <span className="truncate">{listing.departureArea} → {listing.arrivalArea}</span>
                         </div>
                         <div className="mt-auto text-sm text-foreground font-bold">
-                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談"}
+                          {hasNumericPrice(listing.price) ? `${formatPrice(listing.price)}円` : "要相談"}
                         </div>
                       </div>
                     </div>
@@ -636,7 +636,7 @@ export default function Home() {
                           <span className="truncate">{listing.currentArea} → {listing.destinationArea}</span>
                         </div>
                         <div className="mt-auto text-sm text-foreground font-bold">
-                          {listing.price ? `${formatPrice(listing.price)}円` : "要相談"}
+                          {hasNumericPrice(listing.price) ? `${formatPrice(listing.price)}円` : "要相談"}
                         </div>
                       </div>
                     </div>
