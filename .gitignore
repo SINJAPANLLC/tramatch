@@ -1,13 +1,8 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
-attached_assets/*.txt.local/
+.local/
 node_modules/
 dist/
 uploads/
 *.bin
+*.db
 .replit
 replit.nix
