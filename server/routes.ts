@@ -4704,5 +4704,83 @@ JSON形式で以下を返してください（日本語で）:
     res.send(content);
   });
 
+  // Admin: SNS Management
+  app.get("/api/admin/sns-posts", requireAdmin, async (_req, res) => {
+    res.json([]);
+  });
+
+  app.post("/api/admin/sns-posts", requireAdmin, async (req, res) => {
+    res.json({ id: crypto.randomUUID(), ...req.body, status: "draft", createdAt: new Date().toISOString() });
+  });
+
+  app.post("/api/admin/sns/generate", requireAdmin, async (req, res) => {
+    try {
+      const { platform, topic } = req.body;
+      const openai = getOpenAI();
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: `あなたは物流業界専門のSNSマーケターです。${platform}に最適化された日本語の投稿文を作成してください。ハッシュタグも含めてください。` },
+          { role: "user", content: `トピック: ${topic}\n\n投稿文を1つ生成してください。` },
+        ],
+        max_tokens: 300,
+      });
+      res.json({ content: result.choices[0]?.message?.content || "" });
+    } catch (error) {
+      res.status(500).json({ message: "生成に失敗しました" });
+    }
+  });
+
+  // Admin: Media Generation
+  app.post("/api/admin/media/generate-image", requireAdmin, async (req, res) => {
+    try {
+      const { prompt, style, size } = req.body;
+      const openai = getOpenAI();
+      const result = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: `${style} style: ${prompt}`,
+        n: 1,
+        size: size || "1024x1024",
+      });
+      res.json({ url: result.data[0]?.url || "" });
+    } catch (error) {
+      res.status(500).json({ message: "画像生成に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/media/generate-video", requireAdmin, async (req, res) => {
+    try {
+      const { topic, style } = req.body;
+      const { processAutoPublishJob } = await import("./youtube-auto-publisher");
+      const job = await storage.createYoutubeAutoPublishJob({ topic, status: "pending" });
+      processAutoPublishJob(job.id).catch((err: any) =>
+        console.error(`[Media Gen] Video job ${job.id} error:`, err?.message)
+      );
+      res.json({ message: "動画生成を開始しました", jobId: job.id });
+    } catch (error) {
+      res.status(500).json({ message: "動画生成に失敗しました" });
+    }
+  });
+
+  // Admin: LP Generation
+  app.post("/api/admin/lp/generate", requireAdmin, async (req, res) => {
+    try {
+      const { title, purpose, targetAudience, features, colorTheme } = req.body;
+      const openai = getOpenAI();
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "あなたはプロのWebデザイナーです。完全なHTMLランディングページを生成してください。レスポンシブデザイン、モダンなスタイリングを含めてください。HTMLコードのみを返してください。" },
+          { role: "user", content: `以下の条件でランディングページのHTMLを生成してください:\nタイトル: ${title}\n目的: ${purpose}\nターゲット: ${targetAudience}\nアピールポイント: ${features}\nカラーテーマ: ${colorTheme}\n\n完全なHTMLを返してください。` },
+        ],
+        max_tokens: 4000,
+      });
+      const html = (result.choices[0]?.message?.content || "").replace(/```html\n?/g, "").replace(/```\n?/g, "");
+      res.json({ html });
+    } catch (error) {
+      res.status(500).json({ message: "LP生成に失敗しました" });
+    }
+  });
+
   return httpServer;
 }
