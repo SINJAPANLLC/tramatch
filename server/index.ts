@@ -91,14 +91,22 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
 
-  const { scheduleAutoArticleGeneration } = await import("./auto-article-generator");
-  scheduleAutoArticleGeneration();
-
-  const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
-  scheduleAutoPublish();
-
-  const { scheduleLeadCrawler } = await import("./lead-crawler");
-  scheduleLeadCrawler();
+  if (process.env.NODE_ENV === "production") {
+    setTimeout(async () => {
+      try {
+        const { scheduleAutoArticleGeneration } = await import("./auto-article-generator");
+        scheduleAutoArticleGeneration();
+        const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
+        scheduleAutoPublish();
+        const { scheduleLeadCrawler } = await import("./lead-crawler");
+        scheduleLeadCrawler();
+      } catch (e) {
+        console.error("Scheduler init error:", e);
+      }
+    }, 10000);
+  } else {
+    console.log("[Dev] Skipping scheduled tasks in dev mode");
+  }
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
