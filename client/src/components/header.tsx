@@ -4,7 +4,7 @@ import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, Ch
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { CargoListing, TruckListing, Notification } from "@shared/schema";
+import type { Notification } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -245,16 +245,6 @@ export default function Header() {
   ];
   const isOnDashboard = isAuthenticated && dashboardPaths.some((p) => location === p || location.startsWith(p + "/"));
 
-  const { data: cargoListings } = useQuery<CargoListing[]>({
-    queryKey: ["/api/cargo"],
-    enabled: !!isOnDashboard,
-  });
-
-  const { data: truckListings } = useQuery<TruckListing[]>({
-    queryKey: ["/api/trucks"],
-    enabled: !!isOnDashboard,
-  });
-
   const navItems: { href: string; label: string }[] = [];
 
   if (isOnDashboard) {
@@ -266,16 +256,6 @@ export default function Header() {
               <Link href="/home" className="flex items-center shrink-0" data-testid="text-logo">
                 <img src={logoImage} alt="TRA MATCH" className="h-6 w-auto" />
               </Link>
-              <div className="hidden sm:flex items-center gap-2">
-                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-cargo">
-                  <Package className="w-3 h-3" />
-                  荷物数 {cargoListings?.length ?? 0}
-                </Badge>
-                <Badge variant="outline" className="text-xs gap-1.5 font-normal" data-testid="text-stat-trucks">
-                  <Truck className="w-3 h-3" />
-                  空車数 {truckListings?.length ?? 0}
-                </Badge>
-              </div>
             </div>
 
             <div className="flex items-center gap-2">
