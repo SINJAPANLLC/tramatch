@@ -904,8 +904,8 @@ export default function CargoList() {
                     )}
                   </td>
                   <td className="px-2 py-3 align-top max-w-[120px]">
-                    <div className="font-bold text-foreground text-[12px] leading-tight truncate">{listing.companyName}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 font-bold truncate">{listing.title}</div>
+                    <div className="font-bold text-foreground text-[13px] leading-tight truncate">{listing.companyName}</div>
+                    <div className="text-[11px] text-foreground/70 mt-0.5 font-bold truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</div>
                   </td>
                   <td className="px-2 py-3 align-top">
                     <div className="flex items-center gap-2">
@@ -913,12 +913,12 @@ export default function CargoList() {
                         <Navigation className="w-3 h-3 fill-primary text-primary shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1 flex-wrap">
-                            <span className="font-bold text-[12px] text-foreground">{listing.departureArea}</span>
+                            <span className="font-bold text-[13px] text-foreground">{listing.departureArea}</span>
                             {listing.departureAddress && (
-                              <span className="text-[11px] text-muted-foreground font-bold">{listing.departureAddress}</span>
+                              <span className="text-[12px] text-foreground/70 font-bold">{listing.departureAddress}</span>
                             )}
                           </div>
-                          <div className="text-[11px] text-muted-foreground font-bold">
+                          <div className="text-[12px] text-foreground/70 font-bold">
                             {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
@@ -928,12 +928,12 @@ export default function CargoList() {
                         <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1 flex-wrap">
-                            <span className="font-bold text-[12px] text-foreground">{listing.arrivalArea}</span>
+                            <span className="font-bold text-[13px] text-foreground">{listing.arrivalArea}</span>
                             {listing.arrivalAddress && (
-                              <span className="text-[11px] text-muted-foreground font-bold">{listing.arrivalAddress}</span>
+                              <span className="text-[12px] text-foreground/70 font-bold">{listing.arrivalAddress}</span>
                             )}
                           </div>
-                          <div className="text-[11px] text-muted-foreground font-bold">
+                          <div className="text-[12px] text-foreground/70 font-bold">
                             {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                           </div>
                         </div>
@@ -944,7 +944,7 @@ export default function CargoList() {
                     <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
-                    <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">
+                    <div className="text-[11px] text-foreground/70 whitespace-nowrap mt-0.5 font-bold">
                       高速代: {listing.highwayFee || "未設定"}
                     </div>
                   </td>
@@ -952,22 +952,22 @@ export default function CargoList() {
                     {listing.consolidation === "可" ? (
                       <Badge variant="outline" className="text-[10px] border-primary/30 text-primary px-1">可</Badge>
                     ) : listing.consolidation === "不可" ? (
-                      <span className="text-[11px] text-muted-foreground font-bold">不可</span>
+                      <span className="text-[12px] text-foreground font-bold">不可</span>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground font-bold">-</span>
+                      <span className="text-[12px] text-foreground font-bold">-</span>
                     )}
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
-                    <span className="whitespace-nowrap text-[12px] font-bold">{listing.weight}</span>
+                    <span className="whitespace-nowrap text-[13px] text-foreground font-bold">{listing.weight}</span>
                   </td>
                   <td className="px-1.5 py-3 text-center align-top">
-                    <div className="text-[12px] whitespace-nowrap font-bold">{listing.vehicleType}</div>
+                    <div className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.vehicleType}</div>
                     {listing.bodyType && (
-                      <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
+                      <div className="text-[11px] text-foreground/70 whitespace-nowrap mt-0.5 font-bold">{listing.bodyType}</div>
                     )}
                   </td>
                   <td className="px-2 py-3 align-top">
-                    <span className="whitespace-nowrap text-[12px] font-bold">{listing.cargoType}</span>
+                    <span className="whitespace-nowrap text-[13px] text-foreground font-bold">{listing.cargoType}</span>
                     {listing.temperatureControl && listing.temperatureControl !== "指定なし" && listing.temperatureControl !== "常温" && (
                       <div className="mt-0.5">
                         <Badge variant="outline" className="text-[10px] px-1">{listing.temperatureControl}</Badge>
@@ -975,10 +975,10 @@ export default function CargoList() {
                     )}
                   </td>
                   <td className="px-1.5 py-3 align-top">
-                    <span className="text-[12px] whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
+                    <span className="text-[13px] text-foreground whitespace-nowrap font-bold">{listing.driverWork || "-"}</span>
                   </td>
                   <td className="px-2 py-3 align-top">
-                    <span className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
+                    <span className="text-foreground/80 text-[12px] leading-relaxed line-clamp-2 max-w-[140px] font-bold">
                       {listing.description || "-"}
                     </span>
                   </td>
