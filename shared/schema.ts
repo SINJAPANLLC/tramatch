@@ -570,3 +570,20 @@ export const landingPages = pgTable("landing_pages", {
 export const insertLandingPageSchema = createInsertSchema(landingPages).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertLandingPage = z.infer<typeof insertLandingPageSchema>;
 export type LandingPage = typeof landingPages.$inferSelect;
+
+export const snsAutoPosts = pgTable("sns_auto_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platform: text("platform").notNull(),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  status: text("status").notNull().default("pending"),
+  scheduledAt: timestamp("scheduled_at"),
+  postedAt: timestamp("posted_at"),
+  externalId: text("external_id"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSnsAutoPostSchema = createInsertSchema(snsAutoPosts).omit({ id: true, createdAt: true });
+export type InsertSnsAutoPost = z.infer<typeof insertSnsAutoPostSchema>;
+export type SnsAutoPost = typeof snsAutoPosts.$inferSelect;

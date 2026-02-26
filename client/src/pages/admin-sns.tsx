@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Loader2, Wand2, ExternalLink } from "lucide-react";
+import { Share2, Loader2, Wand2, ExternalLink, ImagePlus, Send, Trash2, Zap, Clock, CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { SiX, SiInstagram, SiFacebook, SiTiktok, SiLinkedin, SiLine } from "react-icons/si";
+import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard-layout";
+import type { SnsAutoPost } from "@shared/schema";
 
 const snsServices = [
   { id: "x", name: "X (Twitter)", icon: SiX, color: "#000000", darkColor: "#ffffff", loginUrl: "https://x.com/login", dashboardUrl: "https://x.com/home" },
@@ -21,12 +22,29 @@ const snsServices = [
   { id: "line", name: "LINE公式アカウント", icon: SiLine, color: "#06C755", darkColor: "#06C755", loginUrl: "https://manager.line.biz/", dashboardUrl: "https://manager.line.biz/" },
 ];
 
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "posted": return <Badge className="bg-green-500 text-white" data-testid="badge-posted"><CheckCircle2 className="w-3 h-3 mr-1" />投稿済み</Badge>;
+    case "generating": return <Badge className="bg-blue-500 text-white" data-testid="badge-generating"><Loader2 className="w-3 h-3 mr-1 animate-spin" />生成中</Badge>;
+    case "posting": return <Badge className="bg-yellow-500 text-white" data-testid="badge-posting"><Send className="w-3 h-3 mr-1" />投稿中</Badge>;
+    case "generated": return <Badge className="bg-purple-500 text-white" data-testid="badge-generated"><CheckCircle2 className="w-3 h-3 mr-1" />生成完了</Badge>;
+    case "error": return <Badge variant="destructive" data-testid="badge-error"><AlertCircle className="w-3 h-3 mr-1" />エラー</Badge>;
+    default: return <Badge variant="outline" data-testid="badge-pending"><Clock className="w-3 h-3 mr-1" />{status}</Badge>;
+  }
+}
+
 export default function AdminSns() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("accounts");
   const [platform, setPlatform] = useState("x");
   const [prompt, setPrompt] = useState("");
   const [content, setContent] = useState("");
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["x"]);
+
+  const postsQuery = useQuery<SnsAutoPost[]>({
+    queryKey: ["/api/admin/sns-posts"],
+  });
 
   const generateMutation = useMutation({
     mutationFn: async (data: { platform: string; topic: string }) => {
@@ -40,6 +58,62 @@ export default function AdminSns() {
     onError: () => toast({ title: "生成に失敗しました", variant: "destructive" }),
   });
 
+  const generateImageMutation = useMutation({
+    mutationFn: async (data: { topic: string; platform: string }) => {
+      const res = await apiRequest("POST", "/api/admin/sns/generate-image", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedImage(data.image || null);
+      toast({ title: "トラパン画像を生成しました" });
+    },
+    onError: () => toast({ title: "画像生成に失敗しました", variant: "destructive" }),
+  });
+
+  const postSingleMutation = useMutation({
+    mutationFn: async (data: { platform: string; content: string; imageBase64?: string | null }) => {
+      const res = await apiRequest("POST", "/api/admin/sns/post-single", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({ title: `投稿完了！ ID: ${data.externalId}` });
+      } else {
+        toast({ title: "投稿を保存しました", description: data.error });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sns-posts"] });
+    },
+    onError: () => toast({ title: "投稿に失敗しました", variant: "destructive" }),
+  });
+
+  const autoPostMutation = useMutation({
+    mutationFn: async (data: { platforms: string[] }) => {
+      const res = await apiRequest("POST", "/api/admin/sns/auto-post", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "自動投稿を開始しました" });
+      setTimeout(() => queryClient.invalidateQueries({ queryKey: ["/api/admin/sns-posts"] }), 5000);
+    },
+    onError: () => toast({ title: "自動投稿に失敗しました", variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/sns-posts/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "削除しました" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sns-posts"] });
+    },
+  });
+
+  const togglePlatform = (id: string) => {
+    setSelectedPlatforms(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-6" data-testid="admin-sns-page">
@@ -47,9 +121,9 @@ export default function AdminSns() {
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2" data-testid="text-page-title">
               <Share2 className="w-6 h-6 text-primary" />
-              SNS管理
+              SNS自動投稿管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">各SNSへのアクセス・投稿の作成・分析を管理します</p>
+            <p className="text-sm text-muted-foreground mt-1">AIがトラパンと一緒にSNS投稿を自動生成・投稿します</p>
           </div>
         </div>
 
@@ -57,6 +131,8 @@ export default function AdminSns() {
           <TabsList data-testid="tabs-sns">
             <TabsTrigger value="accounts" data-testid="tab-accounts">SNSアカウント</TabsTrigger>
             <TabsTrigger value="create" data-testid="tab-create">投稿作成</TabsTrigger>
+            <TabsTrigger value="auto" data-testid="tab-auto">自動投稿</TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history">投稿履歴</TabsTrigger>
           </TabsList>
 
           <TabsContent value="accounts" className="space-y-4 mt-4">
@@ -101,7 +177,7 @@ export default function AdminSns() {
               <CardContent className="p-6 space-y-5">
                 <div>
                   <Label className="text-sm font-bold text-foreground">1. プラットフォームを選択</Label>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mt-2">
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-2">
                     {snsServices.map((sns) => {
                       const Icon = sns.icon;
                       const isSelected = platform === sns.id;
@@ -136,15 +212,35 @@ export default function AdminSns() {
                   />
                 </div>
 
-                <Button
-                  className="w-full"
-                  onClick={() => generateMutation.mutate({ platform, topic: prompt })}
-                  disabled={!prompt.trim() || generateMutation.isPending}
-                  data-testid="button-ai-generate"
-                >
-                  {generateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
-                  AIで投稿文を生成
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => generateMutation.mutate({ platform, topic: prompt })}
+                    disabled={!prompt.trim() || generateMutation.isPending}
+                    data-testid="button-ai-generate"
+                  >
+                    {generateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                    AIで投稿文を生成
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => generateImageMutation.mutate({ topic: prompt || "トラマッチの紹介", platform })}
+                    disabled={generateImageMutation.isPending}
+                    data-testid="button-generate-image"
+                  >
+                    {generateImageMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImagePlus className="w-4 h-4 mr-2" />}
+                    トラパン画像生成
+                  </Button>
+                </div>
+
+                {generatedImage && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-foreground">生成されたトラパン画像</Label>
+                    <div className="border rounded-lg overflow-hidden max-w-sm">
+                      <img src={generatedImage} alt="トラパン" className="w-full" data-testid="img-generated-trapan" />
+                    </div>
+                  </div>
+                )}
 
                 {content && (
                   <div className="space-y-3 border-t pt-4">
@@ -156,7 +252,7 @@ export default function AdminSns() {
                       data-testid="input-sns-content"
                     />
                     <p className="text-xs text-muted-foreground">{content.length} 文字 ・ 内容は自由に編集できます</p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -165,15 +261,28 @@ export default function AdminSns() {
                         }}
                         data-testid="button-copy-content"
                       >
+                        <Copy className="w-4 h-4 mr-1" />
                         コピー
+                      </Button>
+                      <Button
+                        onClick={() => postSingleMutation.mutate({
+                          platform,
+                          content,
+                          imageBase64: generatedImage,
+                        })}
+                        disabled={postSingleMutation.isPending}
+                        data-testid="button-post-single"
+                      >
+                        {postSingleMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
+                        {snsServices.find(s => s.id === platform)?.name}に投稿
                       </Button>
                       {(() => {
                         const sns = snsServices.find(s => s.id === platform);
                         return sns ? (
                           <a href={sns.dashboardUrl} target="_blank" rel="noopener noreferrer">
-                            <Button data-testid="button-open-sns">
+                            <Button variant="outline" data-testid="button-open-sns">
                               <ExternalLink className="w-4 h-4 mr-1" />
-                              {sns.name}を開いて投稿
+                              手動で投稿
                             </Button>
                           </a>
                         ) : null;
@@ -185,6 +294,167 @@ export default function AdminSns() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="auto" className="space-y-4 mt-4">
+            <Card>
+              <CardContent className="p-6 space-y-5">
+                <div>
+                  <h3 className="text-base font-bold text-foreground mb-2">AI自動投稿</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    AIがトラパンの画像付きで物流業界に関するSNS投稿を自動生成し、選択したプラットフォームに投稿します。
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-bold text-foreground mb-2 block">投稿先を選択</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {snsServices.map((sns) => {
+                      const Icon = sns.icon;
+                      const isSelected = selectedPlatforms.includes(sns.id);
+                      return (
+                        <button
+                          key={sns.id}
+                          type="button"
+                          onClick={() => togglePlatform(sns.id)}
+                          className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
+                            isSelected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
+                          }`}
+                          data-testid={`toggle-auto-${sns.id}`}
+                        >
+                          <Icon className="w-5 h-5" style={{ color: isSelected ? sns.color : "#999" }} />
+                          <span className={`text-sm font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
+                            {sns.name.replace("公式アカウント", "")}
+                          </span>
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <h4 className="text-sm font-bold text-foreground mb-2">API設定状況</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">X (Twitter) API</span>
+                      <Badge variant="outline" className="text-xs" data-testid="status-x-api">環境変数で設定</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Facebook API</span>
+                      <Badge variant="outline" className="text-xs" data-testid="status-fb-api">環境変数で設定</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">LinkedIn API</span>
+                      <Badge variant="outline" className="text-xs" data-testid="status-li-api">環境変数で設定</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ※ API未設定のプラットフォームは投稿文と画像の生成のみ行います。手動でコピー＆ペーストで投稿できます。
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => autoPostMutation.mutate({ platforms: selectedPlatforms })}
+                  disabled={selectedPlatforms.length === 0 || autoPostMutation.isPending}
+                  data-testid="button-auto-post"
+                >
+                  {autoPostMutation.isPending ? (
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  ) : (
+                    <Zap className="w-5 h-5 mr-2" />
+                  )}
+                  {selectedPlatforms.length}つのSNSに自動投稿を実行
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4 mt-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-bold text-foreground">投稿履歴</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/sns-posts"] })}
+                data-testid="button-refresh-history"
+              >
+                更新
+              </Button>
+            </div>
+
+            {postsQuery.isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : !postsQuery.data?.length ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">まだ投稿履歴がありません</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {postsQuery.data.map((post) => {
+                  const sns = snsServices.find(s => s.id === post.platform);
+                  const Icon = sns?.icon;
+                  return (
+                    <Card key={post.id} data-testid={`card-post-${post.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${sns?.color || "#999"}15` }}>
+                            {Icon && <Icon className="w-5 h-5" style={{ color: sns?.color }} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-bold text-foreground">{sns?.name || post.platform}</span>
+                              {getStatusBadge(post.status)}
+                            </div>
+                            <p className="text-sm text-foreground whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                            {post.imageUrl && (
+                              <p className="text-xs text-muted-foreground mt-1">📷 画像付き</p>
+                            )}
+                            {post.errorMessage && (
+                              <p className="text-xs text-red-500 mt-1">{post.errorMessage}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                {post.createdAt ? new Date(post.createdAt).toLocaleString("ja-JP") : ""}
+                              </span>
+                              {post.externalId && (
+                                <span className="text-xs text-primary">ID: {post.externalId}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(post.content);
+                                toast({ title: "コピーしました" });
+                              }}
+                              data-testid={`button-copy-${post.id}`}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteMutation.mutate(post.id)}
+                              data-testid={`button-delete-${post.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>

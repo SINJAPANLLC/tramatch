@@ -4729,29 +4729,88 @@ JSON形式で以下を返してください（日本語で）:
 
   // Admin: SNS Management
   app.get("/api/admin/sns-posts", requireAdmin, async (_req, res) => {
-    res.json([]);
+    try {
+      const { getSnsAutoPosts } = await import("./sns-auto-publisher");
+      const posts = await getSnsAutoPosts();
+      res.json(posts);
+    } catch (error: any) {
+      console.error("[SNS] Error fetching posts:", error?.message);
+      res.json([]);
+    }
   });
 
   app.post("/api/admin/sns-posts", requireAdmin, async (req, res) => {
     res.json({ id: crypto.randomUUID(), ...req.body, status: "draft", createdAt: new Date().toISOString() });
   });
 
+  app.delete("/api/admin/sns-posts/:id", requireAdmin, async (req, res) => {
+    try {
+      const { deleteSnsAutoPost } = await import("./sns-auto-publisher");
+      await deleteSnsAutoPost(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error?.message || "削除に失敗しました" });
+    }
+  });
+
   app.post("/api/admin/sns/generate", requireAdmin, async (req, res) => {
     try {
-      const { platform, topic } = req.body;
-      const openai = getOpenAI();
-      const result = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: `あなたは物流業界専門のSNSマーケターです。${platform}に最適化された日本語の投稿文を作成してください。ハッシュタグも含めてください。` },
-          { role: "user", content: `トピック: ${topic}\n\n投稿文を1つ生成してください。` },
-        ],
-        max_tokens: 300,
-      });
-      res.json({ content: result.choices[0]?.message?.content || "" });
+      const { platform, topic } = req.body || {};
+      const { generateSnsContent } = await import("./sns-auto-publisher");
+      const content = await generateSnsContent(platform || "x", topic || "トラマッチの紹介");
+      res.json({ content });
     } catch (error: any) {
       console.error("[SNS Gen] Error:", error?.message || error);
       res.status(500).json({ message: "生成に失敗しました: " + (error?.message || "不明なエラー") });
+    }
+  });
+
+  app.post("/api/admin/sns/generate-image", requireAdmin, async (req, res) => {
+    try {
+      const { topic, platform } = req.body || {};
+      const { generateTrapanImage } = await import("./sns-auto-publisher");
+      const imageBuffer = await generateTrapanImage(topic || "トラマッチの紹介", platform || "x");
+      if (!imageBuffer) return res.status(500).json({ message: "画像生成に失敗しました" });
+      const base64 = imageBuffer.toString("base64");
+      res.json({ image: `data:image/png;base64,${base64}` });
+    } catch (error: any) {
+      console.error("[SNS Image] Error:", error?.message || error);
+      res.status(500).json({ message: "画像生成に失敗しました: " + (error?.message || "不明なエラー") });
+    }
+  });
+
+  app.post("/api/admin/sns/auto-post", requireAdmin, async (req, res) => {
+    try {
+      const { platforms } = req.body || {};
+      const { runAutoPost } = await import("./sns-auto-publisher");
+      runAutoPost(platforms || ["x"]);
+      res.json({ message: "自動投稿を開始しました" });
+    } catch (error: any) {
+      res.status(500).json({ message: error?.message || "自動投稿に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/sns/post-single", requireAdmin, async (req, res) => {
+    try {
+      const { platform, content, imageBase64 } = req.body || {};
+      const { postToSns } = await import("./sns-auto-publisher");
+      const imageBuffer = imageBase64 ? Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ""), "base64") : null;
+      const result = await postToSns(platform || "x", content, imageBuffer);
+      
+      const { db: database } = await import("./db");
+      const { snsAutoPosts: table } = await import("@shared/schema");
+      await database.insert(table).values({
+        platform: platform || "x",
+        content,
+        status: result.success ? "posted" : "generated",
+        externalId: result.externalId || null,
+        errorMessage: result.error || null,
+        postedAt: result.success ? new Date() : null,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error?.message || "投稿に失敗しました" });
     }
   });
 
