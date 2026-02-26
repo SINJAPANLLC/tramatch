@@ -941,7 +941,7 @@ export default function CargoList() {
                     </div>
                   </td>
                   <td className="px-2 py-3 text-right align-top">
-                    <div className="font-bold text-[13px] text-foreground whitespace-nowrap">
+                    <div className="font-bold text-[15px] text-foreground whitespace-nowrap">
                       {listing.price ? `¥${formatPrice(listing.price)}` : "要相談"}
                     </div>
                     <div className="text-[11px] text-foreground whitespace-nowrap mt-0.5 font-bold">
