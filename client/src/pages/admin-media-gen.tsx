@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ImageIcon, Video, Wand2, Loader2, Download, Sparkles, Settings2, Palette, Type, Ratio } from "lucide-react";
+import { ImageIcon, Video, Wand2, Loader2, Download, Sparkles, Palette, Ratio } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 
 type GeneratedMedia = {
@@ -21,16 +21,45 @@ type GeneratedMedia = {
   createdAt: string;
 };
 
+const imageStyles = [
+  { id: "professional", label: "プロフェッショナル" },
+  { id: "modern", label: "モダン" },
+  { id: "minimal", label: "ミニマル" },
+  { id: "illustration", label: "イラスト" },
+  { id: "photo", label: "写真風" },
+];
+
+const imageSizes = [
+  { id: "1024x1024", label: "1024×1024（正方形）" },
+  { id: "1792x1024", label: "1792×1024（横長）" },
+  { id: "1024x1792", label: "1024×1792（縦長）" },
+];
+
+const videoStyles = [
+  { id: "explanation", label: "解説動画" },
+  { id: "promotion", label: "プロモーション" },
+  { id: "tutorial", label: "チュートリアル" },
+  { id: "news", label: "ニュース" },
+];
+
+const templatePrompts = [
+  { label: "バナー広告", prompt: "物流マッチングサービスのバナー広告、トラックとデジタル技術をイメージ、プロフェッショナル" },
+  { label: "SNS投稿用", prompt: "物流業界向けSNS投稿画像、明るくモダンなデザイン、ターコイズカラー基調" },
+  { label: "ブログアイキャッチ", prompt: "運送業界ブログのアイキャッチ画像、高速道路を走るトラック、夕焼け" },
+  { label: "サービス紹介", prompt: "AIを活用した物流マッチングの概念図、テクノロジーと物流の融合" },
+  { label: "求人広告", prompt: "運送会社の求人広告用画像、働くドライバーのイメージ、活気のある職場" },
+  { label: "LP用ヒーロー", prompt: "物流プラットフォームのランディングページ用ヒーロー画像、信頼性と効率性" },
+];
+
 export default function AdminMediaGen() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("image");
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageStyle, setImageStyle] = useState("professional");
   const [imageSize, setImageSize] = useState("1024x1024");
-  const [videoTopic, setVideoTopic] = useState("");
+  const [videoPrompt, setVideoPrompt] = useState("");
   const [videoStyle, setVideoStyle] = useState("explanation");
   const [generatedImages, setGeneratedImages] = useState<GeneratedMedia[]>([]);
-  const [generatedVideos, setGeneratedVideos] = useState<GeneratedMedia[]>([]);
 
   const imageGenMutation = useMutation({
     mutationFn: async (data: { prompt: string; style: string; size: string }) => {
@@ -52,19 +81,10 @@ export default function AdminMediaGen() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "動画生成を開始しました" });
+      toast({ title: "動画生成を開始しました。YouTube管理ページから進捗を確認できます。" });
     },
     onError: () => toast({ title: "動画生成に失敗しました", variant: "destructive" }),
   });
-
-  const templatePrompts = [
-    { label: "バナー広告", prompt: "物流マッチングサービスのバナー広告、トラックとデジタル技術をイメージ、プロフェッショナル" },
-    { label: "SNS投稿用", prompt: "物流業界向けSNS投稿画像、明るくモダンなデザイン、ターコイズカラー基調" },
-    { label: "ブログアイキャッチ", prompt: "運送業界ブログのアイキャッチ画像、高速道路を走るトラック、夕焼け" },
-    { label: "サービス紹介", prompt: "AIを活用した物流マッチングの概念図、テクノロジーと物流の融合" },
-    { label: "求人広告", prompt: "運送会社の求人広告用画像、働くドライバーのイメージ、活気のある職場" },
-    { label: "LP用ヒーロー", prompt: "物流プラットフォームのランディングページ用ヒーロー画像、信頼性と効率性" },
-  ];
 
   return (
     <DashboardLayout>
@@ -74,7 +94,7 @@ export default function AdminMediaGen() {
             <Sparkles className="w-6 h-6 text-primary" />
             画像・動画生成
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">AIを使って画像や動画コンテンツを自動生成します</p>
+          <p className="text-sm text-muted-foreground mt-1">プロンプトを入力するとAIがコンテンツを自動生成します</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -85,74 +105,93 @@ export default function AdminMediaGen() {
             <TabsTrigger value="video" data-testid="tab-video">
               <Video className="w-4 h-4 mr-1" />動画生成
             </TabsTrigger>
-            <TabsTrigger value="templates" data-testid="tab-templates">
-              <Palette className="w-4 h-4 mr-1" />テンプレート
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="image" className="space-y-4 mt-4">
             <Card>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-6 space-y-5">
                 <div>
-                  <Label className="text-sm font-bold text-foreground">画像プロンプト</Label>
+                  <Label className="text-sm font-bold text-foreground">1. プロンプトを入力</Label>
                   <Textarea
-                    className="mt-1 min-h-[100px] text-sm"
+                    className="mt-2 min-h-[100px] text-sm"
                     value={imagePrompt}
                     onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="生成したい画像の説明を入力してください..."
+                    placeholder={"生成したい画像の説明を入力してください\n\n例:\n・物流マッチングサービスのバナー広告\n・トラックが高速道路を走るイメージ写真\n・AIと物流を組み合わせたモダンなイラスト"}
                     data-testid="input-image-prompt"
                   />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {templatePrompts.map((t, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setImagePrompt(t.prompt)}
+                        className="text-[11px] px-2.5 py-1 rounded-full border border-border hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid={`template-prompt-${i}`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-bold text-foreground flex items-center gap-1">
-                      <Palette className="w-3 h-3" />スタイル
+                      <Palette className="w-3 h-3" />2. スタイル
                     </Label>
-                    <Select value={imageStyle} onValueChange={setImageStyle}>
-                      <SelectTrigger className="mt-1" data-testid="select-image-style">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="professional">プロフェッショナル</SelectItem>
-                        <SelectItem value="modern">モダン</SelectItem>
-                        <SelectItem value="minimal">ミニマル</SelectItem>
-                        <SelectItem value="illustration">イラスト</SelectItem>
-                        <SelectItem value="photo">写真風</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-3 gap-1.5 mt-2">
+                      {imageStyles.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setImageStyle(s.id)}
+                          className={`text-xs py-2 px-2 rounded-md border transition-colors ${
+                            imageStyle === s.id ? "border-primary bg-primary/10 text-foreground font-medium" : "border-border text-muted-foreground hover:border-primary/40"
+                          }`}
+                          data-testid={`style-${s.id}`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <Label className="text-sm font-bold text-foreground flex items-center gap-1">
-                      <Ratio className="w-3 h-3" />サイズ
+                      <Ratio className="w-3 h-3" />3. サイズ
                     </Label>
-                    <Select value={imageSize} onValueChange={setImageSize}>
-                      <SelectTrigger className="mt-1" data-testid="select-image-size">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1024x1024">1024×1024（正方形）</SelectItem>
-                        <SelectItem value="1792x1024">1792×1024（横長）</SelectItem>
-                        <SelectItem value="1024x1792">1024×1792（縦長）</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-1 gap-1.5 mt-2">
+                      {imageSizes.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setImageSize(s.id)}
+                          className={`text-xs py-2 px-3 rounded-md border transition-colors text-left ${
+                            imageSize === s.id ? "border-primary bg-primary/10 text-foreground font-medium" : "border-border text-muted-foreground hover:border-primary/40"
+                          }`}
+                          data-testid={`size-${s.id}`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <Button
+                  className="w-full"
                   onClick={() => imageGenMutation.mutate({ prompt: imagePrompt, style: imageStyle, size: imageSize })}
                   disabled={!imagePrompt.trim() || imageGenMutation.isPending}
                   data-testid="button-generate-image"
                 >
-                  {imageGenMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
-                  画像を生成
+                  {imageGenMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                  {imageGenMutation.isPending ? "生成中..." : "AIで画像を生成"}
                 </Button>
               </CardContent>
             </Card>
 
             {generatedImages.length > 0 && (
               <div>
-                <h3 className="text-sm font-bold text-foreground mb-3">生成履歴</h3>
+                <h3 className="text-sm font-bold text-foreground mb-3">生成された画像</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {generatedImages.map((img) => (
                     <Card key={img.id} data-testid={`card-generated-image-${img.id}`}>
@@ -161,10 +200,13 @@ export default function AdminMediaGen() {
                           <img src={img.url} alt={img.prompt} className="w-full h-full object-cover" />
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{img.prompt}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(img.createdAt).toLocaleString("ja-JP")}</p>
                         <div className="flex gap-2 mt-2">
-                          <Button variant="outline" size="sm" className="text-xs" data-testid={`button-download-${img.id}`}>
-                            <Download className="w-3 h-3 mr-1" />ダウンロード
-                          </Button>
+                          <a href={img.url} download target="_blank" rel="noopener noreferrer" className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full text-xs" data-testid={`button-download-${img.id}`}>
+                              <Download className="w-3 h-3 mr-1" />ダウンロード
+                            </Button>
+                          </a>
                         </div>
                       </CardContent>
                     </Card>
@@ -176,63 +218,49 @@ export default function AdminMediaGen() {
 
           <TabsContent value="video" className="space-y-4 mt-4">
             <Card>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-6 space-y-5">
                 <div>
-                  <Label className="text-sm font-bold text-foreground">動画トピック</Label>
-                  <Input
-                    className="mt-1"
-                    value={videoTopic}
-                    onChange={(e) => setVideoTopic(e.target.value)}
-                    placeholder="例: 物流業界のDX推進について"
-                    data-testid="input-video-topic"
+                  <Label className="text-sm font-bold text-foreground">1. 動画のテーマ・内容を入力</Label>
+                  <Textarea
+                    className="mt-2 min-h-[100px] text-sm"
+                    value={videoPrompt}
+                    onChange={(e) => setVideoPrompt(e.target.value)}
+                    placeholder={"動画のテーマを入力してください\n\n例:\n・物流業界のDX推進について\n・トラマッチの使い方ガイド\n・燃料費高騰時代のコスト管理術\n・食品輸送における温度管理の重要性"}
+                    data-testid="input-video-prompt"
                   />
                 </div>
+
                 <div>
-                  <Label className="text-sm font-bold text-foreground flex items-center gap-1">
-                    <Settings2 className="w-3 h-3" />動画スタイル
-                  </Label>
-                  <Select value={videoStyle} onValueChange={setVideoStyle}>
-                    <SelectTrigger className="mt-1" data-testid="select-video-style">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="explanation">解説動画</SelectItem>
-                      <SelectItem value="promotion">プロモーション</SelectItem>
-                      <SelectItem value="tutorial">チュートリアル</SelectItem>
-                      <SelectItem value="news">ニュース</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-bold text-foreground">2. 動画スタイル</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {videoStyles.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setVideoStyle(s.id)}
+                        className={`text-xs py-2.5 px-3 rounded-md border transition-colors ${
+                          videoStyle === s.id ? "border-primary bg-primary/10 text-foreground font-medium" : "border-border text-muted-foreground hover:border-primary/40"
+                        }`}
+                        data-testid={`video-style-${s.id}`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
                 <Button
-                  onClick={() => videoGenMutation.mutate({ topic: videoTopic, style: videoStyle })}
-                  disabled={!videoTopic.trim() || videoGenMutation.isPending}
+                  className="w-full"
+                  onClick={() => videoGenMutation.mutate({ topic: videoPrompt, style: videoStyle })}
+                  disabled={!videoPrompt.trim() || videoGenMutation.isPending}
                   data-testid="button-generate-video"
                 >
-                  {videoGenMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Video className="w-4 h-4 mr-1" />}
-                  動画を生成
+                  {videoGenMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
+                  {videoGenMutation.isPending ? "生成を開始中..." : "AIで動画を生成"}
                 </Button>
-                <p className="text-xs text-muted-foreground">※動画生成には数分かかる場合があります。YouTube管理ページから生成状況を確認できます。</p>
+                <p className="text-xs text-muted-foreground">※動画はAIがスクリプト作成→音声生成→動画合成の順で処理します。完了までに数分かかります。進捗はYouTube管理ページから確認できます。</p>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="templates" className="space-y-4 mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templatePrompts.map((t, i) => (
-                <Card key={i} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => { setImagePrompt(t.prompt); setActiveTab("image"); }} data-testid={`card-template-${i}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-                        <ImageIcon className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="text-sm font-bold text-foreground">{t.label}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{t.prompt}</p>
-                    <Badge variant="outline" className="text-[10px] mt-2">クリックで使用</Badge>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </TabsContent>
         </Tabs>
       </div>
