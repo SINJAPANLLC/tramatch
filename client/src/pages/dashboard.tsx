@@ -240,25 +240,25 @@ export default function Dashboard() {
                       <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-cargo-${listing.id}`}>
                         <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
                           <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</h3>
+                            <h3 className="font-bold text-foreground text-[13px] truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</h3>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground w-[130px]">
+                          <div className="flex items-center gap-1.5 text-[12px] text-foreground w-[140px]">
                             <MapPin className="w-3 h-3 text-primary shrink-0" />
                             <span className="font-medium truncate">{listing.departureArea}</span>
-                            <ArrowRight className="w-2.5 h-2.5 text-muted-foreground/50 shrink-0" />
+                            <ArrowRight className="w-2.5 h-2.5 text-foreground/50 shrink-0" />
                             <span className="font-medium truncate">{listing.arrivalArea}</span>
                           </div>
-                          <div className="w-[80px] text-right">
+                          <div className="w-[90px] text-right">
                             {hasNumericPrice(listing.price) ? (
-                              <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
+                              <span className="text-[14px] font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
-                              <span className="text-xs font-bold text-primary">要相談</span>
+                              <span className="text-[13px] font-bold text-primary">要相談</span>
                             )}
                           </div>
                           <div className="w-[36px] text-center">
-                            <Badge variant="secondary" className="text-[10px] font-bold">{listing.vehicleType}</Badge>
+                            <Badge variant="secondary" className="text-[11px] font-bold">{listing.vehicleType}</Badge>
                           </div>
-                          <span className="text-[11px] text-muted-foreground w-[72px] text-right">{listing.desiredDate}</span>
+                          <span className="text-[12px] text-foreground w-[76px] text-right">{listing.desiredDate}</span>
                         </div>
                       </div>
                     ))}
@@ -289,25 +289,25 @@ export default function Dashboard() {
                       <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-truck-${listing.id}`}>
                         <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
                           <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-sm truncate">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</h3>
+                            <h3 className="font-bold text-foreground text-[13px] truncate">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</h3>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground w-[130px]">
+                          <div className="flex items-center gap-1.5 text-[12px] text-foreground w-[140px]">
                             <MapPin className="w-3 h-3 text-primary shrink-0" />
                             <span className="font-medium truncate">{listing.currentArea}</span>
-                            <ArrowRight className="w-2.5 h-2.5 text-muted-foreground/50 shrink-0" />
+                            <ArrowRight className="w-2.5 h-2.5 text-foreground/50 shrink-0" />
                             <span className="font-medium truncate">{listing.destinationArea}</span>
                           </div>
-                          <div className="w-[80px] text-right">
+                          <div className="w-[90px] text-right">
                             {hasNumericPrice(listing.price) ? (
-                              <span className="text-sm font-bold text-primary">{formatPrice(listing.price)}円</span>
+                              <span className="text-[14px] font-bold text-primary">{formatPrice(listing.price)}円</span>
                             ) : (
-                              <span className="text-xs font-bold text-primary">要相談</span>
+                              <span className="text-[13px] font-bold text-primary">要相談</span>
                             )}
                           </div>
                           <div className="w-[36px] text-center">
-                            <Badge variant="secondary" className="text-[10px] font-bold">{listing.vehicleType}</Badge>
+                            <Badge variant="secondary" className="text-[11px] font-bold">{listing.vehicleType}</Badge>
                           </div>
-                          <span className="text-[11px] text-muted-foreground w-[72px] text-right">{listing.availableDate}</span>
+                          <span className="text-[12px] text-foreground w-[76px] text-right">{listing.availableDate}</span>
                         </div>
                       </div>
                     ))}
