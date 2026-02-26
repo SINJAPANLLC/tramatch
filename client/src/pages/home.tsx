@@ -740,7 +740,7 @@ function PromoBanner() {
                   <span className="text-4xl font-extrabold text-primary leading-none">¥0</span>
                 </div>
               </div>
-              <img src={trapanImgPath} alt="トラパン" className="w-20 h-20 object-contain flex-shrink-0" />
+              <img src={trapanImgPath} alt="トラパン" className="w-20 h-20 object-contain flex-shrink-0 -mr-2" />
             </div>
             <p className="text-[10px] text-muted-foreground px-4 pb-2 -mt-1">今だけ無料でプレミアム機能が使える</p>
             <div className="bg-primary text-primary-foreground text-center py-2 text-xs font-bold rounded-b-md">
