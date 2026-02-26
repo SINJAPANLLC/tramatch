@@ -919,7 +919,7 @@ export default function CargoList() {
                             )}
                           </div>
                           <div className="text-[13px] text-foreground font-bold">
-                            {listing.desiredDate} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
+                            {listing.desiredDate?.replace(/^\d{4}[\/\-]/, "")} {listing.departureTime && listing.departureTime !== "指定なし" ? listing.departureTime : ""}
                           </div>
                         </div>
                       </div>
@@ -934,7 +934,7 @@ export default function CargoList() {
                             )}
                           </div>
                           <div className="text-[13px] text-foreground font-bold">
-                            {listing.arrivalDate || ""} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
+                            {(listing.arrivalDate || "").replace(/^\d{4}[\/\-]/, "")} {listing.arrivalTime && listing.arrivalTime !== "指定なし" ? listing.arrivalTime : ""}
                           </div>
                         </div>
                       </div>
