@@ -56,7 +56,7 @@ const PER_PAGE_OPTIONS = [10, 20, 50, 100];
 type InputMode = "text" | "file" | "voice";
 
 const TRUCK_FIELDS = [
-  "title", "currentArea", "destinationArea", "vehicleType", "truckCount", "bodyType",
+  "title", "currentArea", "currentAddress", "destinationArea", "destinationAddress", "vehicleType", "truckCount", "bodyType",
   "maxWeight", "availableDate", "price", "description",
 ];
 
@@ -68,7 +68,7 @@ const SELECT_FIELD_OPTIONS: Record<string, string[]> = {
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  title: "タイトル", currentArea: "空車地", destinationArea: "行先地",
+  title: "タイトル", currentArea: "空車地", currentAddress: "空車地詳細住所", destinationArea: "行先地", destinationAddress: "行先地詳細住所",
   vehicleType: "車種", bodyType: "車体タイプ", maxWeight: "最大積載量", availableDate: "空車日",
   price: "最低運賃", description: "備考",
 };
@@ -298,11 +298,13 @@ ${row("保有車両台数", companyInfo?.truckCount ? `${companyInfo.truckCount}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex-1">
                 <div className="text-sm font-bold text-foreground">{listing.currentArea}</div>
+                {listing.currentAddress && <div className="text-xs text-foreground mt-0.5">{listing.currentAddress}</div>}
                 <div className="text-xs text-muted-foreground font-bold mt-0.5">現在地</div>
               </div>
               <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
               <div className="flex-1 text-right">
                 <div className="text-sm font-bold text-foreground">{listing.destinationArea}</div>
+                {listing.destinationAddress && <div className="text-xs text-foreground mt-0.5">{listing.destinationAddress}</div>}
                 <div className="text-xs text-muted-foreground font-bold mt-0.5">行き先</div>
               </div>
             </div>
@@ -496,7 +498,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
   const form = useForm<InsertTruckListing>({
     resolver: zodResolver(truckFormSchema),
     defaultValues: {
-      title: "", currentArea: "", destinationArea: "", vehicleType: "", truckCount: "", bodyType: "",
+      title: "", currentArea: "", currentAddress: "", destinationArea: "", destinationAddress: "", vehicleType: "", truckCount: "", bodyType: "",
       maxWeight: "", availableDate: "", price: "", description: "",
     },
   });
@@ -730,7 +732,7 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
       setPendingItems(remaining);
       setCurrentItemIndex(prev => prev + 1);
       form.reset({
-        title: "", currentArea: "", destinationArea: "", vehicleType: "", bodyType: "",
+        title: "", currentArea: "", currentAddress: "", destinationArea: "", destinationAddress: "", vehicleType: "", bodyType: "",
         maxWeight: "", availableDate: "", price: "", description: "",
       });
       const normalized = normalizeAiItem(nextItem);
@@ -1037,6 +1039,20 @@ function TruckRegisterTab({ tabBar }: { tabBar: (hasMarginBottom: boolean) => Re
                         </FormItem>
                       )} />
                     </div>
+                    <FormField control={form.control} name="currentAddress" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">空車地 詳細住所</FormLabel>
+                        <FormControl><Input className="h-8 text-xs" placeholder="例: 名古屋市中村区" {...field} value={field.value || ""} data-testid="input-current-address" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="destinationAddress" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">行先地 詳細住所</FormLabel>
+                        <FormControl><Input className="h-8 text-xs" placeholder="例: 大阪市北区" {...field} value={field.value || ""} data-testid="input-destination-address" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
                   </div>
                 </div>
 
@@ -1194,7 +1210,9 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
   const [editFields, setEditFields] = useState({
     title: listing.title,
     currentArea: listing.currentArea,
+    currentAddress: listing.currentAddress || "",
     destinationArea: listing.destinationArea,
+    destinationAddress: listing.destinationAddress || "",
     vehicleType: listing.vehicleType,
     bodyType: listing.bodyType || "",
     maxWeight: listing.maxWeight,
@@ -1207,7 +1225,9 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
     setEditFields({
       title: listing.title,
       currentArea: listing.currentArea,
+      currentAddress: listing.currentAddress || "",
       destinationArea: listing.destinationArea,
+      destinationAddress: listing.destinationAddress || "",
       vehicleType: listing.vehicleType,
       bodyType: listing.bodyType || "",
       maxWeight: listing.maxWeight,
@@ -1280,6 +1300,14 @@ function TruckEditPanel({ listing, onClose }: { listing: TruckListing; onClose: 
               <SelectContent>{PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+        </div>
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">空車地 詳細住所</label>
+          <Input value={editFields.currentAddress} onChange={e => handleChange("currentAddress", e.target.value)} placeholder="例: 名古屋市中村区" data-testid="input-edit-currentAddress" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">行先地 詳細住所</label>
+          <Input value={editFields.destinationAddress} onChange={e => handleChange("destinationAddress", e.target.value)} placeholder="例: 大阪市北区" data-testid="input-edit-destinationAddress" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -1950,6 +1978,7 @@ export default function TruckList() {
                         <div className="min-w-0">
                           <div className="font-bold text-[14px] text-foreground">{listing.availableDate}</div>
                           <div className="text-[13px] text-foreground font-bold">{listing.currentArea}</div>
+                          {listing.currentAddress && <div className="text-[11px] text-muted-foreground">{listing.currentAddress}</div>}
                         </div>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
@@ -1957,6 +1986,7 @@ export default function TruckList() {
                         <MapPin className="w-3 h-3 text-blue-600 shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <div className="text-[13px] text-foreground font-bold">{listing.destinationArea}</div>
+                          {listing.destinationAddress && <div className="text-[11px] text-muted-foreground">{listing.destinationAddress}</div>}
                         </div>
                       </div>
                     </div>
