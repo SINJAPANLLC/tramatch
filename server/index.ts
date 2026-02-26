@@ -44,7 +44,9 @@ declare module "express-session" {
 app.use(
   express.json({
     verify: (req, _res, buf) => {
-      req.rawBody = buf;
+      if (req.url?.includes('/square') || req.url?.includes('/webhook')) {
+        req.rawBody = buf;
+      }
     },
   }),
 );
@@ -85,26 +87,11 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    if (!Array.isArray(bodyJson) || bodyJson.length <= 5) {
-      capturedJsonResponse = bodyJson;
-    }
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        const responseStr = JSON.stringify(capturedJsonResponse);
-        logLine += ` :: ${responseStr.length > 200 ? responseStr.substring(0, 200) + '...' : responseStr}`;
-      }
-
-      log(logLine);
+      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
 
