@@ -864,17 +864,15 @@ export async function registerRoutes(
 
   async function expireOldCargoListings(listings: any[]) {
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const expirePromises: Promise<any>[] = [];
     for (const listing of listings) {
       if (listing.status !== "active") continue;
       const dateStr = listing.arrivalDate || listing.desiredDate;
       if (!dateStr) continue;
-      const cleaned = dateStr.replace(/\//g, "-");
-      const d = new Date(cleaned);
-      if (isNaN(d.getTime())) continue;
-      d.setHours(23, 59, 59, 999);
-      if (d < now) {
+      const cleaned = dateStr.replace(/\//g, "-").replace(/[^\d-]/g, "").slice(0, 10);
+      if (cleaned.length < 10) continue;
+      if (cleaned < todayStr) {
         listing.status = "cancelled";
         expirePromises.push(storage.updateCargoStatus(listing.id, "cancelled"));
       }
