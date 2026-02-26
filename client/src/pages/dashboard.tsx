@@ -226,7 +226,6 @@ export default function Dashboard() {
                 <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
                   最新の荷物情報
-                  <Badge variant="outline" className="text-[10px] ml-1">{cargoListings?.length || 0}件</Badge>
                 </h2>
                 <Link href="/cargo">
                   <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-cargo">
@@ -274,7 +273,6 @@ export default function Dashboard() {
                 <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Truck className="w-4 h-4 text-primary" />
                   最新の車両情報
-                  <Badge variant="outline" className="text-[10px] ml-1">{truckListings?.length || 0}件</Badge>
                 </h2>
                 <Link href="/trucks">
                   <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-trucks">
