@@ -1,6 +1,7 @@
 import express from "express";
 import type { Express, Request, Response, NextFunction } from "express";
-import type { Server } from "http";
+import compression from "compression";
+import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, dbPool } from "./db";
 import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates } from "@shared/schema";
@@ -12,20 +13,12 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import OpenAI from "openai";
+import { ensureCompatibleFormat, speechToText } from "./replit_integrations/audio/client";
+import { SquareClient, SquareEnvironment, SquareError } from "square";
 import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 import { pingGoogleSitemap } from "./auto-article-generator";
-
-let _openai: any = null;
-function getOpenAI() {
-  if (!_openai) {
-    const OpenAI = require("openai").default;
-    _openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
-    });
-  }
-  return _openai;
-}
+import * as XLSX from "xlsx";
 
 async function resolveEmailTemplate(
   triggerEvent: string,
@@ -60,10 +53,9 @@ function isAgentAutoEmail(email: string): boolean {
   return /^agent-[a-z]+@tramatch/.test(email);
 }
 
-const openai = new Proxy({} as any, {
-  get(_target, prop) {
-    return getOpenAI()[prop];
-  }
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  ...(process.env.OPENAI_API_KEY ? {} : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
 });
 
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -195,6 +187,7 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  app.use(compression());
   app.use("/uploads", express.static(uploadDir));
 
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
@@ -1902,7 +1895,6 @@ export async function registerRoutes(
         return res.status(400).json({ message: "音声ファイルが必要です" });
       }
       const rawBuffer = Buffer.from(req.file.buffer);
-      const { ensureCompatibleFormat, speechToText } = await import("./replit_integrations/audio/client");
       const { buffer: audioBuffer, format } = await ensureCompatibleFormat(rawBuffer);
       const transcript = await speechToText(audioBuffer, format);
       res.json({ text: transcript });
@@ -2954,7 +2946,6 @@ statusの意味:
         "備考": r.notes || "",
       }));
 
-      const XLSX = await import("xlsx");
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "実運送体制管理簿");
@@ -3442,8 +3433,7 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/columns", async (_req, res) => {
     try {
       const articles = await storage.getPublishedSeoArticles();
-      const light = articles.map(({ content, ...rest }) => rest);
-      res.json(light);
+      res.json(articles);
     } catch (error) {
       res.status(500).json({ message: "記事の取得に失敗しました" });
     }
@@ -3453,8 +3443,7 @@ JSON形式で以下を返してください（日本語で）:
     try {
       const limit = parseInt(_req.query.limit as string) || 10;
       const articles = await storage.getPopularSeoArticles(limit);
-      const light = articles.map(({ content, ...rest }) => rest);
-      res.json(light);
+      res.json(articles);
     } catch (error) {
       res.status(500).json({ message: "人気記事の取得に失敗しました" });
     }
@@ -3463,8 +3452,7 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/columns/category/:category", async (req, res) => {
     try {
       const articles = await storage.getSeoArticlesByCategory(req.params.category);
-      const light = articles.map(({ content, ...rest }) => rest);
-      res.json(light);
+      res.json(articles);
     } catch (error) {
       res.status(500).json({ message: "カテゴリ記事の取得に失敗しました" });
     }
@@ -3489,8 +3477,7 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(404).json({ message: "記事が見つかりません" });
       }
       const related = await storage.getRelatedSeoArticles(article.id, article.category || "kyukakyusha", 5);
-      const light = related.map(({ content, ...rest }) => rest);
-      res.json(light);
+      res.json(related);
     } catch (error) {
       res.status(500).json({ message: "関連記事の取得に失敗しました" });
     }
@@ -3861,8 +3848,7 @@ JSON形式で以下を返してください（日本語で）:
   app.get("/api/admin/seo-articles", requireAdmin, async (req, res) => {
     try {
       const articles = await storage.getSeoArticles();
-      const light = articles.map(({ content, ...rest }) => ({ ...rest, contentPreview: content?.substring(0, 200) || '' }));
-      res.json(light);
+      res.json(articles);
     } catch (error) {
       res.status(500).json({ message: "記事の取得に失敗しました" });
     }
@@ -4332,7 +4318,6 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(500).json({ message: "Square決済の設定が完了していません" });
       }
 
-      const { SquareClient, SquareEnvironment } = await import("square");
       const squareClient = new SquareClient({
         token: accessToken,
         environment: process.env.SQUARE_ENVIRONMENT === "production"
@@ -4374,7 +4359,6 @@ JSON形式で以下を返してください（日本語で）:
       });
     } catch (error: any) {
       console.error("Square payment error:", error);
-      const { SquareError } = await import("square");
       if (error instanceof SquareError) {
         const errorCode = error.errors?.[0]?.code || "";
         const japaneseMessages: Record<string, string> = {

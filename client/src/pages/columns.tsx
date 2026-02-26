@@ -229,7 +229,7 @@ export default function Columns() {
                       {article.title}
                     </h2>
                     <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                      {article.metaDescription || (article.content ? extractExcerpt(article.content) : '')}
+                      {article.metaDescription || extractExcerpt(article.content)}
                     </p>
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">

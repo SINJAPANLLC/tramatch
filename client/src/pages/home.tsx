@@ -401,6 +401,26 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      <div className="bg-primary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-center gap-3 sm:gap-12 py-3 text-primary-foreground text-shadow flex-wrap">
+            <span className="text-xs sm:text-base font-medium tracking-wide hidden sm:inline">リアルタイム情報</span>
+            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-sm sm:text-lg font-bold">{cargoCount}件</span>
+              <span className="text-xs sm:text-sm">の荷物</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </Link>
+            <Link href="/login" className="flex items-center gap-1.5 sm:gap-2 group">
+              <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-sm sm:text-lg font-bold">{truckCount}件</span>
+              <span className="text-xs sm:text-sm">の空車</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <section className="bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center max-w-3xl mx-auto">
@@ -504,6 +524,31 @@ export default function Home() {
               <p className="text-base text-primary-foreground leading-relaxed">
                 充実したサポートで<br />安心して取引できます
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-primary">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-center mb-4 text-shadow-lg" data-testid="text-stats-title">
+            圧倒的な情報量
+          </h2>
+          <p className="text-base text-primary-foreground text-center mb-12 text-shadow">リアルタイムで更新される情報をご活用ください</p>
+          <StatsCounters cargoCount={cargoCount} truckCount={truckCount} />
+        </div>
+      </section>
+
+      <section className="py-4 bg-primary">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 py-4">
+            <p className="text-primary-foreground font-bold text-lg sm:text-xl text-shadow">TRA MATCH AIを使って業務をラクにしませんか？</p>
+            <div className="flex items-center gap-3">
+              <Link href="/register">
+                <Button variant="outline" className="bg-primary-foreground text-primary font-bold border-primary-foreground" data-testid="button-mid-cta-register">
+                  無料会員登録
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -636,6 +681,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">最新の荷物情報</h2>
+            <p className="mt-2 text-primary-foreground text-shadow">現在 <span className="font-bold text-xl">{cargoCount}件</span> の荷物情報が登録されています</p>
           </div>
         </div>
         {cargoListings && cargoListings.length > 0 && (
@@ -688,6 +734,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-shadow-lg">最新の車両情報</h2>
+            <p className="mt-2 text-primary-foreground text-shadow">現在 <span className="font-bold text-xl">{truckCount}件</span> の空車情報が登録されています</p>
           </div>
         </div>
         {truckListings && truckListings.length > 0 && (
