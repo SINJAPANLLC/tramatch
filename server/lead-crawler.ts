@@ -24,6 +24,14 @@ const SEARCH_QUERIES = [
   "運送会社 配車 お問い合わせ",
   "3PL 物流 株式会社",
   "特別積合せ 運送 株式会社",
+  "運送会社 メールアドレス 会社概要",
+  "運輸 株式会社 mail 会社概要",
+  "運送 株式会社 info@ 会社概要",
+  "一般貨物 運送 連絡先 メール",
+  "物流会社 採用 お問い合わせ メール",
+  "運送会社 一覧 連絡先",
+  "トラック運送 事業者 電話 メール",
+  "貨物運送 会社情報 連絡先",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -69,6 +77,7 @@ const NON_TRANSPORT_KEYWORDS = [
   "弁護士", "税理士", "行政書士事務所", "司法書士",
   "プログラミング", "IT企業", "ソフトウェア開発",
   "飲食店", "居酒屋", "寿司", "ラーメン",
+  "タクシー", "ハイヤー", "バス", "観光バス", "旅行", "ツアー",
 ];
 
 const PORTAL_DOMAINS = [
@@ -76,6 +85,9 @@ const PORTAL_DOMAINS = [
   "clearworks.co.jp", "job-gear.jp", "townwork.net",
   "navit-j.com", "mapion.co.jp", "ekiten.jp", "itp.ne.jp",
   "ashita-office.com", "freee.co.jp", "minkabu.jp",
+  "hakopro.jp", "lnews.jp", "e-logit.com", "pref.",
+  "faq.", "wikipedia.org", "google.com", "bing.com",
+  "yahoo.co.jp", "indeed.com", "indeedworks.com",
 ];
 
 function isPortalSite(url: string): boolean {
@@ -166,12 +178,32 @@ async function fetchPageContent(url: string): Promise<string> {
 }
 
 function extractContactInfo(html: string): { emails: string[]; phones: string[]; faxes: string[] } {
-  const textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+  const mailtoEmails = (html.match(/mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi) || [])
+    .map(m => m.replace(/^mailto:/i, ""));
+
+  const decodedHtml = html
+    .replace(/&#64;/g, "@")
+    .replace(/&#x40;/g, "@")
+    .replace(/\[at\]/gi, "@")
+    .replace(/（at）/gi, "@")
+    .replace(/\(at\)/gi, "@")
+    .replace(/\[dot\]/gi, ".")
+    .replace(/（dot）/gi, ".");
+
+  const jsEmailPattern = /['"]([a-zA-Z0-9._%+\-]+)['"][\s]*\+[\s]*['"]@['"][\s]*\+[\s]*['"]([a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})['"]/g;
+  const jsEmails: string[] = [];
+  let jsMatch;
+  while ((jsMatch = jsEmailPattern.exec(html)) !== null) {
+    jsEmails.push(jsMatch[1] + "@" + jsMatch[2]);
+  }
+
+  const textContent = decodedHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
-  const emailSet = new Set((textContent.match(EMAIL_REGEX) || []).filter(isValidCompanyEmail));
+  const allEmails = [...mailtoEmails, ...jsEmails, ...(textContent.match(EMAIL_REGEX) || [])];
+  const emailSet = new Set(allEmails.filter(isValidCompanyEmail));
   const emails = Array.from(emailSet);
 
   const phoneSet = new Set(textContent.match(PHONE_REGEX) || []);
@@ -199,11 +231,25 @@ function extractCompanyName(html: string, url: string): string {
   try { return new URL(url).hostname; } catch { return url; }
 }
 
-async function findEmailOnRelatedPages(baseUrl: string): Promise<{ emails: string[]; phones: string[]; faxes: string[] } | null> {
+async function findEmailOnRelatedPages(baseUrl: string, baseHtml?: string): Promise<{ emails: string[]; phones: string[]; faxes: string[] } | null> {
   try {
     const urlObj = new URL(baseUrl);
     const origin = urlObj.origin;
-    const relatedPaths = ["/contact", "/contact/", "/company/", "/about/", "/access/", "/inquiry/"];
+    const relatedPaths = ["/contact", "/contact/", "/company/", "/about/", "/access/", "/inquiry/", "/company/outline/", "/company/about/", "/gaiyou/", "/outline/", "/info/", "/corporate/", "/company-info/", "/toiawase/"];
+
+    if (baseHtml) {
+      const linkPattern = /href=["']([^"']*(?:contact|company|about|gaiyou|outline|inquiry|toiawase|info|概要|問[いい]合[わわ]せ)[^"']*)["']/gi;
+      let m;
+      while ((m = linkPattern.exec(baseHtml)) !== null) {
+        try {
+          const linkedUrl = new URL(m[1], baseUrl).href;
+          if (new URL(linkedUrl).hostname === urlObj.hostname && !relatedPaths.includes(new URL(linkedUrl).pathname)) {
+            relatedPaths.push(new URL(linkedUrl).pathname);
+          }
+        } catch {}
+      }
+    }
+
     for (const path of relatedPaths) {
       const relatedUrl = origin + path;
       if (relatedUrl === baseUrl) continue;
@@ -237,20 +283,27 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
   const companyName = extractCompanyName(html, url);
 
   if (emails.length === 0) {
-    const relatedInfo = await findEmailOnRelatedPages(url);
+    console.log(`[Lead Crawler] No email on main page, checking related pages for: ${url}`);
+    const relatedInfo = await findEmailOnRelatedPages(url, html);
     if (relatedInfo) {
       emails = relatedInfo.emails;
       if (relatedInfo.phones.length > 0) phones = relatedInfo.phones;
       if (relatedInfo.faxes.length > 0) faxes = relatedInfo.faxes;
     }
-    if (emails.length === 0) return 0;
+    if (emails.length === 0) {
+      console.log(`[Lead Crawler] No email found anywhere for: ${companyName} (${url})`);
+      return 0;
+    }
   }
 
   let added = 0;
 
   for (const email of emails) {
     const existing = await storage.getEmailLeadByEmail(email);
-    if (existing) continue;
+    if (existing) {
+      console.log(`[Lead Crawler] Duplicate email skipped: ${email}`);
+      continue;
+    }
 
     try {
       const industry = detectIndustry(html);
@@ -266,6 +319,7 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
         status: "new",
       });
       added++;
+      console.log(`[Lead Crawler] ✓ New lead saved: ${companyName} <${email}>`);
     } catch (err) {
       console.error(`[Lead Crawler] Failed to save lead ${email}:`, err);
     }
@@ -493,14 +547,13 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   const limit = maxCount || CRAWL_BATCH_SIZE;
 
   const shuffled = [...SEARCH_QUERIES].sort(() => Math.random() - 0.5);
-  const todaysQueries = shuffled.slice(0, 5);
+  const todaysQueries = shuffled.slice(0, 8);
 
   const prefStart = Math.floor(Math.random() * PREFECTURES.length);
-  const todaysPrefectures = [
-    PREFECTURES[prefStart % PREFECTURES.length],
-    PREFECTURES[(prefStart + 1) % PREFECTURES.length],
-    PREFECTURES[(prefStart + 2) % PREFECTURES.length],
-  ];
+  const todaysPrefectures: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    todaysPrefectures.push(PREFECTURES[(prefStart + i) % PREFECTURES.length]);
+  }
 
   for (const query of todaysQueries) {
     if (totalFound >= limit) break;
