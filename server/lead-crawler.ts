@@ -2,8 +2,8 @@ import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
 import dns from "dns/promises";
 
-const DAILY_SEND_LIMIT = 300;
-const SEND_INTERVAL_MS = 3000;
+const DAILY_SEND_LIMIT = 1500;
+const SEND_INTERVAL_MS = 1000;
 const CRAWL_BATCH_SIZE = 50;
 
 // セッション内でクロール済みドメインを記録（重複回避）
