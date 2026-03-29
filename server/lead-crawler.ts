@@ -1,9 +1,13 @@
 import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
+import dns from "dns/promises";
 
 const DAILY_SEND_LIMIT = 300;
 const SEND_INTERVAL_MS = 3000;
 const CRAWL_BATCH_SIZE = 50;
+
+// セッション内でクロール済みドメインを記録（重複回避）
+const crawledDomainsCache = new Set<string>();
 
 const SEARCH_QUERIES = [
   "一般貨物自動車運送事業 会社概要",
@@ -32,6 +36,30 @@ const SEARCH_QUERIES = [
   "運送会社 一覧 連絡先",
   "トラック運送 事業者 電話 メール",
   "貨物運送 会社情報 連絡先",
+  "中小運送会社 株式会社 会社概要",
+  "運送会社 有限会社 会社概要",
+  "有限会社 運送 連絡先",
+  "有限会社 運輸 お問い合わせ",
+  "合同会社 運送 物流",
+  "運送業 創業 会社概要",
+  "自家用 貨物 輸送 事業者",
+  "引越し 運送 一般貨物 会社概要",
+  "ルート配送 運送 株式会社",
+  "幹線輸送 運送会社 会社概要",
+  "地場輸送 運送 株式会社",
+  "食品 輸送 運送 会社概要",
+  "建材 輸送 運送 株式会社",
+  "産廃 運送 一般貨物 会社概要",
+  "危険物 輸送 運送 株式会社",
+  "精密機器 輸送 運送会社",
+  "医療機器 輸送 物流 会社概要",
+  "農産物 輸送 運送 株式会社",
+  "鋼材 輸送 運送 会社概要",
+  "土木 建設資材 輸送 運送",
+  "コンテナ 輸送 運送 株式会社",
+  "海上コンテナ 陸送 運送会社",
+  "港湾 輸送 運送 株式会社",
+  "空港 輸送 運送会社 会社概要",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -85,9 +113,11 @@ const PORTAL_DOMAINS = [
   "clearworks.co.jp", "job-gear.jp", "townwork.net",
   "navit-j.com", "mapion.co.jp", "ekiten.jp", "itp.ne.jp",
   "ashita-office.com", "freee.co.jp", "minkabu.jp",
-  "hakopro.jp", "lnews.jp", "e-logit.com", "pref.",
+  "hakopro.jp", "lnews.jp", "e-logit.com",
   "faq.", "wikipedia.org", "google.com", "bing.com",
   "yahoo.co.jp", "indeed.com", "indeedworks.com",
+  "metro.tokyo.lg.jp", "prtimes.jp", "salesnow.jp",
+  "doraever.jp", "mynavi.jp", "rikunabi.com",
 ];
 
 function isPortalSite(url: string): boolean {
@@ -269,7 +299,29 @@ async function findEmailOnRelatedPages(baseUrl: string, baseHtml?: string): Prom
   }
 }
 
+const COMMON_EMAIL_PREFIXES = ["info", "contact", "mail", "office", "inquiry", "soumu", "eigyo", "hanbai", "support", "jimukyoku", "honsha"];
+
+async function guessCompanyEmail(domain: string): Promise<string | null> {
+  try {
+    const mxRecords = await dns.resolveMx(domain);
+    if (!mxRecords || mxRecords.length === 0) return null;
+    const guessedEmail = `info@${domain}`;
+    console.log(`[Lead Crawler] Domain ${domain} has MX records, guessing: ${guessedEmail}`);
+    return guessedEmail;
+  } catch {
+    return null;
+  }
+}
+
 export async function crawlLeadsFromUrl(url: string): Promise<number> {
+  try {
+    const domain = new URL(url).hostname.replace(/^www\./, "");
+    if (crawledDomainsCache.has(domain)) {
+      return 0;
+    }
+    crawledDomainsCache.add(domain);
+  } catch { return 0; }
+
   console.log(`[Lead Crawler] Crawling: ${url}`);
   const html = await fetchPageContent(url);
   if (!html) return 0;
@@ -290,10 +342,21 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
       if (relatedInfo.phones.length > 0) phones = relatedInfo.phones;
       if (relatedInfo.faxes.length > 0) faxes = relatedInfo.faxes;
     }
-    if (emails.length === 0) {
-      console.log(`[Lead Crawler] No email found anywhere for: ${companyName} (${url})`);
-      return 0;
-    }
+  }
+
+  if (emails.length === 0) {
+    try {
+      const domain = new URL(url).hostname.replace(/^www\./, "");
+      if (domain.endsWith(".co.jp") || domain.endsWith(".jp") || domain.endsWith(".com")) {
+        const guessed = await guessCompanyEmail(domain);
+        if (guessed) emails = [guessed];
+      }
+    } catch { }
+  }
+
+  if (emails.length === 0) {
+    console.log(`[Lead Crawler] No email found anywhere for: ${companyName} (${url})`);
+    return 0;
   }
 
   let added = 0;
@@ -329,15 +392,71 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
 }
 
 const DIRECTORY_SOURCES = [
-  "https://www.jta.or.jp/member/",
+  // 物流系ディレクトリ（ページネーション含む）
   "https://www.logi-today.com/company-list",
+  "https://www.logi-today.com/company-list?page=2",
+  "https://www.logi-today.com/company-list?page=3",
+  "https://www.logi-today.com/company-list?page=4",
+  "https://www.logi-today.com/company-list?page=5",
   "https://transport-guide.jp/company/",
+  "https://transport-guide.jp/company/?page=2",
   "https://www.trabox.ne.jp/company/",
   "https://www.butsuryu.or.jp/member/",
-  "https://www.nittsu.co.jp/",
-  "https://lnews.jp/logistics-company/",
-  "https://www.e-logit.com/companylist/",
   "https://www.logistics.jp/company/",
+  "https://www.moji-transportation.com/",
+  "https://www.cargo-kyushu.jp/",
+  "https://www.truck-station.com/",
+  // 会社検索サイト（運送業）
+  "https://baseconnect.in/companies?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
+  "https://www.tsr-net.co.jp/service/tsrdb/?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
+  "https://jta.or.jp/member.html",
+  // 全国トラック協会各都道府県支部
+  "https://www.nta.or.jp/member/",
+  "https://www.hokkaido-ta.or.jp/",
+  "https://www.aomori-ta.or.jp/",
+  "https://www.iwate-ta.or.jp/",
+  "https://www.miyagi-ta.or.jp/",
+  "https://www.akita-ta.or.jp/",
+  "https://www.yamagata-ta.or.jp/",
+  "https://www.fukushima-ta.or.jp/",
+  "https://www.ibaraki-ta.or.jp/",
+  "https://www.tochigi-ta.or.jp/",
+  "https://www.gunma-ta.or.jp/",
+  "https://www.saitama-ta.or.jp/",
+  "https://www.chiba-ta.or.jp/",
+  "https://www.niigata-ta.or.jp/",
+  "https://www.toyama-ta.or.jp/",
+  "https://www.ishikawa-ta.or.jp/",
+  "https://www.fukui-ta.or.jp/",
+  "https://www.yamanashi-ta.or.jp/",
+  "https://www.nagano-ta.or.jp/",
+  "https://www.gifu-ta.or.jp/",
+  "https://www.shizuoka-ta.or.jp/",
+  "https://www.aichi-ta.or.jp/",
+  "https://www.mie-ta.or.jp/",
+  "https://www.shiga-ta.or.jp/",
+  "https://www.kyoto-ta.or.jp/",
+  "https://www.osaka-ta.or.jp/",
+  "https://www.hyogo-ta.or.jp/",
+  "https://www.nara-ta.or.jp/",
+  "https://www.wakayama-ta.or.jp/",
+  "https://www.tottori-ta.or.jp/",
+  "https://www.shimane-ta.or.jp/",
+  "https://www.okayama-ta.or.jp/",
+  "https://www.hiroshima-ta.or.jp/",
+  "https://www.yamaguchi-ta.or.jp/",
+  "https://www.tokushima-ta.or.jp/",
+  "https://www.kagawa-ta.or.jp/",
+  "https://www.ehime-ta.or.jp/",
+  "https://www.kochi-ta.or.jp/",
+  "https://www.fukuoka-ta.or.jp/",
+  "https://www.saga-ta.or.jp/",
+  "https://www.nagasaki-ta.or.jp/",
+  "https://www.kumamoto-ta.or.jp/",
+  "https://www.oita-ta.or.jp/member/",
+  "https://www.miyazaki-ta.or.jp/",
+  "https://www.kagoshima-ta.or.jp/",
+  "https://www.kta.or.jp/member/",
 ];
 
 const PREFECTURES = [
@@ -414,76 +533,143 @@ async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
   ];
   const ua = userAgents[Math.floor(Math.random() * userAgents.length)];
 
+  // Try Yahoo Japan first
   try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=jp-jp`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-    const res = await fetch(searchUrl, {
-      signal: controller.signal,
+    const yahooUrl = `https://search.yahoo.co.jp/search?p=${encodeURIComponent(query)}&n=20&ei=UTF-8`;
+    const yc = new AbortController();
+    const yt = setTimeout(() => yc.abort(), 15000);
+    const yahooRes = await fetch(yahooUrl, {
+      signal: yc.signal,
       headers: {
-        "User-Agent": ua,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate",
-        "Referer": "https://duckduckgo.com/",
-        "DNT": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "ja,en;q=0.5",
+        "Cookie": "over18=1; y=; B=; F=d=", // minimal cookies to avoid consent redirect
       },
-      redirect: "follow",
     });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      console.log(`[Lead Crawler] DuckDuckGo returned ${res.status} for "${query}"`);
-    } else {
-      const html = await res.text();
-
-      let match;
-      const uddgPattern = /uddg=(https?%3A%2F%2F[^&"']+)/gi;
-      while ((match = uddgPattern.exec(html)) !== null) {
-        try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
-      }
-
-      const resultLinkPattern = /class="result__a"[^>]*href="([^"]+)"/gi;
-      while ((match = resultLinkPattern.exec(html)) !== null) {
-        try {
-          let href = match[1];
-          if (href.includes("uddg=")) {
-            const u = new URL(href, "https://duckduckgo.com").searchParams.get("uddg");
-            if (u) href = u;
-          }
-          addUniqueUrl(urls, href, true);
-        } catch {}
-      }
-
-      const snippetUrlPattern = /class="result__url"[^>]*>([^<]+)</gi;
-      while ((match = snippetUrlPattern.exec(html)) !== null) {
-        try {
-          let domain = match[1].trim().replace(/\s/g, "");
-          if (!domain.startsWith("http")) domain = "https://" + domain;
-          const cleanUrl = new URL(domain).origin;
-          addUniqueUrl(urls, cleanUrl, true);
-        } catch {}
-      }
-
-      const hrefPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
-      while ((match = hrefPattern.exec(html)) !== null) {
-        try { addUniqueUrl(urls, match[1], true); } catch {}
+    clearTimeout(yt);
+    if (yahooRes.ok) {
+      const yahooHtml = await yahooRes.text();
+      if (yahooHtml.includes("search.yahoo.co.jp") || yahooHtml.includes("ysearch")) {
+        let match;
+        const yahooRealUrlPattern = /\bRU=(https?:\/\/[^&"]+)/gi;
+        while ((match = yahooRealUrlPattern.exec(yahooHtml)) !== null) {
+          try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
+        }
+        const yahooLinkPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
+        while ((match = yahooLinkPattern.exec(yahooHtml)) !== null) {
+          try { addUniqueUrl(urls, match[1], true); } catch {}
+        }
+        if (urls.length > 0) console.log(`[Lead Crawler] Yahoo found ${urls.length} URLs for "${query}"`);
       }
     }
-  } catch (err) {
-    console.error(`[Lead Crawler] DuckDuckGo search failed:`, err);
+  } catch (err: any) {
+    console.log(`[Lead Crawler] Yahoo search failed: ${err?.message || err}`);
   }
 
+  // Try Startpage as secondary
+  if (urls.length < 3) try {
+    const startUrl = `https://www.startpage.com/sp/search?q=${encodeURIComponent(query + " site:.jp")}&language=japanese`;
+    const sc = new AbortController();
+    const st = setTimeout(() => sc.abort(), 15000);
+    const startRes = await fetch(startUrl, {
+      signal: sc.signal,
+      headers: {
+        "User-Agent": ua,
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "ja,en;q=0.5",
+      },
+    });
+    clearTimeout(st);
+    if (startRes.ok) {
+      const startHtml = await startRes.text();
+      let match;
+      const startPattern = /<a[^>]*href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"[^>]*class="[^"]*result[^"]*"/gi;
+      while ((match = startPattern.exec(startHtml)) !== null) {
+        try { addUniqueUrl(urls, match[1], true); } catch {}
+      }
+      if (urls.length > 0) console.log(`[Lead Crawler] Startpage found ${urls.length} URLs for "${query}"`);
+    }
+  } catch {}
+
+  // Try Bing as backup (more reliable when running multiple batches)
+  if (urls.length < 5) try {
+    const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&cc=jp&setlang=ja&count=20`;
+    const bc = new AbortController();
+    const bt = setTimeout(() => bc.abort(), 20000);
+    const bingRes = await fetch(bingUrl, {
+      signal: bc.signal,
+      headers: {
+        "User-Agent": ua,
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "ja,en;q=0.5",
+      },
+    });
+    clearTimeout(bt);
+    if (bingRes.ok) {
+      const bingHtml = await bingRes.text();
+      let match;
+      const bingLinkPattern = /<a[^>]*href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp|com)[^"]*?)"[^>]*>/gi;
+      while ((match = bingLinkPattern.exec(bingHtml)) !== null) {
+        try { addUniqueUrl(urls, match[1], true); } catch {}
+      }
+      const citeLinkPattern = /<cite[^>]*>(https?:\/\/[^<]+)<\/cite>/gi;
+      while ((match = citeLinkPattern.exec(bingHtml)) !== null) {
+        try { addUniqueUrl(urls, match[1].replace(/<[^>]+>/g, "").trim(), true); } catch {}
+      }
+      if (urls.length > 0) console.log(`[Lead Crawler] Bing found ${urls.length} URLs for "${query}"`);
+    }
+  } catch (err: any) {
+    console.log(`[Lead Crawler] Bing search failed: ${err?.message || err}`);
+  }
+
+  // Try DuckDuckGo if Bing didn't get enough
   if (urls.length < 5) {
     try {
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 500));
+      const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=jp-jp`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": ua,
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+          "Accept-Encoding": "gzip, deflate",
+          "Referer": "https://duckduckgo.com/",
+        },
+        redirect: "follow",
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const html = await res.text();
+        let match;
+        const uddgPattern = /uddg=(https?%3A%2F%2F[^&"']+)/gi;
+        while ((match = uddgPattern.exec(html)) !== null) {
+          try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
+        }
+        const hrefPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
+        while ((match = hrefPattern.exec(html)) !== null) {
+          try { addUniqueUrl(urls, match[1], true); } catch {}
+        }
+        if (urls.length > 0) console.log(`[Lead Crawler] DDG found ${urls.length} URLs`);
+      }
+    } catch {}
+  }
+
+  // Fallback to Google
+  if (urls.length < 3) {
+    try {
+      await new Promise(r => setTimeout(r, 500));
       const googleUrl = `https://www.google.co.jp/search?q=${encodeURIComponent(query)}&hl=ja&gl=jp&num=20`;
       const gc = new AbortController();
-      const gt = setTimeout(() => gc.abort(), 20000);
+      const gt = setTimeout(() => gc.abort(), 15000);
       const googleRes = await fetch(googleUrl, {
         signal: gc.signal,
         headers: {
           "User-Agent": ua,
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept": "text/html",
           "Accept-Language": "ja,en;q=0.5",
         },
       });
@@ -491,48 +677,11 @@ async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
       if (googleRes.ok) {
         const googleHtml = await googleRes.text();
         let match;
-        const googleLinkPattern = /href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"/gi;
-        while ((match = googleLinkPattern.exec(googleHtml)) !== null) {
-          try { addUniqueUrl(urls, match[1], true); } catch {}
-        }
         const googleUrlPattern = /url\?q=(https?:\/\/[^&"]+)/gi;
         while ((match = googleUrlPattern.exec(googleHtml)) !== null) {
           try { addUniqueUrl(urls, decodeURIComponent(match[1]), true); } catch {}
         }
-        if (urls.length > 0) console.log(`[Lead Crawler] Google added URLs, total now: ${urls.length}`);
-      }
-    } catch (err: any) {
-      console.log(`[Lead Crawler] Google search failed: ${err?.message || err}`);
-    }
-  }
-
-  if (urls.length < 5) {
-    try {
-      await new Promise(r => setTimeout(r, 1000));
-      const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&cc=jp&setlang=ja`;
-      const bc = new AbortController();
-      const bt = setTimeout(() => bc.abort(), 20000);
-      const bingRes = await fetch(bingUrl, {
-        signal: bc.signal,
-        headers: {
-          "User-Agent": ua,
-          "Accept": "text/html,application/xhtml+xml",
-          "Accept-Language": "ja,en;q=0.5",
-        },
-      });
-      clearTimeout(bt);
-      if (bingRes.ok) {
-        const bingHtml = await bingRes.text();
-        let match;
-        const bingLinkPattern = /<a[^>]*href="(https?:\/\/(?:www\.)?[a-zA-Z0-9\-]+\.(?:co\.jp|ne\.jp|or\.jp|jp)[^"]*?)"[^>]*>/gi;
-        while ((match = bingLinkPattern.exec(bingHtml)) !== null) {
-          try { addUniqueUrl(urls, match[1], true); } catch {}
-        }
-        const citeLinkPattern = /<cite[^>]*>(https?:\/\/[^<]+)<\/cite>/gi;
-        while ((match = citeLinkPattern.exec(bingHtml)) !== null) {
-          try { addUniqueUrl(urls, match[1].replace(/<[^>]+>/g, "").trim(), true); } catch {}
-        }
-        if (urls.length > 0) console.log(`[Lead Crawler] Bing added URLs, total now: ${urls.length}`);
+        if (urls.length > 0) console.log(`[Lead Crawler] Google added URLs, total: ${urls.length}`);
       }
     } catch {}
   }
@@ -547,11 +696,11 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   const limit = maxCount || CRAWL_BATCH_SIZE;
 
   const shuffled = [...SEARCH_QUERIES].sort(() => Math.random() - 0.5);
-  const todaysQueries = shuffled.slice(0, 8);
+  const todaysQueries = shuffled.slice(0, 12);
 
   const prefStart = Math.floor(Math.random() * PREFECTURES.length);
   const todaysPrefectures: string[] = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 10; i++) {
     todaysPrefectures.push(PREFECTURES[(prefStart + i) % PREFECTURES.length]);
   }
 
@@ -613,6 +762,38 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   }
 
   console.log(`[Lead Crawler] Crawl complete: searched=${totalSearched}, found=${totalFound}`);
+  return { searched: totalSearched, found: totalFound };
+}
+
+export async function crawlFromDirectoriesOnly(maxCount?: number): Promise<{ searched: number; found: number }> {
+  let totalFound = 0;
+  let totalSearched = 0;
+  const limit = maxCount || CRAWL_BATCH_SIZE;
+
+  const shuffledDirs = [...DIRECTORY_SOURCES].sort(() => Math.random() - 0.5);
+  for (const dirUrl of shuffledDirs) {
+    if (totalFound >= limit) break;
+    try {
+      console.log(`[Lead Crawler] Checking directory: ${dirUrl}`);
+      const dirHtml = await fetchPageContent(dirUrl);
+      if (!dirHtml) continue;
+      const companyUrls = extractExternalUrls(dirHtml, dirUrl);
+      console.log(`[Lead Crawler] Found ${companyUrls.length} company links from directory: ${dirUrl}`);
+      const shuffledCompanies = companyUrls.sort(() => Math.random() - 0.5).slice(0, 20);
+      for (const compUrl of shuffledCompanies) {
+        if (totalFound >= limit) break;
+        totalSearched++;
+        const found = await crawlLeadsFromUrl(compUrl);
+        totalFound += found;
+        if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${compUrl}`);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    } catch (err) {
+      console.error(`[Lead Crawler] Directory crawl failed for ${dirUrl}:`, err);
+    }
+  }
+
+  console.log(`[Lead Crawler] Directory crawl complete: searched=${totalSearched}, found=${totalFound}`);
   return { searched: totalSearched, found: totalFound };
 }
 

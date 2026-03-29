@@ -3835,6 +3835,17 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.post("/api/admin/email-leads/crawl-directories", requireAdmin, async (req, res) => {
+    try {
+      const count = req.body?.count ? parseInt(req.body.count) : undefined;
+      const { crawlFromDirectoriesOnly } = await import("./lead-crawler");
+      res.json({ message: "ディレクトリクロールを開始しました。バックグラウンドで実行中です。" });
+      crawlFromDirectoriesOnly(count).catch(err => console.error("[Lead Crawler] Directory crawl failed:", err));
+    } catch (error: any) {
+      res.status(500).json({ message: "クロールの開始に失敗しました: " + (error?.message || "不明なエラー") });
+    }
+  });
+
   app.post("/api/admin/email-leads/crawl-url", requireAdmin, async (req, res) => {
     try {
       const { url } = req.body;
