@@ -60,6 +60,38 @@ const SEARCH_QUERIES = [
   "海上コンテナ 陸送 運送会社",
   "港湾 輸送 運送 株式会社",
   "空港 輸送 運送会社 会社概要",
+  // 新しいカテゴリ
+  "軽貨物 配送 会社 会社概要",
+  "軽貨物 運送 株式会社 連絡先",
+  "宅配 急配 株式会社 会社概要",
+  "路線便 運送 会社概要",
+  "定温 輸送 運送 株式会社",
+  "医薬品 輸送 物流 会社概要",
+  "重量物 輸送 運送 株式会社",
+  "引越 会社 お問い合わせ メール",
+  "協同組合 運送 連絡先",
+  "運送業 協同組合 一覧",
+  "トレーラー 輸送 会社概要",
+  "タンクローリー 輸送 運送会社",
+  "バルク 輸送 運送 株式会社",
+  "宅急便 代理店 運送 会社概要",
+  "ヤマト 代理店 運送 株式会社",
+  "佐川 代理店 運送 会社概要",
+  "フォワーダー 運送 会社概要",
+  "航空貨物 陸送 運送 株式会社",
+  "国際物流 運送 会社概要",
+  "通関 物流 運送 会社概要",
+  "共同配送 運送 株式会社",
+  "JIT 輸送 運送 株式会社",
+  "ミルクラン 輸送 運送会社",
+  "帰り便 求荷 運送 会社概要",
+  "スポット 運送 株式会社",
+  "配送代行 物流 会社概要",
+  "EC 物流 運送 株式会社",
+  "Eコマース 物流 運送会社",
+  "倉庫 配送 3PL 会社概要",
+  "一括輸送 運送 株式会社",
+  "集荷 配送 運送 会社概要",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -299,7 +331,12 @@ async function findEmailOnRelatedPages(baseUrl: string, baseHtml?: string): Prom
   }
 }
 
-const COMMON_EMAIL_PREFIXES = ["info", "contact", "mail", "office", "inquiry", "soumu", "eigyo", "hanbai", "support", "jimukyoku", "honsha"];
+const COMMON_EMAIL_PREFIXES = [
+  "info", "contact", "mail", "office", "inquiry", "soumu", "eigyo",
+  "hanbai", "support", "jimukyoku", "honsha", "recruit", "sales",
+  "webmaster", "admin", "service", "logi", "butsuryu", "unso",
+  "kaisha", "center", "general", "total", "main", "post",
+];
 
 async function guessCompanyEmail(domain: string): Promise<string | null> {
   try {
@@ -398,18 +435,40 @@ const DIRECTORY_SOURCES = [
   "https://www.logi-today.com/company-list?page=3",
   "https://www.logi-today.com/company-list?page=4",
   "https://www.logi-today.com/company-list?page=5",
+  "https://www.logi-today.com/company-list?page=6",
+  "https://www.logi-today.com/company-list?page=7",
+  "https://www.logi-today.com/company-list?page=8",
+  "https://www.logi-today.com/company-list?page=9",
+  "https://www.logi-today.com/company-list?page=10",
+  "https://www.logi-today.com/company-list?page=11",
+  "https://www.logi-today.com/company-list?page=12",
   "https://transport-guide.jp/company/",
   "https://transport-guide.jp/company/?page=2",
+  "https://transport-guide.jp/company/?page=3",
+  "https://transport-guide.jp/company/?page=4",
+  "https://transport-guide.jp/company/?page=5",
   "https://www.trabox.ne.jp/company/",
   "https://www.butsuryu.or.jp/member/",
   "https://www.logistics.jp/company/",
   "https://www.moji-transportation.com/",
   "https://www.cargo-kyushu.jp/",
   "https://www.truck-station.com/",
+  // 物流・運送業専門ポータル
+  "https://www.cargo-work.com/",
+  "https://www.e-butsuryu.jp/company/",
+  "https://www.logizard.jp/company/",
+  "https://www.mj21.co.jp/member/",
+  "https://www.jils.or.jp/member/",
+  "https://www.zen-unyu.or.jp/member/",
+  "https://jta.or.jp/member.html",
+  // 採用サイトから会社リスト
+  "https://www.driver-ab.com/company/transport/",
+  "https://www.toradriver.com/company/",
   // 会社検索サイト（運送業）
   "https://baseconnect.in/companies?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
+  "https://baseconnect.in/companies?industry=%E7%89%A9%E6%B5%81%E6%A5%AD",
   "https://www.tsr-net.co.jp/service/tsrdb/?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
-  "https://jta.or.jp/member.html",
+  "https://www.tsr-net.co.jp/service/tsrdb/?industry=%E7%89%A9%E6%B5%81",
   // 全国トラック協会各都道府県支部
   "https://www.nta.or.jp/member/",
   "https://www.hokkaido-ta.or.jp/",
