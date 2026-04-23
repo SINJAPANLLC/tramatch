@@ -1071,6 +1071,75 @@ export async function crawlFromDirectoriesOnly(maxCount?: number): Promise<{ sea
   return { searched: totalSearched, found: totalFound };
 }
 
+// インポート済みリード（ウェブサイトあり・メールなし）のサイトをクロールしてメール取得
+export async function crawlEmailsForExistingLeads(batchSize = 50): Promise<{ updated: number; skipped: number }> {
+  const leads = await storage.getLeadsWithWebsiteNoEmail(batchSize);
+  if (leads.length === 0) {
+    console.log("[Lead Crawler] No leads with website but no email found.");
+    return { updated: 0, skipped: 0 };
+  }
+
+  let updated = 0;
+  let skipped = 0;
+
+  console.log(`[Lead Crawler] Crawling emails for ${leads.length} leads with websites...`);
+
+  for (const lead of leads) {
+    if (!lead.website) { skipped++; continue; }
+    try {
+      const domain = new URL(lead.website).hostname.replace(/^www\./, "");
+      if (crawledDomainsCache.has(domain)) { skipped++; continue; }
+      crawledDomainsCache.add(domain);
+
+      const html = await fetchPageContent(lead.website);
+      if (!html) { skipped++; continue; }
+
+      let { emails, phones, faxes } = extractContactInfo(html);
+
+      if (emails.length === 0) {
+        const relatedInfo = await findEmailOnRelatedPages(lead.website, html);
+        if (relatedInfo && relatedInfo.emails.length > 0) {
+          emails = relatedInfo.emails;
+          if (relatedInfo.phones.length > 0 && !lead.phone) phones = relatedInfo.phones;
+          if (relatedInfo.faxes.length > 0 && !lead.fax) faxes = relatedInfo.faxes;
+        }
+      }
+
+      if (emails.length === 0) {
+        // MXレコードから推測
+        const guessed = await guessCompanyEmail(domain);
+        if (guessed) emails = [guessed];
+      }
+
+      if (emails.length === 0) { skipped++; continue; }
+
+      const email = emails[0];
+      // 他のリードに同じメールがないか確認
+      const existing = await storage.getEmailLeadByEmail(email);
+      if (existing && existing.id !== lead.id) {
+        skipped++;
+        continue;
+      }
+
+      // メール・電話・FAXを更新
+      await storage.updateEmailLead(lead.id, {
+        email,
+        phone: lead.phone || phones[0] || undefined,
+        fax: lead.fax || faxes[0] || undefined,
+      });
+      updated++;
+      console.log(`[Lead Crawler] ✓ Email found for ${lead.companyName}: ${email}`);
+
+      await new Promise(r => setTimeout(r, 1500));
+    } catch {
+      skipped++;
+    }
+  }
+
+  console.log(`[Lead Crawler] Website email crawl complete: updated=${updated}, skipped=${skipped}`);
+  return { updated, skipped };
+}
+
 export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: number }> {
   const todaySent = await storage.getTodaySentLeadCount();
   const remaining = DAILY_SEND_LIMIT - todaySent;
@@ -1160,6 +1229,7 @@ https://tramatch-sinjapan.com
 let isCrawling = false;
 let isSending = false;
 let isDirCrawling = false;
+let isExistingCrawling = false;
 
 // 並列バッチでクロール実行（count件×3バッチ）
 async function runParallelCrawl(batchCount = 3, perBatch = 80) {
@@ -1226,6 +1296,18 @@ export function scheduleLeadCrawler() {
     if (min === 30 && dirCrawlHours.includes(jstHour)) {
       console.log(`[Lead Crawler] ⏰ ${jstHour}:30 JST — ディレクトリクロール開始（5並列）`);
       runParallelDirCrawl(5, 120).catch(console.error);
+    }
+
+    // ============================================================
+    // 既存リード（ウェブサイトあり・メールなし）のメール取得
+    // 08:00, 11:00, 14:30, 17:00, 22:00 JST（毎回100件）
+    // ============================================================
+    const existingCrawlTimes: Array<[number, number]> = [[8,0],[11,0],[14,30],[17,0],[22,0]];
+    const isExistingCrawlTime = existingCrawlTimes.some(([h, m]) => jstHour === h && min === m);
+    if (isExistingCrawlTime && !isExistingCrawling) {
+      isExistingCrawling = true;
+      console.log(`[Lead Crawler] ⏰ ${jstHour}:${String(min).padStart(2,'0')} JST — 既存リードのメール取得開始（100件）`);
+      crawlEmailsForExistingLeads(100).catch(console.error).finally(() => { isExistingCrawling = false; });
     }
 
     // ============================================================

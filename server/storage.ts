@@ -29,7 +29,7 @@ import {
   emailCampaigns, emailLeads
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
+import { eq, desc, and, sql, ilike, or, gte, isNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -218,6 +218,7 @@ export interface IStorage {
   deleteEmailLead(id: string): Promise<boolean>;
   getNewEmailLeadsForSending(limit: number): Promise<EmailLead[]>;
   getTodaySentLeadCount(): Promise<number>;
+  getLeadsWithWebsiteNoEmail(limit: number): Promise<EmailLead[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1262,6 +1263,16 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(emailLeads)
       .where(and(eq(emailLeads.status, "sent"), gte(emailLeads.sentAt, today)));
     return result?.count || 0;
+  }
+
+  async getLeadsWithWebsiteNoEmail(limit: number): Promise<EmailLead[]> {
+    return await db.select().from(emailLeads)
+      .where(and(
+        isNull(emailLeads.email),
+        sql`${emailLeads.website} IS NOT NULL AND ${emailLeads.website} != ''`
+      ))
+      .limit(limit)
+      .orderBy(emailLeads.createdAt);
   }
 }
 

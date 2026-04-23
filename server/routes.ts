@@ -3947,6 +3947,17 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.post("/api/admin/email-leads/crawl-existing-websites", requireAdmin, async (req, res) => {
+    try {
+      const count = req.body?.count ? parseInt(req.body.count) : 100;
+      const { crawlEmailsForExistingLeads } = await import("./lead-crawler");
+      res.json({ message: `ウェブサイト付きリードのメール取得を開始しました（最大${count}件）` });
+      crawlEmailsForExistingLeads(count).catch(err => console.error("[Lead Crawler] Website email crawl failed:", err));
+    } catch (error: any) {
+      res.status(500).json({ message: "クロールの開始に失敗しました: " + (error?.message || "不明なエラー") });
+    }
+  });
+
   app.post("/api/admin/email-leads/crawl-url", requireAdmin, async (req, res) => {
     try {
       const { url } = req.body;
