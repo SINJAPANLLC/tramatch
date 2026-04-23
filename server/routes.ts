@@ -1093,6 +1093,79 @@ export async function registerRoutes(
       const acceptedByUserId = status === "completed" ? req.session.userId as string : undefined;
       const updated = await storage.updateCargoStatus(cargoId, status, acceptedByUserId);
       res.json(updated);
+
+      // 成約時メール通知（バックグラウンド）
+      if (status === "completed") {
+        setImmediate(async () => {
+          try {
+            const contractorUser = await storage.getUser(req.session.userId as string);
+            const ownerUser = listing.userId ? await storage.getUser(listing.userId) : null;
+            const host = req.get("host") || "tramatch-sinjapan.com";
+            const appBaseUrl = process.env.APP_BASE_URL || `https://${host}`;
+            const cargoSummary = `${listing.departureArea || ""}→${listing.arrivalArea || ""} ${listing.cargoType || ""} ${listing.weight || ""}`;
+
+            // 荷主（登録者）への成約通知
+            if (ownerUser && ownerUser.notifyEmail && ownerUser.email && isEmailConfigured() && !isAgentAutoEmail(ownerUser.email)) {
+              const resolved = await resolveEmailTemplate(
+                "cargo_contracted_owner",
+                {
+                  cargoSummary,
+                  departureArea: listing.departureArea || "",
+                  arrivalArea: listing.arrivalArea || "",
+                  cargoType: listing.cargoType || "",
+                  weight: listing.weight || "",
+                  contractorCompany: contractorUser?.companyName || "",
+                  appBaseUrl,
+                },
+                "【トラマッチ】荷物が成約されました",
+                `お知らせがあります。\n\n登録された荷物が成約されました。\n\n■荷物情報\n${cargoSummary}\n\n■成約した会社\n${contractorUser?.companyName || "（不明）"}\n\nトラマッチにログインして詳細をご確認ください。\n${appBaseUrl}`
+              );
+              if (resolved) await sendEmail(ownerUser.email, resolved.subject, resolved.body);
+            }
+
+            // 受注者（成約した会社）への成約完了通知
+            if (contractorUser && contractorUser.notifyEmail && contractorUser.email && isEmailConfigured() && !isAgentAutoEmail(contractorUser.email)) {
+              const resolved = await resolveEmailTemplate(
+                "cargo_contracted_contractor",
+                {
+                  cargoSummary,
+                  departureArea: listing.departureArea || "",
+                  arrivalArea: listing.arrivalArea || "",
+                  cargoType: listing.cargoType || "",
+                  weight: listing.weight || "",
+                  ownerCompany: ownerUser?.companyName || "",
+                  appBaseUrl,
+                },
+                "【トラマッチ】成約完了のお知らせ",
+                `成約完了のご連絡です。\n\n以下の荷物案件の成約が完了しました。\n\n■荷物情報\n${cargoSummary}\n\n■荷主会社\n${ownerUser?.companyName || "（不明）"}\n\nトラマッチにログインして詳細をご確認ください。\n${appBaseUrl}`
+              );
+              if (resolved) await sendEmail(contractorUser.email, resolved.subject, resolved.body);
+            }
+
+            // 成約通知（システム通知）
+            if (ownerUser) {
+              await storage.createNotification({
+                userId: ownerUser.id,
+                type: "cargo_contracted",
+                title: "荷物が成約されました",
+                message: `${cargoSummary} — ${contractorUser?.companyName || ""}が成約`,
+                relatedId: listing.id,
+              });
+            }
+            if (contractorUser) {
+              await storage.createNotification({
+                userId: contractorUser.id,
+                type: "cargo_contracted",
+                title: "成約完了",
+                message: `${cargoSummary} の成約が完了しました`,
+                relatedId: listing.id,
+              });
+            }
+          } catch (bgErr) {
+            console.error("[Notify] 成約メール送信エラー:", bgErr);
+          }
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "荷物ステータスの更新に失敗しました" });
     }
@@ -3201,6 +3274,34 @@ statusの意味:
         description: "配車依頼書メール（件名と冒頭文が編集可能、詳細データは自動挿入）",
         variables: [
           { key: "senderName", label: "送信者名" },
+        ],
+      },
+      {
+        triggerEvent: "cargo_contracted_owner",
+        name: "成約通知（荷主向け）",
+        description: "荷物が成約された際に荷物の登録者（荷主）へ送信されるメール",
+        variables: [
+          { key: "cargoSummary", label: "荷物概要" },
+          { key: "departureArea", label: "出発地" },
+          { key: "arrivalArea", label: "到着地" },
+          { key: "cargoType", label: "荷物種類" },
+          { key: "weight", label: "重量" },
+          { key: "contractorCompany", label: "成約した会社名" },
+          { key: "appBaseUrl", label: "サイトURL" },
+        ],
+      },
+      {
+        triggerEvent: "cargo_contracted_contractor",
+        name: "成約完了通知（受注者向け）",
+        description: "荷物が成約された際に成約した会社（受注者）へ送信されるメール",
+        variables: [
+          { key: "cargoSummary", label: "荷物概要" },
+          { key: "departureArea", label: "出発地" },
+          { key: "arrivalArea", label: "到着地" },
+          { key: "cargoType", label: "荷物種類" },
+          { key: "weight", label: "重量" },
+          { key: "ownerCompany", label: "荷主会社名" },
+          { key: "appBaseUrl", label: "サイトURL" },
         ],
       },
       {
