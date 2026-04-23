@@ -2,8 +2,8 @@ import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
 import dns from "dns/promises";
 
-const DAILY_SEND_LIMIT = 6000;
-const SEND_INTERVAL_MS = 500;
+const DAILY_SEND_LIMIT = 2000;
+const SEND_INTERVAL_MS = 3000;
 const CRAWL_BATCH_SIZE = 50;
 
 // セッション内でクロール済みドメインを記録（重複回避）
@@ -1417,4 +1417,31 @@ export function scheduleLeadCrawler() {
   console.log("  クロール: 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 JST（検索）");
   console.log("  クロール: 07:30, 13:30, 19:30 JST（ディレクトリ）");
   console.log("  メール送信: 10:00, 14:00, 20:00 JST");
+
+  // 起動時：ウェブサイトありメールなしが残っていれば自動で一括クロール再開
+  setTimeout(async () => {
+    try {
+      const pending = await storage.getLeadsWithWebsiteNoEmail(1);
+      if (pending.length > 0) {
+        console.log("[Lead Crawler] 🔄 起動時自動クロール開始（未取得リードあり）");
+        crawlAllExistingLeadsParallel(20).catch(console.error);
+        // クロール中は30分ごとに送信を自動実行
+        const autoSendTimer = setInterval(async () => {
+          if (!isSending) {
+            isSending = true;
+            try { await sendDailyLeadEmails(); } catch {} finally { isSending = false; }
+          }
+        }, 30 * 60 * 1000);
+        // 9時間後に自動送信タイマーを停止
+        setTimeout(() => clearInterval(autoSendTimer), 9 * 60 * 60 * 1000);
+        // 起動時に1回送信
+        if (!isSending) {
+          isSending = true;
+          sendDailyLeadEmails().catch(console.error).finally(() => { isSending = false; });
+        }
+      }
+    } catch (err) {
+      console.error("[Lead Crawler] 起動時クロール確認エラー:", err);
+    }
+  }, 10000); // 起動10秒後に実行
 }
