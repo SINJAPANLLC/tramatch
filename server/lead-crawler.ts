@@ -10,6 +10,7 @@ const CRAWL_BATCH_SIZE = 50;
 const crawledDomainsCache = new Set<string>();
 
 const SEARCH_QUERIES = [
+  // 基本クエリ
   "一般貨物自動車運送事業 会社概要",
   "一般貨物 運送会社 お問い合わせ",
   "貨物利用運送事業 会社",
@@ -60,7 +61,6 @@ const SEARCH_QUERIES = [
   "海上コンテナ 陸送 運送会社",
   "港湾 輸送 運送 株式会社",
   "空港 輸送 運送会社 会社概要",
-  // 新しいカテゴリ
   "軽貨物 配送 会社 会社概要",
   "軽貨物 運送 株式会社 連絡先",
   "宅配 急配 株式会社 会社概要",
@@ -75,23 +75,88 @@ const SEARCH_QUERIES = [
   "タンクローリー 輸送 運送会社",
   "バルク 輸送 運送 株式会社",
   "宅急便 代理店 運送 会社概要",
-  "ヤマト 代理店 運送 株式会社",
-  "佐川 代理店 運送 会社概要",
   "フォワーダー 運送 会社概要",
   "航空貨物 陸送 運送 株式会社",
   "国際物流 運送 会社概要",
   "通関 物流 運送 会社概要",
   "共同配送 運送 株式会社",
-  "JIT 輸送 運送 株式会社",
-  "ミルクラン 輸送 運送会社",
   "帰り便 求荷 運送 会社概要",
   "スポット 運送 株式会社",
   "配送代行 物流 会社概要",
   "EC 物流 運送 株式会社",
-  "Eコマース 物流 運送会社",
   "倉庫 配送 3PL 会社概要",
-  "一括輸送 運送 株式会社",
   "集荷 配送 運送 会社概要",
+  // 車両タイプ別
+  "10トン車 運送 会社概要",
+  "4トン車 運送 株式会社",
+  "2トン車 配送 会社概要",
+  "ウイング車 運送 会社概要",
+  "平ボディ 輸送 運送 株式会社",
+  "冷凍車 運送 会社概要",
+  "保冷車 輸送 株式会社",
+  "タンクローリー 運送 株式会社",
+  "ダンプ 輸送 運送 株式会社",
+  "ユニック車 輸送 会社概要",
+  "セミトレーラー 輸送 会社概要",
+  "フルトレーラー 輸送 株式会社",
+  "ローダー 輸送 運送 株式会社",
+  "幌車 運送 会社概要",
+  "バン車 配送 株式会社",
+  // 荷物・業界別
+  "自動車部品 輸送 運送 会社概要",
+  "電子部品 輸送 物流 株式会社",
+  "紙・パルプ 輸送 運送 会社概要",
+  "化学品 輸送 運送 株式会社",
+  "飲料 輸送 運送 会社概要",
+  "酒類 輸送 運送 株式会社",
+  "青果物 輸送 運送 会社概要",
+  "水産物 輸送 冷凍 株式会社",
+  "米穀 輸送 運送 会社概要",
+  "家電 輸送 配送 株式会社",
+  "家具 輸送 配送 会社概要",
+  "繊維 輸送 運送 株式会社",
+  "書籍 輸送 配送 会社概要",
+  "医薬品 GDP 物流 会社概要",
+  "廃棄物 収集 輸送 株式会社",
+  "リサイクル 輸送 運送 会社概要",
+  "液体 タンク 輸送 株式会社",
+  "ガス 輸送 運送 会社概要",
+  "燃料 輸送 運送 株式会社",
+  "石油 輸送 タンクローリー 会社概要",
+  // ルート・地域別
+  "東名 輸送 運送 株式会社",
+  "名神 輸送 運送 会社概要",
+  "北陸 輸送 運送 株式会社",
+  "東北 輸送 運送 会社概要",
+  "九州 輸送 運送 株式会社",
+  "関東 関西 幹線 輸送 会社概要",
+  "中四国 輸送 運送 株式会社",
+  "沖縄 輸送 運送 会社概要",
+  "北海道 輸送 運送 株式会社",
+  "東京 大阪 幹線 輸送 会社概要",
+  // 規模・形態別
+  "中小 運送会社 株式会社 メール",
+  "個人 運送 一人親方 会社概要",
+  "家族経営 運送 株式会社",
+  "老舗 運送会社 創業 昭和",
+  "ドライバー 直用 運送 株式会社",
+  "協力会社 運送 下請け 株式会社",
+  "傭車 運送 株式会社 会社概要",
+  "実運送 株式会社 会社概要",
+  // 特殊輸送
+  "美術品 輸送 運送 会社概要",
+  "金融機器 輸送 警備 会社概要",
+  "遺体 輸送 運送 株式会社",
+  "放射性物質 輸送 運送 会社概要",
+  "超重量 特殊 輸送 会社概要",
+  "プラント 輸送 運送 株式会社",
+  "風車 輸送 特殊 会社概要",
+  "橋梁 部材 輸送 株式会社",
+  // デジタル系
+  "運送会社 ホームページ お問い合わせフォーム メール",
+  "物流会社 公式サイト contact メール",
+  "運輸会社 公式 HP info メールアドレス",
+  "軽貨物 個人事業主 配送 メール",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -283,14 +348,67 @@ function extractContactInfo(html: string): { emails: string[]; phones: string[];
 }
 
 function extractCompanyName(html: string, url: string): string {
+  // 1. LD+JSON構造化データから会社名を抽出（最も正確）
+  try {
+    const ldJsonMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+    for (const m of ldJsonMatches) {
+      try {
+        const data = JSON.parse(m[1]);
+        const items = Array.isArray(data) ? data : [data];
+        for (const item of items) {
+          if (item.name && (item["@type"] === "Organization" || item["@type"] === "LocalBusiness" || item["@type"] === "Corporation")) {
+            const n = String(item.name).trim();
+            if (n.length > 1 && n.length < 60) return n;
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+
+  // 2. OGP site_name
+  const ogSiteMatch = html.match(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i)
+    || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:site_name["']/i);
+  if (ogSiteMatch) {
+    const n = ogSiteMatch[1].trim();
+    if (n.length > 1 && n.length < 60) return n;
+  }
+
+  // 3. 会社名らしいパターンをHTML本文から抽出
+  const companyPatterns = [
+    /(?:会社名|社名|商号)[：:\s]*([^\s<]{2,30}(?:株式会社|有限会社|合同会社|協同組合|一般社団法人|公益社団法人|合資会社|合名会社))/,
+    /((?:株式会社|有限会社|合同会社|協同組合|一般社団法人|合資会社|合名会社)[^\s<]{1,25})/,
+    /([^\s<]{1,25}(?:株式会社|有限会社|合同会社|協同組合))/,
+  ];
+  const text = html.replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ");
+  for (const pat of companyPatterns) {
+    const m = text.match(pat);
+    if (m && m[1]) {
+      const n = m[1].trim();
+      if (n.length > 2 && n.length < 50) return n;
+    }
+  }
+
+  // 4. ページタイトルから抽出（区切り文字で分割）
   const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
   if (titleMatch) {
-    let title = titleMatch[1].replace(/\s*[|\-–—].*$/, "").trim();
-    if (title && title.length > 2 && title.length < 50) return title;
+    const parts = titleMatch[1].split(/[|\-–—\/｜]/);
+    for (const part of parts) {
+      const t = part.trim();
+      if (t.length > 2 && t.length < 50 &&
+          (t.includes("株式会社") || t.includes("有限会社") || t.includes("合同会社") ||
+           t.includes("運送") || t.includes("運輸") || t.includes("物流"))) {
+        return t;
+      }
+    }
+    // タイトル全体（短い場合）
+    const full = titleMatch[1].replace(/\s*[|\-–—].*$/, "").trim();
+    if (full.length > 2 && full.length < 50) return full;
   }
-  const ogMatch = html.match(/<meta\s+property="og:site_name"\s+content="([^"]+)"/i);
-  if (ogMatch) return ogMatch[1].trim();
-  try { return new URL(url).hostname; } catch { return url; }
+
+  // 5. ドメイン名をフォールバック
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
 async function findEmailOnRelatedPages(baseUrl: string, baseHtml?: string): Promise<{ emails: string[]; phones: string[]; faxes: string[] } | null> {
@@ -429,7 +547,7 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
 }
 
 const DIRECTORY_SOURCES = [
-  // 物流系ディレクトリ（ページネーション含む）
+  // logi-today.com（ページ拡充）
   "https://www.logi-today.com/company-list",
   "https://www.logi-today.com/company-list?page=2",
   "https://www.logi-today.com/company-list?page=3",
@@ -442,40 +560,51 @@ const DIRECTORY_SOURCES = [
   "https://www.logi-today.com/company-list?page=10",
   "https://www.logi-today.com/company-list?page=11",
   "https://www.logi-today.com/company-list?page=12",
+  "https://www.logi-today.com/company-list?page=13",
+  "https://www.logi-today.com/company-list?page=14",
+  "https://www.logi-today.com/company-list?page=15",
+  "https://www.logi-today.com/company-list?page=16",
+  "https://www.logi-today.com/company-list?page=17",
+  "https://www.logi-today.com/company-list?page=18",
+  "https://www.logi-today.com/company-list?page=19",
+  "https://www.logi-today.com/company-list?page=20",
+  // transport-guide.jp（ページ拡充）
   "https://transport-guide.jp/company/",
   "https://transport-guide.jp/company/?page=2",
   "https://transport-guide.jp/company/?page=3",
   "https://transport-guide.jp/company/?page=4",
   "https://transport-guide.jp/company/?page=5",
+  "https://transport-guide.jp/company/?page=6",
+  "https://transport-guide.jp/company/?page=7",
+  "https://transport-guide.jp/company/?page=8",
+  "https://transport-guide.jp/company/?page=9",
+  "https://transport-guide.jp/company/?page=10",
+  // 物流・運送業専門ポータル
   "https://www.trabox.ne.jp/company/",
   "https://www.butsuryu.or.jp/member/",
   "https://www.logistics.jp/company/",
-  "https://www.moji-transportation.com/",
-  "https://www.cargo-kyushu.jp/",
-  "https://www.truck-station.com/",
-  // 物流・運送業専門ポータル
   "https://www.cargo-work.com/",
   "https://www.e-butsuryu.jp/company/",
-  "https://www.logizard.jp/company/",
-  "https://www.mj21.co.jp/member/",
   "https://www.jils.or.jp/member/",
   "https://www.zen-unyu.or.jp/member/",
   "https://jta.or.jp/member.html",
-  // 採用サイトから会社リスト
+  // 採用サイト系
   "https://www.driver-ab.com/company/transport/",
   "https://www.toradriver.com/company/",
-  // 会社検索サイト（運送業）
-  "https://baseconnect.in/companies?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
-  "https://baseconnect.in/companies?industry=%E7%89%A9%E6%B5%81%E6%A5%AD",
-  "https://www.tsr-net.co.jp/service/tsrdb/?industry=%E9%81%8B%E8%BC%B8%E6%A5%AD",
-  "https://www.tsr-net.co.jp/service/tsrdb/?industry=%E7%89%A9%E6%B5%81",
-  // 全国トラック協会各都道府県支部
+  "https://www.hacobell.com/shippers",
+  "https://driver-work.com/company/",
+  // 全国トラック協会・各都道府県
   "https://www.nta.or.jp/member/",
   "https://www.hokkaido-ta.or.jp/",
+  "https://www.hokkaido-ta.or.jp/member/",
   "https://www.aomori-ta.or.jp/",
+  "https://www.aomori-ta.or.jp/member/",
   "https://www.iwate-ta.or.jp/",
+  "https://www.iwate-ta.or.jp/member/",
   "https://www.miyagi-ta.or.jp/",
+  "https://www.miyagi-ta.or.jp/member/",
   "https://www.akita-ta.or.jp/",
+  "https://www.akita-ta.or.jp/member/",
   "https://www.yamagata-ta.or.jp/",
   "https://www.fukushima-ta.or.jp/",
   "https://www.ibaraki-ta.or.jp/",
@@ -516,6 +645,92 @@ const DIRECTORY_SOURCES = [
   "https://www.miyazaki-ta.or.jp/",
   "https://www.kagoshima-ta.or.jp/",
   "https://www.kta.or.jp/member/",
+  // 関東近隣運輸業協会
+  "https://www.kansai-yusoukyou.or.jp/member/",
+  "https://www.kansai-yusoukyou.or.jp/union-member/",
+  "https://www.tokyo-ta.or.jp/member/",
+  "https://www.kanagawa-ta.or.jp/member/",
+  // 軽貨物協会・軽運送
+  "https://www.zenkeikyo.or.jp/member/",
+  "https://keiunso.com/company/",
+  "https://m-net.ne.jp/~cargo/",
+  // 全国通運連盟・鉄道貨物
+  "https://www.zentu.or.jp/member/",
+  "https://www.jrfreight.co.jp/partner/",
+  // 港湾・海運関連
+  "https://www.jhta.or.jp/member/",
+  "https://www.kaiun.or.jp/member/",
+  "https://www.inland-container.co.jp/partner/",
+  // 引越し業界
+  "https://www.hikkoshi-estimate.com/company/",
+  "https://www.hikkoshi.net/company/",
+  "https://www.hikkoshi-samurai.jp/company/",
+  // 地域別業界団体
+  "https://www.kantou-unyu.or.jp/member/",
+  "https://www.chubu-unyu.or.jp/member/",
+  "https://www.kinki-unyu.or.jp/member/",
+  "https://www.chugoku-unyu.or.jp/member/",
+  "https://www.shikoku-unyu.or.jp/member/",
+  "https://www.kyushu-unyu.or.jp/member/",
+  "https://www.tohoku-unyu.or.jp/member/",
+  // 物流情報サービス系
+  "https://www.e-logi.co.jp/company/",
+  "https://www.butsuryu-times.co.jp/company/",
+  "https://lnews.jp/company/",
+  "https://www.logistics-today.com/company/",
+  "https://www.logi-biz.com/company/",
+  // 中小企業・商工会議所系
+  "https://www.jcci.or.jp/member/",
+  "https://www.tokyo-cci.or.jp/member/transport/",
+  "https://www.osaka.cci.or.jp/member/transport/",
+  "https://www.nagoya-cci.or.jp/member/transport/",
+  "https://www.fukuoka-cci.or.jp/member/transport/",
+  "https://www.sapporo-cci.or.jp/member/transport/",
+  // 冷凍冷蔵輸送系
+  "https://www.jrc.or.jp/member/",
+  "https://www.cold-chain.or.jp/member/",
+  "https://www.reizo-unso.or.jp/member/",
+  // 危険物輸送系
+  "https://www.khk.or.jp/member/",
+  "https://www.tanker-union.or.jp/member/",
+  // 特殊車両・重量物
+  "https://www.tokushu-unso.or.jp/member/",
+  "https://www.jsia.or.jp/member/",
+  // 産廃・廃棄物輸送系
+  "https://www.jwef.or.jp/member/",
+  "https://www.jwma.or.jp/member/",
+  // 国際物流系
+  "https://www.jiffa.or.jp/member/",
+  "https://www.jafa.or.jp/member/",
+  "https://www.jetro.go.jp/logistics/",
+  // 中継輸送・混載系
+  "https://www.nittsu.co.jp/partner/",
+  "https://www.yamato-hd.co.jp/partner/",
+  "https://www.sagawa-exp.co.jp/partner/",
+  // 求車求荷プラットフォーム関連
+  "https://www.WebKIT.net/search/",
+  "https://www.tr-net.ne.jp/company/",
+  "https://www.hacobell.com/carriers",
+  "https://fleetbase.jp/carrier/",
+  // 地域別企業ディレクトリ（都道府県運送会社一覧）
+  "https://www.hokkaido-unyu.or.jp/member/",
+  "https://www.tohoku-unyu.ne.jp/member/",
+  "https://www.kanto-unyu.or.jp/member/",
+  "https://www.chubu-lorry.or.jp/member/",
+  "https://www.kinki-lorry.or.jp/member/",
+  "https://www.nishi-unyu.or.jp/member/",
+  "https://www.kyushu-lorry.or.jp/member/",
+  // 地域商工会系
+  "https://www.shokokai.or.jp/transport/",
+  "https://www.tokyo-shokokai.or.jp/member/transport/",
+  // 求人・採用サイトから抽出
+  "https://www.green-job.jp/company/transport/",
+  "https://career.co.jp/company/logistics/",
+  "https://en-gage.net/company/logistics/",
+  // 業種別情報サイト
+  "https://www.logistics.jp/member/",
+  "https://butsuryu.jp/company/",
+  "https://www.butsuryu-news.co.jp/company/",
 ];
 
 const PREFECTURES = [
