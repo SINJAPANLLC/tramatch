@@ -941,33 +941,104 @@ https://tramatch-sinjapan.com
   return { sent, failed };
 }
 
+// クロールとメール送信の実行ロックフラグ（多重起動防止）
+let isCrawling = false;
+let isSending = false;
+let isDirCrawling = false;
+
+// 並列バッチでクロール実行（count件×3バッチ）
+async function runParallelCrawl(batchCount = 3, perBatch = 80) {
+  if (isCrawling) {
+    console.log("[Lead Crawler] Crawl already running, skipping.");
+    return;
+  }
+  isCrawling = true;
+  try {
+    const jobs = [];
+    for (let i = 0; i < batchCount; i++) {
+      jobs.push(crawlLeadsWithAI(perBatch).catch(err =>
+        console.error(`[Lead Crawler] Batch ${i + 1} failed:`, err)
+      ));
+    }
+    await Promise.all(jobs);
+    console.log(`[Lead Crawler] ${batchCount} parallel search batches complete`);
+  } finally {
+    isCrawling = false;
+  }
+}
+
+// 並列ディレクトリクロール実行（5バッチ）
+async function runParallelDirCrawl(batchCount = 5, perBatch = 100) {
+  if (isDirCrawling) {
+    console.log("[Lead Crawler] Dir crawl already running, skipping.");
+    return;
+  }
+  isDirCrawling = true;
+  try {
+    const jobs = [];
+    for (let i = 0; i < batchCount; i++) {
+      jobs.push(crawlFromDirectoriesOnly(perBatch).catch(err =>
+        console.error(`[Lead Crawler] Dir batch ${i + 1} failed:`, err)
+      ));
+    }
+    await Promise.all(jobs);
+    console.log(`[Lead Crawler] ${batchCount} parallel directory batches complete`);
+  } finally {
+    isDirCrawling = false;
+  }
+}
+
 export function scheduleLeadCrawler() {
+  // 1分ごとにJST時刻をチェック
   setInterval(async () => {
     const now = new Date();
     const jstHour = (now.getUTCHours() + 9) % 24;
+    const min = now.getMinutes();
 
-    if (jstHour === 7 && now.getMinutes() === 0) {
-      console.log("[Lead Crawler] Starting daily crawl...");
-      try {
-        await crawlLeadsWithAI();
-      } catch (err) {
-        console.error("[Lead Crawler] Crawl failed:", err);
-      }
+    // ============================================================
+    // クロールスケジュール（1日8回 = 3時間ごと）
+    // 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 → 検索クロール
+    // 07:30, 13:30, 19:30 → ディレクトリ専用クロール
+    // ============================================================
+    const searchCrawlHours = [6, 9, 12, 15, 18, 21];
+    const dirCrawlHours    = [7, 13, 19];
+
+    if (min === 0 && searchCrawlHours.includes(jstHour)) {
+      console.log(`[Lead Crawler] ⏰ ${jstHour}:00 JST — 検索クロール開始（3並列）`);
+      runParallelCrawl(3, 100).catch(console.error);
     }
 
-    if (jstHour === 10 && now.getMinutes() === 0) {
-      console.log("[Lead Email] Starting daily send...");
+    if (min === 30 && dirCrawlHours.includes(jstHour)) {
+      console.log(`[Lead Crawler] ⏰ ${jstHour}:30 JST — ディレクトリクロール開始（5並列）`);
+      runParallelDirCrawl(5, 120).catch(console.error);
+    }
+
+    // ============================================================
+    // メール送信スケジュール（1日3回）
+    // 10:00, 14:00, 20:00 JST
+    // ============================================================
+    const sendHours = [10, 14, 20];
+
+    if (min === 0 && sendHours.includes(jstHour)) {
+      if (isSending) {
+        console.log("[Lead Email] Already sending, skipping.");
+        return;
+      }
+      isSending = true;
+      console.log(`[Lead Email] ⏰ ${jstHour}:00 JST — メール送信開始`);
       try {
         await sendDailyLeadEmails();
       } catch (err) {
         console.error("[Lead Email] Send failed:", err);
+      } finally {
+        isSending = false;
       }
     }
   }, 60000);
 
-  const now = new Date();
-  const jstHour = (now.getUTCHours() + 9) % 24;
-  const nextCrawl = jstHour < 7 ? 7 - jstHour : 24 - jstHour + 7;
-  const nextSend = jstHour < 10 ? 10 - jstHour : 24 - jstHour + 10;
-  console.log(`[Lead Crawler] Scheduled: crawl in ~${nextCrawl}h (07:00 JST), send in ~${nextSend}h (10:00 JST)`);
+  // 起動時ログ
+  console.log("[Lead Crawler] ✅ スケジュール設定完了:");
+  console.log("  クロール: 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 JST（検索）");
+  console.log("  クロール: 07:30, 13:30, 19:30 JST（ディレクトリ）");
+  console.log("  メール送信: 10:00, 14:00, 20:00 JST");
 }
