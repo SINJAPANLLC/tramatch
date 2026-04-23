@@ -1300,14 +1300,13 @@ export function scheduleLeadCrawler() {
 
     // ============================================================
     // 既存リード（ウェブサイトあり・メールなし）のメール取得
-    // 08:00, 11:00, 14:30, 17:00, 22:00 JST（毎回100件）
+    // 2時間ごとに300件（1日12回 = 3,600件/日）
     // ============================================================
-    const existingCrawlTimes: Array<[number, number]> = [[8,0],[11,0],[14,30],[17,0],[22,0]];
-    const isExistingCrawlTime = existingCrawlTimes.some(([h, m]) => jstHour === h && min === m);
-    if (isExistingCrawlTime && !isExistingCrawling) {
+    const existingCrawlHours = [6,8,10,12,14,16,18,20,22,0,2,4];
+    if (min === 45 && existingCrawlHours.includes(jstHour) && !isExistingCrawling) {
       isExistingCrawling = true;
-      console.log(`[Lead Crawler] ⏰ ${jstHour}:${String(min).padStart(2,'0')} JST — 既存リードのメール取得開始（100件）`);
-      crawlEmailsForExistingLeads(100).catch(console.error).finally(() => { isExistingCrawling = false; });
+      console.log(`[Lead Crawler] ⏰ ${jstHour}:45 JST — 既存リードのメール取得開始（300件）`);
+      crawlEmailsForExistingLeads(300).catch(console.error).finally(() => { isExistingCrawling = false; });
     }
 
     // ============================================================
