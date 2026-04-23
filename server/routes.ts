@@ -3958,6 +3958,17 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  app.post("/api/admin/email-leads/crawl-all-parallel", requireAdmin, async (req, res) => {
+    try {
+      const parallelism = req.body?.parallelism ? parseInt(req.body.parallelism) : 20;
+      const { crawlAllExistingLeadsParallel } = await import("./lead-crawler");
+      res.json({ message: `全ウェブサイト付きリードの一括クロールを開始しました（並列数=${parallelism}）` });
+      crawlAllExistingLeadsParallel(parallelism).catch(err => console.error("[Lead Crawler] Parallel crawl failed:", err));
+    } catch (error: any) {
+      res.status(500).json({ message: "クロールの開始に失敗しました: " + (error?.message || "不明なエラー") });
+    }
+  });
+
   app.post("/api/admin/email-leads/crawl-url", requireAdmin, async (req, res) => {
     try {
       const { url } = req.body;

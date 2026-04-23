@@ -2,8 +2,8 @@ import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
 import dns from "dns/promises";
 
-const DAILY_SEND_LIMIT = 1500;
-const SEND_INTERVAL_MS = 1000;
+const DAILY_SEND_LIMIT = 6000;
+const SEND_INTERVAL_MS = 500;
 const CRAWL_BATCH_SIZE = 50;
 
 // セッション内でクロール済みドメインを記録（重複回避）
@@ -1138,6 +1138,86 @@ export async function crawlEmailsForExistingLeads(batchSize = 50): Promise<{ upd
 
   console.log(`[Lead Crawler] Website email crawl complete: updated=${updated}, skipped=${skipped}`);
   return { updated, skipped };
+}
+
+// 全リードを高並列で一括処理（parallelism=同時リクエスト数）
+export async function crawlAllExistingLeadsParallel(parallelism = 20): Promise<{ updated: number; skipped: number; total: number }> {
+  const PAGE_SIZE = 500;
+  let offset = 0;
+  let totalUpdated = 0;
+  let totalSkipped = 0;
+  let totalProcessed = 0;
+  const localCrawled = new Set<string>();
+
+  console.log(`[Lead Crawler] 🚀 全リード一括クロール開始（並列数=${parallelism}）`);
+
+  while (true) {
+    const leads = await storage.getLeadsWithWebsiteNoEmail(PAGE_SIZE, offset);
+    if (leads.length === 0) break;
+    offset += leads.length;
+
+    // parallelism件ずつ並列処理
+    for (let i = 0; i < leads.length; i += parallelism) {
+      const chunk = leads.slice(i, i + parallelism);
+      const results = await Promise.allSettled(chunk.map(async (lead) => {
+        if (!lead.website) return "skip";
+        try {
+          const domain = new URL(lead.website).hostname.replace(/^www\./, "");
+          if (crawledDomainsCache.has(domain) || localCrawled.has(domain)) return "skip";
+          localCrawled.add(domain);
+          crawledDomainsCache.add(domain);
+
+          const html = await fetchPageContent(lead.website);
+          if (!html) return "skip";
+
+          let { emails, phones, faxes } = extractContactInfo(html);
+
+          if (emails.length === 0) {
+            const related = await findEmailOnRelatedPages(lead.website, html);
+            if (related?.emails.length) {
+              emails = related.emails;
+              if (related.phones.length && !lead.phone) phones = related.phones;
+              if (related.faxes.length && !lead.fax) faxes = related.faxes;
+            }
+          }
+
+          if (emails.length === 0) {
+            const guessed = await guessCompanyEmail(domain);
+            if (guessed) emails = [guessed];
+          }
+
+          if (emails.length === 0) return "skip";
+
+          const email = emails[0];
+          const existing = await storage.getEmailLeadByEmail(email);
+          if (existing && existing.id !== lead.id) return "skip";
+
+          await storage.updateEmailLead(lead.id, {
+            email,
+            phone: lead.phone || phones[0] || undefined,
+            fax: lead.fax || faxes[0] || undefined,
+          });
+          console.log(`[Lead Crawler] ✓ ${lead.companyName}: ${email}`);
+          return "updated";
+        } catch {
+          return "skip";
+        }
+      }));
+
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value === "updated") totalUpdated++;
+        else totalSkipped++;
+      }
+      totalProcessed += chunk.length;
+
+      if (totalProcessed % 100 === 0) {
+        console.log(`[Lead Crawler] 進捗: ${totalProcessed}件処理 / 取得=${totalUpdated}`);
+      }
+    }
+  }
+
+  console.log(`[Lead Crawler] ✅ 一括クロール完了: 取得=${totalUpdated}, スキップ=${totalSkipped}, 合計=${totalProcessed}`);
+  return { updated: totalUpdated, skipped: totalSkipped, total: totalProcessed };
 }
 
 export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: number }> {

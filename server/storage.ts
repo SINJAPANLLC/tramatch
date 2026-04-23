@@ -218,7 +218,7 @@ export interface IStorage {
   deleteEmailLead(id: string): Promise<boolean>;
   getNewEmailLeadsForSending(limit: number): Promise<EmailLead[]>;
   getTodaySentLeadCount(): Promise<number>;
-  getLeadsWithWebsiteNoEmail(limit: number): Promise<EmailLead[]>;
+  getLeadsWithWebsiteNoEmail(limit: number, offset?: number): Promise<EmailLead[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1265,13 +1265,14 @@ export class DatabaseStorage implements IStorage {
     return result?.count || 0;
   }
 
-  async getLeadsWithWebsiteNoEmail(limit: number): Promise<EmailLead[]> {
+  async getLeadsWithWebsiteNoEmail(limit: number, offset = 0): Promise<EmailLead[]> {
     return await db.select().from(emailLeads)
       .where(and(
         isNull(emailLeads.email),
-        sql`${emailLeads.website} IS NOT NULL AND ${emailLeads.website} != ''`
+        sql`${emailLeads.website} IS NOT NULL AND ${emailLeads.website} != '' AND ${emailLeads.website} != '-'`
       ))
       .limit(limit)
+      .offset(offset)
       .orderBy(emailLeads.createdAt);
   }
 }
