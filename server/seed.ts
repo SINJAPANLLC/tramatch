@@ -158,6 +158,42 @@ const defaultEmailTemplates = [
   {
     category: "auto_notification",
     channel: "email",
+    name: "公式LINE友達追加のご案内",
+    subject: "【トラマッチ】LINEで新着案件・空車情報をリアルタイム受信しませんか？",
+    body: `{{companyName}} 様
+
+いつもトラマッチをご利用いただきありがとうございます。
+
+━━━━━━━━━━━━━━━━━━━━
+🟢 トラマッチ公式LINEのご案内
+━━━━━━━━━━━━━━━━━━━━
+
+トラマッチ公式LINEを友達追加いただくと、以下の情報をLINEでリアルタイムにお受け取りいただけます。
+
+✅ 新着荷物案件の通知
+✅ 新着空車情報の通知
+✅ アカウント承認・重要なお知らせ
+
+メールよりも素早く情報をキャッチできますので、ぜひご活用ください。
+
+■ 友達追加はこちら
+https://line.me/R/ti/p/%40107avlvk
+
+※ 友達追加後、LINEのトーク画面にご登録のメールアドレスを送信してください。
+　 アカウントが自動で連携され、通知が届くようになります。
+
+━━━━━━━━━━━━━━━━━━━━
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+トラマッチ運営事務局
+合同会社SIN JAPAN
+{{appBaseUrl}}`,
+    triggerEvent: "line_add_invite",
+  },
+  {
+    category: "auto_notification",
+    channel: "email",
     name: "請求書送信",
     subject: "【トラマッチ】請求書 {{invoiceNumber}}（{{billingMonth}}）",
     body: `{{companyName}} 御中
