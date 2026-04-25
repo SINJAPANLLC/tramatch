@@ -3648,6 +3648,7 @@ statusの意味:
   // Admin: Notification Templates CRUD
   app.get("/api/admin/notification-templates", requireAdmin, async (req, res) => {
     try {
+      res.set("Cache-Control", "no-store");
       const category = req.query.category as string | undefined;
       const channel = req.query.channel as string | undefined;
       let templates;

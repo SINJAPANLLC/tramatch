@@ -67,7 +67,7 @@ type EmailTemplateInfo = {
 
 export default function AdminNotifications() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<ChannelKey | "send">("system");
+  const [activeTab, setActiveTab] = useState<ChannelKey | "send">("email");
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<NotificationTemplate | null>(null);
@@ -810,7 +810,8 @@ export default function AdminNotifications() {
                               <p className="text-xs text-muted-foreground mb-2">HTMLメールプレビュー</p>
                               <iframe
                                 srcDoc={previewTemplate.htmlBody}
-                                className="w-full min-h-[400px] bg-white border border-border rounded-md"
+                                className="w-full bg-white border border-border rounded-md"
+                                style={{ minHeight: "600px", height: "70vh" }}
                                 sandbox=""
                                 title="HTML Email Preview"
                                 data-testid="iframe-html-preview"
