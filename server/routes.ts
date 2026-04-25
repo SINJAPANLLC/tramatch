@@ -246,70 +246,71 @@ export async function registerRoutes(
         const text = (event.message.text as string).trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+        const lineReply = async (msg: string) => {
+          if (!replyToken) return;
+          await fetch("https://api.line.me/v2/bot/message/reply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ replyToken, messages: [{ type: "text", text: msg }] }),
+          }).catch(() => {});
+        };
+
+        const allUsers = await storage.getAllUsers().catch(() => [] as any[]);
+        const linkedUser = allUsers.find((u: any) => u.lineUserId === lineUserId);
+
+        if (linkedUser) {
+          await lineReply(
+            `こんにちは、${linkedUser.companyName || linkedUser.email} さん！\n\n` +
+            `このLINEアカウントは通知専用です。\n` +
+            `新着案件・空車情報は自動でお知らせします。\n\n` +
+            `各種設定はトラマッチのマイページよりご確認ください。`
+          );
+          continue;
+        }
+
         if (emailRegex.test(text)) {
           const user = await storage.getUserByEmail(text).catch(() => null);
           if (!user) {
-            if (replyToken) {
-              await fetch("https://api.line.me/v2/bot/message/reply", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({
-                  replyToken,
-                  messages: [{ type: "text", text: "⚠️ そのメールアドレスでのアカウントが見つかりませんでした。\nトラマッチに登録済みのメールアドレスを送信してください。" }],
-                }),
-              }).catch(() => {});
-            }
+            await lineReply("⚠️ そのメールアドレスに一致するアカウントが見つかりませんでした。\nトラマッチに登録済みのメールアドレスを送信してください。");
             continue;
           }
-
-          if (user.lineUserId === lineUserId) {
-            if (replyToken) {
-              await fetch("https://api.line.me/v2/bot/message/reply", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({
-                  replyToken,
-                  messages: [{ type: "text", text: "✅ すでにアカウントが連携されています。" }],
-                }),
-              }).catch(() => {});
-            }
-            continue;
-          }
-
           await storage.updateUserProfile(user.id, { lineUserId, notifyLine: true }).catch(() => {});
-
-          if (replyToken) {
-            await fetch("https://api.line.me/v2/bot/message/reply", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({
-                replyToken,
-                messages: [{
-                  type: "text",
-                  text: `✅ アカウント連携が完了しました！\n\n${user.companyName || user.email} さん、これからLINEで通知をお届けします。`,
-                }],
-              }),
-            }).catch(() => {});
-          }
+          await lineReply(
+            `✅ アカウント連携が完了しました！\n\n${user.companyName || user.email} さん、これからLINEで通知をお届けします。\n\n新着案件・空車情報は自動でお知らせしますので、お楽しみに！`
+          );
         } else {
-          if (replyToken) {
-            await fetch("https://api.line.me/v2/bot/message/reply", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({
-                replyToken,
-                messages: [{
-                  type: "text",
-                  text: "アカウントを連携するには、ご登録のメールアドレスを送信してください。\n（例: yamada@example.com）",
-                }],
-              }),
-            }).catch(() => {});
-          }
+          await lineReply(
+            "アカウントを連携するには、ご登録のメールアドレスを送信してください。\n（例: yamada@example.com）"
+          );
         }
       }
     }
   });
   // ─────────────────────────────────────────────────────────────────────────────
+
+  app.post("/api/line/test-notification", requireAdmin, async (req, res) => {
+    const { type, lineUserId: targetLineUserId } = req.body;
+    if (!targetLineUserId) return res.status(400).json({ message: "LINE User IDが必要です" });
+    if (!isLineConfigured()) return res.status(400).json({ message: "LINE未設定です" });
+
+    const appBaseUrl = process.env.APP_BASE_URL || "https://tramatch-sinjapan.com";
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")}`;
+
+    let msg = "";
+    if (type === "truck") {
+      msg = `【新着空車】\n神奈川→愛知\n車種: 4t車 / 積載3t\n空車日: ${dateStr}\n\nトラマッチで確認:\n${appBaseUrl}`;
+    } else {
+      msg = `【新着案件】\n東京→大阪\n荷種: 食品 / 10t\n希望日: ${dateStr}\n\nトラマッチで確認:\n${appBaseUrl}`;
+    }
+
+    const result = await sendLineMessage(targetLineUserId, msg);
+    if (result.success) {
+      res.json({ success: true, message: "テスト通知を送信しました", preview: msg });
+    } else {
+      res.status(500).json({ success: false, message: result.error });
+    }
+  });
 
   app.get("/api/line/friend-url", async (_req, res) => {
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;

@@ -92,11 +92,22 @@ export default function AdminNotifications() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
+  const [lineTestUserId, setLineTestUserId] = useState("");
+  const [lineTestType, setLineTestType] = useState<"cargo" | "truck">("cargo");
+
   const currentChannel = activeTab !== "send" ? activeTab : "system";
 
   const { data: channelStatus } = useQuery<Record<string, ChannelStatus>>({
     queryKey: ["/api/admin/notification-channels/status"],
   });
+
+  const { data: currentUser } = useQuery<any>({ queryKey: ["/api/user"] });
+
+  useEffect(() => {
+    if (currentUser?.lineUserId && !lineTestUserId) {
+      setLineTestUserId(currentUser.lineUserId);
+    }
+  }, [currentUser]);
 
   const { data: emailTemplateInfo } = useQuery<EmailTemplateInfo[]>({
     queryKey: ["/api/admin/email-template-info"],
@@ -262,6 +273,21 @@ export default function AdminNotifications() {
       }
     },
     onError: () => toast({ title: "テスト送信に失敗しました", variant: "destructive" }),
+  });
+
+  const lineTestNotifMutation = useMutation({
+    mutationFn: async ({ type, lineUserId }: { type: string; lineUserId: string }) => {
+      const res = await apiRequest("POST", "/api/line/test-notification", { type, lineUserId });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({ title: "テスト通知を送信しました", description: "LINEを確認してください" });
+      } else {
+        toast({ title: "送信失敗", description: data.message, variant: "destructive" });
+      }
+    },
+    onError: () => toast({ title: "送信に失敗しました", variant: "destructive" }),
   });
 
   function resetForm() {
@@ -1033,21 +1059,62 @@ export default function AdminNotifications() {
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 flex-wrap p-3 rounded-md border border-border">
-                      <div className="flex items-center gap-2">
-                        <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">LINE通知</p>
-                          <p className="text-xs text-muted-foreground">LINE Channel Access Tokenが必要です</p>
+                    <div className="p-3 rounded-md border border-border space-y-3">
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">LINE通知</p>
+                            <p className="text-xs text-muted-foreground">LINE Channel Access Tokenが必要です</p>
+                          </div>
                         </div>
+                        <Badge variant={channelStatus?.line?.configured ? "default" : "secondary"} className="text-xs">
+                          {channelStatus?.line?.configured ? (
+                            <><CheckCircle className="w-3 h-3 mr-1" />設定済み</>
+                          ) : (
+                            <><XCircle className="w-3 h-3 mr-1" />未設定</>
+                          )}
+                        </Badge>
                       </div>
-                      <Badge variant={channelStatus?.line?.configured ? "default" : "secondary"} className="text-xs">
-                        {channelStatus?.line?.configured ? (
-                          <><CheckCircle className="w-3 h-3 mr-1" />設定済み</>
-                        ) : (
-                          <><XCircle className="w-3 h-3 mr-1" />未設定</>
-                        )}
-                      </Badge>
+                      {channelStatus?.line?.configured && (
+                        <div className="space-y-2 pt-1 border-t border-border">
+                          <p className="text-[11px] font-medium text-foreground">通知フォーマットのテスト送信</p>
+                          <Input
+                            placeholder="LINE User ID（例: Uxxxxxxxxxxxx）"
+                            value={lineTestUserId}
+                            onChange={e => setLineTestUserId(e.target.value)}
+                            className="h-7 text-xs font-mono"
+                            data-testid="input-line-test-user-id"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 text-xs h-7 border-green-400 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30"
+                              disabled={!lineTestUserId.trim() || lineTestNotifMutation.isPending}
+                              onClick={() => lineTestNotifMutation.mutate({ type: "cargo", lineUserId: lineTestUserId.trim() })}
+                              data-testid="button-line-test-cargo"
+                            >
+                              {lineTestNotifMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                              新着案件テスト
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 text-xs h-7 border-green-400 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30"
+                              disabled={!lineTestUserId.trim() || lineTestNotifMutation.isPending}
+                              onClick={() => lineTestNotifMutation.mutate({ type: "truck", lineUserId: lineTestUserId.trim() })}
+                              data-testid="button-line-test-truck"
+                            >
+                              {lineTestNotifMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                              新着空車テスト
+                            </Button>
+                          </div>
+                          {currentUser?.lineUserId && (
+                            <p className="text-[10px] text-muted-foreground">※ あなたのLINE User IDが自動入力されています</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
