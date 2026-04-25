@@ -6,6 +6,24 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { dbPool } from "./db";
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
+
+if (process.env.NODE_ENV === "production") {
+  const envPath = resolve(process.cwd(), ".env");
+  if (existsSync(envPath)) {
+    const lines = readFileSync(envPath, "utf-8").split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const idx = trimmed.indexOf("=");
+      if (idx === -1) continue;
+      const key = trimmed.slice(0, idx).trim();
+      const val = trimmed.slice(idx + 1).trim();
+      if (key && !(key in process.env)) process.env[key] = val;
+    }
+  }
+}
 
 const app = express();
 app.set("trust proxy", 1);
