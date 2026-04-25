@@ -3761,6 +3761,8 @@ JSON形式で以下を返してください（日本語で）:
         return parseInt(cleaned, 10) || 0;
       };
 
+      const userMap = new Map(allUsers.map(u => [u.id, u.companyName]));
+
       const completedCargoDetails = completedCargo.map(c => ({
         id: c.id,
         cargoNumber: c.cargoNumber,
@@ -3771,6 +3773,7 @@ JSON形式で以下を返してください（日本語で）:
         price: c.price,
         priceValue: parsePrice(c.price),
         companyName: c.companyName,
+        acceptedByCompanyName: c.acceptedByUserId ? (userMap.get(c.acceptedByUserId) ?? null) : null,
         desiredDate: c.desiredDate,
         createdAt: c.createdAt,
       }));

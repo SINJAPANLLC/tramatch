@@ -1,12 +1,19 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Users, UserCheck, UserPlus, Package, CheckCircle, Truck, Crown,
   BarChart3, TrendingUp, ArrowUpDown, Banknote, CircleDollarSign,
-  MapPin
+  MapPin, Pencil
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard-layout";
 
 type CompletedCargoDetail = {
@@ -19,6 +26,7 @@ type CompletedCargoDetail = {
   price: string | null;
   priceValue: number;
   companyName: string;
+  acceptedByCompanyName: string | null;
   desiredDate: string;
   createdAt: string;
 };
@@ -91,9 +99,35 @@ function StatCard({
 }
 
 export default function AdminRevenue() {
+  const { toast } = useToast();
   const { data: stats, isLoading } = useQuery<RevenueStats>({
     queryKey: ["/api/admin/revenue-stats"],
   });
+
+  const [editingCargo, setEditingCargo] = useState<CompletedCargoDetail | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", price: "", departureArea: "", arrivalArea: "", cargoType: "" });
+
+  const editMutation = useMutation({
+    mutationFn: (data: { id: string; body: Record<string, string> }) =>
+      apiRequest("PATCH", `/api/admin/cargo/${data.id}`, data.body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/revenue-stats"] });
+      toast({ title: "更新しました" });
+      setEditingCargo(null);
+    },
+    onError: () => toast({ title: "更新に失敗しました", variant: "destructive" }),
+  });
+
+  const openEdit = (cargo: CompletedCargoDetail) => {
+    setEditingCargo(cargo);
+    setEditForm({
+      title: cargo.title || "",
+      price: cargo.price || "",
+      departureArea: cargo.departureArea || "",
+      arrivalArea: cargo.arrivalArea || "",
+      cargoType: cargo.cargoType || "",
+    });
+  };
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -401,9 +435,11 @@ export default function AdminRevenue() {
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷物名</th>
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">区間</th>
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷種</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">掲載企業</th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">成約企業</th>
                       <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">成約日</th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -412,17 +448,28 @@ export default function AdminRevenue() {
                         <td className="px-3 py-2.5 text-foreground font-bold text-[12px]">
                           {cargo.cargoNumber ? `#${cargo.cargoNumber}` : "-"}
                         </td>
-                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px] truncate max-w-[140px]">{cargo.title}</td>
+                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px] max-w-[120px]">
+                          <div className="truncate">{cargo.title}</div>
+                        </td>
                         <td className="px-3 py-2.5 text-[12px]">
                           <div className="flex items-center gap-1 text-foreground font-bold">
                             <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                            <span className="truncate max-w-[60px]">{cargo.departureArea}</span>
+                            <span className="truncate max-w-[55px]">{cargo.departureArea}</span>
                             <span className="text-muted-foreground mx-0.5">→</span>
-                            <span className="truncate max-w-[60px]">{cargo.arrivalArea}</span>
+                            <span className="truncate max-w-[55px]">{cargo.arrivalArea}</span>
                           </div>
                         </td>
                         <td className="px-3 py-2.5 text-foreground text-[12px]">{cargo.cargoType}</td>
-                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px] truncate max-w-[100px]">{cargo.companyName}</td>
+                        <td className="px-3 py-2.5 text-[12px] max-w-[110px]">
+                          <div className="truncate font-bold text-foreground">{cargo.companyName}</div>
+                        </td>
+                        <td className="px-3 py-2.5 text-[12px] max-w-[110px]">
+                          {cargo.acceptedByCompanyName ? (
+                            <div className="truncate font-bold text-emerald-600 dark:text-emerald-400">{cargo.acceptedByCompanyName}</div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2.5 text-right whitespace-nowrap">
                           {cargo.priceValue > 0 ? (
                             <span className="font-bold text-foreground text-[12px]">{formatYen(cargo.priceValue)}</span>
@@ -433,16 +480,27 @@ export default function AdminRevenue() {
                         <td className="px-3 py-2.5 text-muted-foreground text-[12px] whitespace-nowrap">
                           {new Date(cargo.createdAt).toLocaleDateString("ja-JP")}
                         </td>
+                        <td className="px-3 py-2.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => openEdit(cargo)}
+                            data-testid={`button-edit-cargo-${cargo.id}`}
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-border bg-muted/30">
-                      <td colSpan={5} className="px-3 py-2.5 text-sm font-bold text-foreground text-right">合計</td>
+                      <td colSpan={6} className="px-3 py-2.5 text-sm font-bold text-foreground text-right">合計</td>
                       <td className="px-3 py-2.5 text-right">
                         <span className="font-bold text-foreground text-sm">{formatYen(stats?.totalTradeVolume ?? 0)}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-right" colSpan={2}>
                         <span className="text-xs text-muted-foreground">{completedSorted.length}件</span>
                       </td>
                     </tr>
@@ -459,6 +517,70 @@ export default function AdminRevenue() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingCargo} onOpenChange={(open) => { if (!open) setEditingCargo(null); }}>
+        <DialogContent className="max-w-md" data-testid="dialog-edit-cargo">
+          <DialogHeader>
+            <DialogTitle>成約案件の編集</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs mb-1 block">荷物名</Label>
+              <Input
+                value={editForm.title}
+                onChange={(e) => setEditForm(f => ({ ...f, title: e.target.value }))}
+                data-testid="input-edit-title"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs mb-1 block">出発地</Label>
+                <Input
+                  value={editForm.departureArea}
+                  onChange={(e) => setEditForm(f => ({ ...f, departureArea: e.target.value }))}
+                  data-testid="input-edit-departure"
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">到着地</Label>
+                <Input
+                  value={editForm.arrivalArea}
+                  onChange={(e) => setEditForm(f => ({ ...f, arrivalArea: e.target.value }))}
+                  data-testid="input-edit-arrival"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">荷種</Label>
+              <Input
+                value={editForm.cargoType}
+                onChange={(e) => setEditForm(f => ({ ...f, cargoType: e.target.value }))}
+                data-testid="input-edit-cargo-type"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">運賃</Label>
+              <Input
+                value={editForm.price}
+                onChange={(e) => setEditForm(f => ({ ...f, price: e.target.value }))}
+                placeholder="例: ¥50,000"
+                data-testid="input-edit-price"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCargo(null)} data-testid="button-cancel-edit">キャンセル</Button>
+            <Button
+              onClick={() => editingCargo && editMutation.mutate({ id: editingCargo.id, body: editForm })}
+              disabled={editMutation.isPending}
+              data-testid="button-save-edit"
+            >
+              {editMutation.isPending ? "保存中..." : "保存"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
