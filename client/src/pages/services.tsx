@@ -49,14 +49,14 @@ const serviceItems: ServiceItem[] = [
     icon: Users,
   },
   {
-    title: "システム開発サービス",
-    description: "物流業務に特化したシステム開発。業務効率化のためのカスタムシステムを構築します。",
-    icon: Code,
-  },
-  {
     title: "M&A相談サービス",
     description: "運送会社の事業承継・M&Aをサポート。専門アドバイザーが最適なマッチングを行います。",
     icon: Handshake,
+  },
+  {
+    title: "システム開発サービス",
+    description: "物流業務に特化したシステム開発。業務効率化のためのカスタムシステムを構築します。",
+    icon: Code,
   },
   {
     title: "KEI MATCH",
