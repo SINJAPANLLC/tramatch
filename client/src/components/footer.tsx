@@ -39,15 +39,20 @@ export default function Footer() {
                 <li><Link href="/company-info" className="hover:underline" data-testid="link-company-info">会社情報</Link></li>
                 <li><Link href="/terms" className="hover:underline" data-testid="link-terms">利用規約</Link></li>
                 <li><Link href="/privacy" className="hover:underline" data-testid="link-privacy">プライバシーポリシー</Link></li>
-                <li>
-                  <a href="https://keimatch-sinjapan.com" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keimatch">
-                    KEI MATCH
-                  </a>
-                </li>
-                <li>
-                  <a href="https://keisaiyou-sinjapan.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keisaiyou">
-                    KEI SAIYOU
-                  </a>
+                <li className="pt-3">
+                  <p className="font-semibold text-primary-foreground mb-2">関連サービス</p>
+                  <ul className="space-y-2">
+                    <li>
+                      <a href="https://keimatch-sinjapan.com" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keimatch">
+                        KEI MATCH
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://keisaiyou-sinjapan.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keisaiyou">
+                        KEI SAIYOU
+                      </a>
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>
