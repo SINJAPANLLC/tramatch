@@ -272,6 +272,33 @@ export async function registerRoutes(
         } catch (err) {
           console.error("Welcome email failed:", err);
         }
+
+        try {
+          const adminNotifyBody = `<table style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;width:100%;margin:0 auto;border-collapse:collapse;">
+<tr><td style="background:#1CBFB3;padding:24px 32px;border-radius:10px 10px 0 0;">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,0.8);text-transform:uppercase;">管理者通知</p>
+<h2 style="margin:4px 0 0;font-size:22px;font-weight:900;color:#fff;">新規会員登録がありました</h2>
+</td></tr>
+<tr><td style="background:#fff;padding:24px 32px;border:1px solid #e0f7f5;border-top:none;">
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+<tr><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#888;width:36%;">会社名</td><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:14px;color:#1a1a1a;font-weight:700;">${parsed.data.companyName || "未入力"}</td></tr>
+<tr><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#888;">メールアドレス</td><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:14px;color:#1a1a1a;font-weight:700;">${parsed.data.email}</td></tr>
+<tr><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#888;">会員種別</td><td style="padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:14px;color:#1a1a1a;font-weight:700;">${parsed.data.userType === "shipper" ? "荷主" : parsed.data.userType === "carrier" ? "運送会社" : parsed.data.userType || "未設定"}</td></tr>
+<tr><td style="padding:10px 0;font-size:12px;color:#888;">登録日時</td><td style="padding:10px 0;font-size:14px;color:#1a1a1a;font-weight:700;">${new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</td></tr>
+</table>
+</td></tr>
+<tr><td style="background:#fff;padding:16px 32px 28px;border:1px solid #e0f7f5;border-top:none;border-radius:0 0 10px 10px;text-align:center;">
+<a href="${appBaseUrl}/admin/users" style="display:inline-block;background:#1CBFB3;color:#fff;text-decoration:none;padding:12px 36px;border-radius:50px;font-size:14px;font-weight:800;">管理画面で承認する →</a>
+</td></tr>
+</table>`;
+          await sendEmail(
+            "info@sinjapan.jp",
+            `【TRA MATCH】新規会員登録：${parsed.data.companyName || parsed.data.email}`,
+            adminNotifyBody
+          );
+        } catch (err) {
+          console.error("Admin registration notify email failed:", err);
+        }
       });
     } catch (error) {
       res.status(500).json({ message: "登録に失敗しました" });
@@ -1078,7 +1105,7 @@ ${appBaseUrl}
 
 ※ このメールはTRA MATCHからの自動通知です。`;
           for (const u of allUsers) {
-            if (u.id !== sessionUserId && u.approved) {
+            if (u.approved) {
               await storage.createNotification({
                 userId: u.id,
                 type: "cargo_new",
@@ -1594,7 +1621,7 @@ ${appBaseUrl}
 
 ※ このメールはTRA MATCHからの自動通知です。`;
           for (const u of allUsers) {
-            if (u.id !== sessionUserId && u.approved) {
+            if (u.approved) {
               await storage.createNotification({
                 userId: u.id,
                 type: "truck_new",
