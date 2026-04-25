@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { injectSeoMeta } from "./meta-injector";
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -20,8 +21,14 @@ export function serveStatic(app: Express) {
     },
   }));
 
-  app.use("/{*path}", (_req, res) => {
+  app.use("/{*path}", async (req, res) => {
     res.setHeader("Cache-Control", "no-cache");
-    res.sendFile(path.resolve(distPath, "index.html"));
+    try {
+      let html = await fs.promises.readFile(path.resolve(distPath, "index.html"), "utf-8");
+      html = await injectSeoMeta(html, req.path);
+      res.set("Content-Type", "text/html").send(html);
+    } catch {
+      res.sendFile(path.resolve(distPath, "index.html"));
+    }
   });
 }
