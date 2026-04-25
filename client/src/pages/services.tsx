@@ -19,6 +19,7 @@ type ServiceItem = {
   title: string;
   description: string;
   icon: typeof Truck;
+  href?: string;
 };
 
 const serviceItems: ServiceItem[] = [
@@ -57,33 +58,63 @@ const serviceItems: ServiceItem[] = [
     description: "運送会社の事業承継・M&Aをサポート。専門アドバイザーが最適なマッチングを行います。",
     icon: Handshake,
   },
+  {
+    title: "KEI MATCH",
+    description: "軽貨物ドライバーと荷主をつなぐマッチングプラットフォーム。軽貨物の求荷求車サービスです。",
+    icon: Truck,
+    href: "https://keimatch-sinjapan.com",
+  },
+  {
+    title: "KEI SAIYOU",
+    description: "軽貨物ドライバーの採用・求人に特化したサービス。即戦力ドライバーを効率よく採用できます。",
+    icon: Users,
+    href: "https://keisaiyou-sinjapan.com/",
+  },
 ];
 
 function ServiceCard({ service, index }: { service: ServiceItem; index: number }) {
-  return (
-    <Link href="/contact">
-      <Card className="cursor-pointer hover:bg-primary/10 transition-colors" data-testid={`card-service-${index}`}>
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-              <service.icon className="w-5 h-5 text-primary" />
+  const cardInner = (
+    <Card className="cursor-pointer hover:bg-primary/10 transition-colors h-full" data-testid={`card-service-${index}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+            <service.icon className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-medium text-foreground text-sm">{service.title}</h3>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
-              <div className="flex items-center gap-1 mt-2 text-primary text-xs font-medium">
-                <Mail className="w-3 h-3" />
-                お問い合わせ
-                <ArrowRight className="w-3 h-3" />
-              </div>
+            <p className="text-xs text-muted-foreground mt-1">{service.description}</p>
+            <div className="flex items-center gap-1 mt-2 text-primary text-xs font-medium">
+              {service.href ? (
+                <>
+                  <ArrowRight className="w-3 h-3" />
+                  サイトを見る
+                  <ArrowRight className="w-3 h-3" />
+                </>
+              ) : (
+                <>
+                  <Mail className="w-3 h-3" />
+                  お問い合わせ
+                  <ArrowRight className="w-3 h-3" />
+                </>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
+
+  if (service.href) {
+    return (
+      <a href={service.href} target="_blank" rel="noopener noreferrer">
+        {cardInner}
+      </a>
+    );
+  }
+
+  return <Link href="/contact">{cardInner}</Link>;
 }
 
 export default function Services() {
