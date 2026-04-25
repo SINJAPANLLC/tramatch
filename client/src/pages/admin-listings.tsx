@@ -35,12 +35,16 @@ export default function AdminListings() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCargo, setEditingCargo] = useState<CargoListing | null>(null);
   const [editingTruck, setEditingTruck] = useState<TruckListing | null>(null);
+  const [editingContracted, setEditingContracted] = useState<ContractedCargo | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ type: TabType; id: string; title: string } | null>(null);
   const [cargoForm, setCargoForm] = useState({
     title: "", departureArea: "", arrivalArea: "", desiredDate: "", vehicleType: "", price: "", status: "",
   });
   const [truckForm, setTruckForm] = useState({
     title: "", currentArea: "", destinationArea: "", vehicleType: "", maxWeight: "", availableDate: "", price: "", status: "",
+  });
+  const [contractedForm, setContractedForm] = useState({
+    title: "", departureArea: "", arrivalArea: "", desiredDate: "", cargoType: "", price: "",
   });
 
   const { data: cargo, isLoading: cargoLoading } = useQuery<CargoListing[]>({
@@ -166,6 +170,21 @@ export default function AdminListings() {
     setEditingTruck(item);
   };
 
+  const updateContracted = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, string> }) => {
+      await apiRequest("PATCH", `/api/admin/cargo/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/cargo/contracted"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
+      toast({ title: "成約案件を更新しました" });
+      setEditingContracted(null);
+    },
+    onError: () => {
+      toast({ title: "更新に失敗しました", variant: "destructive" });
+    },
+  });
+
   const handleCargoSave = () => {
     if (!editingCargo) return;
     updateCargo.mutate({ id: editingCargo.id, data: cargoForm });
@@ -174,6 +193,23 @@ export default function AdminListings() {
   const handleTruckSave = () => {
     if (!editingTruck) return;
     updateTruck.mutate({ id: editingTruck.id, data: truckForm });
+  };
+
+  const openContractedEdit = (item: ContractedCargo) => {
+    setContractedForm({
+      title: item.title || "",
+      departureArea: item.departure_area || "",
+      arrivalArea: item.arrival_area || "",
+      desiredDate: item.desired_date || "",
+      cargoType: item.cargo_type || "",
+      price: item.price || "",
+    });
+    setEditingContracted(item);
+  };
+
+  const handleContractedSave = () => {
+    if (!editingContracted) return;
+    updateContracted.mutate({ id: editingContracted.id, data: contractedForm });
   };
 
   const handleDelete = () => {
@@ -453,6 +489,7 @@ export default function AdminListings() {
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">エリア</th>
                       <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">希望日</th>
                       <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
+                      <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -501,6 +538,16 @@ export default function AdminListings() {
                           <span className="text-[12px] font-bold text-foreground whitespace-nowrap">
                             {item.price ? `¥${Number(item.price).toLocaleString()}` : "—"}
                           </span>
+                        </td>
+                        <td className="px-3 py-3 text-center align-top">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openContractedEdit(item)}
+                            data-testid={`button-edit-contracted-${item.id}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -611,6 +658,50 @@ export default function AdminListings() {
             <Button variant="outline" onClick={() => setEditingTruck(null)} data-testid="button-cancel-edit-truck">キャンセル</Button>
             <Button onClick={handleTruckSave} disabled={updateTruck.isPending} data-testid="button-save-truck">
               {updateTruck.isPending ? "保存中..." : "保存"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingContracted} onOpenChange={(open) => { if (!open) setEditingContracted(null); }}>
+        <DialogContent data-testid="dialog-edit-contracted">
+          <DialogHeader>
+            <DialogTitle>成約案件を編集</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">案件名</label>
+              <Input value={contractedForm.title} onChange={(e) => setContractedForm({ ...contractedForm, title: e.target.value })} data-testid="input-edit-contracted-title" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">出発地</label>
+                <Input value={contractedForm.departureArea} onChange={(e) => setContractedForm({ ...contractedForm, departureArea: e.target.value })} data-testid="input-edit-contracted-departure" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">到着地</label>
+                <Input value={contractedForm.arrivalArea} onChange={(e) => setContractedForm({ ...contractedForm, arrivalArea: e.target.value })} data-testid="input-edit-contracted-arrival" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">希望日</label>
+                <Input value={contractedForm.desiredDate} onChange={(e) => setContractedForm({ ...contractedForm, desiredDate: e.target.value })} data-testid="input-edit-contracted-date" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">荷種</label>
+                <Input value={contractedForm.cargoType} onChange={(e) => setContractedForm({ ...contractedForm, cargoType: e.target.value })} data-testid="input-edit-contracted-cargo-type" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 block">運賃</label>
+              <Input value={contractedForm.price} onChange={(e) => setContractedForm({ ...contractedForm, price: e.target.value })} placeholder="例: ¥50,000" data-testid="input-edit-contracted-price" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingContracted(null)} data-testid="button-cancel-edit-contracted">キャンセル</Button>
+            <Button onClick={handleContractedSave} disabled={updateContracted.isPending} data-testid="button-save-contracted">
+              {updateContracted.isPending ? "保存中..." : "保存"}
             </Button>
           </DialogFooter>
         </DialogContent>
