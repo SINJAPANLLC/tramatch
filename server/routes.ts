@@ -954,7 +954,26 @@ export async function registerRoutes(
     try {
       const listings = await storage.getCargoListingsByUserId(req.session.userId as string);
       await expireOldCargoListings(listings);
-      res.json(listings);
+
+      const contractorIds = [...new Set(
+        listings
+          .filter(l => l.status === "completed" && l.acceptedByUserId)
+          .map(l => l.acceptedByUserId as string)
+      )];
+      let contractorMap: Record<string, string> = {};
+      if (contractorIds.length > 0) {
+        const contractors = await Promise.all(contractorIds.map(id => storage.getUser(id)));
+        contractors.forEach(c => { if (c) contractorMap[c.id] = c.companyName || ""; });
+      }
+
+      const enriched = listings.map(l => ({
+        ...l,
+        contractorCompanyName: (l.status === "completed" && l.acceptedByUserId)
+          ? (contractorMap[l.acceptedByUserId] ?? null)
+          : null,
+      }));
+
+      res.json(enriched);
     } catch (error) {
       res.status(500).json({ message: "荷物一覧の取得に失敗しました" });
     }
@@ -1183,6 +1202,7 @@ export async function registerRoutes(
   // 自社荷物の成約一覧（成約した運送会社名付き）
   app.get("/api/my-cargo/completed-with-contractor", requireAuth, async (req, res) => {
     try {
+      const userId = req.session.userId as string;
       const result = await db.execute(sql`
         SELECT
           cl.*,
@@ -1191,10 +1211,11 @@ export async function registerRoutes(
           u_ct.email        AS contractor_email
         FROM cargo_listings cl
         LEFT JOIN users u_ct ON cl.accepted_by_user_id = u_ct.id
-        WHERE cl.user_id = ${req.session.userId as string}
+        WHERE cl.user_id = ${userId}
           AND cl.status = 'completed'
         ORDER BY cl.created_at DESC
       `);
+      console.log(`[completed-with-contractor] userId=${userId} rows=${result.rows.length}`);
       res.json(result.rows);
     } catch (error: any) {
       res.status(500).json({ message: "成約データの取得に失敗: " + error?.message });

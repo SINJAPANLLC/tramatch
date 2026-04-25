@@ -1295,10 +1295,8 @@ function CompletedCargoTable({ items, selectedId, onSelect, contractorNameMap, m
   );
 }
 
-type CompletedOwnItem = CargoListing & {
-  contractor_company_name: string | null;
-  contractor_phone: string | null;
-  contractor_email: string | null;
+type EnrichedCargoListing = CargoListing & {
+  contractorCompanyName?: string | null;
 };
 
 export default function CompletedCargo() {
@@ -1306,29 +1304,31 @@ export default function CompletedCargo() {
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<"own" | "contracted" | "billing">("own");
 
-  const { data: allCargo, isLoading } = useQuery<CargoListing[]>({
-    queryKey: ["/api/my-cargo"],
-  });
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/contracted-cargo"] });
+  }, []);
 
-  const { data: completedOwnRaw, isLoading: isLoadingOwn } = useQuery<CompletedOwnItem[]>({
-    queryKey: ["/api/my-cargo/completed-with-contractor"],
+  const { data: allCargo, isLoading } = useQuery<EnrichedCargoListing[]>({
+    queryKey: ["/api/my-cargo"],
   });
 
   const { data: contractedCargo, isLoading: isLoadingContracted } = useQuery<CargoListing[]>({
     queryKey: ["/api/contracted-cargo"],
   });
 
+  const completedOwn = allCargo?.filter((c) => c.status === "completed") ?? [];
   const completedContracted = contractedCargo?.filter((c) => c.status === "completed") ?? [];
-  const sorted = [...(completedOwnRaw ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const contractorNameMap = useMemo(() => {
     const map: Record<string, string | null> = {};
-    completedOwnRaw?.forEach((item) => {
-      map[item.id] = item.contractor_company_name;
+    completedOwn.forEach((item) => {
+      map[item.id] = item.contractorCompanyName ?? null;
     });
     return map;
-  }, [completedOwnRaw]);
+  }, [completedOwn]);
 
   const selectedCargo = useMemo(() => {
     if (!selectedCargoId) return null;
@@ -1376,7 +1376,7 @@ export default function CompletedCargo() {
               ))}
             </div>
 
-            {(isLoading || isLoadingOwn || isLoadingContracted) ? (
+            {(isLoading || isLoadingContracted) ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />
