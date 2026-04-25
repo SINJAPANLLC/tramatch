@@ -1048,9 +1048,35 @@ export async function registerRoutes(
             arrivalArea: listing.arrivalArea || "",
             cargoType: listing.cargoType || "",
             weight: listing.weight || "",
+            vehicleType: listing.vehicleType || "",
+            bodyType: listing.bodyType || "",
+            price: listing.price ? `¥${Number(listing.price.replace(/[^0-9]/g, "")).toLocaleString()}` : "要相談",
+            desiredDate: listing.desiredDate || "",
+            description: listing.description || "",
             companyName: currentUser?.companyName || "",
             appBaseUrl,
           };
+          const cargoFallbackBody = `新しい荷物案件が登録されました。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 荷物案件 詳細
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【区間】  ${listing.departureArea} → ${listing.arrivalArea}
+【荷物種類】${listing.cargoType || "—"}
+【重量】  ${listing.weight || "—"}
+【車種・車体】${[listing.vehicleType, listing.bodyType].filter(Boolean).join(" / ") || "—"}
+【運賃】  ${cargoVars.price}
+【希望日】 ${listing.desiredDate || "—"}
+【掲載会社】${currentUser?.companyName || "—"}
+${listing.description ? `\n【備考】  ${listing.description}` : ""}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+トラマッチにログインして詳細・お問い合わせはこちら：
+${appBaseUrl}
+
+※ このメールはTRA MATCHからの自動通知です。`;
           for (const u of allUsers) {
             if (u.id !== sessionUserId && u.approved) {
               await storage.createNotification({
@@ -1066,8 +1092,8 @@ export async function registerRoutes(
                   const resolved = await resolveEmailTemplate(
                     "cargo_new",
                     cargoVars,
-                    "【トラマッチ】新しい荷物が登録されました",
-                    `新しい荷物案件が登録されました。\n\n出発地: ${listing.departureArea}\n到着地: ${listing.arrivalArea}\n荷物種類: ${listing.cargoType}\n重量: ${listing.weight}\n\nトラマッチにログインして詳細をご確認ください。`
+                    "【トラマッチ】新着案件：" + listing.departureArea + "→" + listing.arrivalArea + " " + (listing.cargoType || ""),
+                    cargoFallbackBody
                   );
                   if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
                 } catch (emailErr) {
@@ -1539,10 +1565,34 @@ export async function registerRoutes(
             currentArea: listing.currentArea || "",
             destinationArea: listing.destinationArea || "",
             vehicleType: listing.vehicleType || "",
+            bodyType: listing.bodyType || "",
             maxWeight: listing.maxWeight || "",
+            availableDate: listing.availableDate || "",
+            price: listing.price ? `¥${Number(listing.price.replace(/[^0-9]/g, "")).toLocaleString()}` : "要相談",
+            notes: listing.notes || "",
             companyName: user?.companyName || "",
             appBaseUrl,
           };
+          const truckFallbackBody = `新しい空車情報が登録されました。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 空車情報 詳細
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【区間】  ${listing.currentArea} → ${listing.destinationArea || "指定なし"}
+【車種・車体】${[listing.vehicleType, listing.bodyType].filter(Boolean).join(" / ") || "—"}
+【積載量】 ${listing.maxWeight || "—"}
+【空車日】 ${listing.availableDate || "—"}
+【運賃】  ${truckVars.price}
+【掲載会社】${user?.companyName || "—"}
+${listing.notes ? `\n【備考】  ${listing.notes}` : ""}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+トラマッチにログインして詳細・お問い合わせはこちら：
+${appBaseUrl}
+
+※ このメールはTRA MATCHからの自動通知です。`;
           for (const u of allUsers) {
             if (u.id !== sessionUserId && u.approved) {
               await storage.createNotification({
@@ -1558,8 +1608,8 @@ export async function registerRoutes(
                   const resolved = await resolveEmailTemplate(
                     "truck_new",
                     truckVars,
-                    "【トラマッチ】新しい空車が登録されました",
-                    `新しい空車情報が登録されました。\n\n現在地: ${listing.currentArea}\n行先: ${listing.destinationArea}\n車両タイプ: ${listing.vehicleType}\n積載量: ${listing.maxWeight}\n\nトラマッチにログインして詳細をご確認ください。`
+                    "【トラマッチ】新着空車：" + listing.currentArea + "→" + (listing.destinationArea || "指定なし") + " " + (listing.vehicleType || ""),
+                    truckFallbackBody
                   );
                   if (resolved) await sendEmail(u.email, resolved.subject, resolved.body);
                 } catch (emailErr) {
@@ -3544,6 +3594,11 @@ statusの意味:
           { key: "arrivalArea", label: "到着地" },
           { key: "cargoType", label: "荷物種類" },
           { key: "weight", label: "重量" },
+          { key: "vehicleType", label: "車種" },
+          { key: "bodyType", label: "車体タイプ" },
+          { key: "price", label: "運賃" },
+          { key: "desiredDate", label: "希望日" },
+          { key: "description", label: "備考" },
           { key: "companyName", label: "登録会社名" },
           { key: "appBaseUrl", label: "サイトURL" },
         ],
@@ -3556,7 +3611,11 @@ statusの意味:
           { key: "currentArea", label: "現在地" },
           { key: "destinationArea", label: "行先" },
           { key: "vehicleType", label: "車両タイプ" },
+          { key: "bodyType", label: "車体タイプ" },
           { key: "maxWeight", label: "積載量" },
+          { key: "availableDate", label: "空車日" },
+          { key: "price", label: "運賃" },
+          { key: "notes", label: "備考" },
           { key: "companyName", label: "登録会社名" },
           { key: "appBaseUrl", label: "サイトURL" },
         ],
