@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, Upload, FileText, X } from "lucide-react";
+import { UserPlus, Upload, FileText, X, CheckCircle, Clock } from "lucide-react";
+import { SiLine } from "react-icons/si";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import logoImage from "@assets/IMG_0046_1771226022407.webp";
 
 export default function Register() {
@@ -15,6 +17,7 @@ export default function Register() {
   const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [agreed, setAgreed] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const [permitFile, setPermitFile] = useState<{ filePath: string; fileName: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +30,12 @@ export default function Register() {
     phone: "",
     fax: "",
     truckCount: "",
+  });
+
+  const { data: lineData } = useQuery<{ url: string | null; basicId?: string }>({
+    queryKey: ["/api/line/friend-url"],
+    enabled: registered,
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -69,8 +78,7 @@ export default function Register() {
     }
     try {
       await register.mutateAsync({ ...form, permitFile: permitFile?.filePath || "" });
-      toast({ title: "登録完了", description: "管理者の承認後にログインできます。しばらくお待ちください。" });
-      setLocation("/login");
+      setRegistered(true);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -83,6 +91,74 @@ export default function Register() {
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  if (registered) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <img src={logoImage} alt="TRA MATCH" className="h-10 w-auto" />
+            </div>
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+            <CardTitle className="text-xl">登録が完了しました</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex gap-3">
+              <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">管理者の承認をお待ちください</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  承認完了後にログインできます。通常1〜2営業日以内にご連絡いたします。
+                </p>
+              </div>
+            </div>
+
+            {lineData?.url ? (
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <SiLine className="w-5 h-5 text-[#06C755]" />
+                  <p className="text-sm font-bold text-green-800 dark:text-green-300">LINE通知を受け取る</p>
+                </div>
+                <p className="text-xs text-green-700 dark:text-green-400">
+                  承認通知・新着案件・新着空車情報をLINEでリアルタイムに受け取れます。
+                  友達追加後にメールアドレスを送信するだけで自動連携されます。
+                </p>
+                <a
+                  href={lineData.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="button-line-add-friend"
+                >
+                  <Button className="w-full bg-[#06C755] hover:bg-[#05a847] text-white font-bold" size="lg">
+                    <SiLine className="w-5 h-5 mr-2" />
+                    トラマッチ公式LINEを友達追加
+                  </Button>
+                </a>
+              </div>
+            ) : lineData && !lineData.url ? null : (
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-3 animate-pulse">
+                <div className="h-4 bg-green-200 dark:bg-green-800 rounded w-1/2" />
+                <div className="h-10 bg-green-200 dark:bg-green-800 rounded" />
+              </div>
+            )}
+
+            <div className="text-center">
+              <Link href="/login">
+                <Button variant="outline" className="w-full" data-testid="button-go-to-login">
+                  ログイン画面へ
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">

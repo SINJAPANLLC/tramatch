@@ -311,6 +311,23 @@ export async function registerRoutes(
   });
   // ─────────────────────────────────────────────────────────────────────────────
 
+  app.get("/api/line/friend-url", async (_req, res) => {
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    if (!token) return res.json({ url: null });
+    try {
+      const r = await fetch("https://api.line.me/v2/bot/info", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) return res.json({ url: null });
+      const info = await r.json() as any;
+      const basicId = info.basicId as string | undefined;
+      if (!basicId) return res.json({ url: null });
+      res.json({ url: `https://line.me/R/ti/p/${encodeURIComponent(basicId)}`, basicId });
+    } catch {
+      res.json({ url: null });
+    }
+  });
+
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "ファイルを選択してください" });
@@ -1240,6 +1257,10 @@ ${appBaseUrl}
                   console.error(`Cargo new email failed for ${u.email}:`, emailErr);
                 }
               }
+              if (u.notifyLine && u.lineUserId && isLineConfigured()) {
+                const lineMsg = `【新着案件】\n${listing.departureArea}→${listing.arrivalArea}\n荷種: ${listing.cargoType || "—"} / ${listing.weight || "—"}\n希望日: ${listing.desiredDate || "—"}\n\nトラマッチで確認:\n${appBaseUrl}`;
+                sendLineMessage(u.lineUserId, lineMsg).catch(() => {});
+              }
             }
           }
         } catch (bgErr) {
@@ -1755,6 +1776,10 @@ ${appBaseUrl}
                 } catch (emailErr) {
                   console.error(`Truck new email failed for ${u.email}:`, emailErr);
                 }
+              }
+              if (u.notifyLine && u.lineUserId && isLineConfigured()) {
+                const lineMsg = `【新着空車】\n${listing.currentArea}→${listing.destinationArea || "指定なし"}\n車種: ${listing.vehicleType || "—"} / ${listing.maxWeight || "—"}\n空車日: ${listing.availableDate || "—"}\n\nトラマッチで確認:\n${appBaseUrl}`;
+                sendLineMessage(u.lineUserId, lineMsg).catch(() => {});
               }
             }
           }
