@@ -613,7 +613,7 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             </FieldRow>
             <FieldRow label="発地詳細">
               <FormField control={form.control} name="departureAddress" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="発日">
@@ -645,12 +645,12 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             </FieldRow>
             <FieldRow label="着地詳細">
               <FormField control={form.control} name="arrivalAddress" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="着日">
               <FormField control={form.control} name="arrivalDate" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="YYYY/MM/DD" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="YYYY/MM/DD" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="着時間">
@@ -677,7 +677,7 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             </FieldRow>
             <FieldRow label="個数">
               <FormField control={form.control} name="packageCount" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 20パレット" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="例: 20パレット" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="車種">
@@ -718,7 +718,7 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             <SectionLabel>運賃・条件</SectionLabel>
             <FieldRow label="運賃(税別)">
               <FormField control={form.control} name="price" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 50000 または 要相談" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="例: 50000 または 要相談" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="高速代">
@@ -765,17 +765,17 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             <SectionLabel>車両指定・装備</SectionLabel>
             <FieldRow label="車両指定">
               <FormField control={form.control} name="vehicleSpec" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="特定の車両指定" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="特定の車両指定" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="必要装備">
               <FormField control={form.control} name="equipment" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="りん木、コンパネ など" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="りん木、コンパネ など" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="台数">
               <FormField control={form.control} name="truckCount" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 2台" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="例: 2台" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
 
@@ -792,12 +792,12 @@ function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: 
             </FieldRow>
             <FieldRow label="担当者">
               <FormField control={form.control} name="contactPerson" render={({ field }) => (
-                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="担当者名" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Input {...field} value={field.value ?? undefined} className="h-8 text-sm" placeholder="担当者名" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
             <FieldRow label="備考">
               <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormControl><Textarea {...field} className="text-sm min-h-[80px] resize-none" placeholder="備考・特記事項" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormControl><Textarea {...field} value={field.value ?? undefined} className="text-sm min-h-[80px] resize-none" placeholder="備考・特記事項" /></FormControl><FormMessage /></FormItem>
               )} />
             </FieldRow>
           </div>

@@ -1596,7 +1596,7 @@ ${appBaseUrl}
             maxWeight: listing.maxWeight || "",
             availableDate: listing.availableDate || "",
             price: listing.price ? `¥${Number(listing.price.replace(/[^0-9]/g, "")).toLocaleString()}` : "要相談",
-            notes: listing.notes || "",
+            notes: listing.description || "",
             companyName: user?.companyName || "",
             appBaseUrl,
           };
@@ -1612,7 +1612,7 @@ ${appBaseUrl}
 【空車日】 ${listing.availableDate || "—"}
 【運賃】  ${truckVars.price}
 【掲載会社】${user?.companyName || "—"}
-${listing.notes ? `\n【備考】  ${listing.notes}` : ""}
+${listing.description ? `\n【備考】  ${listing.description}` : ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
