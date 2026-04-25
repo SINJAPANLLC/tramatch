@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Package, ArrowRight, Truck, Loader2, Phone, X, FileText, CreditCard } from "lucide-react";
+import { CheckCircle, Package, ArrowRight, Truck, Loader2, Phone, X, FileText, CreditCard, Building2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing, DispatchRequest } from "@shared/schema";
@@ -1205,10 +1205,12 @@ function DispatchStatusBadge({ cargoId }: { cargoId: string }) {
   return <Badge variant="outline" className="text-[10px] border-yellow-300 text-yellow-600">下書き</Badge>;
 }
 
-function CompletedCargoTable({ items, selectedId, onSelect }: {
+function CompletedCargoTable({ items, selectedId, onSelect, contractorNameMap, mode }: {
   items: CargoListing[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  contractorNameMap?: Record<string, string | null>;
+  mode?: "own" | "contracted";
 }) {
   if (items.length === 0) {
     return (
@@ -1230,7 +1232,11 @@ function CompletedCargoTable({ items, selectedId, onSelect }: {
             <tr className="bg-muted/50 border-b border-border">
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">成約番号</th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">状態</th>
-              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運送会社</th>
+              <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">
+                {mode === "own" ? (
+                  <span className="flex items-center gap-1"><Building2 className="w-3 h-3 text-green-600" />成約運送会社</span>
+                ) : "荷主会社"}
+              </th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">発日時・発地</th>
               <th className="text-left px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">着日時・着地</th>
               <th className="text-right px-3 py-2.5 font-bold text-muted-foreground whitespace-nowrap">運賃</th>
@@ -1254,7 +1260,13 @@ function CompletedCargoTable({ items, selectedId, onSelect }: {
                   <Badge variant="outline" className="text-[10px] border-orange-300 text-orange-600">成約</Badge>
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
-                  <div className="font-bold">{item.companyName}</div>
+                  {mode === "own" ? (
+                    <div className="font-bold text-green-700 dark:text-green-400">
+                      {contractorNameMap?.[item.id] ?? "（不明）"}
+                    </div>
+                  ) : (
+                    <div className="font-bold">{item.companyName}</div>
+                  )}
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
                   <div className="font-bold">{formatDateCompact(item.desiredDate)} {item.departureTime || ""}</div>
@@ -1283,6 +1295,12 @@ function CompletedCargoTable({ items, selectedId, onSelect }: {
   );
 }
 
+type CompletedOwnItem = CargoListing & {
+  contractor_company_name: string | null;
+  contractor_phone: string | null;
+  contractor_email: string | null;
+};
+
 export default function CompletedCargo() {
   const { user } = useAuth();
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
@@ -1292,14 +1310,25 @@ export default function CompletedCargo() {
     queryKey: ["/api/my-cargo"],
   });
 
+  const { data: completedOwnRaw, isLoading: isLoadingOwn } = useQuery<CompletedOwnItem[]>({
+    queryKey: ["/api/my-cargo/completed-with-contractor"],
+  });
+
   const { data: contractedCargo, isLoading: isLoadingContracted } = useQuery<CargoListing[]>({
     queryKey: ["/api/contracted-cargo"],
   });
 
-  const completedOwn = allCargo?.filter((c) => c.status === "completed") ?? [];
   const completedContracted = contractedCargo?.filter((c) => c.status === "completed") ?? [];
-  const sorted = [...completedOwn].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sorted = [...(completedOwnRaw ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const sortedContracted = [...completedContracted].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const contractorNameMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    completedOwnRaw?.forEach((item) => {
+      map[item.id] = item.contractor_company_name;
+    });
+    return map;
+  }, [completedOwnRaw]);
 
   const selectedCargo = useMemo(() => {
     if (!selectedCargoId) return null;
@@ -1347,7 +1376,7 @@ export default function CompletedCargo() {
               ))}
             </div>
 
-            {(isLoading || isLoadingContracted) ? (
+            {(isLoading || isLoadingOwn || isLoadingContracted) ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />
@@ -1358,6 +1387,8 @@ export default function CompletedCargo() {
                 items={sorted}
                 selectedId={selectedCargoId}
                 onSelect={setSelectedCargoId}
+                contractorNameMap={contractorNameMap}
+                mode="own"
               />
             ) : mainTab === "contracted" ? (
               sortedContracted.length === 0 ? (
@@ -1373,6 +1404,7 @@ export default function CompletedCargo() {
                   items={sortedContracted}
                   selectedId={selectedCargoId}
                   onSelect={setSelectedCargoId}
+                  mode="contracted"
                 />
               )
             ) : (

@@ -1180,6 +1180,27 @@ export async function registerRoutes(
     }
   });
 
+  // 自社荷物の成約一覧（成約した運送会社名付き）
+  app.get("/api/my-cargo/completed-with-contractor", requireAuth, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT
+          cl.*,
+          u_ct.company_name AS contractor_company_name,
+          u_ct.phone        AS contractor_phone,
+          u_ct.email        AS contractor_email
+        FROM cargo_listings cl
+        LEFT JOIN users u_ct ON cl.accepted_by_user_id = u_ct.id
+        WHERE cl.user_id = ${req.session.userId as string}
+          AND cl.status = 'completed'
+        ORDER BY cl.created_at DESC
+      `);
+      res.json(result.rows);
+    } catch (error: any) {
+      res.status(500).json({ message: "成約データの取得に失敗: " + error?.message });
+    }
+  });
+
   app.patch("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
       const cargoId = req.params.id as string;
