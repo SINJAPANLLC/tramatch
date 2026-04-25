@@ -64,7 +64,7 @@ export default function Footer() {
           <span data-testid="icon-sns-youtube" className="text-primary-foreground"><SiYoutube className="w-6 h-6" /></span>
           <span data-testid="icon-sns-tiktok" className="text-primary-foreground"><SiTiktok className="w-6 h-6" /></span>
           <span data-testid="icon-sns-facebook" className="text-primary-foreground"><SiFacebook className="w-6 h-6" /></span>
-          <span data-testid="icon-sns-line" className="text-primary-foreground"><SiLine className="w-6 h-6" /></span>
+          <a href="https://line.me/R/ti/p/%40107avlvk" target="_blank" rel="noopener noreferrer" data-testid="icon-sns-line" className="text-primary-foreground"><SiLine className="w-6 h-6" /></a>
           <span data-testid="icon-sns-linkedin" className="text-primary-foreground"><SiLinkedin className="w-6 h-6" /></span>
         </div>
         <div className="mt-6 pt-6 border-t border-primary-foreground/30 text-center text-base text-primary-foreground">
