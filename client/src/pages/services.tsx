@@ -12,6 +12,7 @@ import {
   Handshake,
   Megaphone,
   Mail,
+  Sparkles,
 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -57,6 +58,12 @@ const serviceItems: ServiceItem[] = [
     title: "システム開発サービス",
     description: "物流業務に特化したシステム開発。業務効率化のためのカスタムシステムを構築します。",
     icon: Code,
+  },
+  {
+    title: "SIN JAPAN AI",
+    description: "AIを活用した物流・業務効率化ソリューション。最新のAI技術で企業の課題を解決します。",
+    icon: Sparkles,
+    href: "https://sinjapanai.site/",
   },
   {
     title: "KEI MATCH",
