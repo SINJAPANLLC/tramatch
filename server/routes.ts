@@ -197,6 +197,120 @@ export async function registerRoutes(
 
   app.use("/uploads", express.static(uploadDir));
 
+  // ─── LINE Webhook ────────────────────────────────────────────────────────────
+  app.post("/api/line/webhook", async (req, res) => {
+    const channelSecret = process.env.LINE_CHANNEL_SECRET;
+    const signature = req.headers["x-line-signature"] as string;
+
+    if (channelSecret && signature) {
+      const rawBody = (req as any).rawBody;
+      if (rawBody) {
+        const hmac = crypto.createHmac("sha256", channelSecret);
+        hmac.update(rawBody);
+        const digest = hmac.digest("base64");
+        if (digest !== signature) {
+          return res.status(401).json({ message: "Invalid signature" });
+        }
+      }
+    }
+
+    res.status(200).json({ status: "ok" });
+
+    const events: any[] = req.body?.events || [];
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+    if (!token) return;
+
+    for (const event of events) {
+      const replyToken = event.replyToken;
+      const lineUserId = event.source?.userId;
+      if (!lineUserId) continue;
+
+      if (event.type === "follow") {
+        if (replyToken) {
+          await fetch("https://api.line.me/v2/bot/message/reply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              replyToken,
+              messages: [{
+                type: "text",
+                text: "🎉 トラマッチ公式LINEへようこそ！\n\nLINE通知を受け取るには、アカウント連携が必要です。\n\nご登録のメールアドレスを、このトーク画面に送信してください。\n（例: yamada@example.com）",
+              }],
+            }),
+          }).catch(() => {});
+        }
+        continue;
+      }
+
+      if (event.type === "message" && event.message?.type === "text") {
+        const text = (event.message.text as string).trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (emailRegex.test(text)) {
+          const user = await storage.getUserByEmail(text).catch(() => null);
+          if (!user) {
+            if (replyToken) {
+              await fetch("https://api.line.me/v2/bot/message/reply", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  replyToken,
+                  messages: [{ type: "text", text: "⚠️ そのメールアドレスでのアカウントが見つかりませんでした。\nトラマッチに登録済みのメールアドレスを送信してください。" }],
+                }),
+              }).catch(() => {});
+            }
+            continue;
+          }
+
+          if (user.lineUserId === lineUserId) {
+            if (replyToken) {
+              await fetch("https://api.line.me/v2/bot/message/reply", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  replyToken,
+                  messages: [{ type: "text", text: "✅ すでにアカウントが連携されています。" }],
+                }),
+              }).catch(() => {});
+            }
+            continue;
+          }
+
+          await storage.updateUserProfile(user.id, { lineUserId, notifyLine: true }).catch(() => {});
+
+          if (replyToken) {
+            await fetch("https://api.line.me/v2/bot/message/reply", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                replyToken,
+                messages: [{
+                  type: "text",
+                  text: `✅ アカウント連携が完了しました！\n\n${user.companyName || user.email} さん、これからLINEで通知をお届けします。`,
+                }],
+              }),
+            }).catch(() => {});
+          }
+        } else {
+          if (replyToken) {
+            await fetch("https://api.line.me/v2/bot/message/reply", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                replyToken,
+                messages: [{
+                  type: "text",
+                  text: "アカウントを連携するには、ご登録のメールアドレスを送信してください。\n（例: yamada@example.com）",
+                }],
+              }),
+            }).catch(() => {});
+          }
+        }
+      }
+    }
+  });
+  // ─────────────────────────────────────────────────────────────────────────────
+
   app.post("/api/upload/permit", permitUpload.single("permit"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "ファイルを選択してください" });

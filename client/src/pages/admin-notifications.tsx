@@ -1051,11 +1051,34 @@ export default function AdminNotifications() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-xs text-muted-foreground mb-2">必要な環境変数:</p>
-                    <div className="space-y-1 text-xs font-mono text-muted-foreground">
-                      <p>SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM</p>
-                      <p>LINE_CHANNEL_ACCESS_TOKEN</p>
+                  <div className="pt-2 border-t border-border space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-foreground mb-1">メール必要環境変数:</p>
+                      <p className="text-[11px] font-mono text-muted-foreground">SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM</p>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-950/30 rounded-md p-3 space-y-2">
+                      <p className="text-xs font-bold text-green-800 dark:text-green-300 flex items-center gap-1">
+                        <SiLine className="w-3.5 h-3.5" />
+                        LINE公式アカウント 接続手順
+                      </p>
+                      <ol className="text-[11px] text-green-700 dark:text-green-400 space-y-1.5 list-decimal list-inside">
+                        <li>LINE Developersコンソールでチャネル作成（Messaging API）</li>
+                        <li>「チャネルシークレット」と「チャネルアクセストークン（長期）」を取得</li>
+                        <li>Replitのシークレットに以下を登録：</li>
+                      </ol>
+                      <div className="text-[11px] font-mono bg-white dark:bg-black/20 rounded p-2 space-y-1">
+                        <p className="text-muted-foreground">LINE_CHANNEL_SECRET=xxxx</p>
+                        <p className="text-muted-foreground">LINE_CHANNEL_ACCESS_TOKEN=xxxx</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-green-700 dark:text-green-400 mb-1">Webhook URLをLINE Developersに設定：</p>
+                        <div className="text-[11px] font-mono bg-white dark:bg-black/20 rounded p-2 text-primary break-all select-all" data-testid="text-webhook-url">
+                          {window.location.origin}/api/line/webhook
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-green-600 dark:text-green-500">
+                        ユーザーが友達追加後にメールアドレスを送信すると、自動でアカウントが連携されます。
+                      </p>
                     </div>
                   </div>
                 </div>
