@@ -226,7 +226,7 @@ function EditDealForm({ listing, onClose }: { listing: CargoListing; onClose: ()
   );
 }
 
-function DispatchRequestTab({ listing, companyInfo, isContracted = false }: { listing: CargoListing; companyInfo: CompanyInfo | undefined; isContracted?: boolean }) {
+function DispatchRequestTab({ listing, companyInfo, contractorCompanyInfo, isContracted = false }: { listing: CargoListing; companyInfo: CompanyInfo | undefined; contractorCompanyInfo?: CompanyInfo | undefined; isContracted?: boolean }) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -251,8 +251,8 @@ function DispatchRequestTab({ listing, companyInfo, isContracted = false }: { li
 
   const defaultFormData = {
     cargoId: listing.id,
-    transportCompany: listing.companyName || "",
-    shipperCompany: companyInfo?.companyName || listing.companyName || "",
+    transportCompany: isContracted ? listing.companyName || "" : contractorCompanyInfo?.companyName || (listing as EnrichedCargoListing).contractorCompanyName || "",
+    shipperCompany: isContracted ? companyInfo?.companyName || listing.companyName || "" : listing.companyName || "",
     contactPerson: listing.contactPerson || companyInfo?.contactName || "",
     loadingDate: listing.desiredDate || "",
     loadingTime: listing.departureTime || "",
@@ -1111,7 +1111,7 @@ function CargoDetailPanel({ listing, onClose, isContracted = false }: { listing:
           )}
         </div>
       ) : (
-        <DispatchRequestTab listing={listing} companyInfo={companyInfo} isContracted={isContracted} />
+        <DispatchRequestTab listing={listing} companyInfo={companyInfo} contractorCompanyInfo={contractorCompanyInfo} isContracted={isContracted} />
       )}
     </div>
   );
