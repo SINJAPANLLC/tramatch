@@ -2,18 +2,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Truck, Pencil, Download, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Package, Trash2, Plus, ArrowUpDown, ArrowRight, Clock, CircleDot, Eye, CheckCircle2, XCircle, Building2, Phone, Mail, DollarSign, FileText, Loader2, Circle, X, ChevronLeft, ChevronRight, Truck, Pencil, Download, Search, Save } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { CargoListing } from "@shared/schema";
+import { insertCargoListingSchema, type InsertCargoListing } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard-layout";
 import { formatPrice } from "@/lib/utils";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const STATUS_FILTERS = [
   { label: "全て", value: "all" },
@@ -466,10 +470,355 @@ function CargoDetailPanel({ listing, onClose }: { listing: CargoListing | null; 
   );
 }
 
+const EDIT_AREAS = ["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄"];
+const EDIT_TIME_OPTIONS = ["指定なし","午前中","午後","夕方以降","終日可","0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00","9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00","24:00"];
+const EDIT_VEHICLE_TYPES = ["軽車両","1t車","1.5t車","2t車","3t車","4t車","5t車","6t車","7t車","8t車","10t車","11t車","13t車","15t車","増トン車","大型車","トレーラー","フルトレーラー","その他"];
+const EDIT_BODY_TYPES = ["平ボディ","バン","箱車","ウイング","幌ウイング","冷蔵車","冷凍車","冷凍冷蔵車","ダンプ","タンクローリー","車載車","セルフローダー","セーフティローダー","ユニック","クレーン付き","パワーゲート付き","エアサス","コンテナ車","海上コンテナ","低床","高床","ショート","ロング","ワイド","ワイドロング","その他"];
+const EDIT_TEMP_CONTROLS = ["指定なし","常温","冷蔵（0〜10℃）","冷凍（-18℃以下）","定温"];
+const EDIT_HIGHWAY_OPTIONS = ["込み","別途","高速代なし"];
+const EDIT_TRANSPORT_OPTIONS = ["スポット","定期"];
+const EDIT_CONSOLIDATION_OPTIONS = ["不可","可能"];
+const EDIT_DRIVER_WORK_OPTIONS = ["手積み手降ろし","フォークリフト","クレーン","ゲート車","パレット","作業なし","その他"];
+const EDIT_LOADING_METHODS = ["パレット","バラ積み","段ボール","フレコン","その他"];
+const EDIT_URGENCY_OPTIONS = ["通常","至急"];
+
+function MultiSelectBadges({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+  const selected = value ? value.split(",").map(s => s.trim()).filter(Boolean) : [];
+  const toggle = (opt: string) => {
+    const next = selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt];
+    onChange(next.join(", "));
+  };
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map(opt => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => toggle(opt)}
+          className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${selected.includes(opt) ? "bg-primary text-primary-foreground border-primary" : "border-border text-foreground bg-background hover:bg-muted"}`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CargoEditPanel({ listing, onClose }: { listing: CargoListing; onClose: () => void }) {
+  const { toast } = useToast();
+
+  const form = useForm<InsertCargoListing>({
+    resolver: zodResolver(insertCargoListingSchema),
+    defaultValues: {
+      title: listing.title ?? "",
+      departureArea: listing.departureArea ?? "",
+      departureAddress: listing.departureAddress ?? "",
+      departureTime: listing.departureTime ?? "",
+      arrivalArea: listing.arrivalArea ?? "",
+      arrivalAddress: listing.arrivalAddress ?? "",
+      arrivalTime: listing.arrivalTime ?? "",
+      cargoType: listing.cargoType ?? "",
+      weight: listing.weight ?? "",
+      desiredDate: listing.desiredDate ?? "",
+      arrivalDate: listing.arrivalDate ?? "",
+      vehicleType: listing.vehicleType ?? "",
+      bodyType: listing.bodyType ?? "",
+      temperatureControl: listing.temperatureControl ?? "",
+      price: listing.price ?? "",
+      highwayFee: listing.highwayFee ?? "",
+      transportType: listing.transportType ?? "スポット",
+      consolidation: listing.consolidation ?? "",
+      driverWork: listing.driverWork ?? "",
+      packageCount: listing.packageCount ?? "",
+      loadingMethod: listing.loadingMethod ?? "",
+      equipment: listing.equipment ?? "",
+      vehicleSpec: listing.vehicleSpec ?? "",
+      truckCount: listing.truckCount ?? "",
+      urgency: listing.urgency ?? "",
+      movingJob: listing.movingJob ?? "",
+      contactPerson: listing.contactPerson ?? "",
+      description: listing.description ?? "",
+      companyName: listing.companyName ?? "",
+      contactPhone: listing.contactPhone ?? "",
+      contactEmail: listing.contactEmail ?? "",
+      loadingTime: listing.loadingTime ?? "",
+      unloadingTime: listing.unloadingTime ?? "",
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: Partial<InsertCargoListing>) => {
+      await apiRequest("PATCH", `/api/cargo/${listing.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-cargo"] });
+      toast({ title: "更新しました", description: "荷物情報を更新しました" });
+      onClose();
+    },
+    onError: () => {
+      toast({ title: "エラー", description: "更新に失敗しました", variant: "destructive" });
+    },
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const onSubmit = (data: InsertCargoListing) => updateMutation.mutate(data);
+
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2 pb-1 border-b border-border">{children}</div>
+  );
+
+  const FieldRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="flex items-start gap-2">
+      <span className="text-[11px] font-bold text-muted-foreground w-20 shrink-0 pt-2">{label}</span>
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+
+  return (
+    <div className="w-full sm:w-[480px] shrink-0 border-l border-border bg-background h-full flex flex-col" data-testid="panel-cargo-edit">
+      <div className="sticky top-0 bg-background z-10 flex items-center justify-between gap-2 px-4 py-2 border-b border-border">
+        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <Pencil className="w-4 h-4 text-primary" />荷物情報を編集
+        </span>
+        <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-edit-panel">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-3">
+            <SectionLabel>基本情報</SectionLabel>
+            <FieldRow label="タイトル">
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="タイトル" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>発地情報</SectionLabel>
+            <FieldRow label="発地（県）">
+              <FormField control={form.control} name="departureArea" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="発地詳細">
+              <FormField control={form.control} name="departureAddress" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="発日">
+              <FormField control={form.control} name="desiredDate" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="YYYY/MM/DD" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="発時間">
+              <FormField control={form.control} name="departureTime" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_TIME_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>着地情報</SectionLabel>
+            <FieldRow label="着地（県）">
+              <FormField control={form.control} name="arrivalArea" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="着地詳細">
+              <FormField control={form.control} name="arrivalAddress" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="市区町村以下" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="着日">
+              <FormField control={form.control} name="arrivalDate" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="YYYY/MM/DD" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="着時間">
+              <FormField control={form.control} name="arrivalTime" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_TIME_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>荷物情報</SectionLabel>
+            <FieldRow label="荷種">
+              <FormField control={form.control} name="cargoType" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="食品、機械部品 など" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="重量">
+              <FormField control={form.control} name="weight" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 5t" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="個数">
+              <FormField control={form.control} name="packageCount" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 20パレット" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="車種">
+              <FormField control={form.control} name="vehicleType" render={({ field }) => (
+                <FormItem><FormControl>
+                  <MultiSelectBadges options={EDIT_VEHICLE_TYPES} value={field.value ?? ""} onChange={field.onChange} />
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="車体">
+              <FormField control={form.control} name="bodyType" render={({ field }) => (
+                <FormItem><FormControl>
+                  <MultiSelectBadges options={EDIT_BODY_TYPES} value={field.value ?? ""} onChange={field.onChange} />
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="温度管理">
+              <FormField control={form.control} name="temperatureControl" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_TEMP_CONTROLS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="荷姿">
+              <FormField control={form.control} name="loadingMethod" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_LOADING_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>運賃・条件</SectionLabel>
+            <FieldRow label="運賃(税別)">
+              <FormField control={form.control} name="price" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 50000 または 要相談" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="高速代">
+              <FormField control={form.control} name="highwayFee" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_HIGHWAY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="輸送形態">
+              <FormField control={form.control} name="transportType" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_TRANSPORT_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="積合">
+              <FormField control={form.control} name="consolidation" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_CONSOLIDATION_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="作業">
+              <FormField control={form.control} name="driverWork" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_DRIVER_WORK_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>車両指定・装備</SectionLabel>
+            <FieldRow label="車両指定">
+              <FormField control={form.control} name="vehicleSpec" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="特定の車両指定" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="必要装備">
+              <FormField control={form.control} name="equipment" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="りん木、コンパネ など" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="台数">
+              <FormField control={form.control} name="truckCount" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="例: 2台" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+
+            <SectionLabel>その他</SectionLabel>
+            <FieldRow label="緊急度">
+              <FormField control={form.control} name="urgency" render={({ field }) => (
+                <FormItem><FormControl>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="選択" /></SelectTrigger>
+                    <SelectContent>{EDIT_URGENCY_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                </FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="担当者">
+              <FormField control={form.control} name="contactPerson" render={({ field }) => (
+                <FormItem><FormControl><Input {...field} className="h-8 text-sm" placeholder="担当者名" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+            <FieldRow label="備考">
+              <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem><FormControl><Textarea {...field} className="text-sm min-h-[80px] resize-none" placeholder="備考・特記事項" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </FieldRow>
+          </div>
+
+          <div className="sticky bottom-0 bg-background border-t border-border px-4 py-3">
+            <Button type="submit" className="w-full h-9" disabled={updateMutation.isPending} data-testid="button-save-edit">
+              {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+              更新する
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
+
 export default function MyCargo() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedCargoId, setSelectedCargoId] = useState<string | null>(null);
+  const [editingListing, setEditingListing] = useState<CargoListing | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "departDate" | "arriveDate" | "price">("newest");
   const [page, setPage] = useState(1);
@@ -924,16 +1273,15 @@ export default function MyCargo() {
                           </td>
                           <td className="px-2 py-3 align-top" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-1">
-                              <Link href={`/cargo/edit/${listing.id}`}>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-[10px] h-6 px-2"
-                                  data-testid={`button-edit-${listing.id}`}
-                                >
-                                  <Pencil className="w-3 h-3 mr-0.5" />編集
-                                </Button>
-                              </Link>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-[10px] h-6 px-2"
+                                data-testid={`button-edit-${listing.id}`}
+                                onClick={() => { setEditingListing(listing); setSelectedCargoId(null); }}
+                              >
+                                <Pencil className="w-3 h-3 mr-0.5" />編集
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -985,6 +1333,9 @@ export default function MyCargo() {
         </div>
         {selectedCargoId && selectedCargo && (
           <CargoDetailPanel listing={selectedCargo} onClose={() => setSelectedCargoId(null)} />
+        )}
+        {editingListing && (
+          <CargoEditPanel listing={editingListing} onClose={() => setEditingListing(null)} />
         )}
       </div>
     </DashboardLayout>
