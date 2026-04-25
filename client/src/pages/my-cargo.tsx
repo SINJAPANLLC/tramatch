@@ -484,9 +484,12 @@ export default function MyCargo() {
   const myCargo = allCargo ?? [];
 
   const filtered = useMemo(() => {
-    let result = [...myCargo].filter((c) => c.status !== "completed");
+    // "completed" フィルター選択時のみ成約済みを含める。それ以外は除外して専用ページへ誘導
+    let result = statusFilter === "completed"
+      ? [...myCargo].filter((c) => c.status === "completed")
+      : [...myCargo].filter((c) => c.status !== "completed");
 
-    if (statusFilter !== "all") {
+    if (statusFilter !== "all" && statusFilter !== "completed") {
       result = result.filter((c) => c.status === statusFilter);
     }
 
