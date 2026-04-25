@@ -41,6 +41,21 @@ export default function Footer() {
                 <li><Link href="/privacy" className="hover:underline" data-testid="link-privacy">プライバシーポリシー</Link></li>
               </ul>
             </div>
+            <div>
+              <h3 className="text-base font-semibold text-primary-foreground mb-3">関連サービス</h3>
+              <ul className="space-y-2 text-base text-primary-foreground">
+                <li>
+                  <a href="https://keimatch-sinjapan.com" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keimatch">
+                    KEI MATCH
+                  </a>
+                </li>
+                <li>
+                  <a href="https://keisaiyou-sinjapan.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" data-testid="link-keisaiyou">
+                    KEI SAIYOU
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
         <div className="flex justify-center gap-5 mt-8">
