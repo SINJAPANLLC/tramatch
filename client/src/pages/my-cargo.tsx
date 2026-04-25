@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 const STATUS_FILTERS = [
   { label: "全て", value: "all" },
   { label: "掲載中", value: "active" },
+  { label: "成約済み", value: "completed" },
   { label: "不成約", value: "cancelled" },
 ];
 
@@ -552,10 +553,10 @@ export default function MyCargo() {
 
 
   const statusCounts = useMemo(() => {
-    const nonCompleted = myCargo.filter((c) => c.status !== "completed");
-    const counts = { all: nonCompleted.length, active: 0, cancelled: 0 };
-    nonCompleted.forEach((c) => {
+    const counts = { all: myCargo.length, active: 0, completed: 0, cancelled: 0 };
+    myCargo.forEach((c) => {
       if (c.status === "active") counts.active++;
+      else if (c.status === "completed") counts.completed++;
       else if (c.status === "cancelled") counts.cancelled++;
     });
     return counts;
@@ -955,6 +956,7 @@ export default function MyCargo() {
                           <p className="font-medium text-muted-foreground" data-testid="text-empty-state">
                             {statusFilter === "all" ? "登録した荷物はありません" :
                              statusFilter === "active" ? "掲載中の荷物はありません" :
+                             statusFilter === "completed" ? "成約済みの荷物はありません" :
                              "不成約の荷物はありません"}
                           </p>
                         </td>

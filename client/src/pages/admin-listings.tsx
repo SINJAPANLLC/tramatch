@@ -5,14 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Package, Truck, Search, Pencil, Trash2, MapPin } from "lucide-react";
+import { Package, Truck, Search, Pencil, Trash2, MapPin, CheckCircle2, Building2, ArrowRight } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard-layout";
 import type { CargoListing, TruckListing } from "@shared/schema";
 
-type TabType = "cargo" | "trucks";
+type TabType = "cargo" | "trucks" | "contracted";
+
+type ContractedCargo = {
+  id: string;
+  title: string;
+  departure_area: string;
+  arrival_area: string;
+  desired_date: string;
+  cargo_type: string;
+  price: string | null;
+  created_at: string;
+  owner_company_name: string | null;
+  owner_email: string | null;
+  contractor_company_name: string | null;
+  contractor_email: string | null;
+};
 
 export default function AdminListings() {
   const { toast } = useToast();
@@ -34,6 +49,10 @@ export default function AdminListings() {
 
   const { data: trucks, isLoading: trucksLoading } = useQuery<TruckListing[]>({
     queryKey: ["/api/trucks"],
+  });
+
+  const { data: contracted, isLoading: contractedLoading } = useQuery<ContractedCargo[]>({
+    queryKey: ["/api/admin/cargo/contracted"],
   });
 
   const updateCargo = useMutation({
@@ -106,8 +125,19 @@ export default function AdminListings() {
     return trucks.filter((t) => t.title.toLowerCase().includes(q));
   }, [trucks, searchQuery]);
 
-  const isLoading = activeTab === "cargo" ? cargoLoading : trucksLoading;
-  const currentCount = activeTab === "cargo" ? filteredCargo.length : filteredTrucks.length;
+  const filteredContracted = useMemo(() => {
+    if (!contracted) return [];
+    if (!searchQuery) return contracted;
+    const q = searchQuery.toLowerCase();
+    return contracted.filter((c) =>
+      (c.title || "").toLowerCase().includes(q) ||
+      (c.owner_company_name || "").toLowerCase().includes(q) ||
+      (c.contractor_company_name || "").toLowerCase().includes(q)
+    );
+  }, [contracted, searchQuery]);
+
+  const isLoading = activeTab === "cargo" ? cargoLoading : activeTab === "trucks" ? trucksLoading : contractedLoading;
+  const currentCount = activeTab === "cargo" ? filteredCargo.length : activeTab === "trucks" ? filteredTrucks.length : filteredContracted.length;
 
   const openCargoEdit = (item: CargoListing) => {
     setCargoForm({
@@ -163,7 +193,7 @@ export default function AdminListings() {
           <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">荷物・空車掲載の管理</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
           <Card
             className={`cursor-pointer hover-elevate ${activeTab === "cargo" ? "ring-2 ring-primary" : ""}`}
             onClick={() => setActiveTab("cargo")}
@@ -194,6 +224,23 @@ export default function AdminListings() {
                 <div>
                   <p className="text-2xl font-bold text-foreground" data-testid="text-trucks-count">{trucks?.length ?? 0}</p>
                   <p className="text-xs text-muted-foreground">空車掲載</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card
+            className={`cursor-pointer hover-elevate ${activeTab === "contracted" ? "ring-2 ring-green-500" : ""}`}
+            onClick={() => setActiveTab("contracted")}
+            data-testid="card-tab-contracted"
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-green-50 dark:bg-green-950/30 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-contracted-count">{contracted?.length ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">成約済み</p>
                 </div>
               </div>
             </CardContent>
@@ -306,7 +353,7 @@ export default function AdminListings() {
               </div>
             </Card>
           )
-        ) : (
+        ) : activeTab === "trucks" ? (
           filteredTrucks.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
@@ -374,6 +421,86 @@ export default function AdminListings() {
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                           </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )
+        ) : (
+          filteredContracted.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <CheckCircle2 className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">成約済み案件はありません</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs" data-testid="table-contracted">
+                  <thead>
+                    <tr className="border-b bg-green-50/60 dark:bg-green-950/20">
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">案件名</th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
+                        <div className="flex items-center gap-1"><Building2 className="w-3 h-3" />荷主</div>
+                      </th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">
+                        <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-600" />成約会社</div>
+                      </th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">エリア</th>
+                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">希望日</th>
+                      <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredContracted.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors ${index % 2 === 1 ? "bg-green-50/40 dark:bg-green-950/10" : "bg-white dark:bg-transparent"}`}
+                        data-testid={`row-contracted-${item.id}`}
+                      >
+                        <td className="px-3 py-3 align-top">
+                          <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[180px]">{item.title}</div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="font-semibold text-[12px] text-foreground truncate max-w-[140px]">
+                            {item.owner_company_name || "—"}
+                          </div>
+                          {item.owner_email && (
+                            <div className="text-[11px] text-muted-foreground truncate max-w-[140px]">{item.owner_email}</div>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                            <div>
+                              <div className="font-bold text-[12px] text-green-700 dark:text-green-400 truncate max-w-[140px]">
+                                {item.contractor_company_name || "不明"}
+                              </div>
+                              {item.contractor_email && (
+                                <div className="text-[11px] text-muted-foreground truncate max-w-[140px]">{item.contractor_email}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex items-center gap-1 text-[12px] text-muted-foreground">
+                            <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
+                            <span className="truncate max-w-[160px]">
+                              {item.departure_area} <ArrowRight className="w-3 h-3 inline" /> {item.arrival_area}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <span className="text-[12px] text-muted-foreground font-bold whitespace-nowrap">{item.desired_date}</span>
+                        </td>
+                        <td className="px-3 py-3 align-top text-right">
+                          <span className="text-[12px] font-bold text-foreground whitespace-nowrap">
+                            {item.price ? `¥${Number(item.price).toLocaleString()}` : "—"}
+                          </span>
                         </td>
                       </tr>
                     ))}

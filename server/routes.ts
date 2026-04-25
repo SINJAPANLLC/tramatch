@@ -1813,6 +1813,30 @@ export async function registerRoutes(
     }
   });
 
+  // Admin: contracted cargo with contractor company names
+  app.get("/api/admin/cargo/contracted", requireAdmin, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT
+          cl.*,
+          u_owner.company_name  AS owner_company_name,
+          u_owner.email         AS owner_email,
+          u_owner.phone         AS owner_phone,
+          u_ct.company_name     AS contractor_company_name,
+          u_ct.email            AS contractor_email,
+          u_ct.phone            AS contractor_phone
+        FROM cargo_listings cl
+        LEFT JOIN users u_owner ON cl.user_id      = u_owner.id
+        LEFT JOIN users u_ct    ON cl.accepted_by_user_id = u_ct.id
+        WHERE cl.status = 'completed'
+        ORDER BY cl.created_at DESC
+      `);
+      res.json(result.rows);
+    } catch (error: any) {
+      res.status(500).json({ message: "成約データの取得に失敗: " + error?.message });
+    }
+  });
+
   app.patch("/api/admin/cargo/:id", requireAdmin, async (req, res) => {
     try {
       const listing = await storage.getCargoListing(req.params.id as string);
