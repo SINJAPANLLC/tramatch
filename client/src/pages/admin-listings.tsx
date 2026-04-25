@@ -93,7 +93,8 @@ export default function AdminListings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "荷物掲載を削除しました" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/cargo/contracted"] });
+      toast({ title: "削除しました" });
       setDeleteTarget(null);
     },
     onError: () => {
@@ -540,14 +541,24 @@ export default function AdminListings() {
                           </span>
                         </td>
                         <td className="px-3 py-3 text-center align-top">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openContractedEdit(item)}
-                            data-testid={`button-edit-contracted-${item.id}`}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openContractedEdit(item)}
+                              data-testid={`button-edit-contracted-${item.id}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteTarget({ type: "cargo", id: item.id, title: item.title })}
+                              data-testid={`button-delete-contracted-${item.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
