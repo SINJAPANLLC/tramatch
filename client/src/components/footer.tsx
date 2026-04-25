@@ -1,4 +1,4 @@
-import logoImage from "@assets/tra_match_logo_white.jpg";
+import logoImage from "@assets/tra_match_logo_white.webp";
 import { Link } from "wouter";
 import { SiX, SiInstagram, SiYoutube, SiTiktok, SiFacebook, SiLine, SiLinkedin } from "react-icons/si";
 

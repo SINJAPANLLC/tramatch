@@ -7,7 +7,7 @@ import { ArrowLeft, Mail } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import logoImage from "@assets/IMG_0046_1771226022407.jpg";
+import logoImage from "@assets/IMG_0046_1771226022407.webp";
 
 export default function ForgotPassword() {
   const { toast } = useToast();
