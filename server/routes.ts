@@ -19,12 +19,8 @@ import OpenAI from "openai";
 let _openai: OpenAI | null = null;
 function getOpenAI(): OpenAI {
   if (!_openai) {
-    const useIntegration = !!(process.env.AI_INTEGRATIONS_OPENAI_BASE_URL && process.env.AI_INTEGRATIONS_OPENAI_API_KEY);
     _openai = new OpenAI({
-      apiKey: useIntegration
-        ? process.env.AI_INTEGRATIONS_OPENAI_API_KEY!
-        : (process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY || ""),
-      ...(useIntegration ? { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL } : {}),
+      apiKey: process.env.OPENAI_API_KEY || "",
     });
   }
   return _openai;
