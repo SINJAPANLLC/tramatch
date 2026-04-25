@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Bell, Send, Mail, Loader2, Sparkles, Plus, Pencil, Trash2,
-  ChevronLeft, Eye, Power, CheckCircle, XCircle, MessageSquare, Smartphone
+  ChevronLeft, Eye, Power, CheckCircle, XCircle, MessageSquare, Smartphone, RefreshCw
 } from "lucide-react";
 import { SiLine } from "react-icons/si";
 import {
@@ -143,9 +143,12 @@ export default function AdminNotifications() {
     return `/api/admin/notification-templates?${params.toString()}`;
   };
 
-  const { data: templates, isLoading: templatesLoading } = useQuery<NotificationTemplate[]>({
+  const { data: templates, isLoading: templatesLoading, refetch: refetchTemplates } = useQuery<NotificationTemplate[]>({
     queryKey: [buildTemplateQueryKey()],
     enabled: activeTab !== "send",
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const invalidateTemplates = () => {
@@ -402,10 +405,15 @@ export default function AdminNotifications() {
                         return <><div className={`w-7 h-7 rounded-md ${cfg.bg} flex items-center justify-center`}><Icon className={`w-4 h-4 ${cfg.color}`} /></div>{cfg.label}テンプレート</>;
                       })()}
                     </h2>
-                    <Button size="sm" onClick={startCreate} data-testid="button-new-template">
-                      <Plus className="w-3.5 h-3.5 mr-1" />
-                      新規作成
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button size="sm" variant="ghost" onClick={() => { refetchTemplates(); resetForm(); }} data-testid="button-refresh-templates" title="テンプレートを再読み込み">
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="sm" onClick={startCreate} data-testid="button-new-template">
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        新規作成
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="mb-3">
