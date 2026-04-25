@@ -509,14 +509,51 @@ export default function AdminEmailMarketing() {
                     />
                   </div>
                   <div>
-                    <Label>本文</Label>
-                    <Textarea
-                      value={leadEmailBody}
-                      onChange={(e) => setLeadEmailBody(e.target.value)}
-                      placeholder="営業メールの本文を入力..."
-                      rows={15}
-                      data-testid="input-lead-body"
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label>本文</Label>
+                      <div className="flex items-center gap-1 border rounded-md p-0.5">
+                        <button
+                          onClick={() => setTemplateMode("edit")}
+                          className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${templateMode === "edit" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid="button-template-edit"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => setTemplateMode("preview")}
+                          className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${templateMode === "preview" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid="button-template-preview"
+                        >
+                          HTMLプレビュー
+                        </button>
+                      </div>
+                    </div>
+                    {templateMode === "edit" ? (
+                      <Textarea
+                        value={leadEmailBody}
+                        onChange={(e) => setLeadEmailBody(e.target.value)}
+                        placeholder="営業メールの本文を入力..."
+                        rows={18}
+                        data-testid="input-lead-body"
+                      />
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden bg-white" style={{ minHeight: "400px" }}>
+                        {leadEmailBody ? (
+                          <iframe
+                            srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:sans-serif;}</style></head><body>${leadEmailBody}</body></html>`}
+                            className="w-full"
+                            style={{ height: "480px", border: "none" }}
+                            title="メールHTMLプレビュー"
+                            sandbox="allow-same-origin"
+                            data-testid="iframe-template-preview"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
+                            本文を入力するとプレビューが表示されます
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Button
                     onClick={() => saveSettingsMutation.mutate({ subject: leadEmailSubject, body: leadEmailBody })}
@@ -665,7 +702,20 @@ export default function AdminEmailMarketing() {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">本文</Label>
-                <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap text-sm">{selectedCampaign.body}</div>
+                {selectedCampaign.body && /<[a-z][\s\S]*>/i.test(selectedCampaign.body) ? (
+                  <div className="border rounded-lg overflow-hidden bg-white">
+                    <iframe
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:sans-serif;}</style></head><body>${selectedCampaign.body}</body></html>`}
+                      className="w-full"
+                      style={{ height: "400px", border: "none" }}
+                      title="メールHTMLプレビュー"
+                      sandbox="allow-same-origin"
+                      data-testid="iframe-campaign-preview"
+                    />
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap text-sm">{selectedCampaign.body}</div>
+                )}
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">送信先 ({selectedCampaign.recipients.split("\n").filter(e => e.trim() && e.includes("@")).length}件)</Label>
