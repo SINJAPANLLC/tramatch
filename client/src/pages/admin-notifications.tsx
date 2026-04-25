@@ -13,7 +13,7 @@ import { SiLine } from "react-icons/si";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -154,6 +154,12 @@ export default function AdminNotifications() {
   const invalidateTemplates = () => {
     queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as string)?.startsWith("/api/admin/notification-templates") });
   };
+
+  useEffect(() => {
+    if (!templates || !previewTemplate) return;
+    const fresh = templates.find(t => t.id === previewTemplate.id);
+    if (fresh) setPreviewTemplate(fresh);
+  }, [templates]);
 
   const createMutation = useMutation({
     mutationFn: async (data: { category: string; channel: string; name: string; subject?: string; body: string; htmlBody?: string; triggerEvent?: string }) => {
