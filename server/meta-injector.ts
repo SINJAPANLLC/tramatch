@@ -66,8 +66,38 @@ function escape(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
+const ORGANIZATION_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "TRA MATCH AI",
+  alternateName: "トラマッチ",
+  url: BASE_URL,
+  logo: { "@type": "ImageObject", url: `${BASE_URL}/og-image.png` },
+  contactPoint: { "@type": "ContactPoint", telephone: "+81-46-212-2325", contactType: "customer support", availableLanguage: "Japanese" },
+  address: { "@type": "PostalAddress", streetAddress: "中津7287", addressLocality: "愛川町", addressRegion: "神奈川県", postalCode: "243-0303", addressCountry: "JP" },
+  sameAs: ["https://line.me/R/ti/p/%40107avlvk"],
+});
+
+const WEBSITE_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "TRA MATCH AI | AI求荷求車サービス",
+  url: BASE_URL,
+  description: "AIで荷物や空きトラックを簡単登録・検索できる物流マッチングサービス",
+  publisher: { "@type": "Organization", name: "TRA MATCH AI", url: BASE_URL },
+  potentialAction: { "@type": "SearchAction", target: `${BASE_URL}/column?q={search_term_string}`, "query-input": "required name=search_term_string" },
+});
+
 export async function injectSeoMeta(html: string, urlPath: string): Promise<string> {
   try {
+    // Home page: inject WebSite + Organization schema
+    if (urlPath === "/" || urlPath === "") {
+      let result = html;
+      result = result.replace("</head>", `    <script type="application/ld+json">${WEBSITE_JSON_LD}</script>\n    <script type="application/ld+json">${ORGANIZATION_JSON_LD}</script>\n  </head>`);
+      return result;
+    }
+
+    // Column article pages
     const columnMatch = urlPath.match(/^\/column\/([^/?#]+)/);
     if (!columnMatch) return html;
 

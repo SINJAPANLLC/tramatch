@@ -5535,6 +5535,55 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
+  // Public: RSS feed for column articles
+  app.get("/feed.xml", async (_req, res) => {
+    try {
+      const articles = await storage.getPublishedSeoArticles();
+      const top = articles.slice(0, 50);
+      const BASE = "https://tramatch-sinjapan.com";
+      const escapeXml = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+      const items = top.map(a => {
+        const url = `${BASE}/column/${a.slug}`;
+        const pubDate = new Date(a.createdAt).toUTCString();
+        const desc = escapeXml(a.metaDescription || a.title);
+        return `    <item>
+      <title>${escapeXml(a.title)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+      <description>${desc}</description>
+      <pubDate>${pubDate}</pubDate>
+      <category>物流・運送</category>
+    </item>`;
+      }).join("\n");
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>TRA MATCH AI | コラム</title>
+    <link>${BASE}/column</link>
+    <atom:link href="${BASE}/feed.xml" rel="self" type="application/rss+xml" />
+    <description>物流・運送業界のAI求荷求車サービス「トラマッチ」のコラム記事</description>
+    <language>ja</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <image>
+      <url>${BASE}/og-image.png</url>
+      <title>TRA MATCH AI</title>
+      <link>${BASE}</link>
+    </image>
+${items}
+  </channel>
+</rss>`;
+
+      res.set("Content-Type", "application/rss+xml; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=3600");
+      res.send(xml);
+    } catch (error) {
+      res.status(500).send("<?xml version=\"1.0\"?><error>RSS feed error</error>");
+    }
+  });
+
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {
