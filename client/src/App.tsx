@@ -61,6 +61,7 @@ const pageImports = {
   guideKyukakyusha: () => import("@/pages/guide-kyukakyusha"),
   compareSites: () => import("@/pages/compare-sites"),
   alternativeTrabox: () => import("@/pages/alternative-trabox"),
+  agentApply: () => import("@/pages/agent-apply"),
   forgotPassword: () => import("@/pages/forgot-password"),
   resetPassword: () => import("@/pages/reset-password"),
   truckForm: () => import("@/pages/truck-form"),
@@ -117,6 +118,7 @@ const ColumnCategory = lazy(pageImports.columnCategory);
 const GuideKyukakyusha = lazy(pageImports.guideKyukakyusha);
 const CompareSites = lazy(pageImports.compareSites);
 const AlternativeTrabox = lazy(pageImports.alternativeTrabox);
+const AgentApply = lazy(pageImports.agentApply);
 const ForgotPassword = lazy(pageImports.forgotPassword);
 const ResetPassword = lazy(pageImports.resetPassword);
 const TruckForm = lazy(pageImports.truckForm);
@@ -229,6 +231,7 @@ function Router() {
         <Route path="/guide/kyukakyusha-complete" component={GuideKyukakyusha} />
         <Route path="/compare/kyukakyusha-sites" component={CompareSites} />
         <Route path="/alternative/trabox" component={AlternativeTrabox} />
+        <Route path="/agent-apply" component={AgentApply} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

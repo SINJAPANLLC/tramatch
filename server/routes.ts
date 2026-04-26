@@ -3619,6 +3619,7 @@ statusの意味:
 
       const results = { system: 0, email: 0, line: 0, emailErrors: 0, lineErrors: 0 };
 
+      const emailUsers: typeof targetUsers = [];
       for (const user of targetUsers) {
         if (selectedChannels.includes("system") && user.notifySystem) {
           await storage.createNotification({
@@ -3629,25 +3630,37 @@ statusの意味:
           });
           results.system++;
         }
-
         if (selectedChannels.includes("email") && user.notifyEmail && user.email) {
-          const emailResult = await sendEmail(user.email, `【トラマッチ】${title}`, message);
-          if (emailResult.success) results.email++;
-          else results.emailErrors++;
+          emailUsers.push(user);
+          results.email++;
         }
-
         if (selectedChannels.includes("line") && user.notifyLine && user.lineUserId) {
           const lineResult = await sendLineMessage(user.lineUserId, `${title}\n\n${message}`);
           if (lineResult.success) results.line++;
           else results.lineErrors++;
+          await new Promise(r => setTimeout(r, 300));
         }
       }
 
       res.json({
-        message: `通知を送信しました`,
+        message: `通知を送信しました（メールは${emailUsers.length}件をバックグラウンドで送信中）`,
         count: targetUsers.length,
         results,
       });
+
+      // Send emails in background with rate limiting (12s interval = ~300/hour, safe for Hostinger)
+      (async () => {
+        for (const user of emailUsers) {
+          try {
+            const r = await sendEmail(user.email!, `【トラマッチ】${title}`, message);
+            if (!r.success) console.error(`Bulk email failed to ${user.email}: ${r.error}`);
+          } catch (err) {
+            console.error(`Bulk email error to ${user.email}:`, err);
+          }
+          await new Promise(r => setTimeout(r, 12000));
+        }
+        console.log(`Bulk email sending complete: ${emailUsers.length} users processed`);
+      })();
     } catch (error) {
       res.status(500).json({ message: "通知の送信に失敗しました" });
     }
@@ -4344,7 +4357,7 @@ JSON形式で以下を返してください（日本語で）:
             console.error(`Email error to ${email}:`, err);
           }
           await storage.updateEmailCampaign(campaign.id, { sentCount, failedCount });
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 12000)); // 12s = ~300/hour, safe for Hostinger
         }
         await storage.updateEmailCampaign(campaign.id, {
           status: failedCount === recipientList.length ? "failed" : "completed",
@@ -5206,6 +5219,7 @@ JSON形式で以下を返してください（日本語で）:
         } else {
           failCount++;
         }
+        await new Promise(r => setTimeout(r, 12000)); // 12s = ~300/hour, safe for Hostinger
       }
 
       res.json({ message: `${sentCount}件送信成功、${failCount}件失敗` });
