@@ -39,7 +39,7 @@ export default function Footer() {
                 <li><Link href="/company-info" className="hover:underline" data-testid="link-company-info">会社情報</Link></li>
                 <li><Link href="/terms" className="hover:underline" data-testid="link-terms">利用規約</Link></li>
                 <li><Link href="/privacy" className="hover:underline" data-testid="link-privacy">プライバシーポリシー</Link></li>
-                <li><Link href="/agent-apply" className="hover:underline font-semibold" data-testid="link-agent-apply">代理店申請</Link></li>
+                <li><Link href="/agent-apply" className="hover:underline font-semibold" data-testid="link-agent-apply">代理店</Link></li>
                 <li className="pt-3">
                   <p className="font-semibold text-primary-foreground mb-2">関連サービス</p>
                   <ul className="space-y-2">
