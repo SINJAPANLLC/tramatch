@@ -3666,6 +3666,52 @@ statusの意味:
     }
   });
 
+  // Admin: Send specific template to all users (per-user variable resolution)
+  app.post("/api/admin/notifications/send-template-all", requireAdmin, async (req, res) => {
+    try {
+      const { triggerEvent } = req.body;
+      if (!triggerEvent) return res.status(400).json({ message: "triggerEventは必須です" });
+
+      const templates = await storage.getNotificationTemplates();
+      const emailTemplate = templates.find(
+        t => t.triggerEvent === triggerEvent && t.channel === "email" && t.isActive
+      );
+      if (!emailTemplate) return res.status(404).json({ message: "テンプレートが見つかりません" });
+
+      const allUsers = await storage.getAllUsers();
+      const targetUsers = allUsers.filter(u => u.approved && u.email);
+
+      res.json({
+        message: `${targetUsers.length}件のメールをバックグラウンドで送信開始しました`,
+        count: targetUsers.length,
+      });
+
+      (async () => {
+        let sent = 0; let failed = 0;
+        for (const user of targetUsers) {
+          try {
+            const vars: Record<string, string> = {
+              companyName: user.companyName || user.email || "お客様",
+              userName: user.email || "",
+              appBaseUrl: process.env.APP_BASE_URL || "https://tramatch-sinjapan.com",
+            };
+            const subject = replaceTemplateVariables(emailTemplate.subject || "", vars);
+            const body = replaceTemplateVariables(emailTemplate.body || "", vars);
+            const r = await sendEmail(user.email!, subject, body);
+            if (r.success) sent++; else { failed++; console.error(`Template email failed to ${user.email}: ${r.error}`); }
+          } catch (err) {
+            failed++;
+            console.error(`Template email error to ${user.email}:`, err);
+          }
+          await new Promise(r => setTimeout(r, 12000));
+        }
+        console.log(`Template bulk send (${triggerEvent}) complete: ${sent} sent, ${failed} failed`);
+      })();
+    } catch (error) {
+      res.status(500).json({ message: "送信に失敗しました" });
+    }
+  });
+
   // Admin: Get notification channel configuration status
   app.get("/api/admin/notification-channels/status", requireAdmin, async (_req, res) => {
     res.json({
