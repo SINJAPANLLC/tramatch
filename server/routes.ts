@@ -4663,6 +4663,21 @@ JSON形式で以下を返してください（日本語で）:
   });
 
   // Admin: Settings
+  // Public: non-sensitive site settings (for frontend rendering)
+  app.get("/api/public/settings", async (_req, res) => {
+    try {
+      const PUBLIC_KEYS = ["logoSliderVisible"];
+      const all = await storage.getAllAdminSettings();
+      const map: Record<string, string> = {};
+      for (const s of all) {
+        if (PUBLIC_KEYS.includes(s.key)) map[s.key] = s.value;
+      }
+      res.json(map);
+    } catch {
+      res.json({});
+    }
+  });
+
   app.get("/api/admin/settings", requireAdmin, async (req, res) => {
     try {
       const settings = await storage.getAllAdminSettings();

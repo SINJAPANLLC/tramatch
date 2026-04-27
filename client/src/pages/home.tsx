@@ -327,6 +327,12 @@ export default function Home() {
     queryKey: ["/api/trucks"],
   });
 
+  const { data: publicSettings } = useQuery<Record<string, string>>({
+    queryKey: ["/api/public/settings"],
+  });
+
+  const logoSliderVisible = publicSettings?.logoSliderVisible !== "false";
+
   return (
     <div className="min-h-screen">
       <section className="bg-primary">
@@ -360,7 +366,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
+      {logoSliderVisible && <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
           .logo-wall{width:100%;overflow:hidden;}
           .logo-slider{height:100px;overflow:hidden;position:relative;width:100%;}
@@ -398,7 +404,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="py-16 sm:py-20 bg-primary">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -677,7 +683,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
+      {logoSliderVisible && <section className="bg-white dark:bg-gray-50 py-8 sm:py-12">
         <style dangerouslySetInnerHTML={{ __html: `
           .sin-logo-wall{--slide-w:200px;--slide-h:100px;--speed:22s;width:100%;overflow:hidden;}
           .sin-slider{height:var(--slide-h);overflow:hidden;width:100%;}
@@ -698,7 +704,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       <PromoBanner />
     </div>

@@ -65,12 +65,14 @@ export default function AdminSettings() {
   const [companyAddress, setCompanyAddress] = useState("");
   const [sessionTimeout, setSessionTimeout] = useState("24");
   const [passwordMinLength, setPasswordMinLength] = useState("6");
+  const [logoSliderVisible, setLogoSliderVisible] = useState(true);
 
   useEffect(() => {
     if (settings) {
       if (settings.siteName) setSiteName(settings.siteName);
       if (settings.siteDescription) setSiteDescription(settings.siteDescription);
       if (settings.siteKeywords) setSiteKeywords(settings.siteKeywords);
+      if (settings.logoSliderVisible !== undefined) setLogoSliderVisible(settings.logoSliderVisible !== "false");
       if (settings.approvalRequired !== undefined) setApprovalRequired(settings.approvalRequired === "true");
       if (settings.preventConcurrentLogin !== undefined) setPreventConcurrentLogin(settings.preventConcurrentLogin === "true");
       if (settings.permitRequired !== undefined) setPermitRequired(settings.permitRequired === "true");
@@ -105,7 +107,7 @@ export default function AdminSettings() {
   });
 
   const saveSite = () => {
-    saveMutation.mutate({ siteName, siteDescription, siteKeywords });
+    saveMutation.mutate({ siteName, siteDescription, siteKeywords, logoSliderVisible: String(logoSliderVisible) });
   };
 
   const saveSecurity = () => {
@@ -319,9 +321,18 @@ export default function AdminSettings() {
                   value={siteKeywords}
                   onChange={(e) => setSiteKeywords(e.target.value)}
                   className="mt-1"
-                  placeholder="求荷求車, マッチング, 運送, 物流"
+                  placeholder="求荷求車, マッチング, 物流"
                   data-testid="input-site-keywords"
                 />
+              </div>
+              <div className="pt-1">
+                <SettingRow icon={Palette} title="ロゴスライダー表示" description="LPのパートナーロゴスライダーを表示する">
+                  <Switch
+                    checked={logoSliderVisible}
+                    onCheckedChange={setLogoSliderVisible}
+                    data-testid="switch-logo-slider-visible"
+                  />
+                </SettingRow>
               </div>
               <SectionSaveButton onClick={saveSite} label="site" />
             </CardContent>
