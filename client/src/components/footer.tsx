@@ -33,6 +33,7 @@ export default function Footer() {
                 <li><Link href="/column" className="hover:underline" data-testid="link-columns">コラム記事</Link></li>
                 <li><Link href="/tracom" className="hover:underline" data-testid="link-tracom">トラコミ（口コミ）</Link></li>
                 <li><Link href="/blacklist" className="hover:underline" data-testid="link-blacklist">強制退会リスト</Link></li>
+                <li><Link href="/freight-guarantee" className="hover:underline" data-testid="link-freight-guarantee">運賃全額保証サービス</Link></li>
               </ul>
             </div>
             <div>
