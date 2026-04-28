@@ -24,11 +24,12 @@ import {
   type EmailLead, type InsertEmailLead,
   type TracomReview, type InsertTracomReview,
   type BlacklistEntry, type InsertBlacklistEntry,
+  type FactoringInquiry, type InsertFactoringInquiry,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
   invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs,
-  emailCampaigns, emailLeads, tracomReviews, blacklistEntries
+  emailCampaigns, emailLeads, tracomReviews, blacklistEntries, factoringInquiries
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte, isNull } from "drizzle-orm";
@@ -232,6 +233,9 @@ export interface IStorage {
   createBlacklistEntry(data: InsertBlacklistEntry): Promise<BlacklistEntry>;
   updateBlacklistEntry(id: string, data: Partial<BlacklistEntry>): Promise<BlacklistEntry | undefined>;
   deleteBlacklistEntry(id: string): Promise<boolean>;
+
+  createFactoringInquiry(data: InsertFactoringInquiry): Promise<FactoringInquiry>;
+  getFactoringInquiries(): Promise<FactoringInquiry[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1345,6 +1349,15 @@ export class DatabaseStorage implements IStorage {
   async deleteBlacklistEntry(id: string): Promise<boolean> {
     await db.delete(blacklistEntries).where(eq(blacklistEntries.id, id));
     return true;
+  }
+
+  async createFactoringInquiry(data: InsertFactoringInquiry): Promise<FactoringInquiry> {
+    const [inquiry] = await db.insert(factoringInquiries).values(data).returning();
+    return inquiry;
+  }
+
+  async getFactoringInquiries(): Promise<FactoringInquiry[]> {
+    return db.select().from(factoringInquiries).orderBy(desc(factoringInquiries.createdAt));
   }
 }
 

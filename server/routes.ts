@@ -5739,6 +5739,22 @@ ${items}
     } catch { res.status(500).json({ message: "削除に失敗しました" }); }
   });
 
+  app.post("/api/factoring-inquiry", async (req, res) => {
+    try {
+      const { insertFactoringInquirySchema } = await import("@shared/schema");
+      const data = insertFactoringInquirySchema.parse(req.body);
+      const inquiry = await storage.createFactoringInquiry(data);
+      res.json(inquiry);
+    } catch (error) {
+      res.status(400).json({ message: "入力内容を確認してください" });
+    }
+  });
+
+  app.get("/api/admin/factoring-inquiries", requireAdmin, async (_req, res) => {
+    const inquiries = await storage.getFactoringInquiries();
+    res.json(inquiries);
+  });
+
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {

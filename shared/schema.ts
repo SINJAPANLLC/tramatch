@@ -607,6 +607,21 @@ export const insertTracomReviewSchema = createInsertSchema(tracomReviews).omit({
 export type InsertTracomReview = z.infer<typeof insertTracomReviewSchema>;
 export type TracomReview = typeof tracomReviews.$inferSelect;
 
+export const factoringInquiries = pgTable("factoring_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  receivableAmount: text("receivable_amount"),
+  desiredTiming: text("desired_timing"),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const insertFactoringInquirySchema = createInsertSchema(factoringInquiries).omit({ id: true, createdAt: true });
+export type InsertFactoringInquiry = z.infer<typeof insertFactoringInquirySchema>;
+export type FactoringInquiry = typeof factoringInquiries.$inferSelect;
+
 export const blacklistEntries = pgTable("blacklist_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   entityType: text("entity_type").notNull(),
