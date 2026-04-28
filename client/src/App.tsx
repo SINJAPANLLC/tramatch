@@ -248,7 +248,7 @@ function Router() {
         <Route path="/column/carrier-sales" component={ColumnCategory} />
         <Route path="/column/:slug" component={ColumnDetail} />
         <Route path="/column" component={Columns} />
-        <Route path="/columns/:slug">{({ params }: any) => <Redirect to={`/column/${params.slug}`} />}</Route>
+        <Route path="/columns/:slug">{(params: any) => <Redirect to={`/column/${params?.slug}`} />}</Route>
         <Route path="/columns">{() => <Redirect to="/column" />}</Route>
         <Route path="/guide/kyukakyusha-complete" component={GuideKyukakyusha} />
         <Route path="/compare/kyukakyusha-sites" component={CompareSites} />
