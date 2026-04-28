@@ -627,13 +627,15 @@ export const blacklistEntries = pgTable("blacklist_entries", {
   entityType: text("entity_type").notNull(),
   name: text("name").notNull(),
   reasons: text("reasons").array().notNull().default(sql`'{}'::text[]`),
-  detail: text("detail").notNull(),
+  withdrawalReason: text("withdrawal_reason"),
+  withdrawalDate: text("withdrawal_date"),
+  detail: text("detail").notNull().default(""),
   source: text("source").notNull().default("report"),
   prefecture: text("prefecture"),
   contactEmail: text("contact_email"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-export const insertBlacklistEntrySchema = createInsertSchema(blacklistEntries).omit({ id: true, createdAt: true, status: true, source: true });
+export const insertBlacklistEntrySchema = createInsertSchema(blacklistEntries).omit({ id: true, createdAt: true, status: true });
 export type InsertBlacklistEntry = z.infer<typeof insertBlacklistEntrySchema>;
 export type BlacklistEntry = typeof blacklistEntries.$inferSelect;

@@ -1,22 +1,25 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UserX, Trash2, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, AlertTriangle, Plus, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserX, Trash2, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, AlertTriangle, Shield, MessageCircle } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardLayout from "@/components/dashboard-layout";
 import type { BlacklistEntry } from "@shared/schema";
+
+const PREFECTURES = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
+
+const WITHDRAWAL_REASONS = ["未払い","詐欺行為","契約違反","ハラスメント","不正利用","虚偽申告","その他"];
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending:  { label: "審査待ち", variant: "destructive" },
@@ -26,153 +29,178 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 const addSchema = z.object({
   entityType: z.string().min(1, "種別を選択してください"),
-  name: z.string().min(1, "名前を入力してください"),
-  detail: z.string().min(1, "詳細を入力してください"),
+  name: z.string().min(1, "名前・会社名を入力してください"),
+  withdrawalReason: z.string().min(1, "退会理由を選択してください"),
+  source: z.string().min(1, "情報の出所を選択してください"),
   prefecture: z.string().optional(),
-  contactEmail: z.string().email("正しいメールアドレスを入力してください").optional().or(z.literal("")),
-  status: z.string().default("approved"),
+  withdrawalDate: z.string().optional(),
+  detail: z.string().optional(),
+  reasons: z.array(z.string()).default([]),
+  contactEmail: z.string().optional(),
 });
 type AddForm = z.infer<typeof addSchema>;
 
-function AddEntryDialog({ onAdded }: { onAdded: () => void }) {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [reasons, setReasons] = useState<string[]>([]);
-  const [reasonInput, setReasonInput] = useState("");
+function ToggleGroup({ options, value, onChange }: {
+  options: { label: string; value: string; activeClass?: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {options.map(o => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            value === o.value
+              ? o.activeClass ?? "bg-primary text-primary-foreground border-primary"
+              : "bg-background text-foreground border-border hover:bg-muted"
+          }`}
+          data-testid={`toggle-${o.value.replace(/\s/g, "-")}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  const form = useForm<AddForm>({
+function AddEntryForm({ onCancel }: { onCancel?: () => void }) {
+  const { toast } = useToast();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<AddForm>({
     resolver: zodResolver(addSchema),
-    defaultValues: { entityType: "", name: "", detail: "", prefecture: "", contactEmail: "", status: "approved" },
+    defaultValues: {
+      entityType: "企業・荷主",
+      name: "",
+      withdrawalReason: "",
+      source: "official",
+      prefecture: "",
+      withdrawalDate: today,
+      detail: "",
+      reasons: [],
+      contactEmail: "",
+    },
   });
 
   const addMutation = useMutation({
     mutationFn: (data: AddForm) =>
-      apiRequest("POST", "/api/admin/blacklist", { ...data, reasons, source: "official" }),
+      apiRequest("POST", "/api/admin/blacklist", {
+        ...data,
+        reasons: data.withdrawalReason ? [data.withdrawalReason] : [],
+        detail: data.detail ?? "",
+        status: "approved",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/blacklist"] });
-      toast({ title: "追加しました" });
-      form.reset();
-      setReasons([]);
-      setReasonInput("");
-      setOpen(false);
-      onAdded();
+      toast({ title: "登録しました" });
+      reset();
     },
-    onError: () => toast({ title: "追加に失敗しました", variant: "destructive" }),
+    onError: () => toast({ title: "登録に失敗しました", variant: "destructive" }),
   });
 
-  const addReason = () => {
-    const t = reasonInput.trim();
-    if (t && !reasons.includes(t)) { setReasons([...reasons, t]); setReasonInput(""); }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button data-testid="button-add-entry"><Plus className="w-4 h-4 mr-1" />新規追加</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>強制退会リストに追加</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(d => addMutation.mutate(d))} className="space-y-4">
+    <Card className="mb-6">
+      <CardContent className="pt-5 pb-5">
+        <h2 className="font-semibold text-base mb-4">新規登録</h2>
+        <form onSubmit={handleSubmit(d => addMutation.mutate(d))} className="space-y-4">
 
-            <FormField control={form.control} name="entityType" render={({ field }) => (
-              <FormItem>
-                <FormLabel>種別 <span className="text-destructive">*</span></FormLabel>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">種別 <span className="text-destructive">*</span></label>
+            <Controller control={control} name="entityType" render={({ field }) => (
+              <ToggleGroup
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: "企業・荷主", value: "企業・荷主" },
+                  { label: "ドライバー", value: "ドライバー" },
+                  { label: "運送会社", value: "運送会社" },
+                  { label: "その他", value: "その他" },
+                ]}
+              />
+            )} />
+            {errors.entityType && <p className="text-destructive text-xs mt-1">{errors.entityType.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">名前・会社名 <span className="text-destructive">*</span></label>
+              <Input placeholder="例：株式会社〇〇、山田太郎" data-testid="input-name" {...register("name")} />
+              {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">退会理由 <span className="text-destructive">*</span></label>
+              <Controller control={control} name="withdrawalReason" render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl><SelectTrigger data-testid="select-entity-type"><SelectValue placeholder="選択" /></SelectTrigger></FormControl>
+                  <SelectTrigger data-testid="select-withdrawal-reason">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="荷主企業">荷主企業</SelectItem>
-                    <SelectItem value="運送会社">運送会社</SelectItem>
-                    <SelectItem value="個人">個人</SelectItem>
-                    <SelectItem value="その他">その他</SelectItem>
+                    {WITHDRAWAL_REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
+              )} />
+              {errors.withdrawalReason && <p className="text-destructive text-xs mt-1">{errors.withdrawalReason.message}</p>}
+            </div>
+          </div>
 
-            <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>名前・社名 <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Input placeholder="株式会社〇〇 / 山田太郎" data-testid="input-name" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">情報の出所 <span className="text-destructive">*</span></label>
+            <Controller control={control} name="source" render={({ field }) => (
+              <ToggleGroup
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: "🛡 KEI MATCH確認済み", value: "official", activeClass: "bg-green-600 text-white border-green-600" },
+                  { label: "💬 通報情報", value: "report", activeClass: "bg-primary text-primary-foreground border-primary" },
+                ]}
+              />
             )} />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <FormLabel>理由タグ</FormLabel>
-              <div className="flex gap-2 mt-1.5">
-                <Input
-                  placeholder="例：未払い、詐欺、契約違反"
-                  value={reasonInput}
-                  onChange={e => setReasonInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addReason(); } }}
-                  data-testid="input-reason"
-                />
-                <Button type="button" variant="outline" onClick={addReason} data-testid="button-add-reason">追加</Button>
-              </div>
-              {reasons.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {reasons.map(r => (
-                    <Badge key={r} variant="secondary" className="flex items-center gap-1">
-                      {r}
-                      <button type="button" onClick={() => setReasons(reasons.filter(x => x !== r))}><X className="w-3 h-3" /></button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <FormField control={form.control} name="detail" render={({ field }) => (
-              <FormItem>
-                <FormLabel>詳細 <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Textarea placeholder="退会理由や経緯を入力してください" className="min-h-[100px]" data-testid="textarea-detail" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control} name="prefecture" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>都道府県</FormLabel>
-                  <FormControl><Input placeholder="東京都" data-testid="input-prefecture" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <FormField control={form.control} name="status" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>掲載ステータス</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger data-testid="select-status"><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      <SelectItem value="approved">掲載中</SelectItem>
-                      <SelectItem value="pending">審査待ち</SelectItem>
-                      <SelectItem value="rejected">非掲載</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+              <label className="text-sm font-medium mb-1.5 block">都道府県</label>
+              <Controller control={control} name="prefecture" render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <SelectTrigger data-testid="select-prefecture">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PREFECTURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               )} />
             </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">退会日</label>
+              <Input type="date" data-testid="input-withdrawal-date" {...register("withdrawalDate")} />
+            </div>
+          </div>
 
-            <FormField control={form.control} name="contactEmail" render={({ field }) => (
-              <FormItem>
-                <FormLabel>連絡先メール（任意）</FormLabel>
-                <FormControl><Input type="email" placeholder="info@example.com" data-testid="input-contact-email" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">詳細（任意）</label>
+            <Textarea
+              placeholder="具体的な経緯・状況など（公開されます）"
+              className="min-h-[100px]"
+              data-testid="textarea-detail"
+              {...register("detail")}
+            />
+          </div>
 
-            <Button type="submit" className="w-full" disabled={addMutation.isPending} data-testid="button-submit">
-              {addMutation.isPending ? "追加中..." : "追加する"}
+          <div className="flex gap-3">
+            <Button type="submit" disabled={addMutation.isPending} data-testid="button-submit">
+              {addMutation.isPending ? "登録中..." : "登録する"}
             </Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel} data-testid="button-cancel">キャンセル</Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -202,13 +230,14 @@ function EntryRow({ entry }: { entry: BlacklistEntry }) {
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={statusInfo.variant} data-testid={`badge-status-${entry.id}`}>{statusInfo.label}</Badge>
               <Badge variant="outline">{entry.entityType}</Badge>
-              <Badge variant="outline">{entry.source === "official" ? "公式情報" : "報告"}</Badge>
-              <span className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString("ja-JP")}</span>
+              {(entry as any).withdrawalReason && <Badge variant="secondary">{(entry as any).withdrawalReason}</Badge>}
+              <Badge variant="outline">{entry.source === "official" ? "🛡 確認済み" : "💬 通報"}</Badge>
+              <span className="text-xs text-muted-foreground">{(entry as any).withdrawalDate ?? new Date(entry.createdAt).toLocaleDateString("ja-JP")}</span>
             </div>
             <p className="font-semibold">{entry.name}</p>
             <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
               {entry.prefecture && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{entry.prefecture}</span>}
-              {(entry.reasons ?? []).map(r => (
+              {(entry.reasons ?? []).filter(r => r !== (entry as any).withdrawalReason).map(r => (
                 <span key={r} className="flex items-center gap-1 text-orange-600"><AlertTriangle className="w-3 h-3" />{r}</span>
               ))}
             </div>
@@ -239,13 +268,10 @@ function EntryRow({ entry }: { entry: BlacklistEntry }) {
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </div>
-
-        {expanded && (
+        {expanded && entry.detail && (
           <div className="mt-4 border-t pt-4 space-y-2">
             <p className="text-sm whitespace-pre-wrap bg-muted/50 p-3 rounded-md">{entry.detail}</p>
-            {entry.contactEmail && (
-              <p className="text-xs text-muted-foreground">連絡先：{entry.contactEmail}</p>
-            )}
+            {entry.contactEmail && <p className="text-xs text-muted-foreground">連絡先：{entry.contactEmail}</p>}
           </div>
         )}
       </CardContent>
@@ -254,52 +280,60 @@ function EntryRow({ entry }: { entry: BlacklistEntry }) {
 }
 
 export default function AdminBlacklist() {
-  const [statusFilter, setStatusFilter] = useState("all");
-
   const { data: entries, isLoading } = useQuery<BlacklistEntry[]>({
     queryKey: ["/api/admin/blacklist"],
   });
 
-  const filtered = entries?.filter(e => statusFilter === "all" || e.status === statusFilter) ?? [];
-  const pendingCount = entries?.filter(e => e.status === "pending").length ?? 0;
+  const approved = entries?.filter(e => e.status !== "pending" && e.source === "official") ?? [];
+  const reports = entries?.filter(e => e.source === "report") ?? [];
+  const pendingReports = reports.filter(e => e.status === "pending").length;
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6" data-testid="page-admin-blacklist">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <UserX className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold" data-testid="text-page-title">強制退会リスト管理</h1>
-            {pendingCount > 0 && <Badge variant="destructive" data-testid="badge-pending-count">{pendingCount}件審査待ち</Badge>}
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]" data-testid="select-filter-status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
-                <SelectItem value="pending">審査待ち</SelectItem>
-                <SelectItem value="approved">掲載中</SelectItem>
-                <SelectItem value="rejected">非掲載</SelectItem>
-              </SelectContent>
-            </Select>
-            <AddEntryDialog onAdded={() => {}} />
-          </div>
+      <div className="p-6 space-y-4" data-testid="page-admin-blacklist">
+        <div className="flex items-center gap-3">
+          <UserX className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">強制退会リスト管理</h1>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-24 w-full" />)}</div>
-        ) : filtered.length === 0 ? (
-          <Card><CardContent className="p-8 text-center">
-            <UserX className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">該当するエントリはありません</p>
-          </CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map(e => <EntryRow key={e.id} entry={e} />)}
-          </div>
-        )}
+        <Tabs defaultValue="list">
+          <TabsList>
+            <TabsTrigger value="list" data-testid="tab-list">
+              <Shield className="w-4 h-4 mr-1.5" />強制退会リスト（{approved.length}）
+            </TabsTrigger>
+            <TabsTrigger value="reports" data-testid="tab-reports">
+              <MessageCircle className="w-4 h-4 mr-1.5" />通報一覧
+              {pendingReports > 0 && <Badge variant="destructive" className="ml-1.5 text-xs px-1.5">{pendingReports}</Badge>}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="list" className="mt-4 space-y-3">
+            <AddEntryForm />
+            {isLoading ? (
+              <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full" />)}</div>
+            ) : approved.length === 0 ? (
+              <Card><CardContent className="p-8 text-center">
+                <UserX className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">登録されたエントリはありません</p>
+              </CardContent></Card>
+            ) : (
+              <div className="space-y-3">{approved.map(e => <EntryRow key={e.id} entry={e} />)}</div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-4 space-y-3">
+            {isLoading ? (
+              <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full" />)}</div>
+            ) : reports.length === 0 ? (
+              <Card><CardContent className="p-8 text-center">
+                <MessageCircle className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">通報はまだありません</p>
+              </CardContent></Card>
+            ) : (
+              <div className="space-y-3">{reports.map(e => <EntryRow key={e.id} entry={e} />)}</div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
