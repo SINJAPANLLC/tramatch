@@ -2,8 +2,8 @@ import { storage } from "./storage";
 import { sendEmail } from "./notification-service";
 import dns from "dns/promises";
 
-const DAILY_SEND_LIMIT = 280; // Hostinger SMTP ~300/hour safe limit
-const SEND_INTERVAL_MS = 12000; // 12s interval = ~300/hour, within Hostinger limits
+const DAILY_SEND_LIMIT = 20; // 1日20通に制限（スパム対策）
+const SEND_INTERVAL_MS = 180000; // 3分間隔（スパム対策）
 const CRAWL_BATCH_SIZE = 50;
 
 // セッション内でクロール済みドメインを記録（重複回避）
@@ -1394,10 +1394,10 @@ export function scheduleLeadCrawler() {
     }
 
     // ============================================================
-    // メール送信スケジュール（1日3回）
-    // 10:00, 14:00, 20:00 JST
+    // メール送信スケジュール（1日1回）
+    // 10:00 JST のみ（スパム対策で減量）
     // ============================================================
-    const sendHours = [10, 14, 20];
+    const sendHours = [10];
 
     if (min === 0 && sendHours.includes(jstHour)) {
       if (isSending) {
@@ -1420,7 +1420,7 @@ export function scheduleLeadCrawler() {
   console.log("[Lead Crawler] ✅ スケジュール設定完了:");
   console.log("  クロール: 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 JST（検索）");
   console.log("  クロール: 07:30, 13:30, 19:30 JST（ディレクトリ）");
-  console.log("  メール送信: 10:00, 14:00, 20:00 JST");
+  console.log("  メール送信: 10:00 JST（1日1回・20通上限）");
 
   // 起動時：ウェブサイトありメールなしが残っていれば自動で一括クロール再開
   setTimeout(async () => {
@@ -1429,20 +1429,7 @@ export function scheduleLeadCrawler() {
       if (pending.length > 0) {
         console.log("[Lead Crawler] 🔄 起動時自動クロール開始（未取得リードあり）");
         crawlAllExistingLeadsParallel(20).catch(console.error);
-        // クロール中は30分ごとに送信を自動実行
-        const autoSendTimer = setInterval(async () => {
-          if (!isSending) {
-            isSending = true;
-            try { await sendDailyLeadEmails(); } catch {} finally { isSending = false; }
-          }
-        }, 30 * 60 * 1000);
-        // 9時間後に自動送信タイマーを停止
-        setTimeout(() => clearInterval(autoSendTimer), 9 * 60 * 60 * 1000);
-        // 起動時に1回送信
-        if (!isSending) {
-          isSending = true;
-          sendDailyLeadEmails().catch(console.error).finally(() => { isSending = false; });
-        }
+        // ※ クロール中の自動送信は停止（スパム対策）
       }
     } catch (err) {
       console.error("[Lead Crawler] 起動時クロール確認エラー:", err);
