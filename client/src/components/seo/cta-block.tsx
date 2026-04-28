@@ -37,7 +37,7 @@ export default function CtaBlock({ variant = "both", location, articleSlug }: Ct
         <p className="text-xs text-muted-foreground mb-3">AIマッチングで最適な荷物・車両を瞬時に発見。登録無料。</p>
         <div className="flex flex-wrap gap-2">
           {(variant === "shipper" || variant === "both") && (
-            <Link href="/register" onClick={() => handleClick("shipper")}>
+            <Link href="/truck-arrangement" onClick={() => handleClick("shipper")}>
               <Button size="sm" className="text-xs" data-testid={`button-cta-shipper-${location}`}>
                 <Package className="w-3.5 h-3.5 mr-1" />荷主として登録
               </Button>
