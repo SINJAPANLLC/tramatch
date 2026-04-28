@@ -587,3 +587,38 @@ export const snsAutoPosts = pgTable("sns_auto_posts", {
 export const insertSnsAutoPostSchema = createInsertSchema(snsAutoPosts).omit({ id: true, createdAt: true });
 export type InsertSnsAutoPost = z.infer<typeof insertSnsAutoPostSchema>;
 export type SnsAutoPost = typeof snsAutoPosts.$inferSelect;
+
+export const tracomReviews = pgTable("tracom_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull(),
+  targetName: text("target_name"),
+  rating: integer("rating").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+  nickname: text("nickname"),
+  experience: text("experience"),
+  prefecture: text("prefecture"),
+  workStyle: text("work_style"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const insertTracomReviewSchema = createInsertSchema(tracomReviews).omit({ id: true, createdAt: true, status: true });
+export type InsertTracomReview = z.infer<typeof insertTracomReviewSchema>;
+export type TracomReview = typeof tracomReviews.$inferSelect;
+
+export const blacklistEntries = pgTable("blacklist_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entityType: text("entity_type").notNull(),
+  name: text("name").notNull(),
+  reasons: text("reasons").array().notNull().default(sql`'{}'::text[]`),
+  detail: text("detail").notNull(),
+  source: text("source").notNull().default("report"),
+  prefecture: text("prefecture"),
+  contactEmail: text("contact_email"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const insertBlacklistEntrySchema = createInsertSchema(blacklistEntries).omit({ id: true, createdAt: true, status: true, source: true });
+export type InsertBlacklistEntry = z.infer<typeof insertBlacklistEntrySchema>;
+export type BlacklistEntry = typeof blacklistEntries.$inferSelect;

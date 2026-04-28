@@ -62,6 +62,8 @@ const pageImports = {
   compareSites: () => import("@/pages/compare-sites"),
   alternativeTrabox: () => import("@/pages/alternative-trabox"),
   agentApply: () => import("@/pages/agent-apply"),
+  tracom: () => import("@/pages/tracom"),
+  blacklist: () => import("@/pages/blacklist"),
   forgotPassword: () => import("@/pages/forgot-password"),
   resetPassword: () => import("@/pages/reset-password"),
   truckForm: () => import("@/pages/truck-form"),
@@ -119,6 +121,8 @@ const GuideKyukakyusha = lazy(pageImports.guideKyukakyusha);
 const CompareSites = lazy(pageImports.compareSites);
 const AlternativeTrabox = lazy(pageImports.alternativeTrabox);
 const AgentApply = lazy(pageImports.agentApply);
+const Tracom = lazy(pageImports.tracom);
+const Blacklist = lazy(pageImports.blacklist);
 const ForgotPassword = lazy(pageImports.forgotPassword);
 const ResetPassword = lazy(pageImports.resetPassword);
 const TruckForm = lazy(pageImports.truckForm);
@@ -232,6 +236,8 @@ function Router() {
         <Route path="/compare/kyukakyusha-sites" component={CompareSites} />
         <Route path="/alternative/trabox" component={AlternativeTrabox} />
         <Route path="/agent-apply" component={AgentApply} />
+        <Route path="/tracom" component={Tracom} />
+        <Route path="/blacklist" component={Blacklist} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

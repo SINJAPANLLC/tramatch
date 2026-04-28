@@ -5652,6 +5652,93 @@ ${items}
     }
   });
 
+  // ===== トラコミ（口コミ） =====
+  app.get("/api/tracom-reviews", async (req, res) => {
+    try {
+      const { category } = req.query as { category?: string };
+      const reviews = await storage.getTracomReviews({ category, status: "approved" });
+      res.json(reviews);
+    } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.get("/api/tracom-reviews/stats", async (_req, res) => {
+    try {
+      const stats = await storage.getTracomReviewStats();
+      res.json(stats);
+    } catch { res.status(500).json({ avg: 0, count: 0 }); }
+  });
+
+  app.post("/api/tracom-reviews", async (req, res) => {
+    try {
+      const { category, targetName, rating, title, body, tags, nickname, experience, prefecture, workStyle } = req.body;
+      if (!category || !rating || !title || !body) return res.status(400).json({ message: "必須項目を入力してください" });
+      const review = await storage.createTracomReview({ category, targetName, rating: Number(rating), title, body, tags: tags || [], nickname, experience, prefecture, workStyle });
+      res.json(review);
+    } catch { res.status(500).json({ message: "送信に失敗しました" }); }
+  });
+
+  app.get("/api/admin/tracom-reviews", requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.query as { status?: string };
+      const reviews = await storage.getTracomReviews(status ? { status } : {});
+      res.json(reviews);
+    } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.patch("/api/admin/tracom-reviews/:id", requireAdmin, async (req, res) => {
+    try {
+      const review = await storage.updateTracomReview(req.params.id, req.body);
+      res.json(review);
+    } catch { res.status(500).json({ message: "更新に失敗しました" }); }
+  });
+
+  app.delete("/api/admin/tracom-reviews/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteTracomReview(req.params.id);
+      res.json({ success: true });
+    } catch { res.status(500).json({ message: "削除に失敗しました" }); }
+  });
+
+  // ===== 強制退会リスト =====
+  app.get("/api/blacklist", async (req, res) => {
+    try {
+      const { entityType, reason, source } = req.query as { entityType?: string; reason?: string; source?: string };
+      const entries = await storage.getBlacklistEntries({ entityType, reason, source, status: "approved" });
+      res.json(entries);
+    } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.post("/api/blacklist/report", async (req, res) => {
+    try {
+      const { entityType, name, reasons, detail, prefecture, contactEmail } = req.body;
+      if (!entityType || !name || !detail) return res.status(400).json({ message: "必須項目を入力してください" });
+      const entry = await storage.createBlacklistEntry({ entityType, name, reasons: reasons || [], detail, prefecture, contactEmail });
+      res.json(entry);
+    } catch { res.status(500).json({ message: "送信に失敗しました" }); }
+  });
+
+  app.get("/api/admin/blacklist", requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.query as { status?: string };
+      const entries = await storage.getBlacklistEntries(status ? { status } : {});
+      res.json(entries);
+    } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.patch("/api/admin/blacklist/:id", requireAdmin, async (req, res) => {
+    try {
+      const entry = await storage.updateBlacklistEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch { res.status(500).json({ message: "更新に失敗しました" }); }
+  });
+
+  app.delete("/api/admin/blacklist/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteBlacklistEntry(req.params.id);
+      res.json({ success: true });
+    } catch { res.status(500).json({ message: "削除に失敗しました" }); }
+  });
+
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {

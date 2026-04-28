@@ -22,11 +22,13 @@ import {
   type YoutubeAutoPublishJob,
   type EmailCampaign, type InsertEmailCampaign,
   type EmailLead, type InsertEmailLead,
+  type TracomReview, type InsertTracomReview,
+  type BlacklistEntry, type InsertBlacklistEntry,
   users, cargoListings, truckListings, notifications, announcements, dispatchRequests,
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
   invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs,
-  emailCampaigns, emailLeads
+  emailCampaigns, emailLeads, tracomReviews, blacklistEntries
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, or, gte, isNull } from "drizzle-orm";
@@ -219,6 +221,17 @@ export interface IStorage {
   getNewEmailLeadsForSending(limit: number): Promise<EmailLead[]>;
   getTodaySentLeadCount(): Promise<number>;
   getLeadsWithWebsiteNoEmail(limit: number, offset?: number): Promise<EmailLead[]>;
+
+  getTracomReviews(options?: { category?: string; status?: string }): Promise<TracomReview[]>;
+  getTracomReviewStats(): Promise<{ avg: number; count: number }>;
+  createTracomReview(data: InsertTracomReview): Promise<TracomReview>;
+  updateTracomReview(id: string, data: Partial<TracomReview>): Promise<TracomReview | undefined>;
+  deleteTracomReview(id: string): Promise<boolean>;
+
+  getBlacklistEntries(options?: { entityType?: string; reason?: string; source?: string; status?: string }): Promise<BlacklistEntry[]>;
+  createBlacklistEntry(data: InsertBlacklistEntry): Promise<BlacklistEntry>;
+  updateBlacklistEntry(id: string, data: Partial<BlacklistEntry>): Promise<BlacklistEntry | undefined>;
+  deleteBlacklistEntry(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1274,6 +1287,64 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset)
       .orderBy(emailLeads.createdAt);
+  }
+
+  async getTracomReviews(options?: { category?: string; status?: string }): Promise<TracomReview[]> {
+    const conditions = [];
+    if (options?.category && options.category !== "all") conditions.push(eq(tracomReviews.category, options.category));
+    if (options?.status) conditions.push(eq(tracomReviews.status, options.status));
+    const query = db.select().from(tracomReviews);
+    if (conditions.length > 0) return query.where(and(...conditions)).orderBy(desc(tracomReviews.createdAt));
+    return query.orderBy(desc(tracomReviews.createdAt));
+  }
+
+  async getTracomReviewStats(): Promise<{ avg: number; count: number }> {
+    const [result] = await db.select({
+      avg: sql<number>`COALESCE(AVG(${tracomReviews.rating}), 0)::float`,
+      count: sql<number>`COUNT(*)::int`,
+    }).from(tracomReviews).where(eq(tracomReviews.status, "approved"));
+    return { avg: result?.avg || 0, count: result?.count || 0 };
+  }
+
+  async createTracomReview(data: InsertTracomReview): Promise<TracomReview> {
+    const [review] = await db.insert(tracomReviews).values(data).returning();
+    return review;
+  }
+
+  async updateTracomReview(id: string, data: Partial<TracomReview>): Promise<TracomReview | undefined> {
+    const [review] = await db.update(tracomReviews).set(data).where(eq(tracomReviews.id, id)).returning();
+    return review;
+  }
+
+  async deleteTracomReview(id: string): Promise<boolean> {
+    await db.delete(tracomReviews).where(eq(tracomReviews.id, id));
+    return true;
+  }
+
+  async getBlacklistEntries(options?: { entityType?: string; reason?: string; source?: string; status?: string }): Promise<BlacklistEntry[]> {
+    const conditions = [];
+    if (options?.entityType && options.entityType !== "all") conditions.push(eq(blacklistEntries.entityType, options.entityType));
+    if (options?.source && options.source !== "all") conditions.push(eq(blacklistEntries.source, options.source));
+    if (options?.status) conditions.push(eq(blacklistEntries.status, options.status));
+    if (options?.reason && options.reason !== "all") conditions.push(sql`${blacklistEntries.reasons} @> ARRAY[${options.reason}]::text[]`);
+    const query = db.select().from(blacklistEntries);
+    if (conditions.length > 0) return query.where(and(...conditions)).orderBy(desc(blacklistEntries.createdAt));
+    return query.orderBy(desc(blacklistEntries.createdAt));
+  }
+
+  async createBlacklistEntry(data: InsertBlacklistEntry): Promise<BlacklistEntry> {
+    const [entry] = await db.insert(blacklistEntries).values(data).returning();
+    return entry;
+  }
+
+  async updateBlacklistEntry(id: string, data: Partial<BlacklistEntry>): Promise<BlacklistEntry | undefined> {
+    const [entry] = await db.update(blacklistEntries).set(data).where(eq(blacklistEntries.id, id)).returning();
+    return entry;
+  }
+
+  async deleteBlacklistEntry(id: string): Promise<boolean> {
+    await db.delete(blacklistEntries).where(eq(blacklistEntries.id, id));
+    return true;
   }
 }
 
