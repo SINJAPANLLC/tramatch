@@ -56,7 +56,7 @@ const adminMenuGroups: AdminMenuGroup[] = [
       { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
       { href: "/admin/tracom", label: "トラコミ管理", icon: Star },
       { href: "/admin/blacklist", label: "強制退会リスト", icon: UserX },
-      { href: "/admin/factoring-inquiries", label: "ファクタリング問い合わせ", icon: Banknote },
+      { href: "/admin/factoring-inquiries", label: "ファクタリング", icon: Banknote },
     ],
   },
   {

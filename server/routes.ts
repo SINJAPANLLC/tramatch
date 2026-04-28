@@ -5717,6 +5717,17 @@ ${items}
     } catch { res.status(500).json({ message: "送信に失敗しました" }); }
   });
 
+  app.post("/api/admin/blacklist", requireAdmin, async (req, res) => {
+    try {
+      const { insertBlacklistEntrySchema } = await import("@shared/schema");
+      const data = insertBlacklistEntrySchema.parse(req.body);
+      const entry = await storage.createBlacklistEntry({ ...data, status: req.body.status ?? "approved" } as any);
+      res.json(entry);
+    } catch (error) {
+      res.status(400).json({ message: "入力内容を確認してください" });
+    }
+  });
+
   app.get("/api/admin/blacklist", requireAdmin, async (req, res) => {
     try {
       const { status } = req.query as { status?: string };
