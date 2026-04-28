@@ -8,11 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle2, Truck, Phone, Building2, Calendar, Package, ArrowRight } from "lucide-react";
+import { CheckCircle2, Truck, Building2, Package, ArrowRight } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import SeoHead from "@/components/seo/seo-head";
 
 const formSchema = z.object({
@@ -82,10 +80,9 @@ export default function TruckArrangement() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <>
         <SeoHead title="トラック手配依頼 | TRA MATCH" description="TRA MATCHのトラック手配フォームです。スポット便・定期便のご依頼を承ります。" />
-        <Header />
-        <main className="flex-1 flex items-center justify-center p-6">
+        <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center max-w-md">
             <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-3">お問い合わせを受け付けました</h2>
@@ -95,17 +92,15 @@ export default function TruckArrangement() {
             </p>
             <Button onClick={() => setSubmitted(false)} variant="outline">新しい依頼を送る</Button>
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <SeoHead title="トラック手配依頼 | TRA MATCH" description="スポット便・定期便のトラック手配はTRA MATCHへ。全国対応、最短即日手配。まずはお気軽にお問い合わせください。" />
-      <Header />
-      <main className="flex-1">
+      <div>
         <section className="bg-primary text-primary-foreground py-12 px-4 text-center">
           <p className="text-sm font-semibold tracking-widest mb-2 opacity-80">TRUCK ARRANGEMENT</p>
           <h1 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3" data-testid="text-page-title">
@@ -261,8 +256,7 @@ export default function TruckArrangement() {
             </p>
           </form>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </>
   );
 }
