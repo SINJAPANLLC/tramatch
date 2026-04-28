@@ -35,6 +35,7 @@ export default function Footer() {
                 <li><Link href="/blacklist" className="hover:underline" data-testid="link-blacklist">強制退会リスト</Link></li>
                 <li><Link href="/freight-guarantee" className="hover:underline" data-testid="link-freight-guarantee">運賃全額保証サービス</Link></li>
                 <li><Link href="/factoring" className="hover:underline" data-testid="link-factoring">ファクタリングサービス</Link></li>
+                <li><Link href="/truck-arrangement" className="hover:underline" data-testid="link-truck-arrangement">トラック手配</Link></li>
               </ul>
             </div>
             <div>

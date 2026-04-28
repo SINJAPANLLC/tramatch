@@ -237,6 +237,11 @@ export interface IStorage {
   createFactoringInquiry(data: InsertFactoringInquiry): Promise<FactoringInquiry>;
   getFactoringInquiries(): Promise<FactoringInquiry[]>;
   deleteFactoringInquiry(id: string): Promise<boolean>;
+
+  createTruckArrangementInquiry(data: any): Promise<any>;
+  getTruckArrangementInquiries(): Promise<any[]>;
+  updateTruckArrangementInquiry(id: string, data: any): Promise<any>;
+  deleteTruckArrangementInquiry(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1363,6 +1368,29 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFactoringInquiry(id: string): Promise<boolean> {
     await db.delete(factoringInquiries).where(eq(factoringInquiries.id, id));
+    return true;
+  }
+
+  async createTruckArrangementInquiry(data: any): Promise<any> {
+    const { truckArrangementInquiries } = await import("@shared/schema");
+    const [inquiry] = await db.insert(truckArrangementInquiries).values(data).returning();
+    return inquiry;
+  }
+
+  async getTruckArrangementInquiries(): Promise<any[]> {
+    const { truckArrangementInquiries } = await import("@shared/schema");
+    return db.select().from(truckArrangementInquiries).orderBy(desc(truckArrangementInquiries.createdAt));
+  }
+
+  async updateTruckArrangementInquiry(id: string, data: any): Promise<any> {
+    const { truckArrangementInquiries } = await import("@shared/schema");
+    const [updated] = await db.update(truckArrangementInquiries).set(data).where(eq(truckArrangementInquiries.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTruckArrangementInquiry(id: string): Promise<boolean> {
+    const { truckArrangementInquiries } = await import("@shared/schema");
+    await db.delete(truckArrangementInquiries).where(eq(truckArrangementInquiries.id, id));
     return true;
   }
 }

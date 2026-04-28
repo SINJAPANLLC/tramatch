@@ -622,6 +622,34 @@ export const insertFactoringInquirySchema = createInsertSchema(factoringInquirie
 export type InsertFactoringInquiry = z.infer<typeof insertFactoringInquirySchema>;
 export type FactoringInquiry = typeof factoringInquiries.$inferSelect;
 
+export const truckArrangementInquiries = pgTable("truck_arrangement_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceType: text("service_type").notNull(),
+  pickupAddress: text("pickup_address").notNull(),
+  pickupDate: text("pickup_date"),
+  pickupContact: text("pickup_contact"),
+  deliveryAddress: text("delivery_address").notNull(),
+  deliveryDate: text("delivery_date"),
+  deliveryContact: text("delivery_contact"),
+  vehicleSize: text("vehicle_size"),
+  vehicleCount: text("vehicle_count"),
+  cargoDetails: text("cargo_details"),
+  additionalWork: text("additional_work"),
+  desiredFare: text("desired_fare"),
+  highwayFee: text("highway_fee"),
+  paymentDate: text("payment_date"),
+  remarks: text("remarks"),
+  companyName: text("company_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  phone: text("phone").notNull(),
+  fax: text("fax"),
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const insertTruckArrangementInquirySchema = createInsertSchema(truckArrangementInquiries).omit({ id: true, createdAt: true, status: true });
+export type InsertTruckArrangementInquiry = z.infer<typeof insertTruckArrangementInquirySchema>;
+export type TruckArrangementInquiry = typeof truckArrangementInquiries.$inferSelect;
+
 export const blacklistEntries = pgTable("blacklist_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   entityType: text("entity_type").notNull(),

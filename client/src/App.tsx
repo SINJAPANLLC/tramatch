@@ -69,6 +69,8 @@ const pageImports = {
   adminTracom: () => import("@/pages/admin-tracom"),
   adminBlacklist: () => import("@/pages/admin-blacklist"),
   adminFactoringInquiries: () => import("@/pages/admin-factoring-inquiries"),
+  truckArrangement: () => import("@/pages/truck-arrangement"),
+  adminTruckArrangement: () => import("@/pages/admin-truck-arrangement"),
   forgotPassword: () => import("@/pages/forgot-password"),
   resetPassword: () => import("@/pages/reset-password"),
   truckForm: () => import("@/pages/truck-form"),
@@ -133,6 +135,8 @@ const Factoring = lazy(pageImports.factoring);
 const AdminTracom = lazy(pageImports.adminTracom);
 const AdminBlacklist = lazy(pageImports.adminBlacklist);
 const AdminFactoringInquiries = lazy(pageImports.adminFactoringInquiries);
+const TruckArrangement = lazy(pageImports.truckArrangement);
+const AdminTruckArrangement = lazy(pageImports.adminTruckArrangement);
 const ForgotPassword = lazy(pageImports.forgotPassword);
 const ResetPassword = lazy(pageImports.resetPassword);
 const TruckForm = lazy(pageImports.truckForm);
@@ -222,6 +226,7 @@ function Router() {
         <Route path="/admin/tracom">{() => <AdminRoute component={AdminTracom} />}</Route>
         <Route path="/admin/blacklist">{() => <AdminRoute component={AdminBlacklist} />}</Route>
         <Route path="/admin/factoring-inquiries">{() => <AdminRoute component={AdminFactoringInquiries} />}</Route>
+        <Route path="/admin/truck-arrangement">{() => <AdminRoute component={AdminTruckArrangement} />}</Route>
         <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
         <Route path="/admin/agents">{() => <AdminRoute component={AdminAgents} />}</Route>
         <Route path="/admin/ai-training">{() => <AdminRoute component={AdminAiTraining} />}</Route>
@@ -253,6 +258,7 @@ function Router() {
         <Route path="/blacklist" component={Blacklist} />
         <Route path="/freight-guarantee" component={FreightGuarantee} />
         <Route path="/factoring" component={Factoring} />
+        <Route path="/truck-arrangement" component={TruckArrangement} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

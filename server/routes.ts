@@ -4632,7 +4632,7 @@ JSON形式で以下を返してください（日本語で）:
         messages: [
           {
             role: "system",
-            content: `あなたはSEOに強い物流業界専門のコラムライターです。「トラマッチ」という求荷求車マッチングプラットフォームのコラム記事を作成してください。
+            content: `あなたはSEOに強い物流業界専門のコラムライターです。「TRA MATCH（トラマッチ）」という求荷求車マッチングプラットフォームのコラム記事を作成してください。
 
 記事の要件：
 1. SEOに最適化されたタイトル（# 見出し）- キーワードを含む
@@ -4643,6 +4643,21 @@ JSON形式で以下を返してください（日本語で）:
   - 自然にキーワードを含める（キーワード密度2-3%）
   - トラマッチのサービスを自然に紹介
 4. まとめ・結論
+5. 記事の末尾に必ず以下のCTAブロックを追加してください（マークダウンのまま）：
+
+---
+
+## 今すぐトラックを手配する
+
+スポット便・定期便・チャーター便のトラック手配はTRA MATCHにおまかせください。全国ネットワークで最短即日対応。物流担当者様からのご相談を随時受け付けております。
+
+**▶ [トラック手配を依頼する](/truck-arrangement)**
+
+TRA MATCHのAIマッチングなら、最適な運送会社を瞬時にご提案。登録無料でお試しいただけます。
+
+**▶ [無料で荷主登録する](/register)**
+
+---
 
 重要な出力ルール：
 - マークダウン形式で出力してください
@@ -5723,6 +5738,38 @@ ${items}
       const entries = await storage.getBlacklistEntries({ entityType, reason, source, status: "approved" });
       res.json(entries);
     } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.post("/api/truck-arrangement", async (req, res) => {
+    try {
+      const { serviceType, pickupAddress, deliveryAddress, companyName, contactName, phone } = req.body;
+      if (!serviceType || !pickupAddress || !deliveryAddress || !companyName || !contactName || !phone) {
+        return res.status(400).json({ message: "必須項目を入力してください" });
+      }
+      const inquiry = await storage.createTruckArrangementInquiry(req.body);
+      res.json(inquiry);
+    } catch { res.status(500).json({ message: "送信に失敗しました" }); }
+  });
+
+  app.get("/api/admin/truck-arrangement", requireAdmin, async (req, res) => {
+    try {
+      const inquiries = await storage.getTruckArrangementInquiries();
+      res.json(inquiries);
+    } catch { res.status(500).json({ message: "エラーが発生しました" }); }
+  });
+
+  app.patch("/api/admin/truck-arrangement/:id", requireAdmin, async (req, res) => {
+    try {
+      const inquiry = await storage.updateTruckArrangementInquiry(req.params.id, req.body);
+      res.json(inquiry);
+    } catch { res.status(500).json({ message: "更新に失敗しました" }); }
+  });
+
+  app.delete("/api/admin/truck-arrangement/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteTruckArrangementInquiry(req.params.id);
+      res.json({ message: "削除しました" });
+    } catch { res.status(500).json({ message: "削除に失敗しました" }); }
   });
 
   app.post("/api/blacklist/report", evidenceUpload.array("evidenceFiles", 5), async (req, res) => {

@@ -19,20 +19,36 @@ import type { SeoArticle } from "@shared/schema";
 import DashboardLayout from "@/components/dashboard-layout";
 
 const KEYWORD_PRESETS = [
-  { label: "求荷求車", value: "求荷求車, マッチング, 運送, 物流" },
-  { label: "空車情報", value: "空車, 空車情報, 配車, 運送会社" },
-  { label: "物流DX", value: "物流DX, デジタル化, テクノロジー, 効率化" },
-  { label: "コスト削減", value: "コスト削減, 物流費, 運賃, 効率化" },
-  { label: "2024年問題", value: "2024年問題, ドライバー不足, 働き方改革" },
-  { label: "配車計画", value: "配車, AI, 自動化, 効率化" },
-  { label: "共同配送", value: "共同配送, 混載, コスト削減, 物流効率" },
-  { label: "帰り便", value: "帰り便, 空車, コスト削減, 求荷求車" },
+  { label: "求荷求車", value: "求荷求車, マッチング, 運送, 物流", group: "基本" },
+  { label: "空車情報", value: "空車, 空車情報, 配車, 運送会社", group: "基本" },
+  { label: "物流DX", value: "物流DX, デジタル化, テクノロジー, 効率化", group: "基本" },
+  { label: "コスト削減", value: "コスト削減, 物流費, 運賃, 効率化", group: "基本" },
+  { label: "2024年問題", value: "2024年問題, ドライバー不足, 働き方改革", group: "基本" },
+  { label: "配車計画", value: "配車, AI, 自動化, 効率化", group: "基本" },
+  { label: "共同配送", value: "共同配送, 混載, コスト削減, 物流効率", group: "基本" },
+  { label: "帰り便", value: "帰り便, 空車, コスト削減, 求荷求車", group: "基本" },
+  { label: "食品輸送", value: "食品輸送, 冷蔵, 冷凍, 食品物流, マッチング, 外注", group: "業種別" },
+  { label: "製造業物流", value: "製造業, 部品輸送, チャーター便, 物流コスト削減, サプライチェーン", group: "業種別" },
+  { label: "建設資材", value: "建設資材, 重量物輸送, 建設業, トラック手配, 急募", group: "業種別" },
+  { label: "小売・EC", value: "小売業, EC物流, 幹線輸送, 定期便, 物流アウトソーシング", group: "業種別" },
+  { label: "医薬・医療", value: "医療機器, 医薬品輸送, 温度管理, 信頼性, 物流規制", group: "業種別" },
+  { label: "大手荷主向け", value: "荷主企業, 物流担当者, 運送会社選定, 物流費削減, BPO", group: "大手向け" },
+  { label: "スポット便", value: "スポット便, 急な輸送, 当日対応, 法人, チャーター", group: "大手向け" },
+  { label: "物流アウトソース", value: "物流アウトソーシング, 3PL, 外注, コスト削減, DX", group: "大手向け" },
+  { label: "物流費高騰対策", value: "物流費高騰, 運賃値上げ, コスト削減, 荷主, 対策", group: "大手向け" },
 ];
+
+const PRESET_GROUPS = ["基本", "業種別", "大手向け"] as const;
 
 const CATEGORY_OPTIONS = [
   { value: "kyukakyusha", label: "求荷求車・マッチング" },
   { value: "truck-order", label: "トラック手配・荷主向け" },
   { value: "carrier-sales", label: "運送会社の案件獲得・営業" },
+  { value: "food-logistics", label: "食品・冷蔵物流" },
+  { value: "manufacturing-logistics", label: "製造業物流" },
+  { value: "construction-logistics", label: "建設・重量物輸送" },
+  { value: "ec-logistics", label: "小売・EC物流" },
+  { value: "enterprise-logistics", label: "大手企業向け物流" },
 ];
 
 export default function AdminSeo() {
@@ -202,20 +218,27 @@ export default function AdminSeo() {
                 </div>
                 <div>
                   <Label className="mb-2 block">キーワードプリセット</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {KEYWORD_PRESETS.map((preset) => (
-                      <Badge
-                        key={preset.label}
-                        variant={keywords === preset.value ? "default" : "secondary"}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setKeywords(keywords === preset.value ? "" : preset.value);
-                          if (!topic) setTopic(preset.label + "に関する最新動向");
-                        }}
-                        data-testid={`badge-preset-${preset.label}`}
-                      >
-                        {preset.label}
-                      </Badge>
+                  <div className="space-y-2">
+                    {PRESET_GROUPS.map((group) => (
+                      <div key={group}>
+                        <p className="text-xs text-muted-foreground mb-1 font-semibold">{group}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {KEYWORD_PRESETS.filter(p => p.group === group).map((preset) => (
+                            <Badge
+                              key={preset.label}
+                              variant={keywords === preset.value ? "default" : "secondary"}
+                              className="cursor-pointer"
+                              onClick={() => {
+                                setKeywords(keywords === preset.value ? "" : preset.value);
+                                if (!topic) setTopic(preset.label + "に関する最新動向");
+                              }}
+                              data-testid={`badge-preset-${preset.label}`}
+                            >
+                              {preset.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
