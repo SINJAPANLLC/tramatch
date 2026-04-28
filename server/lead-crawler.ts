@@ -1272,13 +1272,17 @@ https://tramatch-sinjapan.com
 
   let sent = 0;
   let failed = 0;
+  let sendCount = 0;
 
   for (const lead of leads) {
     if (!lead.email) continue;
 
     try {
       const personalizedBody = body.replace(/\{company\}/g, lead.companyName);
-      const result = await sendEmail(lead.email, subject, personalizedBody);
+      // 20件ごとに接続をリフレッシュしてHostinger切断を防ぐ
+      const fresh = sendCount > 0 && sendCount % 20 === 0;
+      const result = await sendEmail(lead.email, subject, personalizedBody, { fresh });
+      sendCount++;
 
       if (result.success) {
         await storage.updateEmailLead(lead.id, {

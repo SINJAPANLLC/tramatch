@@ -47,7 +47,8 @@ async function main() {
     const body = replaceTemplateVariables(template.body || "", vars);
 
     try {
-      const result = await sendEmail(user.email!, subject, body);
+      const fresh = (sent + failed) > 0 && (sent + failed) % 20 === 0;
+      const result = await sendEmail(user.email!, subject, body, { fresh });
       if (result.success) {
         sent++;
         console.log(`✅ [${sent}/${targets.length}] ${user.email}`);

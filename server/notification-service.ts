@@ -2,25 +2,35 @@ import nodemailer from "nodemailer";
 
 let transporter: nodemailer.Transporter | null = null;
 
-function getEmailTransporter(): nodemailer.Transporter | null {
-  if (transporter) return transporter;
-
+function createTransporter(): nodemailer.Transporter | null {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587");
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  if (!host || !user || !pass) {
-    return null;
-  }
+  if (!host || !user || !pass) return null;
 
-  transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
     auth: { user, pass },
+    pool: false,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    tls: { rejectUnauthorized: false },
   });
+}
 
+function getEmailTransporter(): nodemailer.Transporter | null {
+  if (!transporter) transporter = createTransporter();
+  return transporter;
+}
+
+function resetTransporter(): nodemailer.Transporter | null {
+  try { transporter?.close?.(); } catch (_) {}
+  transporter = createTransporter();
   return transporter;
 }
 
@@ -101,39 +111,54 @@ ${bodyHtml}
 </html>`;
 }
 
+const CONNECTION_ERRORS = ["ECONNRESET", "ETIMEDOUT", "ECONNREFUSED", "EPIPE", "ENOTFOUND", "connection timeout", "socket timeout", "greeting never received"];
+
+function isConnectionError(err: any): boolean {
+  const msg = (err?.message || err?.code || "").toLowerCase();
+  return CONNECTION_ERRORS.some(e => msg.includes(e.toLowerCase()));
+}
+
 export async function sendEmail(
   to: string,
   subject: string,
   body: string,
+  { fresh = false }: { fresh?: boolean } = {},
 ): Promise<{ success: boolean; error?: string }> {
-  const transport = getEmailTransporter();
-  if (!transport) {
-    return { success: false, error: "メール設定が未構成です" };
-  }
+  let transport = fresh ? resetTransporter() : getEmailTransporter();
+  if (!transport) return { success: false, error: "メール設定が未構成です" };
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@tramatch-sinjapan.com";
   const isAlreadyHtml = /<\/?(?:div|table|tr|td|h[1-6]|p|br|a|span|img)\b/i.test(body);
 
-  try {
-    if (isAlreadyHtml) {
-      await transport.sendMail({
-        from,
-        to,
-        subject,
+  const mailOptions = isAlreadyHtml
+    ? {
+        from, to, subject,
         text: body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"),
         html: body,
-      });
-    } else {
-      await transport.sendMail({
-        from,
-        to,
-        subject,
+      }
+    : {
+        from, to, subject,
         text: body,
         html: wrapInEmailTemplate(subject, body),
-      });
-    }
+      };
+
+  try {
+    await transport.sendMail(mailOptions);
     return { success: true };
   } catch (err: any) {
+    if (isConnectionError(err)) {
+      console.warn(`[Email] 接続エラー、コネクションをリセットして再試行: ${err.message}`);
+      await new Promise(r => setTimeout(r, 5000));
+      transport = resetTransporter();
+      if (!transport) return { success: false, error: "メール設定が未構成です" };
+      try {
+        await transport.sendMail(mailOptions);
+        return { success: true };
+      } catch (retryErr: any) {
+        console.error("[Email] 再試行も失敗:", retryErr.message);
+        return { success: false, error: retryErr.message };
+      }
+    }
     console.error("Email send error:", err);
     return { success: false, error: err.message };
   }
@@ -144,9 +169,7 @@ export async function sendLineMessage(
   message: string,
 ): Promise<{ success: boolean; error?: string }> {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  if (!token) {
-    return { success: false, error: "LINE設定が未構成です" };
-  }
+  if (!token) return { success: false, error: "LINE設定が未構成です" };
 
   try {
     const res = await fetch("https://api.line.me/v2/bot/message/push", {

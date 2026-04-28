@@ -3648,11 +3648,13 @@ statusの意味:
         results,
       });
 
-      // Send emails in background with rate limiting (12s interval = ~300/hour, safe for Hostinger)
+      // Send emails in background with rate limiting (12s interval, connection refresh every 20)
       (async () => {
-        for (const user of emailUsers) {
+        for (let i = 0; i < emailUsers.length; i++) {
+          const user = emailUsers[i];
           try {
-            const r = await sendEmail(user.email!, `【トラマッチ】${title}`, message);
+            const fresh = i > 0 && i % 20 === 0;
+            const r = await sendEmail(user.email!, `【トラマッチ】${title}`, message, { fresh });
             if (!r.success) console.error(`Bulk email failed to ${user.email}: ${r.error}`);
           } catch (err) {
             console.error(`Bulk email error to ${user.email}:`, err);
@@ -3688,7 +3690,8 @@ statusの意味:
 
       (async () => {
         let sent = 0; let failed = 0;
-        for (const user of targetUsers) {
+        for (let i = 0; i < targetUsers.length; i++) {
+          const user = targetUsers[i];
           try {
             const vars: Record<string, string> = {
               companyName: user.companyName || user.email || "お客様",
@@ -3697,7 +3700,8 @@ statusの意味:
             };
             const subject = replaceTemplateVariables(emailTemplate.subject || "", vars);
             const body = replaceTemplateVariables(emailTemplate.body || "", vars);
-            const r = await sendEmail(user.email!, subject, body);
+            const fresh = i > 0 && i % 20 === 0;
+            const r = await sendEmail(user.email!, subject, body, { fresh });
             if (r.success) sent++; else { failed++; console.error(`Template email failed to ${user.email}: ${r.error}`); }
           } catch (err) {
             failed++;
@@ -4389,9 +4393,11 @@ JSON形式で以下を返してください（日本語で）:
       (async () => {
         let sentCount = 0;
         let failedCount = 0;
-        for (const email of recipientList) {
+        for (let i = 0; i < recipientList.length; i++) {
+          const email = recipientList[i];
           try {
-            const result = await sendEmail(email, campaign.subject, campaign.body);
+            const fresh = i > 0 && i % 20 === 0;
+            const result = await sendEmail(email, campaign.subject, campaign.body, { fresh });
             if (result.success) {
               sentCount++;
             } else {
