@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, Brain, Video, Mail, Share2, ImageIcon, Layout, Lightbulb } from "lucide-react";
+import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, Brain, Video, Mail, Share2, ImageIcon, Layout, Lightbulb, UserX, Banknote } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,9 @@ const adminMenuGroups: AdminMenuGroup[] = [
       { href: "/admin/announcements", label: "お知らせ", icon: Megaphone },
       { href: "/admin/notifications", label: "通知管理", icon: Bell },
       { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
+      { href: "/admin/tracom", label: "トラコミ管理", icon: Star },
+      { href: "/admin/blacklist", label: "強制退会リスト", icon: UserX },
+      { href: "/admin/factoring-inquiries", label: "ファクタリング問い合わせ", icon: Banknote },
     ],
   },
   {

@@ -5755,6 +5755,13 @@ ${items}
     res.json(inquiries);
   });
 
+  app.delete("/api/admin/factoring-inquiries/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteFactoringInquiry(req.params.id);
+      res.json({ success: true });
+    } catch { res.status(500).json({ message: "削除に失敗しました" }); }
+  });
+
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {

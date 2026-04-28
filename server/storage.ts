@@ -236,6 +236,7 @@ export interface IStorage {
 
   createFactoringInquiry(data: InsertFactoringInquiry): Promise<FactoringInquiry>;
   getFactoringInquiries(): Promise<FactoringInquiry[]>;
+  deleteFactoringInquiry(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1358,6 +1359,11 @@ export class DatabaseStorage implements IStorage {
 
   async getFactoringInquiries(): Promise<FactoringInquiry[]> {
     return db.select().from(factoringInquiries).orderBy(desc(factoringInquiries.createdAt));
+  }
+
+  async deleteFactoringInquiry(id: string): Promise<boolean> {
+    await db.delete(factoringInquiries).where(eq(factoringInquiries.id, id));
+    return true;
   }
 }
 
