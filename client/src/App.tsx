@@ -65,6 +65,7 @@ const pageImports = {
   tracom: () => import("@/pages/tracom"),
   blacklist: () => import("@/pages/blacklist"),
   freightGuarantee: () => import("@/pages/freight-guarantee"),
+  factoring: () => import("@/pages/factoring"),
   forgotPassword: () => import("@/pages/forgot-password"),
   resetPassword: () => import("@/pages/reset-password"),
   truckForm: () => import("@/pages/truck-form"),
@@ -125,6 +126,7 @@ const AgentApply = lazy(pageImports.agentApply);
 const Tracom = lazy(pageImports.tracom);
 const Blacklist = lazy(pageImports.blacklist);
 const FreightGuarantee = lazy(pageImports.freightGuarantee);
+const Factoring = lazy(pageImports.factoring);
 const ForgotPassword = lazy(pageImports.forgotPassword);
 const ResetPassword = lazy(pageImports.resetPassword);
 const TruckForm = lazy(pageImports.truckForm);
@@ -241,6 +243,7 @@ function Router() {
         <Route path="/tracom" component={Tracom} />
         <Route path="/blacklist" component={Blacklist} />
         <Route path="/freight-guarantee" component={FreightGuarantee} />
+        <Route path="/factoring" component={Factoring} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>
