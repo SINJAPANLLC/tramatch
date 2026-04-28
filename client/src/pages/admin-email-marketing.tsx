@@ -70,6 +70,8 @@ function campaignStatusBadge(status: string) {
       return <Badge variant="destructive" className="text-xs"><XCircle className="w-3 h-3 mr-1" />失敗</Badge>;
     case "sending":
       return <Badge variant="default" className="text-xs"><Loader2 className="w-3 h-3 mr-1 animate-spin" />送信中</Badge>;
+    case "interrupted":
+      return <Badge variant="outline" className="text-xs border-orange-400 text-orange-600"><AlertTriangle className="w-3 h-3 mr-1" />中断（再送可）</Badge>;
     case "draft":
       return <Badge variant="secondary" className="text-xs"><Clock className="w-3 h-3 mr-1" />下書き</Badge>;
     default:
@@ -606,13 +608,16 @@ export default function AdminEmailMarketing() {
                               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedCampaign(campaign); setShowPreviewDialog(true); }}>
                                 <Eye className="w-4 h-4" />
                               </Button>
-                              {campaign.status === "draft" && (
+                              {(campaign.status === "draft" || campaign.status === "interrupted") && (
                                 <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(campaign)}>
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="default" size="sm" onClick={() => { setSelectedCampaign(campaign); setShowConfirmSendDialog(true); }}>
-                                    <Send className="w-3.5 h-3.5 mr-1" />送信
+                                  {campaign.status === "draft" && (
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(campaign)}>
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                  <Button variant="default" size="sm" onClick={() => { setSelectedCampaign(campaign); setShowConfirmSendDialog(true); }}
+                                    className={campaign.status === "interrupted" ? "bg-orange-500 hover:bg-orange-600" : ""}>
+                                    <Send className="w-3.5 h-3.5 mr-1" />{campaign.status === "interrupted" ? "再送" : "送信"}
                                   </Button>
                                 </>
                               )}

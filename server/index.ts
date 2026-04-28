@@ -115,6 +115,21 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
 
+  // 起動時：送信中のまま止まったキャンペーンを「中断」に回復
+  setTimeout(async () => {
+    try {
+      const { storage } = await import("./storage");
+      const campaigns = await storage.getEmailCampaigns();
+      const stuckCampaigns = campaigns.filter(c => c.status === "sending");
+      for (const c of stuckCampaigns) {
+        await storage.updateEmailCampaign(c.id, { status: "interrupted" });
+        console.log(`[Startup] キャンペーン「${c.name}」を中断状態に回復 (送信済:${c.sentCount}/${c.totalCount})`);
+      }
+    } catch (e) {
+      console.error("[Startup] キャンペーン回復エラー:", e);
+    }
+  }, 3000);
+
   // 本番・開発どちらでもCRONを有効化
   setTimeout(async () => {
     try {

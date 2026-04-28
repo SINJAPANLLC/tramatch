@@ -4376,6 +4376,7 @@ JSON形式で以下を返してください（日本語で）:
       const campaign = await storage.getEmailCampaign(req.params.id);
       if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
       if (campaign.status === "sending") return res.status(400).json({ message: "送信中です" });
+      // interrupted は再送可能（送信済みも含め全件再送）
 
       const recipientList = campaign.recipients.split("\n").map(e => e.trim()).filter(e => e && e.includes("@"));
       if (recipientList.length === 0) return res.status(400).json({ message: "送信先がありません" });
