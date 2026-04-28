@@ -91,6 +91,23 @@ const permitUpload = multer({
   },
 });
 
+const evidenceUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `evidence_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [".pdf", ".jpg", ".jpeg", ".png"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error("PDF、JPG、PNGファイルのみアップロードできます"));
+  },
+});
+
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ message: "ログインが必要です" });
@@ -5708,11 +5725,18 @@ ${items}
     } catch { res.status(500).json({ message: "エラーが発生しました" }); }
   });
 
-  app.post("/api/blacklist/report", async (req, res) => {
+  app.post("/api/blacklist/report", evidenceUpload.array("evidenceFiles", 5), async (req, res) => {
     try {
       const { entityType, name, reasons, detail, prefecture, contactEmail } = req.body;
       if (!entityType || !name || !detail) return res.status(400).json({ message: "必須項目を入力してください" });
-      const entry = await storage.createBlacklistEntry({ entityType, name, reasons: reasons || [], detail, prefecture, contactEmail });
+      const files = (req.files as Express.Multer.File[] ?? []).map(f => `/uploads/${f.filename}`);
+      const reasonsArr = reasons ? (Array.isArray(reasons) ? reasons : [reasons]) : [];
+      const entry = await storage.createBlacklistEntry({
+        entityType, name, reasons: reasonsArr, detail,
+        prefecture, contactEmail,
+        evidenceFiles: files,
+        source: "report",
+      } as any);
       res.json(entry);
     } catch { res.status(500).json({ message: "送信に失敗しました" }); }
   });

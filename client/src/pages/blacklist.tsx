@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Shield, Flag, MapPin, CheckCircle2, Building2, User } from "lucide-react";
+import { AlertTriangle, Shield, Flag, MapPin, CheckCircle2, Building2, User, Paperclip, X } from "lucide-react";
 
 type BlacklistEntry = {
   id: string;
@@ -55,6 +55,7 @@ export default function BlacklistPage() {
   const [activeSource, setActiveSource] = useState("すべて");
   const [showDialog, setShowDialog] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   const { data: entries = [], isLoading } = useQuery<BlacklistEntry[]>({
@@ -74,7 +75,19 @@ export default function BlacklistPage() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: (data: z.infer<typeof reportSchema>) => apiRequest("POST", "/api/blacklist/report", data),
+    mutationFn: async (data: z.infer<typeof reportSchema>) => {
+      const formData = new FormData();
+      formData.append("entityType", data.entityType);
+      formData.append("name", data.name);
+      data.reasons.forEach(r => formData.append("reasons", r));
+      formData.append("detail", data.detail);
+      if (data.prefecture) formData.append("prefecture", data.prefecture);
+      if (data.contactEmail) formData.append("contactEmail", data.contactEmail);
+      evidenceFiles.forEach(f => formData.append("evidenceFiles", f));
+      const res = await fetch("/api/blacklist/report", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("failed");
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/blacklist"] });
       setSubmitted(true);
@@ -203,7 +216,7 @@ export default function BlacklistPage() {
       </div>
 
       {/* Report Dialog */}
-      <Dialog open={showDialog} onOpenChange={(o) => { setShowDialog(o); if (!o) { setSubmitted(false); form.reset(); } }}>
+      <Dialog open={showDialog} onOpenChange={(o) => { setShowDialog(o); if (!o) { setSubmitted(false); form.reset(); setEvidenceFiles([]); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Flag className="w-4 h-4 text-orange-500" />通報する</DialogTitle>
@@ -265,6 +278,43 @@ export default function BlacklistPage() {
                   <FormItem><FormLabel>連絡先メール（任意・非公開）</FormLabel>
                     <FormControl><Input type="email" placeholder="確認が必要な場合に連絡します" {...field} data-testid="input-contact-email" /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                <div>
+                  <p className="text-sm font-medium mb-1.5 flex items-center gap-1.5">
+                    <Paperclip className="w-4 h-4" />証拠ファイル（任意・最大5枚）
+                  </p>
+                  <label className="flex items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors" data-testid="label-file-upload">
+                    <div className="text-center">
+                      <Paperclip className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">JPG・PNG・PDF（各5MB以内）</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      multiple
+                      className="hidden"
+                      data-testid="input-evidence-files"
+                      onChange={e => {
+                        const newFiles = Array.from(e.target.files ?? []);
+                        setEvidenceFiles(prev => [...prev, ...newFiles].slice(0, 5));
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {evidenceFiles.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {evidenceFiles.map((f, i) => (
+                        <li key={i} className="flex items-center justify-between text-xs bg-muted/60 rounded px-2 py-1">
+                          <span className="truncate max-w-[80%]">{f.name}</span>
+                          <button type="button" onClick={() => setEvidenceFiles(prev => prev.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive ml-2" data-testid={`button-remove-file-${i}`}>
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="flex-1">キャンセル</Button>
                   <Button type="submit" className="flex-1" disabled={submitMutation.isPending} data-testid="button-submit-report">

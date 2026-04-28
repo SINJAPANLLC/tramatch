@@ -633,6 +633,7 @@ export const blacklistEntries = pgTable("blacklist_entries", {
   source: text("source").notNull().default("report"),
   prefecture: text("prefecture"),
   contactEmail: text("contact_email"),
+  evidenceFiles: text("evidence_files").array().notNull().default(sql`'{}'::text[]`),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
