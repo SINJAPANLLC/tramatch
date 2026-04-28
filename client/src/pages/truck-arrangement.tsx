@@ -104,7 +104,7 @@ export default function TruckArrangement() {
         <section className="bg-primary text-primary-foreground py-12 px-4 text-center">
           <p className="text-sm font-semibold tracking-widest mb-2 opacity-80">TRUCK ARRANGEMENT</p>
           <h1 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3" data-testid="text-page-title">
-            <Truck className="w-8 h-8" />トラック手配
+            <Truck className="w-8 h-8" />荷主専用 トラック手配フォーム
           </h1>
           <p className="text-base opacity-90 max-w-xl mx-auto">
             スポット便・定期便のトラック手配を承ります。<br />
